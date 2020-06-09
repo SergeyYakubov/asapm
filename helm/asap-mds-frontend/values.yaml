@@ -1,0 +1,3 @@
+mdsFrontend:
+  internalPort: 3000
+  host: "localhost"
