@@ -5,7 +5,7 @@ cfg = config.parse()
 mode=cfg.get('mode','dev')
 targetHost=cfg.get('targetHost','localhost')
 
-repo = local_git_repo('.')
+repo = local_git_repo('..')
 
 
 k8s_yaml(helm('helm/asap-mds-frontend', set=['mdsFrontend.host='+targetHost]))
