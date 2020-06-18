@@ -1,0 +1,6 @@
+Testing:
+    venom - https://github.com/ovh/venom
+
+Deployment:
+    Kubernetes + Helm
+    tilt - https://tilt.dev/

@@ -1,0 +1,14 @@
+name: InitialTests
+testcases:
+  - name: create record
+    steps:
+      - type: http
+        method: POST
+        headers:
+          Content-Type: "application/json"
+        url: http://localhost/default/asapm/apiquery
+        body: '{"query":"mutation createMeta {createMeta(input:{text:\"hi\"}){text}}"}'
+        assertions:
+          - result.statuscode ShouldEqual 200
+          - result.bodyjson.data.createmeta.text ShouldEqual hi
+
