@@ -1,0 +1,4 @@
+apiServer:
+  internalPort: 8080
+  endpoint: "/asapm/api"
+  host: "localhost"
