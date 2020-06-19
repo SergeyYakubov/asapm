@@ -12,59 +12,59 @@ variables:
   FRONTEND_IMAGE_STATIC: $REGISTRY/yakubov/asapm/frontend
 
 
-#build_frontend_dev:
-#  stage: build_dev
-#  image:
-#    name: gcr.io/kaniko-project/executor:debug
-#    entrypoint: [""]
-#  script:
-#    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-#    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --target base --destination $FRONTEND_IMAGE
-#  tags:
-#    - kubernetes-executor
-#
-#unit_tests_frontend:
-#  variables:
-#    GIT_CHECKOUT: "false"
-#  stage: unit_tests
-#  image:
-#    name: $FRONTEND_IMAGE
-#    entrypoint: [""]
-#  before_script:
-#    - cd /src
-#  script:
-#    - npm run test
-#  tags:
-#    - kubernetes-executor
-#
-#build_frontend:
-#  stage: build
-#  image:
-#    name: gcr.io/kaniko-project/executor:debug
-#    entrypoint: [""]
-#  script:
-#    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-#    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --destination $FRONTEND_IMAGE
-#  tags:
-#    - kubernetes-executor
-#
-#deploy-frontend:
-#  stage: deploy
-#  image:
-#    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
-#    entrypoint: [""]
-#  script:
-#    - helm --kubeconfig=${MY_KUBE_CONFIG} install
-#      --set frontend.image=${FRONTEND_IMAGE}
-#      --set frontend.imageCredentials.use=true
-#      --set frontend.imageCredentials.registry=eosc-pan-git.desy.de:5555
-#      --set frontend.imageCredentials.username=${REGISTRY_USERNAME}
-#      --set frontend.imageCredentials.password=${REGISTRY_PASS}
-#      --set frontend.host="*.desy.de"
-#      --wait --timeout 10m0s
-#      asapm-frontend-${CI_COMMIT_SHORT_SHA} frontend/helm/asapm-frontend
-#  tags:
-#    - kubernetes-executor
+build_frontend_dev:
+  stage: build_dev
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --target base --destination $FRONTEND_IMAGE
+  tags:
+    - kubernetes-executor
+
+unit_tests_frontend:
+  variables:
+    GIT_CHECKOUT: "false"
+  stage: unit_tests
+  image:
+    name: $FRONTEND_IMAGE
+    entrypoint: [""]
+  before_script:
+    - cd /src
+  script:
+    - npm run test
+  tags:
+    - kubernetes-executor
+
+build_frontend:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --destination $FRONTEND_IMAGE
+  tags:
+    - kubernetes-executor
+
+deploy-frontend:
+  stage: deploy
+  image:
+    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+    entrypoint: [""]
+  script:
+    - helm --kubeconfig=${MY_KUBE_CONFIG} install
+      --set frontend.image=${FRONTEND_IMAGE}
+      --set frontend.imageCredentials.use=true
+      --set frontend.imageCredentials.registry=eosc-pan-git.desy.de:5555
+      --set frontend.imageCredentials.username=${REGISTRY_USERNAME}
+      --set frontend.imageCredentials.password=${REGISTRY_PASS}
+      --set frontend.host="*.desy.de"
+      --wait --timeout 10m0s
+      asapm-frontend-${CI_COMMIT_SHORT_SHA} frontend/helm/asapm-frontend
+  tags:
+    - kubernetes-executor
 
 int_tests_frontend:
   stage: integration_tests
@@ -72,7 +72,6 @@ int_tests_frontend:
     name: curlimages/curl
     entrypoint: [""]
   script:
-    - echo ${MY_KUBE_FRONTEND}
     - curl --fail ${MY_KUBE_FRONTEND}/asapm/ | grep react
   tags:
     - kubernetes-executor
