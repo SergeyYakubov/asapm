@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: myregistrykey
+  name: myregistrykey{{ .Values.resourceSuffix }}
 type: kubernetes.io/dockerconfigjson
 data:
   .dockerconfigjson: {{ template "imagePullSecret" . }}
@@ -9,7 +9,7 @@ data:
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: asapm-frontend
+  name: asapm-frontend{{ .Values.resourceSuffix }}
   annotations:
     kubernetes.io/ingress.class: "nginx"
 spec:
@@ -17,51 +17,51 @@ spec:
     - host: "{{ .Values.frontend.host }}"
       http:
         paths:
-          - path: /{{ .Release.Namespace }}/asapm
+          - path: /{{ .Release.Namespace }}{{ .Values.resourceSuffix }}/asapm
             backend:
-              serviceName: asapm-frontend
+              serviceName: asapm-frontend{{ .Values.resourceSuffix }}
               servicePort: {{ .Values.frontend.internalPort }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: asapm-frontend
+  name: asapm-frontend{{ .Values.resourceSuffix }}
 spec:
   type: ClusterIP
   ports:
     - protocol: TCP
       port: {{ .Values.frontend.internalPort }}
   selector:
-    app: asapm-frontend
+    app: asapm-frontend{{ .Values.resourceSuffix }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: asapm-frontend
+  name: asapm-frontend{{ .Values.resourceSuffix }}
   labels:
-    app: asapm-frontend
+    app: asapm-frontend{{ .Values.resourceSuffix }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: asapm-frontend
+      app: asapm-frontend{{ .Values.resourceSuffix }}
   template:
     metadata:
       labels:
-        app: asapm-frontend
+        app: asapm-frontend{{ .Values.resourceSuffix }}
     spec:
       containers:
-        - name: asapm-frontend
+        - name: asapm-frontend{{ .Values.resourceSuffix }}
           image: "{{ .Values.frontend.image }}"
           ports:
             - containerPort: {{ .Values.frontend.internalPort }}
           stdin: true
           env:
             - name: PUBLIC_URL
-              value: "/{{ .Release.Namespace }}/asapm"
+              value: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix }}/asapm"
             - name: SERVICE_PORT
               value: "{{ .Values.frontend.internalPort }}"
 {{- if .Values.frontend.imageCredentials.use }}
       imagePullSecrets:
-        - name: myregistrykey
+        - name: myregistrykey{{ .Values.resourceSuffix }}
 {{- end }}

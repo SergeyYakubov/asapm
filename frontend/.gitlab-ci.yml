@@ -10,7 +10,7 @@ variables:
   REGISTRY: eosc-pan-git.desy.de:5555
   FRONTEND_IMAGE: $REGISTRY/yakubov/asapm/frontend:$CI_COMMIT_SHORT_SHA
   FRONTEND_IMAGE_STATIC: $REGISTRY/yakubov/asapm/frontend
-
+  FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-for-tests-${CI_COMMIT_SHORT_SHA}/asapm/
 
 build_frontend_dev:
   stage: build_dev
@@ -54,8 +54,11 @@ deploy-frontend:
     name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
     entrypoint: [""]
   script:
-    - helm --kubeconfig=${MY_KUBE_CONFIG} install
-      --set frontend.image=${FRONTEND_IMAGE}
+    - DYNAMIC_ENVIRONMENT_URL=$(echo ${FRONTEND_URL})
+    - echo "DYNAMIC_ENVIRONMENT_URL=$DYNAMIC_ENVIRONMENT_URL" >> deploy.env    # Add the value to a dotenv file.
+    - helm install
+      --set frontend.image=${FRONTEND_IMAGE_STATIC}
+      --set resourceSuffix="-${CI_COMMIT_SHORT_SHA}"
       --set frontend.imageCredentials.use=true
       --set frontend.imageCredentials.registry=eosc-pan-git.desy.de:5555
       --set frontend.imageCredentials.username=${REGISTRY_USERNAME}
@@ -63,6 +66,15 @@ deploy-frontend:
       --set frontend.host="*.desy.de"
       --wait --timeout 10m0s
       asapm-frontend-${CI_COMMIT_SHORT_SHA} frontend/helm/asapm-frontend
+  artifacts:
+    reports:
+      dotenv: deploy.env
+  environment:
+    name: deploy-for-tests
+    url: ${DYNAMIC_ENVIRONMENT_URL}
+    on_stop: destroy-frontend
+    kubernetes:
+      namespace: ${CI_COMMIT_SHORT_SHA}
   tags:
     - kubernetes-executor
 
@@ -72,10 +84,9 @@ int_tests_frontend:
     name: curlimages/curl
     entrypoint: [""]
   script:
-    - curl --fail ${MY_KUBE_FRONTEND}/asapm/ | grep react
+    - curl --fail ${FRONTEND_URL} | grep react
   tags:
     - kubernetes-executor
-
 
 destroy-frontend:
   stage: destroy_deployments
@@ -83,7 +94,12 @@ destroy-frontend:
     name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
     entrypoint: [""]
   script:
-    - helm --kubeconfig=${MY_KUBE_CONFIG} uninstall asapm-frontend-${CI_COMMIT_SHORT_SHA}
+    - helm uninstall -n $KUBE_NAMESPACE asapm-frontend-${CI_COMMIT_SHORT_SHA}
+  environment:
+      name: deploy-for-tests
+      action: stop
+      kubernetes:
+        namespace: ${CI_COMMIT_SHORT_SHA}
   when: always
   tags:
     - kubernetes-executor

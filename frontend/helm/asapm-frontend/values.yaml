@@ -1,3 +1,5 @@
+resourceSuffix: ""
+
 frontend:
   internalPort: 3000
   host: "localhost"
