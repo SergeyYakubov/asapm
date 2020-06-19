@@ -1,0 +1,9 @@
+frontend:
+  internalPort: 3000
+  host: "localhost"
+  image: yakser/asapm-frontend
+  imageCredentials:
+    use : false
+    registry: quay.io
+    username: someone
+    password: sillyness

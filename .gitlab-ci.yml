@@ -1,0 +1,2 @@
+include:
+  - local: '/frontend/.gitlab-ci.yml'
