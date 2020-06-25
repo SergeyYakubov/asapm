@@ -48,8 +48,8 @@ deploy-frontend:
     - DYNAMIC_ENVIRONMENT_URL=$(echo ${FRONTEND_URL})
     - echo "DYNAMIC_ENVIRONMENT_URL=$DYNAMIC_ENVIRONMENT_URL" >> deploy.env    # Add the value to a dotenv file.
     - helm install
-      --set frontend.image=${FRONTEND_IMAGE_STATIC}
-      --set resourceSuffix="${CI_COMMIT_SHORT_SHA}"
+      --set frontend.image=${FRONTEND_IMAGE}
+      --set resourceSuffix="-${CI_COMMIT_SHORT_SHA}"
       --set frontend.imageCredentials.use=true
       --set frontend.imageCredentials.registry=eosc-pan-git.desy.de:5555
       --set frontend.imageCredentials.username=${REGISTRY_USERNAME}
@@ -61,11 +61,10 @@ deploy-frontend:
     reports:
       dotenv: deploy.env
   environment:
-    name: deploy-for-tests
+    name: deploy-for-tests-frontend
     url: ${DYNAMIC_ENVIRONMENT_URL}
     on_stop: destroy-frontend
     kubernetes:
-      namespace: ${CI_COMMIT_SHORT_SHA}
   tags:
     - kubernetes-executor
 
@@ -87,10 +86,9 @@ destroy-frontend:
   script:
     - helm uninstall -n $KUBE_NAMESPACE asapm-frontend-${CI_COMMIT_SHORT_SHA}
   environment:
-      name: deploy-for-tests
+      name: deploy-for-tests-frontend
       action: stop
       kubernetes:
-        namespace: ${CI_COMMIT_SHORT_SHA}
   when: always
   tags:
     - kubernetes-executor

@@ -39,36 +39,35 @@ build_api_server:
   tags:
     - kubernetes-executor
 
-#deploy-frontend:
-#  stage: deploy
-#  image:
-#    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
-#    entrypoint: [""]
-#  script:
-#    - DYNAMIC_ENVIRONMENT_URL=$(echo ${FRONTEND_URL})
-#    - echo "DYNAMIC_ENVIRONMENT_URL=$DYNAMIC_ENVIRONMENT_URL" >> deploy.env    # Add the value to a dotenv file.
-#    - helm install
-#      --set frontend.image=${FRONTEND_IMAGE_STATIC}
-#      --set resourceSuffix="${CI_COMMIT_SHORT_SHA}"
-#      --set frontend.imageCredentials.use=true
-#      --set frontend.imageCredentials.registry=eosc-pan-git.desy.de:5555
-#      --set frontend.imageCredentials.username=${REGISTRY_USERNAME}
-#      --set frontend.imageCredentials.password=${REGISTRY_PASS}
-#      --set frontend.host="*.desy.de"
-#      --wait --timeout 10m0s
-#      asapm-frontend-${CI_COMMIT_SHORT_SHA} frontend/helm/asapm-frontend
-#  artifacts:
-#    reports:
-#      dotenv: deploy.env
-#  environment:
-#    name: deploy-for-tests
-#    url: ${DYNAMIC_ENVIRONMENT_URL}
-#    on_stop: destroy-frontend
-#    kubernetes:
-#      namespace: ${CI_COMMIT_SHORT_SHA}
-#  tags:
-#    - kubernetes-executor
-#
+deploy-api-server:
+  stage: deploy
+  image:
+    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+    entrypoint: [""]
+  script:
+    - DYNAMIC_ENVIRONMENT_URL=$(echo ${API_SERVER_URL})
+    - echo "DYNAMIC_ENVIRONMENT_URL=$DYNAMIC_ENVIRONMENT_URL" >> deploy.env    # Add the value to a dotenv file.
+    - helm install
+      --set apiServer.image=${API_SERVER_IMAGE}
+      --set resourceSuffix="-${CI_COMMIT_SHORT_SHA}"
+      --set apiServer.imageCredentials.use=true
+      --set apiServer.imageCredentials.registry=eosc-pan-git.desy.de:5555
+      --set apiServer.imageCredentials.username=${REGISTRY_USERNAME}
+      --set apiServer.imageCredentials.password=${REGISTRY_PASS}
+      --set apiServer.host="*.desy.de"
+      --wait --timeout 1m0s
+      asapm-api-server-${CI_COMMIT_SHORT_SHA} api_server/helm/asapm-api-server
+  artifacts:
+    reports:
+      dotenv: deploy.env
+  environment:
+    name: deploy-for-tests-api-server
+    url: ${DYNAMIC_ENVIRONMENT_URL}
+    on_stop: destroy_api_server
+    kubernetes:
+  tags:
+    - kubernetes-executor
+
 #int_tests_frontend:
 #  stage: integration_tests
 #  image:
@@ -79,19 +78,19 @@ build_api_server:
 #  tags:
 #    - kubernetes-executor
 #
-#destroy-frontend:
-#  stage: destroy_deployments
-#  image:
-#    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
-#    entrypoint: [""]
-#  script:
-#    - helm uninstall -n $KUBE_NAMESPACE asapm-frontend-${CI_COMMIT_SHORT_SHA}
-#  environment:
-#      name: deploy-for-tests
-#      action: stop
-#      kubernetes:
-#        namespace: ${CI_COMMIT_SHORT_SHA}
-#  when: always
-#  tags:
-#    - kubernetes-executor
+
+destroy_api_server:
+  stage: destroy_deployments
+  image:
+    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+    entrypoint: [""]
+  script:
+    - helm uninstall -n $KUBE_NAMESPACE asapm-api-server-${CI_COMMIT_SHORT_SHA}
+  environment:
+      name: deploy-for-tests-api-server
+      action: stop
+      kubernetes:
+  when: always
+  tags:
+    - kubernetes-executor
 

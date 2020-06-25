@@ -11,5 +11,5 @@ variables:
 
 
 include:
-#  - local: '/frontend/.gitlab-ci.yml'
+  - local: '/frontend/.gitlab-ci.yml'
   - local: '/api_server/.gitlab-ci.yml'

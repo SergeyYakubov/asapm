@@ -4,7 +4,7 @@ frontend:
   internalPort: 3000
   host: "localhost"
   image: yakser/asapm-frontend
-  basePathTemplate: "/{{ .Release.Namespace }}-{{ .Values.resourceSuffix }}/asapm"
+  basePathTemplate: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix }}/asapm"
   imageCredentials:
     use : false
     registry: quay.io

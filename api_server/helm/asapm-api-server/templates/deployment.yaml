@@ -1,55 +1,66 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "asapm.resourceName" . }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: {{ template "imagePullSecret" . }}
+---
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: asapm-api-server
+  name: {{ include "asapm.resourceName" . }}
   annotations:
     kubernetes.io/ingress.class: "nginx"
 spec:
   rules:
-    - host: {{ .Values.apiServer.host }}
+    - host: "{{ .Values.apiServer.host }}"
       http:
         paths:
-          - path: /{{ .Release.Namespace }}/asapm/api
+          - path: {{ tpl .Values.apiServer.basePathTemplate . }}
             backend:
-              serviceName: asapm-api-server
+              serviceName: {{ include "asapm.resourceName" . }}
               servicePort: {{ .Values.apiServer.internalPort }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: asapm-api-server
+  name: {{ include "asapm.resourceName" . }}
 spec:
   type: ClusterIP
   ports:
     - protocol: TCP
       port: {{ .Values.apiServer.internalPort }}
   selector:
-    app: asapm-api-server
+    app: {{ include "asapm.resourceName" . }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: asapm-api-server
+  name: {{ include "asapm.resourceName" . }}
   labels:
-    app: asapm-api-server
+    app: {{ include "asapm.resourceName" . }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: asapm-api-server
+      app: {{ include "asapm.resourceName" . }}
   template:
     metadata:
       labels:
-        app: asapm-api-server
+        app: {{ include "asapm.resourceName" . }}
     spec:
       containers:
-        - name: asapm-api-server
-          image: "yakser/asapm-api-server"
+        - name: {{ include "asapm.resourceName" . }}
+          image: "{{ .Values.apiServer.image }}"
           ports:
             - containerPort: {{ .Values.apiServer.internalPort }}
           env:
             - name: ASAPM_API_PORT
               value:  "{{ .Values.apiServer.internalPort }}"
             - name: ASAPM_API_ENDPOINT
-              value:  "/{{ .Release.Namespace }}{{ .Values.apiServer.endpoint }}"
-
+              value:  "{{ tpl .Values.apiServer.basePathTemplate . }}"
+  {{- if .Values.apiServer.imageCredentials.use }}
+      imagePullSecrets:
+        - name: {{ include "asapm.resourceName" . }}
+  {{- end }}

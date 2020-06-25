@@ -1,4 +1,12 @@
+resourceSuffix: ""
+
 apiServer:
   internalPort: 8080
-  endpoint: "/asapm/api"
   host: "localhost"
+  image: yakser/asapm-api-server
+  basePathTemplate: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix}}/asapm/api"
+  imageCredentials:
+    use : false
+    registry: quay.io
+    username: someone
+    password: sillyness
