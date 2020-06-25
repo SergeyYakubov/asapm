@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: myregistrykey{{ .Values.resourceSuffix }}
+  name: {{ include "asapm.resourceName" . }}
 type: kubernetes.io/dockerconfigjson
 data:
   .dockerconfigjson: {{ template "imagePullSecret" . }}
@@ -9,7 +9,7 @@ data:
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: asapm-frontend{{ .Values.resourceSuffix }}
+  name: {{ include "asapm.resourceName" . }}
   annotations:
     kubernetes.io/ingress.class: "nginx"
 spec:
@@ -17,51 +17,51 @@ spec:
     - host: "{{ .Values.frontend.host }}"
       http:
         paths:
-          - path: /{{ .Release.Namespace }}{{ .Values.resourceSuffix }}/asapm
+          - path: {{ tpl .Values.frontend.basePathTemplate . }}
             backend:
-              serviceName: asapm-frontend{{ .Values.resourceSuffix }}
+              serviceName: {{ include "asapm.resourceName" . }}
               servicePort: {{ .Values.frontend.internalPort }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: asapm-frontend{{ .Values.resourceSuffix }}
+  name: {{ include "asapm.resourceName" . }}
 spec:
   type: ClusterIP
   ports:
     - protocol: TCP
       port: {{ .Values.frontend.internalPort }}
   selector:
-    app: asapm-frontend{{ .Values.resourceSuffix }}
+    app: {{ include "asapm.resourceName" . }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: asapm-frontend{{ .Values.resourceSuffix }}
+  name: {{ include "asapm.resourceName" . }}
   labels:
-    app: asapm-frontend{{ .Values.resourceSuffix }}
+    app: {{ include "asapm.resourceName" . }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: asapm-frontend{{ .Values.resourceSuffix }}
+      app: {{ include "asapm.resourceName" . }}
   template:
     metadata:
       labels:
-        app: asapm-frontend{{ .Values.resourceSuffix }}
+        app: {{ include "asapm.resourceName" . }}
     spec:
       containers:
-        - name: asapm-frontend{{ .Values.resourceSuffix }}
+        - name: {{ include "asapm.resourceName" . }}
           image: "{{ .Values.frontend.image }}"
           ports:
             - containerPort: {{ .Values.frontend.internalPort }}
           stdin: true
           env:
             - name: PUBLIC_URL
-              value: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix }}/asapm"
+              value: "{{ tpl .Values.frontend.basePathTemplate . }}"
             - name: SERVICE_PORT
               value: "{{ .Values.frontend.internalPort }}"
 {{- if .Values.frontend.imageCredentials.use }}
       imagePullSecrets:
-        - name: myregistrykey{{ .Values.resourceSuffix }}
+        - name: {{ include "asapm.resourceName" . }}
 {{- end }}
