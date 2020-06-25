@@ -1,7 +1,7 @@
 variables:
   FRONTEND_IMAGE: $REGISTRY/yakubov/asapm/frontend:$CI_COMMIT_SHORT_SHA
   FRONTEND_IMAGE_STATIC: $REGISTRY/yakubov/asapm/frontend
-  FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-for-tests-${CI_COMMIT_SHORT_SHA}/asapm/
+  FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-frontend-${CI_COMMIT_SHORT_SHA}/asapm/
 
 build_frontend_dev:
   stage: build_dev
@@ -61,7 +61,7 @@ deploy-frontend:
     reports:
       dotenv: deploy.env
   environment:
-    name: deploy-for-tests-frontend
+    name: deploy-frontend
     url: ${DYNAMIC_ENVIRONMENT_URL}
     on_stop: destroy-frontend
     kubernetes:
@@ -86,7 +86,7 @@ destroy-frontend:
   script:
     - helm uninstall -n $KUBE_NAMESPACE asapm-frontend-${CI_COMMIT_SHORT_SHA}
   environment:
-      name: deploy-for-tests-frontend
+      name: deploy-frontend
       action: stop
       kubernetes:
   when: always
