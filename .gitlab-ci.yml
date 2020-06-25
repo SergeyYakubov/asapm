@@ -1,2 +1,15 @@
+stages:
+  - build_dev
+  - unit_tests
+  - build
+  - deploy
+  - integration_tests
+  - destroy_deployments
+
+variables:
+  REGISTRY: eosc-pan-git.desy.de:5555
+
+
 include:
-  - local: '/frontend/.gitlab-ci.yml'
+#  - local: '/frontend/.gitlab-ci.yml'
+  - local: '/api_server/.gitlab-ci.yml'

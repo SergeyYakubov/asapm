@@ -1,13 +1,4 @@
-stages:
-  - build_dev
-  - unit_tests
-  - build
-  - deploy
-  - integration_tests
-  - destroy_deployments
-
 variables:
-  REGISTRY: eosc-pan-git.desy.de:5555
   FRONTEND_IMAGE: $REGISTRY/yakubov/asapm/frontend:$CI_COMMIT_SHORT_SHA
   FRONTEND_IMAGE_STATIC: $REGISTRY/yakubov/asapm/frontend
   FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-for-tests-${CI_COMMIT_SHORT_SHA}/asapm/

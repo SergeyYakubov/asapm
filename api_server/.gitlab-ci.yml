@@ -1,0 +1,97 @@
+variables:
+  API_SERVER_IMAGE: $REGISTRY/yakubov/asapm/api_server:$CI_COMMIT_SHORT_SHA
+  API_SERVER_IMAGE_STATIC: $REGISTRY/yakubov/asapm/api_server
+  API_SERVER_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-for-tests-${CI_COMMIT_SHORT_SHA}/asapm/api
+
+build_api_server_dev:
+  stage: build_dev
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE
+  tags:
+    - kubernetes-executor
+
+unit_tests_api_server:
+  variables:
+    GIT_CHECKOUT: "false"
+  stage: unit_tests
+  image:
+    name: $API_SERVER_IMAGE
+    entrypoint: [""]
+  before_script:
+    - cd /app/src
+  script:
+    - go test ./...
+  tags:
+    - kubernetes-executor
+
+build_api_server:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --destination $API_SERVER_IMAGE
+  tags:
+    - kubernetes-executor
+
+#deploy-frontend:
+#  stage: deploy
+#  image:
+#    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+#    entrypoint: [""]
+#  script:
+#    - DYNAMIC_ENVIRONMENT_URL=$(echo ${FRONTEND_URL})
+#    - echo "DYNAMIC_ENVIRONMENT_URL=$DYNAMIC_ENVIRONMENT_URL" >> deploy.env    # Add the value to a dotenv file.
+#    - helm install
+#      --set frontend.image=${FRONTEND_IMAGE_STATIC}
+#      --set resourceSuffix="${CI_COMMIT_SHORT_SHA}"
+#      --set frontend.imageCredentials.use=true
+#      --set frontend.imageCredentials.registry=eosc-pan-git.desy.de:5555
+#      --set frontend.imageCredentials.username=${REGISTRY_USERNAME}
+#      --set frontend.imageCredentials.password=${REGISTRY_PASS}
+#      --set frontend.host="*.desy.de"
+#      --wait --timeout 10m0s
+#      asapm-frontend-${CI_COMMIT_SHORT_SHA} frontend/helm/asapm-frontend
+#  artifacts:
+#    reports:
+#      dotenv: deploy.env
+#  environment:
+#    name: deploy-for-tests
+#    url: ${DYNAMIC_ENVIRONMENT_URL}
+#    on_stop: destroy-frontend
+#    kubernetes:
+#      namespace: ${CI_COMMIT_SHORT_SHA}
+#  tags:
+#    - kubernetes-executor
+#
+#int_tests_frontend:
+#  stage: integration_tests
+#  image:
+#    name: curlimages/curl
+#    entrypoint: [""]
+#  script:
+#    - curl --fail ${FRONTEND_URL} | grep react
+#  tags:
+#    - kubernetes-executor
+#
+#destroy-frontend:
+#  stage: destroy_deployments
+#  image:
+#    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+#    entrypoint: [""]
+#  script:
+#    - helm uninstall -n $KUBE_NAMESPACE asapm-frontend-${CI_COMMIT_SHORT_SHA}
+#  environment:
+#      name: deploy-for-tests
+#      action: stop
+#      kubernetes:
+#        namespace: ${CI_COMMIT_SHORT_SHA}
+#  when: always
+#  tags:
+#    - kubernetes-executor
+
