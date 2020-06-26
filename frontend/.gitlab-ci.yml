@@ -71,10 +71,16 @@ deploy-frontend:
 int_tests_frontend:
   stage: integration_tests
   image:
-    name: curlimages/curl
+    name: cypress/included:3.2.0
     entrypoint: [""]
+  before_script:
+      - cd frontend
   script:
-    - curl --fail ${FRONTEND_URL} | grep react
+    - cypress run --reporter junit -e FRONTEND_URL=${FRONTEND_URL} --reporter-options mochaFile=../cypress_out.xml
+    - ls ..
+  artifacts:
+    reports:
+      junit: cypress_out.xml
   tags:
     - kubernetes-executor
 

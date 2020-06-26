@@ -68,16 +68,19 @@ deploy-api-server:
   tags:
     - kubernetes-executor
 
-#int_tests_frontend:
-#  stage: integration_tests
-#  image:
-#    name: curlimages/curl
-#    entrypoint: [""]
-#  script:
-#    - curl --fail ${FRONTEND_URL} | grep react
-#  tags:
-#    - kubernetes-executor
-#
+int_tests_api_server:
+  stage: integration_tests
+  image:
+    name: postman/newman
+    entrypoint: [""]
+  script:
+    - newman run api_server/tests/Tests.postman_collection.json --reporters cli,junit  --env-var api_server_uri=${API_SERVER_URL}
+  artifacts:
+    reports:
+      junit: newman/*.xml
+  tags:
+    - kubernetes-executor
+
 
 destroy_api_server:
   stage: destroy_deployments
