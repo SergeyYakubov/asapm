@@ -22,4 +22,3 @@ docker_build('yakser/asapm-frontend', '.',
   target='' if mode == 'prod' else 'base' )
 
 
-k8s_resource('asapm-frontend', port_forwards=3000)
