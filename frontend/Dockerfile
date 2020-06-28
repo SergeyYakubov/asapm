@@ -10,6 +10,8 @@ ENTRYPOINT npm start
 FROM node:10 AS builder
 WORKDIR /src
 COPY --from=base /src .
+ARG ENDPOINT_SUFFIX=asapm
+ENV PUBLIC_URL=$ENDPOINT_SUFFIX
 RUN npm run build
 
 FROM nginx:1.19.0
