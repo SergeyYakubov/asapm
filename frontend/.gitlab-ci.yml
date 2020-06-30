@@ -1,5 +1,6 @@
 variables:
   FRONTEND_IMAGE: $REGISTRY/yakubov/asapm/frontend:$CI_COMMIT_SHORT_SHA
+  FRONTEND_IMAGE_DEV: $REGISTRY/yakubov/asapm/frontend:dev.$CI_COMMIT_SHORT_SHA
   FRONTEND_IMAGE_STATIC: $REGISTRY/yakubov/asapm/frontend
   FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-frontend-${CI_COMMIT_SHORT_SHA}/asapm/
 
@@ -10,7 +11,7 @@ build_frontend_dev:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --target base --destination $FRONTEND_IMAGE
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --target base --destination $FRONTEND_IMAGE_DEV
   tags:
     - kubernetes-executor
 
@@ -19,7 +20,7 @@ unit_tests_frontend:
     GIT_CHECKOUT: "false"
   stage: unit_tests
   image:
-    name: $FRONTEND_IMAGE
+    name: $FRONTEND_IMAGE_DEV
     entrypoint: [""]
   before_script:
     - cd /src
@@ -70,14 +71,16 @@ deploy-frontend:
 
 int_tests_frontend:
   stage: integration_tests
+  variables:
+    GIT_CHECKOUT: "false"
   image:
-    name: cypress/included:3.2.0
+    name: $FRONTEND_IMAGE_DEV
     entrypoint: [""]
   before_script:
-      - cd frontend
+      - cd /src
   script:
-    - cypress run --reporter junit -e FRONTEND_URL=${FRONTEND_URL} --reporter-options mochaFile=../cypress_out.xml
-    - ls ..
+    - npx cypress run -e FRONTEND_URL=${FRONTEND_URL} --reporter junit --reporter-options mochaFile=$CI_PROJECT_DIR/cypress_out.xml
+    - pwd
   artifacts:
     reports:
       junit: cypress_out.xml
