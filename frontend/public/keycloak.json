@@ -1,8 +1,0 @@
-{
-  "realm": "asap",
-  "auth-server-url": "https://kube-keycloak.desy.de/auth/",
-  "ssl-required": "none",
-  "resource": "asapm",
-  "public-client": true,
-  "confidential-port": 0
-}

@@ -1,4 +1,4 @@
-FROM node:10 AS base
+FROM node:14.4 AS base
 
 WORKDIR /src
 ADD package.json package.json
@@ -7,7 +7,7 @@ RUN npm install --production
 ADD . /src
 ENTRYPOINT npm start
 
-FROM node:10 AS builder
+FROM node:14.4 AS builder
 WORKDIR /src
 COPY --from=base /src .
 ARG ENDPOINT_SUFFIX=asapm
