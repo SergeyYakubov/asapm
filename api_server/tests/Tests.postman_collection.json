@@ -14,15 +14,15 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0fe2eaf1-ad76-47ea-bbcc-3ae872e1927c",
+								"id": "47a1742a-ea33-41d7-8923-f8954e8301ea",
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"Your test name\", function () {",
+									"pm.test(\"Sets schema correctly\", function () {",
 									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.createMeta.text).to.eql(\"hi\");",
+									"    pm.expect(jsonData.data.setUserPreferences.schema).to.eql(\"dark\");",
 									"});",
 									""
 								],
@@ -36,8 +36,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "  mutation createMeta {\n    createMeta(input:{text:\"hi\"}) {\n      text\n    }\n  }\n",
-								"variables": "{\n    \"text\": \"hi\"\n}"
+								"query": "mutation addUser  {\n  setUserPreferences(id:\"1234\",input:{\n    schema:\"dark\",\n  }){\n      schema\n  }\n}",
+								"variables": ""
 							}
 						},
 						"url": {
