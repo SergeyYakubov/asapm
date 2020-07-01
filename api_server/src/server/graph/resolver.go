@@ -1,5 +1,4 @@
 package graph
-
 //go:generate go run github.com/99designs/gqlgen
 
 import (
@@ -12,5 +11,6 @@ import (
 
 type Resolver struct{
 	metas []*model.Meta
+	users []*model.UserAccount
 }
 

@@ -18,13 +18,15 @@ unit_tests_api_server:
   variables:
     GIT_CHECKOUT: "false"
   stage: unit_tests
+  services:
+    - mongo
   image:
     name: $API_SERVER_IMAGE
     entrypoint: [""]
   before_script:
     - cd /app/src
   script:
-    - go test ./...
+    - go ASAPM_DATABASE=mongo:27017 test --tags=integration_tests ./...
   tags:
     - kubernetes-executor
 

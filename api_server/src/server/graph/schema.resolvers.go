@@ -22,16 +22,20 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewMeta) 
 	return meta, nil
 }
 
+func (r *mutationResolver) SetUserPreferences(ctx context.Context, input model.InputUserPreferences) (*model.UserPreferences, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}) ([]*model.Meta, error) {
-	if r.metas==nil {
-		return []*model.Meta{},nil
+	if r.metas == nil {
+		return []*model.Meta{}, nil
 	}
 
-	if (filter==nil) {
-		return r.metas,nil
+	if filter == nil {
+		return r.metas, nil
 	}
 
-	res:= []*model.Meta{}
+	res := []*model.Meta{}
 	a, ok := filter["angle"].(int64)
 	if !ok {
 		return nil, errors.New("cannot parse filter")
@@ -47,6 +51,21 @@ func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}
 	}
 
 	return res, nil
+}
+
+func (r *queryResolver) User(ctx context.Context, id *string) (*model.UserAccount, error) {
+	schema:="aaa"
+	var ac = model.UserAccount{
+		ID:          "1234",
+		Preferences: &model.UserPreferences{&schema},
+	}
+	if *id != "1234" {
+		return nil, nil
+	}
+	if r.users == nil {
+		return &ac, nil
+	}
+	return nil, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

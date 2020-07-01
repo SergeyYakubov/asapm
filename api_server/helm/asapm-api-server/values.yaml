@@ -6,7 +6,14 @@ apiServer:
   image: yakser/asapm-api-server
   basePathTemplate: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix}}/asapm/api"
   imageCredentials:
-    use : false
+    use: false
     registry: quay.io
     username: someone
     password: sillyness
+
+mongodb:
+  useStatefulSet: false
+  architecture: "standalone"
+  auth:
+    enabled: false
+

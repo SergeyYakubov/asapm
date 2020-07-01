@@ -49,19 +49,32 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateMeta func(childComplexity int, input model.NewMeta) int
+		CreateMeta         func(childComplexity int, input model.NewMeta) int
+		SetUserPreferences func(childComplexity int, input model.InputUserPreferences) int
 	}
 
 	Query struct {
 		Metas func(childComplexity int, filter map[string]interface{}) int
+		User  func(childComplexity int, id *string) int
+	}
+
+	UserAccount struct {
+		ID          func(childComplexity int) int
+		Preferences func(childComplexity int) int
+	}
+
+	UserPreferences struct {
+		Schema func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
 	CreateMeta(ctx context.Context, input model.NewMeta) (*model.Meta, error)
+	SetUserPreferences(ctx context.Context, input model.InputUserPreferences) (*model.UserPreferences, error)
 }
 type QueryResolver interface {
 	Metas(ctx context.Context, filter map[string]interface{}) ([]*model.Meta, error)
+	User(ctx context.Context, id *string) (*model.UserAccount, error)
 }
 
 type executableSchema struct {
@@ -112,6 +125,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateMeta(childComplexity, args["input"].(model.NewMeta)), true
 
+	case "Mutation.setUserPreferences":
+		if e.complexity.Mutation.SetUserPreferences == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setUserPreferences_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SetUserPreferences(childComplexity, args["input"].(model.InputUserPreferences)), true
+
 	case "Query.metas":
 		if e.complexity.Query.Metas == nil {
 			break
@@ -123,6 +148,39 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Metas(childComplexity, args["filter"].(map[string]interface{})), true
+
+	case "Query.user":
+		if e.complexity.Query.User == nil {
+			break
+		}
+
+		args, err := ec.field_Query_user_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.User(childComplexity, args["id"].(*string)), true
+
+	case "UserAccount.id":
+		if e.complexity.UserAccount.ID == nil {
+			break
+		}
+
+		return e.complexity.UserAccount.ID(childComplexity), true
+
+	case "UserAccount.preferences":
+		if e.complexity.UserAccount.Preferences == nil {
+			break
+		}
+
+		return e.complexity.UserAccount.Preferences(childComplexity), true
+
+	case "UserPreferences.schema":
+		if e.complexity.UserPreferences.Schema == nil {
+			break
+		}
+
+		return e.complexity.UserPreferences.Schema(childComplexity), true
 
 	}
 	return 0, false
@@ -194,6 +252,28 @@ var sources = []*ast.Source{
 
 #union Field = String | Int
 
+type Mutation {
+  createMeta(input: NewMeta!): Meta
+  setUserPreferences(input: InputUserPreferences!): UserPreferences
+}
+
+type Query {
+  metas (filter: Map): [Meta]
+  user (id: String): UserAccount
+}
+
+type UserPreferences {
+ schema: String
+}
+input InputUserPreferences {
+  schema: String
+}
+
+type UserAccount {
+  id: ID!
+  preferences: UserPreferences
+}
+
 scalar Map
 
 type Meta {
@@ -207,13 +287,7 @@ input NewMeta {
   customValues: Map
 }
 
-type Mutation {
-  createMeta(input: NewMeta!): Meta!
-}
-
-type Query {
-  metas (filter: Map): [Meta]
-}`, BuiltIn: false},
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -227,6 +301,20 @@ func (ec *executionContext) field_Mutation_createMeta_args(ctx context.Context, 
 	var arg0 model.NewMeta
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNNewMeta2asapmᚋserverᚋgraphᚋmodelᚐNewMeta(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setUserPreferences_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.InputUserPreferences
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNInputUserPreferences2asapmᚋserverᚋgraphᚋmodelᚐInputUserPreferences(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -260,6 +348,20 @@ func (ec *executionContext) field_Query_metas_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["filter"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -429,14 +531,49 @@ func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Meta)
 	fc.Result = res
-	return ec.marshalNMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐMeta(ctx, field.Selections, res)
+	return ec.marshalOMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐMeta(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_setUserPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setUserPreferences_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetUserPreferences(rctx, args["input"].(model.InputUserPreferences))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserPreferences)
+	fc.Result = res
+	return ec.marshalOUserPreferences2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserPreferences(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_metas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -475,6 +612,44 @@ func (ec *executionContext) _Query_metas(ctx context.Context, field graphql.Coll
 	res := resTmp.([]*model.Meta)
 	fc.Result = res
 	return ec.marshalOMeta2ᚕᚖasapmᚋserverᚋgraphᚋmodelᚐMeta(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_user_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().User(rctx, args["id"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserAccount)
+	fc.Result = res
+	return ec.marshalOUserAccount2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -544,6 +719,102 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserAccount_id(ctx context.Context, field graphql.CollectedField, obj *model.UserAccount) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "UserAccount",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserAccount_preferences(ctx context.Context, field graphql.CollectedField, obj *model.UserAccount) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "UserAccount",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Preferences, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserPreferences)
+	fc.Result = res
+	return ec.marshalOUserPreferences2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserPreferences(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UserPreferences_schema(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "UserPreferences",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Schema, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -1601,6 +1872,24 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputInputUserPreferences(ctx context.Context, obj interface{}) (model.InputUserPreferences, error) {
+	var it model.InputUserPreferences
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "schema":
+			var err error
+			it.Schema, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewMeta(ctx context.Context, obj interface{}) (model.NewMeta, error) {
 	var it model.NewMeta
 	var asMap = obj.(map[string]interface{})
@@ -1684,9 +1973,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "createMeta":
 			out.Values[i] = ec._Mutation_createMeta(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+		case "setUserPreferences":
+			out.Values[i] = ec._Mutation_setUserPreferences(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -1724,10 +2012,74 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_metas(ctx, field)
 				return res
 			})
+		case "user":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_user(ctx, field)
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(ctx, field)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userAccountImplementors = []string{"UserAccount"}
+
+func (ec *executionContext) _UserAccount(ctx context.Context, sel ast.SelectionSet, obj *model.UserAccount) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userAccountImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserAccount")
+		case "id":
+			out.Values[i] = ec._UserAccount_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "preferences":
+			out.Values[i] = ec._UserAccount_preferences(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var userPreferencesImplementors = []string{"UserPreferences"}
+
+func (ec *executionContext) _UserPreferences(ctx context.Context, sel ast.SelectionSet, obj *model.UserPreferences) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userPreferencesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserPreferences")
+		case "schema":
+			out.Values[i] = ec._UserPreferences_schema(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2012,18 +2364,8 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNMeta2asapmᚋserverᚋgraphᚋmodelᚐMeta(ctx context.Context, sel ast.SelectionSet, v model.Meta) graphql.Marshaler {
-	return ec._Meta(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐMeta(ctx context.Context, sel ast.SelectionSet, v *model.Meta) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Meta(ctx, sel, v)
+func (ec *executionContext) unmarshalNInputUserPreferences2asapmᚋserverᚋgraphᚋmodelᚐInputUserPreferences(ctx context.Context, v interface{}) (model.InputUserPreferences, error) {
+	return ec.unmarshalInputInputUserPreferences(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNNewMeta2asapmᚋserverᚋgraphᚋmodelᚐNewMeta(ctx context.Context, v interface{}) (model.NewMeta, error) {
@@ -2379,6 +2721,28 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOUserAccount2asapmᚋserverᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v model.UserAccount) graphql.Marshaler {
+	return ec._UserAccount(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOUserAccount2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v *model.UserAccount) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserAccount(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUserPreferences2asapmᚋserverᚋgraphᚋmodelᚐUserPreferences(ctx context.Context, sel ast.SelectionSet, v model.UserPreferences) graphql.Marshaler {
+	return ec._UserPreferences(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOUserPreferences2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserPreferences(ctx context.Context, sel ast.SelectionSet, v *model.UserPreferences) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserPreferences(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
