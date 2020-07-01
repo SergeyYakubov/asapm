@@ -65,7 +65,7 @@ deploy-api-server:
   environment:
     name: deploy-api
     url: ${DYNAMIC_ENVIRONMENT_URL}
-    on_stop: destroy_api_server
+#    on_stop: destroy_api_server
     kubernetes:
   tags:
     - kubernetes-executor
