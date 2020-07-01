@@ -84,18 +84,18 @@ int_tests_api_server:
     - kubernetes-executor
 
 
-destroy_api_server:
-  stage: destroy_deployments
-  image:
-    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
-    entrypoint: [""]
-  script:
-    - helm uninstall -n $KUBE_NAMESPACE asapm-api-server-${CI_COMMIT_SHORT_SHA}
-  environment:
-      name: deploy-api
-      action: stop
-      kubernetes:
-  when: always
-  tags:
-    - kubernetes-executor
-
+#destroy_api_server:
+#  stage: destroy_deployments
+#  image:
+#    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+#    entrypoint: [""]
+#  script:
+#    - helm uninstall -n $KUBE_NAMESPACE asapm-api-server-${CI_COMMIT_SHORT_SHA}
+#  environment:
+#      name: deploy-api
+#      action: stop
+#      kubernetes:
+#  when: always
+#  tags:
+#    - kubernetes-executor
+#
