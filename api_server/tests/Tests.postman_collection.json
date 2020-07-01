@@ -24,6 +24,10 @@
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData.data.setUserPreferences.schema).to.eql(\"dark\");",
 									"});",
+									"",
+									"var body = JSON.parse(responseBody); ",
+									"var content = responseBody;",
+									"tests[\"Response Body\"+content]= body.length != 0",
 									""
 								],
 								"type": "text/javascript"
