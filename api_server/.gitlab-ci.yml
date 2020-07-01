@@ -26,7 +26,7 @@ unit_tests_api_server:
   before_script:
     - cd /app/src
   script:
-    - go ASAPM_DATABASE=mongo:27017 test --tags=integration_tests ./...
+    - ASAPM_DATABASE=mongo:27017 go test --tags=integration_tests ./...
   tags:
     - kubernetes-executor
 
