@@ -32,7 +32,8 @@ scalar Map
 type Meta {
   id: ID!
   text: String!
-  customValues: Map
+  customValues (selectFields: [String],removeFields: [String]): Map
+  account: UserAccount
 }
 
 input NewMeta {
