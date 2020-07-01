@@ -141,9 +141,14 @@
 									"",
 									"pm.test(\"Gets schema correctly \", function () {",
 									"    var jsonData = pm.response.json();",
+									"    console.log(jsonData)",
 									"    pm.expect(jsonData.data.user.preferences.schema).to.eql(\"dark\");",
 									"    pm.expect(jsonData.data.user.id).to.eql(\"1234\");",
 									"});",
+									"",
+									"var body = JSON.parse(responseBody); ",
+									"var content = responseBody;",
+									"tests[\"Response Body\"+content]= body.length != 0",
 									""
 								],
 								"type": "text/javascript"
