@@ -4,9 +4,11 @@ package graph
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
+	"asapm/database"
 	"asapm/server/graph/generated"
 	"asapm/server/graph/model"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -22,8 +24,14 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewMeta) 
 	return meta, nil
 }
 
-func (r *mutationResolver) SetUserPreferences(ctx context.Context, input model.InputUserPreferences) (*model.UserPreferences, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserPreferences, error) {
+	_, err := database.GetDb().ProcessRequest("users","preferences","update_user_preferences",id,&input)
+	if err!= nil {
+		return &model.UserPreferences{},err
+	}
+	var pref model.UserPreferences
+	pref.Schema = input.Schema
+	return &pref,err
 }
 
 func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}) ([]*model.Meta, error) {
@@ -53,19 +61,18 @@ func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}
 	return res, nil
 }
 
-func (r *queryResolver) User(ctx context.Context, id *string) (*model.UserAccount, error) {
-	schema:="aaa"
-	var ac = model.UserAccount{
-		ID:          "1234",
-		Preferences: &model.UserPreferences{&schema},
+func (r *queryResolver) User(ctx context.Context, id string) (*model.UserAccount, error) {
+	res, err := database.GetDb().ProcessRequest("users","preferences","get_user_preferences",id)
+	if err!= nil {
+		return &model.UserAccount{},err
 	}
-	if *id != "1234" {
-		return nil, nil
+	var ac model.UserAccount
+	ac.ID = id
+	err = json.Unmarshal(res,&ac.Preferences)
+	if err!= nil {
+		return &model.UserAccount{},err
 	}
-	if r.users == nil {
-		return &ac, nil
-	}
-	return nil, nil
+	return &ac, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

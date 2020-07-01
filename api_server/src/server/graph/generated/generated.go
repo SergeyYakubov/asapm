@@ -50,12 +50,12 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateMeta         func(childComplexity int, input model.NewMeta) int
-		SetUserPreferences func(childComplexity int, input model.InputUserPreferences) int
+		SetUserPreferences func(childComplexity int, id string, input model.InputUserPreferences) int
 	}
 
 	Query struct {
 		Metas func(childComplexity int, filter map[string]interface{}) int
-		User  func(childComplexity int, id *string) int
+		User  func(childComplexity int, id string) int
 	}
 
 	UserAccount struct {
@@ -70,11 +70,11 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateMeta(ctx context.Context, input model.NewMeta) (*model.Meta, error)
-	SetUserPreferences(ctx context.Context, input model.InputUserPreferences) (*model.UserPreferences, error)
+	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserPreferences, error)
 }
 type QueryResolver interface {
 	Metas(ctx context.Context, filter map[string]interface{}) ([]*model.Meta, error)
-	User(ctx context.Context, id *string) (*model.UserAccount, error)
+	User(ctx context.Context, id string) (*model.UserAccount, error)
 }
 
 type executableSchema struct {
@@ -135,7 +135,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SetUserPreferences(childComplexity, args["input"].(model.InputUserPreferences)), true
+		return e.complexity.Mutation.SetUserPreferences(childComplexity, args["id"].(string), args["input"].(model.InputUserPreferences)), true
 
 	case "Query.metas":
 		if e.complexity.Query.Metas == nil {
@@ -159,7 +159,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.User(childComplexity, args["id"].(*string)), true
+		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
 
 	case "UserAccount.id":
 		if e.complexity.UserAccount.ID == nil {
@@ -254,17 +254,18 @@ var sources = []*ast.Source{
 
 type Mutation {
   createMeta(input: NewMeta!): Meta
-  setUserPreferences(input: InputUserPreferences!): UserPreferences
+  setUserPreferences(id:ID!, input: InputUserPreferences!): UserPreferences
 }
 
 type Query {
   metas (filter: Map): [Meta]
-  user (id: String): UserAccount
+  user (id: ID!): UserAccount
 }
 
 type UserPreferences {
  schema: String
 }
+
 input InputUserPreferences {
   schema: String
 }
@@ -312,14 +313,22 @@ func (ec *executionContext) field_Mutation_createMeta_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_setUserPreferences_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.InputUserPreferences
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNInputUserPreferences2asapmᚋserverᚋgraphᚋmodelᚐInputUserPreferences(ctx, tmp)
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["id"] = arg0
+	var arg1 model.InputUserPreferences
+	if tmp, ok := rawArgs["input"]; ok {
+		arg1, err = ec.unmarshalNInputUserPreferences2asapmᚋserverᚋgraphᚋmodelᚐInputUserPreferences(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -354,9 +363,9 @@ func (ec *executionContext) field_Query_metas_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -562,7 +571,7 @@ func (ec *executionContext) _Mutation_setUserPreferences(ctx context.Context, fi
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SetUserPreferences(rctx, args["input"].(model.InputUserPreferences))
+		return ec.resolvers.Mutation().SetUserPreferences(rctx, args["id"].(string), args["input"].(model.InputUserPreferences))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -638,7 +647,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().User(rctx, args["id"].(*string))
+		return ec.resolvers.Query().User(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

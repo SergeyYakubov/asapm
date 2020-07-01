@@ -6,12 +6,12 @@
 
 type Mutation {
   createMeta(input: NewMeta!): Meta
-  setUserPreferences(input: InputUserPreferences!): UserPreferences
+  setUserPreferences(id:ID!, input: InputUserPreferences!): UserPreferences
 }
 
 type Query {
   metas (filter: Map): [Meta]
-  user (id: String): UserAccount
+  user (id: ID!): UserAccount
 }
 
 type UserPreferences {

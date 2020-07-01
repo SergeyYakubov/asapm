@@ -1,13 +1,14 @@
 package server
 
 import (
+	log "asapm/common/logger"
 	"asapm/server/graph"
 	"asapm/server/graph/generated"
-	"log"
-	"net/http"
-	"os"
+	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"net/http"
+	"os"
 )
 
 const defaultPort = "8080"
@@ -19,6 +20,7 @@ func StartServer() {
 		port = defaultPort
 	}
 
+
 	endpoint := os.Getenv("ASAPM_API_ENDPOINT")
 	if endpoint == "" {
 		endpoint = defaultEndpoint
@@ -29,6 +31,6 @@ func StartServer() {
 	http.Handle(endpoint, playground.Handler("GraphQL playground", endpoint+"query"))
 	http.Handle(endpoint+"/query", srv)
 
-	log.Printf("connect to http://localhost:%s%s for GraphQL playground", port,endpoint)
+	log.Info(fmt.Sprintf("connect to http://localhost:%s%s for GraphQL playground", port,endpoint))
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

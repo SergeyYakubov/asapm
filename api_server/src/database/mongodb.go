@@ -5,7 +5,9 @@ package database
 import (
 	"asapm/common/utils"
 	"context"
+	"encoding/json"
 	"errors"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sync"
@@ -126,14 +128,69 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collectio
 	return nil
 }
 
+func (db *Mongodb) insertRecord(dbname string, collection_name string, s interface{}) error {
+	if db.client == nil {
+		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
+	}
+
+	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
+
+	_, err := c.InsertOne(context.TODO(), s)
+	return err
+}
+
+func (db *Mongodb) updateUserPreferences(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
+	if len(extra_params) !=2 {
+		return nil,errors.New("wrong number of parameters")
+	}
+	id,ok := extra_params[0].(string)
+	if !ok {
+		return nil,errors.New("first argument must be string")
+	}
+	input := extra_params[1]
+	opts := options.Replace().SetUpsert(true)
+	q := bson.M{"_id": id}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	res, err := c.ReplaceOne(context.TODO(), q, input, opts)
+	if err!=nil {
+		return nil,err
+	}
+	if res.ModifiedCount + res.UpsertedCount != 1 {
+		return nil,errors.New("could not add/modify document")
+	}
+	return nil,err
+}
+
+func (db *Mongodb) getUserPreferences(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
+	if len(extra_params) !=1 {
+		return nil,errors.New("wrong number of parameters")
+	}
+	id,ok := extra_params[0].(string)
+	if !ok {
+		return nil,errors.New("an argument must be string")
+	}
+	q := bson.M{"_id": id}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	var resMap map[string]interface{}
+	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(&resMap)
+	if err != nil {
+		return nil,err
+	}
+	return json.Marshal(resMap)
+}
+
+
 func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string,op string, extra_params ...interface{}) ([]byte,error){
 	if err := db.checkDatabaseOperationPrerequisites(db_name, data_collection_name); err != nil {
 		return nil, err
 	}
-
 	switch op {
-	case "next":
-		return nil,nil
+	case "update_user_preferences":
+		return db.updateUserPreferences(db_name, data_collection_name,extra_params...)
+	case "get_user_preferences":
+		return db.getUserPreferences(db_name, data_collection_name,extra_params...)
 	}
+
+
 	return nil, errors.New("Wrong db operation: " + op)
 }
