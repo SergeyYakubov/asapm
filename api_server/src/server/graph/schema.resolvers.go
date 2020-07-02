@@ -18,7 +18,6 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 
 	meta := &model.BeamtimeMeta{}
 	DeepCopy(&input, meta)
-	r.metas = append(r.metas, meta)
 
 	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "create_meta", input)
 	if err != nil {

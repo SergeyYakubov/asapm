@@ -13,8 +13,6 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct{
-	metas []*model.BeamtimeMeta
-	users []*model.UserAccount
 }
 
 func DeepCopy(a, b interface{}) {
