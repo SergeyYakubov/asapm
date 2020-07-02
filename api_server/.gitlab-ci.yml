@@ -50,7 +50,7 @@ deploy-api-server:
     - DYNAMIC_ENVIRONMENT_URL=$(echo ${API_SERVER_URL})
     - echo "DYNAMIC_ENVIRONMENT_URL=$DYNAMIC_ENVIRONMENT_URL" >> deploy.env    # Add the value to a dotenv file.
     - helm install
-      --set apiServer.image=${$API_SERVER_IMAGE_STATIC}
+      --set apiServer.image=$API_SERVER_IMAGE_STATIC
       --set resourceSuffix="-${CI_COMMIT_SHORT_SHA}"
       --set apiServer.imageCredentials.use=true
       --set apiServer.imageCredentials.registry=eosc-pan-git.desy.de:5555
