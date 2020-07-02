@@ -3,6 +3,7 @@ package utils
 import (
 	json "encoding/json"
 	"io/ioutil"
+	"os"
 	"strings"
 	"errors"
 )
@@ -75,4 +76,11 @@ func MapToStruct(m map[string]interface{}, val interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }

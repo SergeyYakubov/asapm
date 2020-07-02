@@ -4,7 +4,8 @@ apiServer:
   internalPort: 8080
   host: "localhost"
   image: yakser/asapm-api-server
-  basePathTemplate: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix}}/asapm/api"
+  basePath: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix}}/asapm/api"
+  dbEndpoint: "{{ .Release.Name }}-mongodb:27017"
   imageCredentials:
     use: false
     registry: quay.io

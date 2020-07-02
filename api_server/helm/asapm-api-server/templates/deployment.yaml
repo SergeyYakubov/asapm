@@ -17,7 +17,7 @@ spec:
     - host: "{{ .Values.apiServer.host }}"
       http:
         paths:
-          - path: {{ tpl .Values.apiServer.basePathTemplate . }}
+          - path: {{ tpl .Values.apiServer.basePath . }}
             backend:
               serviceName: {{ include "asapm.resourceName" . }}
               servicePort: {{ .Values.apiServer.internalPort }}
@@ -59,7 +59,9 @@ spec:
             - name: ASAPM_API_PORT
               value:  "{{ .Values.apiServer.internalPort }}"
             - name: ASAPM_API_ENDPOINT
-              value:  "{{ tpl .Values.apiServer.basePathTemplate . }}"
+              value:  "{{ tpl .Values.apiServer.basePath . }}"
+            - name: ASAPM_DB_ENDPOINT
+              value:  "{{ tpl .Values.apiServer.dbEndpoint . }}"
   {{- if .Values.apiServer.imageCredentials.use }}
       imagePullSecrets:
         - name: {{ include "asapm.resourceName" . }}

@@ -57,6 +57,7 @@ deploy-api-server:
       --set apiServer.imageCredentials.username=${REGISTRY_USERNAME}
       --set apiServer.imageCredentials.password=${REGISTRY_PASS}
       --set apiServer.host="*.desy.de"
+      --set apiServer.dbEndpoint=asapm-api-server-${CI_COMMIT_SHORT_SHA}-mongodb
       --wait --timeout 2m0s
       asapm-api-server-${CI_COMMIT_SHORT_SHA} api_server/helm/asapm-api-server
   artifacts:
