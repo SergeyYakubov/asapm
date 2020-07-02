@@ -1,0 +1,97 @@
+type BeamtimeUser {
+    applicant: String
+    email: String
+    institute: String
+    lastname: String
+    userId: String
+    username: String
+}
+
+input InputBeamtimeUser {
+    applicant: String
+    email: String
+    institute: String
+    lastname: String
+    userId: String
+    username: String
+}
+
+type OnlineAnylysisMeta {
+    asapoBeamtimeTokenPath: String
+    reservedNodes: [String]
+    slurmReservation: String
+    slurmPartition: String
+    sshPrivateKeyPath: String
+    sshPublicKeyPath: String
+    userAccount: String
+}
+
+input InputOnlineAnylysisMeta {
+    asapoBeamtimeTokenPath: String
+    reservedNodes: [String]
+    slurmReservation: String
+    slurmPartition: String
+    sshPrivateKeyPath: String
+    sshPublicKeyPath: String
+    userAccount: String
+}
+
+
+scalar Time
+
+type Users {
+    doorDb: [String]
+    special: [String]
+    unknown: [String]
+}
+
+input InputUsers {
+    doorDb: [String]
+    special: [String]
+    unknown: [String]
+}
+
+type BeamtimeMeta {
+    applicant: BeamtimeUser
+    beamline: String
+    beamlineAlias: String
+    beamtimeId: String!
+    contact: String
+    corePath: String
+    eventEnd: Time
+    eventStart: Time
+    facility: String
+    generated: Time
+    leader: BeamtimeUser
+    onlineAnalysis: OnlineAnylysisMeta
+    pi: BeamtimeUser
+    proposalId: String
+    proposalType: String
+    title: String
+    unixId: String
+    users: Users
+    customValues (selectFields: [String],removeFields: [String]): Map
+}
+
+input NewBeamtimeMeta {
+    applicant: InputBeamtimeUser
+    beamline: String
+    beamlineAlias: String
+    beamtimeId: String!
+    contact: String
+    corePath: String
+    eventEnd: Time
+    eventStart: Time
+    facility: String
+    generated: Time
+    leader: InputBeamtimeUser
+    onlineAnalysis: InputOnlineAnylysisMeta
+    pi: InputBeamtimeUser
+    proposalId: String
+    proposalType: String
+    title: String
+    unixId: String
+    users: InputUsers
+    customValues: Map
+}
+

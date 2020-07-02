@@ -4,6 +4,7 @@ package database
 
 import (
 	"asapm/common/utils"
+	"asapm/server/graph/model"
 	"context"
 	"encoding/json"
 	"errors"
@@ -179,6 +180,37 @@ func (db *Mongodb) getUserPreferences(dbName string, dataCollectionName string, 
 	return json.Marshal(resMap)
 }
 
+func (db *Mongodb) createMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
+	if len(extra_params) !=1 {
+		return nil,errors.New("wrong number of parameters")
+	}
+	meta,ok := extra_params[0].(model.NewBeamtimeMeta)
+	if !ok {
+		return nil,errors.New("mongo: first argument must be NewBeamtimeMeta")
+	}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	_, err := c.InsertOne(context.TODO(), meta, options.InsertOne())
+	if err!=nil {
+		return nil,err
+	}
+	return nil,err
+}
+
+func (db *Mongodb) readMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
+	q := bson.M{}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	cursor,err := c.Find(context.TODO(), q, options.Find())
+	if err != nil {
+		return nil,err
+	}
+	var res []map[string]interface{}
+	err = cursor.All(context.TODO(), &res)
+	if err != nil {
+		return nil,err
+	}
+	return json.Marshal(res)
+}
+
 
 func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string,op string, extra_params ...interface{}) ([]byte,error){
 	if err := db.checkDatabaseOperationPrerequisites(db_name, data_collection_name); err != nil {
@@ -189,6 +221,10 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string,op
 		return db.updateUserPreferences(db_name, data_collection_name,extra_params...)
 	case "get_user_preferences":
 		return db.getUserPreferences(db_name, data_collection_name,extra_params...)
+	case "create_meta":
+		return db.createMeta(db_name, data_collection_name,extra_params...)
+	case "read_meta":
+		return db.readMeta(db_name, data_collection_name,extra_params...)
 	}
 
 

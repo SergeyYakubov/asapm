@@ -4,23 +4,28 @@ package graph
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
+	"asapm/common/logger"
 	"asapm/database"
 	"asapm/server/graph/generated"
 	"asapm/server/graph/model"
 	"context"
 	"encoding/json"
-	"fmt"
-	"math/rand"
 )
 
-func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewMeta) (*model.Meta, error) {
-	meta := &model.Meta{
-		Text: input.Text,
-		ID:   fmt.Sprintf("T%d", rand.Int()),
-	}
-	meta.CustomValues = input.CustomValues
+func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
+	log_str := "processing request create_meta"
+	logger.Debug(log_str)
+
+	meta := &model.BeamtimeMeta{}
+	DeepCopy(&input, meta)
 	r.metas = append(r.metas, meta)
-	meta_new := updateFields(ctx,meta)
+
+	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "create_meta", input)
+	if err != nil {
+		return &model.BeamtimeMeta{}, err
+	}
+
+	meta_new := updateFields(ctx, meta)
 	return meta_new, nil
 }
 
@@ -34,29 +39,40 @@ func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, in
 	return &pref, err
 }
 
-func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}) ([]*model.Meta, error) {
-	if r.metas == nil {
-		return []*model.Meta{}, nil
+func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}) ([]*model.BeamtimeMeta, error) {
+	log_str := "processing request read_meta"
+	logger.Debug(log_str)
+
+	response, err := database.GetDb().ProcessRequest("beamtime", "meta", "read_meta")
+	if err != nil {
+		return []*model.BeamtimeMeta{}, err
 	}
 
-//	if filter == nil {
-//		return r.metas, nil
-//	}
+	var sResponse = []*model.BeamtimeMeta{}
 
-	res := []*model.Meta{}
-//	a, ok := filter["angle"].(int64)
-//	if !ok {
-//		return nil, errors.New("cannot parse filter")
-//	}
-	for _, meta := range r.metas {
+	err = json.Unmarshal(response, &sResponse)
+	if err != nil {
+		return []*model.BeamtimeMeta{}, err
+	}
+
+	//	if filter == nil {
+	//		return r.metas, nil
+	//	}
+
+	res := []*model.BeamtimeMeta{}
+	//	a, ok := filter["angle"].(int64)
+	//	if !ok {
+	//		return nil, errors.New("cannot parse filter")
+	//	}
+	for _, meta := range sResponse {
 		meta_new := updateFields(ctx, meta)
 		//angle, ok := meta.CustomValues["angle"].(int64)
 		//if !ok {
 		//	continue
-	//	}
-	//	if angle == a {
-			res = append(res, meta_new)
-//		}
+		//	}
+		//	if angle == a {
+		res = append(res, meta_new)
+		//		}
 	}
 
 	return res, nil
@@ -84,4 +100,3 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-

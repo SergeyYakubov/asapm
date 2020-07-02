@@ -4,13 +4,16 @@
 
 #union Field = String | Int
 
+scalar Map
+
+
 type Mutation {
-  createMeta(input: NewMeta!): Meta
+  createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
   setUserPreferences(id:ID!, input: InputUserPreferences!): UserPreferences
 }
 
 type Query {
-  metas (filter: Map): [Meta]
+  metas (filter: Map): [BeamtimeMeta]
   user (id: ID!): UserAccount
 }
 
@@ -26,18 +29,3 @@ type UserAccount {
   id: ID!
   preferences: UserPreferences
 }
-
-scalar Map
-
-type Meta {
-  id: ID!
-  text: String!
-  customValues (selectFields: [String],removeFields: [String]): Map
-  account: UserAccount
-}
-
-input NewMeta {
-  text: String!
-  customValues: Map
-}
-
