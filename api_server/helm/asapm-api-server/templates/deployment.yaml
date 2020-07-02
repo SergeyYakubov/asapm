@@ -53,6 +53,7 @@ spec:
       containers:
         - name: {{ include "asapm.resourceName" . }}
           image: "{{ .Values.apiServer.image }}"
+          imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.apiServer.internalPort }}
           env:

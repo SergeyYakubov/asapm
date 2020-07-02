@@ -1,5 +1,6 @@
 variables:
   API_SERVER_IMAGE: $REGISTRY/yakubov/asapm/api_server:$CI_COMMIT_SHORT_SHA
+  API_SERVER_IMAGE_DEV: $REGISTRY/yakubov/asapm/api_server:dev.$CI_COMMIT_SHORT_SHA
   API_SERVER_IMAGE_STATIC: $REGISTRY/yakubov/asapm/api_server
   API_SERVER_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-api-${CI_COMMIT_SHORT_SHA}/asapm/api
 
@@ -10,7 +11,7 @@ build_api_server_dev:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE_DEV
   tags:
     - kubernetes-executor
 
@@ -21,7 +22,7 @@ unit_tests_api_server:
   services:
     - mongo
   image:
-    name: $API_SERVER_IMAGE
+    name: $API_SERVER_IMAGE_DEV
     entrypoint: [""]
   before_script:
     - cd /app/src
@@ -66,7 +67,7 @@ deploy-api-server:
   environment:
     name: deploy-api
     url: ${DYNAMIC_ENVIRONMENT_URL}
-#    on_stop: destroy_api_server
+    on_stop: destroy_api_server
     kubernetes:
   tags:
     - kubernetes-executor
@@ -85,18 +86,18 @@ int_tests_api_server:
     - kubernetes-executor
 
 
-#destroy_api_server:
-#  stage: destroy_deployments
-#  image:
-#    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
-#    entrypoint: [""]
-#  script:
-#    - helm uninstall -n $KUBE_NAMESPACE asapm-api-server-${CI_COMMIT_SHORT_SHA}
-#  environment:
-#      name: deploy-api
-#      action: stop
-#      kubernetes:
-#  when: always
-#  tags:
-#    - kubernetes-executor
+destroy_api_server:
+  stage: destroy_deployments
+  image:
+    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+    entrypoint: [""]
+  script:
+    - helm uninstall -n $KUBE_NAMESPACE asapm-api-server-${CI_COMMIT_SHORT_SHA}
+  environment:
+      name: deploy-api
+      action: stop
+      kubernetes:
+  when: always
+  tags:
+    - kubernetes-executor
 
