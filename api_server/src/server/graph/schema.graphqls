@@ -9,7 +9,7 @@ scalar Map
 
 type Mutation {
   createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
-  setUserPreferences(id:ID!, input: InputUserPreferences!): UserPreferences
+  setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 
 type Query {

@@ -3,10 +3,20 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-
+import ApolloClient from 'apollo-boost';
 import UserService from "./userService";
+import { ApolloProvider } from '@apollo/react-hooks';
 
-const renderApp = () => ReactDOM.render(<App />, document.getElementById("root"));
+
+const client = new ApolloClient({
+    uri: window.location.origin+window.location.pathname+process.env.REACT_APP_API_SUFFIX+"/query",
+});
+
+const renderApp = () => ReactDOM.render(
+    <ApolloProvider client={client}>
+    <App />
+    </ApolloProvider>,
+    document.getElementById("root"));
 
 UserService.initKeycloak(renderApp);
 

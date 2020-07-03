@@ -28,13 +28,15 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 	return meta_new, nil
 }
 
-func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserPreferences, error) {
+func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
 	_, err := database.GetDb().ProcessRequest("users", "preferences", "update_user_preferences", id, &input)
 	if err != nil {
-		return &model.UserPreferences{}, err
+		return &model.UserAccount{}, err
 	}
-	var pref model.UserPreferences
-	pref.Schema = input.Schema
+	var pref = model.UserAccount{}
+	pref.Preferences = new(model.UserPreferences)
+	pref.Preferences.Schema = input.Schema
+	pref.ID = id
 	return &pref, err
 }
 

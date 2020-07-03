@@ -112,7 +112,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error)
-	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserPreferences, error)
+	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error)
 }
 type QueryResolver interface {
 	Metas(ctx context.Context, filter map[string]interface{}) ([]*model.BeamtimeMeta, error)
@@ -614,6 +614,7 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
+
 `, BuiltIn: false},
 	&ast.Source{Name: "graph/schema.graphqls", Input: `# GraphQL schema example
 #
@@ -626,7 +627,7 @@ scalar Map
 
 type Mutation {
   createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
-  setUserPreferences(id:ID!, input: InputUserPreferences!): UserPreferences
+  setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 
 type Query {
@@ -1646,9 +1647,9 @@ func (ec *executionContext) _Mutation_setUserPreferences(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.UserPreferences)
+	res := resTmp.(*model.UserAccount)
 	fc.Result = res
-	return ec.marshalOUserPreferences2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserPreferences(ctx, field.Selections, res)
+	return ec.marshalOUserAccount2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OnlineAnylysisMeta_asapoBeamtimeTokenPath(ctx context.Context, field graphql.CollectedField, obj *model.OnlineAnylysisMeta) (ret graphql.Marshaler) {

@@ -5,7 +5,6 @@ import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import UserAccount from "./userAccount";
-import {TopBarProps} from "./userAccount";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -23,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function TopBar({themeType,onChangeThemeType}: TopBarProps) {
+export default function TopBar() {
     const classes = useStyles();
     return (
         <div className={classes.root}>
@@ -33,7 +32,7 @@ export default function TopBar({themeType,onChangeThemeType}: TopBarProps) {
                         <MenuIcon />
                     </IconButton>
                     <div className={classes.userAccountButton}>
-                        <UserAccount themeType={themeType} onChangeThemeType={onChangeThemeType}/>
+                        <UserAccount/>
                     </div>
                 </Toolbar>
             </AppBar>

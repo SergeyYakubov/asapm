@@ -29,6 +29,9 @@ const doLogout = _kc.logout;
 
 const getToken = () => _kc.token;
 
+const getUserId = () => _kc.tokenParsed?.sub;
+
+
 async function getUserName() {
     const profile = await _kc.loadUserProfile();
     return profile.firstName+" "+profile.lastName;
@@ -40,4 +43,5 @@ export default {
     doLogout,
     getToken,
     getUserName,
+    getUserId,
 }

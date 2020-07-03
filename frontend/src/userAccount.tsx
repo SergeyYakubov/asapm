@@ -8,12 +8,12 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UserService from "./userService";
-import {PaletteType} from "@material-ui/core";
 
 import Typography from '@material-ui/core/Typography';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
 import Divider from '@material-ui/core/Divider';
 import Container from '@material-ui/core/Container';
+import userPreferences from "./userPreferences";
 
 const useStyles = makeStyles((theme) => ({
     userAccountButton: {
@@ -44,14 +44,14 @@ const StyledMenu = withStyles({
     />
 ));
 
-export type TopBarProps = {
-    themeType: PaletteType;
-    onChangeThemeType: (newValue: PaletteType) => void;
-}
-
-export default function UserAccount({themeType, onChangeThemeType}: TopBarProps) {
+export default function UserAccount() {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [username, setUsername] = React.useState("");
+
+    const {loading, error, data} = userPreferences.useUserPreferences();
+    const themeType = data?.user.preferences.schema || "light";
+
+    const [changeTheme, res ] = userPreferences.useUpdateUserTheme("dark");
 
     async function loadUsername() {
         try {
@@ -82,7 +82,7 @@ export default function UserAccount({themeType, onChangeThemeType}: TopBarProps)
     const otherTheme = themeType === "light" ? "dark" : "light"
 
     const handleChangeTheme = () => {
-        onChangeThemeType(otherTheme);
+        changeTheme({variables: { schema:otherTheme.toString()}});
         handleClose();
     };
 
