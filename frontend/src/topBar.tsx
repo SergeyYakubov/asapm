@@ -21,9 +21,6 @@ export default function TopBar() {
     return (
             <AppBar position="fixed" className={classes.root}>
                 <Toolbar variant="dense">
-                    <IconButton edge="start" color="inherit">
-                        <MenuIcon />
-                    </IconButton>
                     <div className={classes.userAccountButton}>
                         <UserAccount/>
                     </div>

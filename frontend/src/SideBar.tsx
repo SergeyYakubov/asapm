@@ -1,38 +1,56 @@
 import React from 'react';
-import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
+import {createStyles, makeStyles, useTheme, Theme} from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
-import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ViewListIcon from '@material-ui/icons/ViewList';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
-import Box from '@material-ui/core/Box';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import IconButton from "@material-ui/core/IconButton";
-import AccountCircle from "@material-ui/icons/AccountCircle";
+import clsx from 'clsx';
 
 const drawerWidth = 200;
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
+        button: {
+            marginTop: 'auto',
+            marginLeft: 'auto',
+            marginRight: theme.spacing(2),
+        },
+        hideButton: {
+            transform: "rotate(-90deg)"
+        },
+        showButton: {
+            transform: "rotate(90deg)"
+        },
         drawer: {
             width: drawerWidth,
             flexShrink: 0,
+            whiteSpace: 'nowrap',
         },
-        drawerPaper: {
+        drawerOpen: {
             width: drawerWidth,
+            transition: theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+            }),
         },
-        drawerContainer: {
-            //overflow: 'auto',
+        hide: {
+            display: 'none',
         },
-        hideButton: {
-            marginTop: 'auto',
-            marginLeft: 'auto',
-            marginRight: theme.spacing(0),
-            transform: "rotate(-90deg)"
+        drawerClose: {
+            transition: theme.transitions.create('width', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.leavingScreen,
+            }),
+            overflowX: 'hidden',
+            width: theme.spacing(7) + 1,
+            [theme.breakpoints.up('sm')]: {
+                width: theme.spacing(9) + 1,
+            },
         },
 
     }),
@@ -40,17 +58,31 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function SideBar() {
     const classes = useStyles();
+    const theme = useTheme();
+    const [open, setOpen] = React.useState(false);
+
+    const handleButtonClick = () => {
+        setOpen(!open);
+
+    }
 
     return (
         <Drawer
-            className={classes.drawer}
             variant="permanent"
+            className={clsx(classes.drawer, {
+                [classes.drawerOpen]: open,
+                [classes.drawerClose]: !open,
+            })}
+
             classes={{
-                paper: classes.drawerPaper,
+                paper: clsx({
+                    [classes.drawerOpen]: open,
+                    [classes.drawerClose]: !open,
+                }),
             }}
         >
             <Toolbar variant="dense"/>
-            <div className={classes.drawerContainer}>
+            <div className={classes.drawer}>
                 <List>
                     <ListItem button key="List View">
                         <ListItemIcon><ViewListIcon/></ListItemIcon>
@@ -58,11 +90,13 @@ export default function SideBar() {
                     </ListItem>
                 </List>
             </div>
-                <IconButton edge="end" className={classes.hideButton} color="inherit">
-                    <ExpandLessIcon/>
-                </IconButton>
-
-
+            <IconButton edge="end" className={clsx(classes.button, {
+                [classes.hideButton]: open,
+                [classes.showButton]: !open,
+            })}
+                        color="inherit" onClick={handleButtonClick}>
+                <ExpandLessIcon/>
+            </IconButton>
         </Drawer>
     );
 }
