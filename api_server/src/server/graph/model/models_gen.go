@@ -7,108 +7,108 @@ import (
 )
 
 type BeamtimeMeta struct {
-	Applicant      *BeamtimeUser          `json:"applicant" bson:"applicant"`
-	Beamline       *string                `json:"beamline" bson:"beamline"`
-	BeamlineAlias  *string                `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamtimeID     string                 `json:"beamtimeId" bson:"_id"`
-	Contact        *string                `json:"contact" bson:"contact"`
-	CorePath       *string                `json:"corePath" bson:"corePath"`
-	EventEnd       *time.Time             `json:"eventEnd" bson:"eventEnd"`
-	EventStart     *time.Time             `json:"eventStart" bson:"eventStart"`
-	Facility       *string                `json:"facility" bson:"facility"`
-	Generated      *time.Time             `json:"generated" bson:"generated"`
-	Leader         *BeamtimeUser          `json:"leader" bson:"leader"`
-	OnlineAnalysis *OnlineAnylysisMeta    `json:"onlineAnalysis" bson:"onlineAnalysis"`
-	Pi             *BeamtimeUser          `json:"pi" bson:"pi"`
-	ProposalID     *string                `json:"proposalId" bson:"proposalId"`
-	ProposalType   *string                `json:"proposalType" bson:"proposalType"`
-	Title          *string                `json:"title" bson:"title"`
-	UnixID         *string                `json:"unixId" bson:"unixId"`
-	Users          *Users                 `json:"users" bson:"users"`
-	CustomValues   map[string]interface{} `json:"customValues" bson:"customValues"`
+	Applicant      *BeamtimeUser          `json:"applicant"`
+	Beamline       *string                `json:"beamline"`
+	BeamlineAlias  *string                `json:"beamlineAlias"`
+	BeamtimeID     string                 `json:"_id" bson:"_id"`
+	Contact        *string                `json:"contact"`
+	CorePath       *string                `json:"corePath"`
+	EventEnd       *time.Time             `json:"eventEnd"`
+	EventStart     *time.Time             `json:"eventStart"`
+	Facility       *string                `json:"facility"`
+	Generated      *time.Time             `json:"generated"`
+	Leader         *BeamtimeUser          `json:"leader"`
+	OnlineAnalysis *OnlineAnylysisMeta    `json:"onlineAnalysis"`
+	Pi             *BeamtimeUser          `json:"pi"`
+	ProposalID     *string                `json:"proposalId"`
+	ProposalType   *string                `json:"proposalType"`
+	Title          *string                `json:"title"`
+	UnixID         *string                `json:"unixId"`
+	Users          *Users                 `json:"users"`
+	CustomValues   map[string]interface{} `json:"customValues"`
 }
 
 type BeamtimeUser struct {
-	Applicant *string `json:"applicant" bson:"applicant"`
-	Email     *string `json:"email" bson:"email"`
-	Institute *string `json:"institute" bson:"institute"`
-	Lastname  *string `json:"lastname" bson:"lastname"`
-	UserID    *string `json:"userId" bson:"userId"`
-	Username  *string `json:"username" bson:"username"`
+	Applicant *string `json:"applicant"`
+	Email     *string `json:"email"`
+	Institute *string `json:"institute"`
+	Lastname  *string `json:"lastname"`
+	UserID    *string `json:"userId"`
+	Username  *string `json:"username"`
 }
 
 type InputBeamtimeUser struct {
-	Applicant *string `json:"applicant" bson:"applicant"`
-	Email     *string `json:"email" bson:"email"`
-	Institute *string `json:"institute" bson:"institute"`
-	Lastname  *string `json:"lastname" bson:"lastname"`
-	UserID    *string `json:"userId" bson:"userId"`
-	Username  *string `json:"username" bson:"username"`
+	Applicant *string `json:"applicant"`
+	Email     *string `json:"email"`
+	Institute *string `json:"institute"`
+	Lastname  *string `json:"lastname"`
+	UserID    *string `json:"userId"`
+	Username  *string `json:"username"`
 }
 
 type InputOnlineAnylysisMeta struct {
-	AsapoBeamtimeTokenPath *string   `json:"asapoBeamtimeTokenPath" bson:"asapoBeamtimeTokenPath"`
-	ReservedNodes          []*string `json:"reservedNodes" bson:"reservedNodes"`
-	SlurmReservation       *string   `json:"slurmReservation" bson:"slurmReservation"`
-	SlurmPartition         *string   `json:"slurmPartition" bson:"slurmPartition"`
-	SSHPrivateKeyPath      *string   `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
-	SSHPublicKeyPath       *string   `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
-	UserAccount            *string   `json:"userAccount" bson:"userAccount"`
+	AsapoBeamtimeTokenPath *string   `json:"asapoBeamtimeTokenPath"`
+	ReservedNodes          []*string `json:"reservedNodes"`
+	SlurmReservation       *string   `json:"slurmReservation"`
+	SlurmPartition         *string   `json:"slurmPartition"`
+	SSHPrivateKeyPath      *string   `json:"sshPrivateKeyPath"`
+	SSHPublicKeyPath       *string   `json:"sshPublicKeyPath"`
+	UserAccount            *string   `json:"userAccount"`
 }
 
 type InputUserPreferences struct {
-	Schema *string `json:"schema" bson:"schema"`
+	Schema *string `json:"schema"`
 }
 
 type InputUsers struct {
-	DoorDb  []*string `json:"doorDb" bson:"doorDb"`
-	Special []*string `json:"special" bson:"special"`
-	Unknown []*string `json:"unknown" bson:"unknown"`
+	DoorDb  []*string `json:"doorDb"`
+	Special []*string `json:"special"`
+	Unknown []*string `json:"unknown"`
 }
 
 type NewBeamtimeMeta struct {
-	Applicant      *InputBeamtimeUser       `json:"applicant" bson:"applicant"`
-	Beamline       *string                  `json:"beamline" bson:"beamline"`
-	BeamlineAlias  *string                  `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamtimeID     string                   `json:"beamtimeId" bson:"_id"`
-	Contact        *string                  `json:"contact" bson:"contact"`
-	CorePath       *string                  `json:"corePath" bson:"corePath"`
-	EventEnd       *time.Time               `json:"eventEnd" bson:"eventEnd"`
-	EventStart     *time.Time               `json:"eventStart" bson:"eventStart"`
-	Facility       *string                  `json:"facility" bson:"facility"`
-	Generated      *time.Time               `json:"generated" bson:"generated"`
-	Leader         *InputBeamtimeUser       `json:"leader" bson:"leader"`
-	OnlineAnalysis *InputOnlineAnylysisMeta `json:"onlineAnalysis" bson:"onlineAnalysis"`
-	Pi             *InputBeamtimeUser       `json:"pi" bson:"pi"`
-	ProposalID     *string                  `json:"proposalId" bson:"proposalId"`
-	ProposalType   *string                  `json:"proposalType" bson:"proposalType"`
-	Title          *string                  `json:"title" bson:"title"`
-	UnixID         *string                  `json:"unixId" bson:"unixId"`
-	Users          *InputUsers              `json:"users" bson:"users"`
-	CustomValues   map[string]interface{}   `json:"customValues" bson:"customValues"`
+	Applicant      *InputBeamtimeUser       `json:"applicant"`
+	Beamline       *string                  `json:"beamline"`
+	BeamlineAlias  *string                  `json:"beamlineAlias"`
+	BeamtimeID     string                   `json:"_id" bson:"_id"`
+	Contact        *string                  `json:"contact"`
+	CorePath       *string                  `json:"corePath"`
+	EventEnd       *time.Time               `json:"eventEnd"`
+	EventStart     *time.Time               `json:"eventStart"`
+	Facility       *string                  `json:"facility"`
+	Generated      *time.Time               `json:"generated"`
+	Leader         *InputBeamtimeUser       `json:"leader"`
+	OnlineAnalysis *InputOnlineAnylysisMeta `json:"onlineAnalysis"`
+	Pi             *InputBeamtimeUser       `json:"pi"`
+	ProposalID     *string                  `json:"proposalId"`
+	ProposalType   *string                  `json:"proposalType"`
+	Title          *string                  `json:"title"`
+	UnixID         *string                  `json:"unixId"`
+	Users          *InputUsers              `json:"users"`
+	CustomValues   map[string]interface{}   `json:"customValues"`
 }
 
 type OnlineAnylysisMeta struct {
-	AsapoBeamtimeTokenPath *string   `json:"asapoBeamtimeTokenPath" bson:"asapoBeamtimeTokenPath"`
-	ReservedNodes          []*string `json:"reservedNodes" bson:"reservedNodes"`
-	SlurmReservation       *string   `json:"slurmReservation" bson:"slurmReservation"`
-	SlurmPartition         *string   `json:"slurmPartition" bson:"slurmPartition"`
-	SSHPrivateKeyPath      *string   `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
-	SSHPublicKeyPath       *string   `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
-	UserAccount            *string   `json:"userAccount" bson:"userAccount"`
+	AsapoBeamtimeTokenPath *string   `json:"asapoBeamtimeTokenPath"`
+	ReservedNodes          []*string `json:"reservedNodes"`
+	SlurmReservation       *string   `json:"slurmReservation"`
+	SlurmPartition         *string   `json:"slurmPartition"`
+	SSHPrivateKeyPath      *string   `json:"sshPrivateKeyPath"`
+	SSHPublicKeyPath       *string   `json:"sshPublicKeyPath"`
+	UserAccount            *string   `json:"userAccount"`
 }
 
 type UserAccount struct {
-	ID          string           `json:"id" bson:"id"`
-	Preferences *UserPreferences `json:"preferences" bson:"preferences"`
+	ID          string           `json:"id"`
+	Preferences *UserPreferences `json:"preferences"`
 }
 
 type UserPreferences struct {
-	Schema *string `json:"schema" bson:"schema"`
+	Schema *string `json:"schema"`
 }
 
 type Users struct {
-	DoorDb  []*string `json:"doorDb" bson:"doorDb"`
-	Special []*string `json:"special" bson:"special"`
-	Unknown []*string `json:"unknown" bson:"unknown"`
+	DoorDb  []*string `json:"doorDb"`
+	Special []*string `json:"special"`
+	Unknown []*string `json:"unknown"`
 }

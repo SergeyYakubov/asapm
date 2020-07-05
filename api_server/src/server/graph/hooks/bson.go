@@ -14,8 +14,8 @@ func mutateHook(b *modelgen.ModelBuild) *modelgen.ModelBuild {
 			name := field.Name
 			if name == "beamtimeId" {
 				name = "_id"
+				field.Tag = `json:"` + name + `"` + ` bson:"` + name + `"`
 			}
-			field.Tag += ` bson:"` + name + `"`
 		}
 	}
 	return b

@@ -9,26 +9,19 @@ import UserAccount from "./userAccount";
 
 const useStyles = makeStyles((theme) => ({
     root: {
-        flexGrow: 1,
-    },
-    menuButton: {
-        marginRight: theme.spacing(2),
+        zIndex: theme.zIndex.drawer + 1,
     },
     userAccountButton: {
         marginLeft: 'auto',
-    },
-    title: {
-        flexGrow: 1,
     },
 }));
 
 export default function TopBar() {
     const classes = useStyles();
     return (
-        <div className={classes.root}>
-            <AppBar position="static">
+            <AppBar position="fixed" className={classes.root}>
                 <Toolbar variant="dense">
-                    <IconButton edge="start" className={classes.menuButton} color="inherit">
+                    <IconButton edge="start" color="inherit">
                         <MenuIcon />
                     </IconButton>
                     <div className={classes.userAccountButton}>
@@ -36,6 +29,5 @@ export default function TopBar() {
                     </div>
                 </Toolbar>
             </AppBar>
-        </div>
     );
 }
