@@ -95,4 +95,19 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
+type Mutation {
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
+    setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
+}
+
+type Query {
+    metas (filter: Map): [BeamtimeMeta]
+    user (id: ID!): UserAccount
+}
+
+type UserAccount {
+    id: ID!
+    preferences: UserPreferences
+}
+
 

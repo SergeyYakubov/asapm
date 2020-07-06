@@ -85,7 +85,7 @@ function ListMeta() {
                                             secondary={
                                                 <Grid container justify="space-between">
                                                     <React.Fragment>
-                                                        <Typography>Id: {meta.beamtimeId}</Typography>
+                                                        <Typography>Beamtime ID: {meta.beamtimeId}</Typography>
                                                         <Typography align="right">Beamline: {meta.beamline}</Typography>
                                                     </React.Fragment>
                                                 </Grid>

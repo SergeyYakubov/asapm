@@ -22,7 +22,7 @@
 									"",
 									"pm.test(\"Sets schema correctly\", function () {",
 									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData.data.setUserPreferences.schema).to.eql(\"dark\");",
+									"    pm.expect(jsonData.data.setUserPreferences.preferences.schema).to.eql(\"dark\");",
 									"});",
 									""
 								],
@@ -36,7 +36,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation addUser  {\n  setUserPreferences(id:\"1234\",input:{\n    schema:\"dark\",\n  }){\n      schema\n  }\n}",
+								"query": "mutation addUser  {\n  setUserPreferences(id:\"1234\",input:{\n    schema:\"dark\",\n  }){\n      preferences {schema}\n  }\n}",
 								"variables": ""
 							}
 						},

@@ -7,15 +7,7 @@
 scalar Map
 
 
-type Mutation {
-  createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
-  setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
-}
 
-type Query {
-  metas (filter: Map): [BeamtimeMeta]
-  user (id: ID!): UserAccount
-}
 
 type UserPreferences {
  schema: String
@@ -25,7 +17,3 @@ input InputUserPreferences {
   schema: String
 }
 
-type UserAccount {
-  id: ID!
-  preferences: UserPreferences
-}

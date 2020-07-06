@@ -10,5 +10,4 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/vektah/gqlparser/v2 v2.0.1
 	go.mongodb.org/mongo-driver v1.3.4
-	rsc.io/quote v1.5.2
 )
