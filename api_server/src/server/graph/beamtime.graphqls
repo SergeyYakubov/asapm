@@ -51,11 +51,19 @@ input InputUsers {
     unknown: [String]
 }
 
+enum Status {
+    Scheduled
+    Running
+    Completed
+}
+
+
 type BeamtimeMeta {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
     beamtimeId: String!
+    status: Status!
     contact: String
     corePath: String
     eventEnd: Time
@@ -78,6 +86,7 @@ input NewBeamtimeMeta {
     beamline: String
     beamlineAlias: String
     beamtimeId: String!
+    status: Status!
     contact: String
     corePath: String
     eventEnd: Time

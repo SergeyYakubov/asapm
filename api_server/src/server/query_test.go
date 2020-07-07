@@ -7,7 +7,6 @@ import (
 	"asapm/server/graph/generated"
 	"asapm/server/graph/model"
 	"encoding/json"
-	"fmt"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/stretchr/testify/mock"
@@ -21,10 +20,12 @@ func AddMeta(c * client.Client, resp interface{} ) {
   createMeta(
     input: {
       beamtimeId: "sss"
+      status: Completed
       customValues: { hello: { time: 123, date: "111" }, bye: "345" }
     }
   ) {
 	beamtimeId
+	status
     customValues(removeFields: ["bye"])
   }
 }
@@ -92,7 +93,7 @@ func (suite *ProcessQueryTestSuite) TestCreateMeta() {
 	c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}})))
 
 
-	suite.mock_db.On("ProcessRequest", "beamtime", "meta","create_meta",mock.Anything).Return([]byte("{}"), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", "meta","create_meta", mock.Anything).Return([]byte("{}"), nil)
 
 	var b map[string]interface{}
 	AddMeta(c,&b)
@@ -103,7 +104,7 @@ func (suite *ProcessQueryTestSuite) TestCreateMeta() {
 	structfromMap(b,&resp)
 
 	suite.Equal( "sss", resp.CreateMeta.BeamtimeID)
-
+	suite.Equal( model.StatusCompleted, resp.CreateMeta.Status)
 }
 
 func (suite *ProcessQueryTestSuite) TestReadMeta() {
@@ -117,18 +118,28 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
   	metas {
     	beamtimeId
     	customValues
+		status
 		}
 	}`
+	assertExpectations(suite.T(), suite.mock_db)
+
+
+	params := []interface {}{&[]*model.BeamtimeMeta{}}
+	suite.mock_db.On("ProcessRequest", "beamtime", "meta","read_meta",params).Return([]byte("{}"), nil).
+		Run(func(args mock.Arguments) {
+		arg := args.Get(3).([]interface {})[0].(*[]*model.BeamtimeMeta)
+		v := []byte("[{\"_id\":\"1234\"}]")
+		json.Unmarshal(v,arg)
+	})
+
+    logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request read_meta")))
+
+
+	c.MustPost(query, &map_resp)
 
 	var resp struct {
 		Metas 	[]*model.BeamtimeMeta
 	}
-
-	suite.mock_db.On("ProcessRequest", "beamtime", "meta","read_meta",mock.Anything).Return([]byte("[{\"_id\":\"1234\"}]"), nil)
-	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request read_meta")))
-
-	c.MustPost(query, &map_resp)
-	fmt.Println(map_resp)
 	structfromMap(map_resp,&resp)
 
 	suite.Equal( "1234", resp.Metas[0].BeamtimeID)

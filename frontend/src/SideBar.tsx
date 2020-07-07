@@ -1,5 +1,5 @@
 import React from 'react';
-import {createStyles, makeStyles, useTheme, Theme} from '@material-ui/core/styles';
+import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
@@ -37,6 +37,8 @@ const useStyles = makeStyles((theme: Theme) =>
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
             }),
+            background: theme.palette.background.default,
+
         },
         hide: {
             display: 'none',
@@ -46,6 +48,8 @@ const useStyles = makeStyles((theme: Theme) =>
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.leavingScreen,
             }),
+            background: theme.palette.background.default,
+
             overflowX: 'hidden',
             width: theme.spacing(7) + 1,
             [theme.breakpoints.up('sm')]: {
@@ -58,7 +62,6 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export default function SideBar() {
     const classes = useStyles();
-    const theme = useTheme();
     const [open, setOpen] = React.useState(false);
 
     const handleButtonClick = () => {
@@ -84,9 +87,9 @@ export default function SideBar() {
             <Toolbar variant="dense"/>
             <div className={classes.drawer}>
                 <List>
-                    <ListItem button key="List View">
+                    <ListItem button key="Board View">
                         <ListItemIcon><ViewListIcon/></ListItemIcon>
-                        <ListItemText primary="List View"/>
+                        <ListItemText primary="Board View"/>
                     </ListItem>
                 </List>
             </div>

@@ -49,6 +49,7 @@ export default function UserAccount() {
     const [username, setUsername] = React.useState("");
 
     const {loading, error, data} = userPreferences.useUserPreferences();
+
     const themeType = data?.user.preferences.schema || "light";
 
     const [changeTheme, res ] = userPreferences.useUpdateUserTheme("dark");

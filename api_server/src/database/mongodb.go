@@ -199,16 +199,22 @@ func (db *Mongodb) createMeta(dbName string, dataCollectionName string, extra_pa
 func (db *Mongodb) readMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
 	q := bson.M{}
 	c := db.client.Database(dbName).Collection(dataCollectionName)
+
+	if len(extra_params) !=1 {
+		return nil,errors.New("wrong number of parameters")
+	}
+	res := extra_params[0]
+
 	cursor,err := c.Find(context.TODO(), q, options.Find())
 	if err != nil {
 		return nil,err
 	}
-	var res []map[string]interface{}
-	err = cursor.All(context.TODO(), &res)
+	err = cursor.All(context.TODO(), res)
+
 	if err != nil {
 		return nil,err
 	}
-	return json.Marshal(res)
+	return nil,nil
 }
 
 
@@ -224,7 +230,7 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string,op
 	case "create_meta":
 		return db.createMeta(db_name, data_collection_name,extra_params...)
 	case "read_meta":
-		return db.readMeta(db_name, data_collection_name,extra_params...)
+		return db.readMeta(db_name, data_collection_name, extra_params...)
 	}
 
 

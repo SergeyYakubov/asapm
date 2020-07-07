@@ -9,7 +9,6 @@ import { grey } from '@material-ui/core/colors';
 import SideBar from "./SideBar";
 import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import Grid from '@material-ui/core/Grid';
 
 
 declare module "@material-ui/core/styles/createPalette" {
@@ -42,7 +41,14 @@ function App() {
     };
 
     const theme = createMuiTheme({
-        overrides: {MuiAppBar: {colorPrimary: {backgroundColor: themeType === "dark" ? "#002984" : "#53c4f7"}}},
+        overrides: {MuiAppBar: {colorPrimary: {backgroundColor: themeType === "dark" ? "#002984" : "#5a4bff"}},
+            MuiCssBaseline: {
+                '@global': {
+                    body: {
+                        backgroundColor: themeType === "light" ?"#fff" : "#424242",
+                    },
+                },
+            }},
         palette: {
             type: themeType,
             lightBackground: {
@@ -53,11 +59,12 @@ function App() {
 
     return (
     <ThemeProvider theme={theme}>
-            <div className={classes.root}>
+        <CssBaseline />
+        <div className={classes.root}>
                 <TopBar/>
-                        <SideBar/>
-                        <ListMeta/>
-            </div>
+                <SideBar/>
+                <ListMeta/>
+        </div>
         </ThemeProvider>
     );
 }

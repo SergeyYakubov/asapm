@@ -3,6 +3,9 @@
 package model
 
 import (
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 )
 
@@ -11,6 +14,7 @@ type BeamtimeMeta struct {
 	Beamline       *string                `json:"beamline"`
 	BeamlineAlias  *string                `json:"beamlineAlias"`
 	BeamtimeID     string                 `json:"_id" bson:"_id"`
+	Status         Status                 `json:"status"`
 	Contact        *string                `json:"contact"`
 	CorePath       *string                `json:"corePath"`
 	EventEnd       *time.Time             `json:"eventEnd"`
@@ -71,6 +75,7 @@ type NewBeamtimeMeta struct {
 	Beamline       *string                  `json:"beamline"`
 	BeamlineAlias  *string                  `json:"beamlineAlias"`
 	BeamtimeID     string                   `json:"_id" bson:"_id"`
+	Status         Status                   `json:"status"`
 	Contact        *string                  `json:"contact"`
 	CorePath       *string                  `json:"corePath"`
 	EventEnd       *time.Time               `json:"eventEnd"`
@@ -111,4 +116,47 @@ type Users struct {
 	DoorDb  []*string `json:"doorDb"`
 	Special []*string `json:"special"`
 	Unknown []*string `json:"unknown"`
+}
+
+type Status string
+
+const (
+	StatusScheduled Status = "Scheduled"
+	StatusRunning   Status = "Running"
+	StatusCompleted Status = "Completed"
+)
+
+var AllStatus = []Status{
+	StatusScheduled,
+	StatusRunning,
+	StatusCompleted,
+}
+
+func (e Status) IsValid() bool {
+	switch e {
+	case StatusScheduled, StatusRunning, StatusCompleted:
+		return true
+	}
+	return false
+}
+
+func (e Status) String() string {
+	return string(e)
+}
+
+func (e *Status) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Status(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Status", str)
+	}
+	return nil
+}
+
+func (e Status) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

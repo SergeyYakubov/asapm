@@ -19,7 +19,7 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 	meta := &model.BeamtimeMeta{}
 	DeepCopy(&input, meta)
 
-	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "create_meta", input)
+	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "create_meta", nil,input)
 	if err != nil {
 		return &model.BeamtimeMeta{}, err
 	}
@@ -29,7 +29,7 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 }
 
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
-	_, err := database.GetDb().ProcessRequest("users", "preferences", "update_user_preferences", id, &input)
+	_, err := database.GetDb().ProcessRequest("users", "preferences", "update_user_preferences", nil,id, &input)
 	if err != nil {
 		return &model.UserAccount{}, err
 	}
@@ -44,17 +44,19 @@ func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}
 	log_str := "processing request read_meta"
 	logger.Debug(log_str)
 
-	response, err := database.GetDb().ProcessRequest("beamtime", "meta", "read_meta")
-	if err != nil {
-		return []*model.BeamtimeMeta{}, err
-	}
-
 	var sResponse = []*model.BeamtimeMeta{}
 
-	err = json.Unmarshal(response, &sResponse)
+	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "read_meta",&sResponse)
 	if err != nil {
 		return []*model.BeamtimeMeta{}, err
 	}
+
+
+//	err = json.Unmarshal(response, &sResponse)
+//	if err != nil {
+//		return []*model.BeamtimeMeta{}, err
+//	}
+	return sResponse,nil
 
 	//	if filter == nil {
 	//		return r.metas, nil

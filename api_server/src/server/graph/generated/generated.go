@@ -60,6 +60,7 @@ type ComplexityRoot struct {
 		Pi             func(childComplexity int) int
 		ProposalID     func(childComplexity int) int
 		ProposalType   func(childComplexity int) int
+		Status         func(childComplexity int) int
 		Title          func(childComplexity int) int
 		UnixID         func(childComplexity int) int
 		Users          func(childComplexity int) int
@@ -250,6 +251,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeMeta.ProposalType(childComplexity), true
+
+	case "BeamtimeMeta.status":
+		if e.complexity.BeamtimeMeta.Status == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.Status(childComplexity), true
 
 	case "BeamtimeMeta.title":
 		if e.complexity.BeamtimeMeta.Title == nil {
@@ -570,11 +578,19 @@ input InputUsers {
     unknown: [String]
 }
 
+enum Status {
+    Scheduled
+    Running
+    Completed
+}
+
+
 type BeamtimeMeta {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
     beamtimeId: String!
+    status: Status!
     contact: String
     corePath: String
     eventEnd: Time
@@ -597,6 +613,7 @@ input NewBeamtimeMeta {
     beamline: String
     beamlineAlias: String
     beamtimeId: String!
+    status: Status!
     contact: String
     corePath: String
     eventEnd: Time
@@ -614,6 +631,21 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
+type Mutation {
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
+    setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
+}
+
+type Query {
+    metas (filter: Map): [BeamtimeMeta]
+    user (id: ID!): UserAccount
+}
+
+type UserAccount {
+    id: ID!
+    preferences: UserPreferences
+}
+
 
 `, BuiltIn: false},
 	&ast.Source{Name: "graph/schema.graphqls", Input: `# GraphQL schema example
@@ -625,15 +657,7 @@ input NewBeamtimeMeta {
 scalar Map
 
 
-type Mutation {
-  createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
-  setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
-}
 
-type Query {
-  metas (filter: Map): [BeamtimeMeta]
-  user (id: ID!): UserAccount
-}
 
 type UserPreferences {
  schema: String
@@ -643,10 +667,6 @@ input InputUserPreferences {
   schema: String
 }
 
-type UserAccount {
-  id: ID!
-  preferences: UserPreferences
-}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -916,6 +936,40 @@ func (ec *executionContext) _BeamtimeMeta_beamtimeId(ctx context.Context, field 
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BeamtimeMeta_status(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Status)
+	fc.Result = res
+	return ec.marshalNStatus2asapmᚋserverᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_contact(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -3438,6 +3492,12 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
+		case "status":
+			var err error
+			it.Status, err = ec.unmarshalNStatus2asapmᚋserverᚋgraphᚋmodelᚐStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "contact":
 			var err error
 			it.Contact, err = ec.unmarshalOString2ᚖstring(ctx, v)
@@ -3561,6 +3621,11 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._BeamtimeMeta_beamlineAlias(ctx, field, obj)
 		case "beamtimeId":
 			out.Values[i] = ec._BeamtimeMeta_beamtimeId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+			out.Values[i] = ec._BeamtimeMeta_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4117,6 +4182,15 @@ func (ec *executionContext) unmarshalNInputUserPreferences2asapmᚋserverᚋgrap
 
 func (ec *executionContext) unmarshalNNewBeamtimeMeta2asapmᚋserverᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx context.Context, v interface{}) (model.NewBeamtimeMeta, error) {
 	return ec.unmarshalInputNewBeamtimeMeta(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNStatus2asapmᚋserverᚋgraphᚋmodelᚐStatus(ctx context.Context, v interface{}) (model.Status, error) {
+	var res model.Status
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNStatus2asapmᚋserverᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v model.Status) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
