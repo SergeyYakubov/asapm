@@ -19,7 +19,7 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 	meta := &model.BeamtimeMeta{}
 	DeepCopy(&input, meta)
 
-	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "create_meta", nil,input)
+	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "create_meta", input)
 	if err != nil {
 		return &model.BeamtimeMeta{}, err
 	}
@@ -29,7 +29,7 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 }
 
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
-	_, err := database.GetDb().ProcessRequest("users", "preferences", "update_user_preferences", nil,id, &input)
+	_, err := database.GetDb().ProcessRequest("users", "preferences", "update_user_preferences", id, &input)
 	if err != nil {
 		return &model.UserAccount{}, err
 	}

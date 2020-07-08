@@ -8,7 +8,7 @@ def rname():
   return generate()[0]
 def randomMail():
     r = generate()
-    return r[0]+'.'+r[1]+'@'+r[2]+'.com'
+    return r[0]+'.'+r[0]+'@'+r[0]+'.com'
 def randId():
     return randint(10000000,99999999)
 # Instantiate the client with a websocket endpoint.
@@ -113,6 +113,5 @@ def addMeta():
     query = s.substitute(d)
 
     data = client.execute(query=query)
-
 for i in range(0, 10000):
     addMeta()
