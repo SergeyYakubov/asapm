@@ -13,13 +13,12 @@ ENTRYPOINT npm start
 FROM node:14.4 AS builder
 WORKDIR /src
 COPY --from=base /src .
-# this will build static files with asapm preif so that late nginx can locate files from path /xxx/asapm
-# current dir will be /xxx/ and thus files undes asapm/... are available
-ARG ENDPOINT_SUFFIX=asapm
-ENV PUBLIC_URL=$ENDPOINT_SUFFIX
+ENV PUBLIC_URL=__PLACEHOLDER_PUBLIC_URL__
 RUN npm run build
 
 FROM nginx:1.19.0
 ENV PUBLIC_URL=/
 ADD default.conf.template  /etc/nginx/templates/default.conf.template
 COPY --from=builder /src/build /usr/share/nginx/html
+COPY replace_public_url.sh /docker-entrypoint.d/30_replace_public_url.sh
+RUN chmod +x /docker-entrypoint.d/30_replace_public_url.sh
