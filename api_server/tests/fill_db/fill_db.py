@@ -12,8 +12,7 @@ def randomMail():
 def randId():
     return randint(10000000,99999999)
 # Instantiate the client with a websocket endpoint.
-client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query")
-from python_graphql_client import GraphqlClient
+client = GraphqlClient(endpoint="http://guest-k8s-node3.desy.de/yakser/asapm/api/query")
 
 
 def random_date(start,intervalDays):
@@ -111,7 +110,7 @@ def addMeta():
     )
     s = Template(query)
     query = s.substitute(d)
-
+#    print (query)
     data = client.execute(query=query)
-for i in range(0, 10000):
+for i in range(0, 5):
     addMeta()

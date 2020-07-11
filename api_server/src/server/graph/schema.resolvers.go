@@ -24,8 +24,8 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 		return &model.BeamtimeMeta{}, err
 	}
 
-	meta_new := updateFields(ctx, meta)
-	return meta_new, nil
+	updateFields(ctx, meta)
+	return meta, nil
 }
 
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
@@ -51,34 +51,25 @@ func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}
 		return []*model.BeamtimeMeta{}, err
 	}
 
-
-//	err = json.Unmarshal(response, &sResponse)
-//	if err != nil {
-//		return []*model.BeamtimeMeta{}, err
+//	if filter == nil {
+//		return sResponse,nil
 //	}
-	return sResponse,nil
 
-	//	if filter == nil {
-	//		return r.metas, nil
-	//	}
-
-	res := []*model.BeamtimeMeta{}
 	//	a, ok := filter["angle"].(int64)
 	//	if !ok {
 	//		return nil, errors.New("cannot parse filter")
 	//	}
 	for _, meta := range sResponse {
-		meta_new := updateFields(ctx, meta)
+		updateFields(ctx, meta)
 		//angle, ok := meta.CustomValues["angle"].(int64)
 		//if !ok {
 		//	continue
 		//	}
 		//	if angle == a {
-		res = append(res, meta_new)
 		//		}
 	}
 
-	return res, nil
+	return sResponse, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.UserAccount, error) {

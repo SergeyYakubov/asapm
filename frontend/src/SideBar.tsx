@@ -6,19 +6,23 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ViewListIcon from '@material-ui/icons/ViewList';
+import MenuBookIcon from '@material-ui/icons/MenuBook';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import IconButton from "@material-ui/core/IconButton";
 import clsx from 'clsx';
+import { NavLink as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
+import Link from '@material-ui/core/Link';
+import { Omit } from '@material-ui/types';
 
-const drawerWidth = 200;
+const drawerWidth = 180;
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         button: {
             marginTop: 'auto',
             marginLeft: 'auto',
-            marginRight: theme.spacing(2),
+            marginRight: theme.spacing(0),
         },
         hideButton: {
             transform: "rotate(-90deg)"
@@ -49,13 +53,12 @@ const useStyles = makeStyles((theme: Theme) =>
                 duration: theme.transitions.duration.leavingScreen,
             }),
             background: theme.palette.background.default,
-
             overflowX: 'hidden',
-            width: theme.spacing(7) + 1,
-            [theme.breakpoints.up('sm')]: {
-                width: theme.spacing(9) + 1,
-            },
+            width: theme.spacing(7) ,
         },
+        listItem: {
+            minWidth: '40px',
+        }
 
     }),
 );
@@ -66,8 +69,9 @@ export default function SideBar() {
 
     const handleButtonClick = () => {
         setOpen(!open);
-
     }
+
+    console.log("sidebar rendered");
 
     return (
         <Drawer
@@ -87,9 +91,13 @@ export default function SideBar() {
             <Toolbar variant="dense"/>
             <div className={classes.drawer}>
                 <List>
-                    <ListItem button key="Board View">
-                        <ListItemIcon><ViewListIcon/></ListItemIcon>
+                    <ListItem button key="Board View" component={RouterLink} to={process.env.PUBLIC_URL} exact activeClassName="Mui-selected">
+                        <ListItemIcon className={classes.listItem}><ViewListIcon/></ListItemIcon>
                         <ListItemText primary="Board View"/>
+                    </ListItem>
+                    <ListItem button key="Detailed View" component={RouterLink} to={process.env.PUBLIC_URL+"/detailed" } activeClassName="Mui-selected">
+                        <ListItemIcon className={classes.listItem}> <MenuBookIcon/></ListItemIcon>
+                        <ListItemText primary="Detailed View"/>
                     </ListItem>
                 </List>
             </div>

@@ -20,10 +20,7 @@ func DeepCopy(a, b interface{}) {
 	json.Unmarshal(byt, b)
 }
 
-func keepFields(ctx context.Context, meta *model.BeamtimeMeta)  *model.BeamtimeMeta {
-	newMeta := model.BeamtimeMeta{}
-	DeepCopy(meta,&newMeta)
-
+func keepFields(ctx context.Context, meta *model.BeamtimeMeta)  {
 	names := map[string]interface{}{}
 	for _, f := range graphql.CollectFieldsCtx(ctx, nil) {
 		for _, a := range f.Arguments {
@@ -35,16 +32,16 @@ func keepFields(ctx context.Context, meta *model.BeamtimeMeta)  *model.BeamtimeM
 		}
 	}
 	if len(names) == 0 {
-		return &newMeta
+		return
 	}
 
 	for key, _ := range meta.CustomValues {
 		_, ok := names[key]
 		if !ok {
-			delete(newMeta.CustomValues, key)
+			delete(meta.CustomValues, key)
 		}
 	}
-	return &newMeta
+	return
 }
 func removeFields(ctx context.Context, source *map[string]interface{}) {
 	for _, f := range graphql.CollectFieldsCtx(ctx, nil) {
@@ -57,11 +54,11 @@ func removeFields(ctx context.Context, source *map[string]interface{}) {
 		}
 	}
 }
-func updateFields(ctx context.Context, meta *model.BeamtimeMeta) *model.BeamtimeMeta{
-	new_meta := keepFields(ctx, meta)
-	if len(new_meta.CustomValues) == len(meta.CustomValues) {
-		removeFields(ctx, &new_meta.CustomValues)
+func updateFields(ctx context.Context, meta *model.BeamtimeMeta) {
+	oldLength := len(meta.CustomValues)
+	keepFields(ctx, meta)
+	if len(meta.CustomValues) == oldLength {
+		removeFields(ctx, &meta.CustomValues)
 	}
-	return new_meta
-
+	return
 }

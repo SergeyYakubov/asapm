@@ -46,17 +46,17 @@ function FilterBox() {
                         Metadata Board
                     </Typography>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item md={6} sm={12} xs={12}>
                     <Typography variant="overline">
                         Quick Filters:
                     </Typography>
                 </Grid>
-                <Grid item xs={6}>
+                <Grid item md={6} xs={12}>
                     <Box
                         display="flex"
                         alignItems="flex-end"
                     >
-                    <Typography variant="overline" align={"right"}>
+                    <Typography noWrap={true} variant="overline" align={"right"}>
                         Quick Search :
                     </Typography>
                     <TextField  className={classes.textField} id="standard-search" margin="dense" label="Search field" type="search"  />

@@ -9,7 +9,8 @@ import { grey } from '@material-ui/core/colors';
 import SideBar from "./SideBar";
 import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
-
+import {Route, Switch } from 'react-router-dom';
+import DetailedMeta from "./DetailedMetaPage";
 
 declare module "@material-ui/core/styles/createPalette" {
     interface Palette {
@@ -63,7 +64,10 @@ function App() {
         <div className={classes.root}>
                 <TopBar/>
                 <SideBar/>
-                <ListMeta/>
+            <Switch>
+                <Route path={process.env.PUBLIC_URL} component={ListMeta} exact />
+                <Route path={process.env.PUBLIC_URL+"/detailed"} component={DetailedMeta} exact />
+            </Switch>
         </div>
         </ThemeProvider>
     );
