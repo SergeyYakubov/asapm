@@ -9,7 +9,7 @@ import { grey } from '@material-ui/core/colors';
 import SideBar from "./SideBar";
 import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import {Route, Switch } from 'react-router-dom';
+import {Route, Switch,Redirect,useLocation } from 'react-router-dom';
 import DetailedMeta from "./DetailedMetaPage";
 
 declare module "@material-ui/core/styles/createPalette" {
@@ -31,6 +31,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 function App() {
     const classes = useStyles();
+    const { pathname } = useLocation();
 
     const {loading, error, data} = userPreferences.useUserPreferences();
     if (loading) return <p>Loading user preferences...</p>;
@@ -65,8 +66,11 @@ function App() {
                 <TopBar/>
                 <SideBar/>
             <Switch>
-                <Route path={process.env.PUBLIC_URL} component={ListMeta} exact />
-                <Route path={process.env.PUBLIC_URL+"/detailed"} component={DetailedMeta} exact />
+                <Route exact path="/">
+                    <Redirect to="/metaboard" />
+                </Route>
+                <Route path="/metaboard" component={ListMeta} exact />
+                <Route path={"/detailed"} component={DetailedMeta} exact />
             </Switch>
         </div>
         </ThemeProvider>

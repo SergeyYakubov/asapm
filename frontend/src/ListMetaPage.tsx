@@ -102,7 +102,7 @@ function MetaColumn({queryResult, status}:MetaColumnProps) {
     if (queryResult.loading || queryResult.error) {
              return <Paper className={clsx(classes.paper,classes.paperNoReducedPadding)}>
             <div>
-                {queryResult.loading? <CircularProgress />:<p>Internal server error, please try later...aaa</p>}
+                {queryResult.loading? <CircularProgress />:<p>Internal server error, please try later...</p>}
             </div>
         </Paper>
     }

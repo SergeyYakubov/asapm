@@ -6,16 +6,16 @@ import * as serviceWorker from './serviceWorker';
 import ApolloClient from 'apollo-boost';
 import UserService from "./userService";
 import { ApolloProvider } from '@apollo/react-hooks';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 
 
 const client = new ApolloClient({
-    uri: window.location.origin+window.location.pathname+process.env.REACT_APP_API_SUFFIX+"/query",
+    uri: window.location.origin+process.env.PUBLIC_URL+process.env.REACT_APP_API_SUFFIX+"/query",
 });
 
 const renderApp = () => ReactDOM.render(
     <ApolloProvider client={client}>
-        <BrowserRouter>
+        <BrowserRouter basename={process.env.PUBLIC_URL}>
         <App />
         </BrowserRouter>
     </ApolloProvider>,

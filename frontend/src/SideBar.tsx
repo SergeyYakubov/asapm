@@ -91,11 +91,11 @@ export default function SideBar() {
             <Toolbar variant="dense"/>
             <div className={classes.drawer}>
                 <List>
-                    <ListItem button key="Board View" component={RouterLink} to={process.env.PUBLIC_URL} exact activeClassName="Mui-selected">
+                    <ListItem button key="Board View" component={RouterLink} to={"/metaboard"} exact activeClassName="Mui-selected">
                         <ListItemIcon className={classes.listItem}><ViewListIcon/></ListItemIcon>
                         <ListItemText primary="Board View"/>
                     </ListItem>
-                    <ListItem button key="Detailed View" component={RouterLink} to={process.env.PUBLIC_URL+"/detailed" } activeClassName="Mui-selected">
+                    <ListItem button key="Detailed View" component={RouterLink} to={"/detailed" } activeClassName="Mui-selected">
                         <ListItemIcon className={classes.listItem}> <MenuBookIcon/></ListItemIcon>
                         <ListItemText primary="Detailed View"/>
                     </ListItem>
