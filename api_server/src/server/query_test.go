@@ -123,11 +123,13 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	}`
 	assertExpectations(suite.T(), suite.mock_db)
 
+	var filter *string = nil
+	var orderBy *string = nil
 
-	params := []interface {}{&[]*model.BeamtimeMeta{}}
+	params := []interface {}{filter,orderBy,&[]*model.BeamtimeMeta{}}
 	suite.mock_db.On("ProcessRequest", "beamtime", "meta","read_meta",params).Return([]byte("{}"), nil).
 		Run(func(args mock.Arguments) {
-		arg := args.Get(3).([]interface {})[0].(*[]*model.BeamtimeMeta)
+		arg := args.Get(3).([]interface {})[2].(*[]*model.BeamtimeMeta)
 		v := []byte("[{\"_id\":\"1234\"}]")
 		json.Unmarshal(v,arg)
 	})

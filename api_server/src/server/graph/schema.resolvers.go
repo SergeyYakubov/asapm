@@ -40,33 +40,19 @@ func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, in
 	return &pref, err
 }
 
-func (r *queryResolver) Metas(ctx context.Context, filter map[string]interface{}) ([]*model.BeamtimeMeta, error) {
+func (r *queryResolver) Metas(ctx context.Context, filter *string,orderBy *string) ([]*model.BeamtimeMeta, error) {
 	log_str := "processing request read_meta"
 	logger.Debug(log_str)
 
 	var sResponse = []*model.BeamtimeMeta{}
 
-	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "read_meta",&sResponse)
+	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "read_meta",filter,orderBy,&sResponse)
 	if err != nil {
 		return []*model.BeamtimeMeta{}, err
 	}
 
-//	if filter == nil {
-//		return sResponse,nil
-//	}
-
-	//	a, ok := filter["angle"].(int64)
-	//	if !ok {
-	//		return nil, errors.New("cannot parse filter")
-	//	}
 	for _, meta := range sResponse {
 		updateFields(ctx, meta)
-		//angle, ok := meta.CustomValues["angle"].(int64)
-		//if !ok {
-		//	continue
-		//	}
-		//	if angle == a {
-		//		}
 	}
 
 	return sResponse, nil

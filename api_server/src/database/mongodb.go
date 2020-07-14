@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"strings"
 	"sync"
 	"time"
 )
@@ -26,13 +27,12 @@ type ServiceRecord struct {
 }
 
 type Nacks struct {
-	Unacknowledged   []int `json:"unacknowledged"`
+	Unacknowledged []int `json:"unacknowledged"`
 }
 
 type LastAck struct {
 	ID int `bson:"_id" json:"lastAckId"`
 }
-
 
 type SubstreamsRecord struct {
 	Substreams []string `bson:"substreams" json:"substreams"`
@@ -64,9 +64,9 @@ type SizeRecord struct {
 }
 
 type Mongodb struct {
-	client              *mongo.Client
-	timeout             time.Duration
-	parent_db           *Mongodb
+	client    *mongo.Client
+	timeout   time.Duration
+	parent_db *Mongodb
 }
 
 func (db *Mongodb) Ping() (err error) {
@@ -122,7 +122,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collectio
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	if len(db_name)==0 || len(collection_name) ==0 {
+	if len(db_name) == 0 || len(collection_name) == 0 {
 		return &DBError{utils.StatusWrongInput, "database and collection must be set"}
 	}
 
@@ -140,99 +140,129 @@ func (db *Mongodb) insertRecord(dbname string, collection_name string, s interfa
 	return err
 }
 
-func (db *Mongodb) updateUserPreferences(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
-	if len(extra_params) !=2 {
-		return nil,errors.New("wrong number of parameters")
+func (db *Mongodb) updateUserPreferences(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 2 {
+		return nil, errors.New("wrong number of parameters")
 	}
-	id,ok := extra_params[0].(string)
+	id, ok := extra_params[0].(string)
 	if !ok {
-		return nil,errors.New("first argument must be string")
+		return nil, errors.New("first argument must be string")
 	}
 	input := extra_params[1]
 	opts := options.Replace().SetUpsert(true)
 	q := bson.M{"_id": id}
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 	res, err := c.ReplaceOne(context.TODO(), q, input, opts)
-	if err!=nil {
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
-	if res.ModifiedCount + res.UpsertedCount != 1 {
-		return nil,errors.New("could not add/modify document")
+	if res.ModifiedCount+res.UpsertedCount != 1 {
+		return nil, errors.New("could not add/modify document")
 	}
-	return nil,err
+	return nil, err
 }
 
-func (db *Mongodb) getUserPreferences(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
-	if len(extra_params) !=1 {
-		return nil,errors.New("wrong number of parameters")
+func (db *Mongodb) getUserPreferences(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 1 {
+		return nil, errors.New("wrong number of parameters")
 	}
-	id,ok := extra_params[0].(string)
+	id, ok := extra_params[0].(string)
 	if !ok {
-		return nil,errors.New("an argument must be string")
+		return nil, errors.New("an argument must be string")
 	}
 	q := bson.M{"_id": id}
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 	var resMap map[string]interface{}
 	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(&resMap)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	return json.Marshal(resMap)
 }
 
-func (db *Mongodb) createMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
-	if len(extra_params) !=1 {
-		return nil,errors.New("wrong number of parameters")
+func (db *Mongodb) createMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 1 {
+		return nil, errors.New("wrong number of parameters")
 	}
-	meta,ok := extra_params[0].(model.NewBeamtimeMeta)
+	meta, ok := extra_params[0].(model.NewBeamtimeMeta)
 	if !ok {
-		return nil,errors.New("mongo: first argument must be NewBeamtimeMeta")
+		return nil, errors.New("mongo: first argument must be NewBeamtimeMeta")
 	}
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 	_, err := c.InsertOne(context.TODO(), meta, options.InsertOne())
-	if err!=nil {
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
-	return nil,err
+	return nil, err
 }
 
-func (db *Mongodb) readMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte,error) {
-	q := bson.M{}
+func (db *Mongodb) readMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 
-	if len(extra_params) !=1 {
-		return nil,errors.New("wrong number of parameters")
+	if len(extra_params) != 3 {
+		return nil, errors.New("wrong number of parameters")
 	}
-	res := extra_params[0]
 
-	cursor,err := c.Find(context.TODO(), q, options.Find())
+	filter, ok := extra_params[0].(*string)
+	if !ok {
+		return nil, errors.New("mongo: filter must be string")
+	}
+	orderBy, ok := extra_params[1].(*string)
+	if !ok {
+		return nil, errors.New("mongo: filter must be string")
+	}
+
+	q := bson.M{}
+	sort := bson.M{}
+	var err error
+	opts := options.Find()
+	queryStr := ""
+
+	if filter != nil {
+		queryStr = " where " + *filter
+	}
+
+	if orderBy != nil {
+		queryStr = queryStr + " order by " + *orderBy
+	}
+
+	if queryStr != "" {
+		queryStr = strings.Replace(queryStr, "beamtimeId", "_id", -1)
+		q, sort, err = db.BSONFromSQL(dbName, queryStr)
+		if err != nil {
+			return nil, err
+		}
+		opts.SetSort(sort)
+	}
+
+	res := extra_params[2]
+
+	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	err = cursor.All(context.TODO(), res)
 
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-	return nil,nil
+	return nil, nil
 }
 
-
-func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string,op string, extra_params ...interface{}) ([]byte,error){
+func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, op string, extra_params ...interface{}) ([]byte, error) {
 	if err := db.checkDatabaseOperationPrerequisites(db_name, data_collection_name); err != nil {
 		return nil, err
 	}
 	switch op {
 	case "update_user_preferences":
-		return db.updateUserPreferences(db_name, data_collection_name,extra_params...)
+		return db.updateUserPreferences(db_name, data_collection_name, extra_params...)
 	case "get_user_preferences":
-		return db.getUserPreferences(db_name, data_collection_name,extra_params...)
+		return db.getUserPreferences(db_name, data_collection_name, extra_params...)
 	case "create_meta":
-		return db.createMeta(db_name, data_collection_name,extra_params...)
+		return db.createMeta(db_name, data_collection_name, extra_params...)
 	case "read_meta":
 		return db.readMeta(db_name, data_collection_name, extra_params...)
 	}
-
 
 	return nil, errors.New("Wrong db operation: " + op)
 }

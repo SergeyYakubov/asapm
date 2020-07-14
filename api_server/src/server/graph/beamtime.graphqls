@@ -110,7 +110,7 @@ type Mutation {
 }
 
 type Query {
-    metas (filter: Map): [BeamtimeMeta]
+    metas (filter: String, orderBy: String): [BeamtimeMeta]
     user (id: ID!): UserAccount
 }
 

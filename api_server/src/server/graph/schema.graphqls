@@ -6,9 +6,6 @@
 
 scalar Map
 
-
-
-
 type UserPreferences {
  schema: String
 }
