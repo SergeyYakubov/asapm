@@ -115,7 +115,7 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	var map_resp map[string]interface{}
 	AddMeta(c,&map_resp)
 	query := `query {
-  	metas {
+  	meta {
     	beamtimeId
     	customValues
 		status
@@ -140,10 +140,10 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	c.MustPost(query, &map_resp)
 
 	var resp struct {
-		Metas 	[]*model.BeamtimeMeta
+		Meta 	[]*model.BeamtimeMeta
 	}
 	structfromMap(map_resp,&resp)
 
-	suite.Equal( "1234", resp.Metas[0].BeamtimeID)
+	suite.Equal( "1234", resp.Meta[0].BeamtimeID)
 
 }

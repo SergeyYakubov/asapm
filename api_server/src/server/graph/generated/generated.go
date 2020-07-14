@@ -91,8 +91,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Metas func(childComplexity int, filter *string, orderBy *string) int
-		User  func(childComplexity int, id string) int
+		Meta func(childComplexity int, filter *string, orderBy *string) int
+		User func(childComplexity int, id string) int
 	}
 
 	UserAccount struct {
@@ -116,7 +116,7 @@ type MutationResolver interface {
 	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error)
 }
 type QueryResolver interface {
-	Metas(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error)
+	Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error)
 	User(ctx context.Context, id string) (*model.UserAccount, error)
 }
 
@@ -395,17 +395,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OnlineAnylysisMeta.UserAccount(childComplexity), true
 
-	case "Query.metas":
-		if e.complexity.Query.Metas == nil {
+	case "Query.meta":
+		if e.complexity.Query.Meta == nil {
 			break
 		}
 
-		args, err := ec.field_Query_metas_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_meta_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Metas(childComplexity, args["filter"].(*string), args["orderBy"].(*string)), true
+		return e.complexity.Query.Meta(childComplexity, args["filter"].(*string), args["orderBy"].(*string)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -637,7 +637,7 @@ type Mutation {
 }
 
 type Query {
-    metas (filter: String, orderBy: String): [BeamtimeMeta]
+    meta (filter: String, orderBy: String): [BeamtimeMeta]
     user (id: ID!): UserAccount
 }
 
@@ -744,7 +744,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_metas_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_meta_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *string
@@ -1928,7 +1928,7 @@ func (ec *executionContext) _OnlineAnylysisMeta_userAccount(ctx context.Context,
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_metas(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_meta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1944,7 +1944,7 @@ func (ec *executionContext) _Query_metas(ctx context.Context, field graphql.Coll
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_metas_args(ctx, rawArgs)
+	args, err := ec.field_Query_meta_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1952,7 +1952,7 @@ func (ec *executionContext) _Query_metas(ctx context.Context, field graphql.Coll
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Metas(rctx, args["filter"].(*string), args["orderBy"].(*string))
+		return ec.resolvers.Query().Meta(rctx, args["filter"].(*string), args["orderBy"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3790,7 +3790,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "metas":
+		case "meta":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -3798,7 +3798,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_metas(ctx, field)
+				res = ec._Query_meta(ctx, field)
 				return res
 			})
 		case "user":

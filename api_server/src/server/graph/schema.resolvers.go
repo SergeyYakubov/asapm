@@ -40,7 +40,7 @@ func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, in
 	return &pref, err
 }
 
-func (r *queryResolver) Metas(ctx context.Context, filter *string,orderBy *string) ([]*model.BeamtimeMeta, error) {
+func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string) ([]*model.BeamtimeMeta, error) {
 	log_str := "processing request read_meta"
 	logger.Debug(log_str)
 

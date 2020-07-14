@@ -71,8 +71,6 @@ export default function SideBar() {
         setOpen(!open);
     }
 
-    console.log("sidebar rendered");
-
     return (
         <Drawer
             variant="permanent"
