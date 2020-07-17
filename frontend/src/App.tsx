@@ -5,17 +5,18 @@ import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
 import {PaletteType} from "@material-ui/core";
 import userPreferences from "./userPreferences";
 import ListMeta from "./ListMetaPage";
-import { grey } from '@material-ui/core/colors';
+import {grey} from '@material-ui/core/colors';
 import SideBar from "./SideBar";
-import { createStyles, Theme, makeStyles } from '@material-ui/core/styles';
+import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import {Route, Switch,Redirect,useLocation } from 'react-router-dom';
+import {Route, Switch, Redirect, useLocation} from 'react-router-dom';
 import DetailedMeta from "./DetailedMetaPage";
 
 declare module "@material-ui/core/styles/createPalette" {
     interface Palette {
         lightBackground: Palette['primary'];
     }
+
     interface PaletteOptions {
         lightBackground: PaletteOptions['primary'];
     }
@@ -24,55 +25,64 @@ declare module "@material-ui/core/styles/createPalette" {
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
-            display:"flex",
+            display: "flex",
         },
     }),
 );
 
 function App() {
     const classes = useStyles();
-    const { pathname } = useLocation();
+    const {pathname} = useLocation();
+    const [activeBeamtime, SetActiveBeamtime] = React.useState("");
+
 
     const {loading, error, data} = userPreferences.useUserPreferences();
     if (loading) return <p>Loading user preferences...</p>;
-    let themeType : PaletteType = "light";
-    if (error)  {
+    let themeType: PaletteType = "light";
+    if (error) {
         console.log("cannot load user preferences, will use default");
     } else {
         themeType = data!.user.preferences.schema;
-    };
+    }
+    ;
 
     const theme = createMuiTheme({
-        overrides: {MuiAppBar: {colorPrimary: {backgroundColor: themeType === "dark" ? "#002984" : "#5a4bff"}},
+        overrides: {
+            MuiAppBar: {colorPrimary: {backgroundColor: themeType === "dark" ? "#002984" : "#5a4bff"}},
             MuiCssBaseline: {
                 '@global': {
                     body: {
-                        backgroundColor: themeType === "light" ?"#fff" : "#424242",
+                        backgroundColor: themeType === "light" ? "#fff" : "#424242",
                     },
                 },
-            }},
+            }
+        },
         palette: {
             type: themeType,
             lightBackground: {
-                main: themeType === "light" ?grey[100]:grey[700]
+                main: themeType === "light" ? grey[100] : grey[700]
             },
         }
     });
 
     return (
-    <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <div className={classes.root}>
+        <ThemeProvider theme={theme}>
+            <CssBaseline/>
+            <div className={classes.root}>
                 <TopBar/>
-                <SideBar/>
-            <Switch>
-                <Route exact path="/">
-                    <Redirect to="/metaboard" />
-                </Route>
-                <Route path="/metaboard" component={ListMeta} exact />
-                <Route path={"/detailed"} component={DetailedMeta} exact />
-            </Switch>
-        </div>
+                <SideBar activeBeamtime={activeBeamtime}/>
+                <Switch>
+                    <Route exact path="/">
+                        <Redirect to="/metaboard"/>
+                    </Route>
+                    <Route path="/metaboard" render={(props) => (
+                        <ListMeta {...props} activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime}/>
+                    )} exact/>
+                    <Route path={"/detailed/:id"} render={(props) => (
+                        <DetailedMeta {...props} SetActiveBeamtime={SetActiveBeamtime}/>
+                    )} exact/>
+                </Switch>
+            </div>
         </ThemeProvider>
     );
 }

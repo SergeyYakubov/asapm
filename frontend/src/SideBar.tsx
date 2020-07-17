@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -14,6 +14,8 @@ import clsx from 'clsx';
 import { NavLink as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
 import Link from '@material-ui/core/Link';
 import { Omit } from '@material-ui/types';
+import {QueryResult} from "@apollo/react-common";
+import {MetaData, Status} from "./graphQLTypes";
 
 const drawerWidth = 180;
 
@@ -63,9 +65,29 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
-export default function SideBar() {
+function usePersistedState<S>(key:string, defaultValue:S) {
+    let setDefaultState = () => {
+        const getVariable = localStorage.getItem(key);
+        if (getVariable === null) {
+            return defaultValue;
+        } else {
+            return JSON.parse(localStorage.getItem(key) as string);
+        }
+    }
+    const [state, setState] = React.useState(setDefaultState);
+    useEffect(() => {
+        localStorage.setItem(key, JSON.stringify(state));
+    }, [key, state]);
+    return [state, setState];
+}
+
+type SideBarProps = {
+    activeBeamtime: string,
+}
+
+export default function SideBar({activeBeamtime}:SideBarProps) {
     const classes = useStyles();
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = usePersistedState("sidebarState",true);
 
     const handleButtonClick = () => {
         setOpen(!open);
@@ -93,7 +115,7 @@ export default function SideBar() {
                         <ListItemIcon className={classes.listItem}><ViewListIcon/></ListItemIcon>
                         <ListItemText primary="Board View"/>
                     </ListItem>
-                    <ListItem button key="Detailed View" component={RouterLink} to={"/detailed" } activeClassName="Mui-selected">
+                    <ListItem button key="Detailed View" component={RouterLink} to={"/detailed/"+activeBeamtime } activeClassName="Mui-selected" disabled={!activeBeamtime}>
                         <ListItemIcon className={classes.listItem}> <MenuBookIcon/></ListItemIcon>
                         <ListItemText primary="Detailed View"/>
                     </ListItem>

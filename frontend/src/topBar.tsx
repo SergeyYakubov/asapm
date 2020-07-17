@@ -4,6 +4,8 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import UserAccount from "./userAccount";
 import Typography from '@material-ui/core/Typography';
+import SvgIcon from '@material-ui/core/SvgIcon';
+import { ReactComponent as DesyIcon } from "./desy_logo.svg";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -13,6 +15,13 @@ const useStyles = makeStyles((theme) => ({
     userAccountButton: {
         marginLeft: 'auto',
     },
+    logo: {
+        minWidth: 40,
+        minHeight: 38,
+        padding: 0,
+        marginRight: theme.spacing(1),
+        marginLeft: -15,
+    },
 }));
 
 export default function TopBar() {
@@ -20,6 +29,9 @@ export default function TopBar() {
     return (
             <AppBar position="fixed" className={classes.root}>
                 <Toolbar variant="dense">
+                    <SvgIcon className={classes.logo}>
+                        <DesyIcon/>
+                    </SvgIcon>
                     <Typography variant="h6" noWrap>
                         ASAP Metadata Service
                     </Typography>

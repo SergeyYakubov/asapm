@@ -1,13 +1,17 @@
 server {
     listen       ${SERVICE_PORT};
     server_name  localhost;
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+    gzip_comp_level 9;
+    etag on;
 
     location ~ (?<no_slash>.*)/$ {
        return 301 $scheme://$host$no_slash;
     }
 
     location ${PUBLIC_URL} {
-        try_files $uri $uri/index.html =404;
+        try_files $uri /index.html =404;
         alias   /usr/share/nginx/html;
     }
 

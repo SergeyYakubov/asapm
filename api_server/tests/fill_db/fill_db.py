@@ -13,6 +13,7 @@ def randId():
     return randint(10000000,99999999)
 # Instantiate the client with a websocket endpoint.
 client = GraphqlClient(endpoint="http://guest-k8s-node3.desy.de/yakser/asapm/api/query")
+#client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query")
 
 
 def random_date(start,intervalDays):
@@ -45,6 +46,15 @@ def addMeta():
           eventStart: "$eventStart"
           facility: "facility"
           generated: "$generated"
+          onlineAnalysis: {
+           asapoBeamtimeTokenPath: "/shared/asapo_token"
+           reservedNodes: ["node1", "node2", "node2"]
+           slurmReservation: "ponline"
+           slurmPartition: "$beamtimeId"
+           sshPrivateKeyPath: "shared/rsa-key.pem"
+           sshPublicKeyPath: "shared/rsa-key.pub"
+           userAccount: "bttest03"
+          }         
           leader: {
             email: "$lemail"
             institute: "$linstitute"
@@ -112,5 +122,5 @@ def addMeta():
     query = s.substitute(d)
 #    print (query)
     data = client.execute(query=query)
-for i in range(0, 5):
+for i in range(0, 10):
     addMeta()
