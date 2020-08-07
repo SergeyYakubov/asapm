@@ -34,6 +34,9 @@ import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 import MaterialTable, {Action, MaterialTableProps, Icons} from "material-table";
 import {UnfoldLess, UnfoldMore} from "@material-ui/icons";
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
 
 const tableIcons: Icons = {
     Add: forwardRef((props, ref) => <AddBox {...props} ref={ref}/>),
@@ -118,6 +121,13 @@ type TParams = { id: string };
 
 type DetailedHeaderProps = {
     meta: MetaDetails,
+    rawView: boolean,
+    setRawView: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+
+type MetaViewProps = {
+    meta: MetaDetails
 }
 
 type StaticSectionProps = {
@@ -125,11 +135,11 @@ type StaticSectionProps = {
     section: string,
 }
 
-function StringFromValue(value: any):string {
+function StringFromValue(value: any): string {
     if (!value) {
         return "undefined"
     }
-    if (typeof(value) === "object") {
+    if (typeof (value) === "object") {
         return JSON.stringify(value)
     }
     return value.toString()
@@ -144,7 +154,7 @@ function TableFromObject(rowData: TableEntry) {
         render: () => {
             return <MaterialTable
                 icons={tableIcons}
-                style={{paddingLeft: '60px',paddingBottom: '1vw',boxShadow: 'none'}}
+                style={{paddingLeft: '60px', paddingBottom: '1vw', boxShadow: 'none'}}
                 options={{
                     filtering: false,
                     header: false,
@@ -168,8 +178,13 @@ function TableFromObject(rowData: TableEntry) {
     }
 }
 
-function DetailedHeader({meta}: DetailedHeaderProps) {
+function DetailedHeader({meta, rawView, setRawView}: DetailedHeaderProps) {
     const classes = useStyles();
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRawView(event.target.checked);
+    };
+
     return (
         <div>
             <Grid container spacing={0}>
@@ -190,6 +205,20 @@ function DetailedHeader({meta}: DetailedHeaderProps) {
                         })}/>
                     </Box>
                 </Grid>
+            </Grid>
+            <Grid container xs={12} justify="flex-end">
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={rawView}
+                            onChange={handleChange}
+                            name="checked"
+                            color="primary"
+                            size="small"
+                        />
+                    }
+                    label="Raw JSON"
+                />
             </Grid>
             <Divider className={classes.divider}/>
         </div>
@@ -234,7 +263,7 @@ function TableDataFromMeta(meta: MetaDetails, section: string): TableData {
         case "Analysis":
             return [
                 {name: 'Core path', value: meta.corePath as string},
-                {name: 'Online', value: meta.onlineAnalysis?"Requested":"Not requested", data: meta.onlineAnalysis},
+                {name: 'Online', value: meta.onlineAnalysis ? "Requested" : "Not requested", data: meta.onlineAnalysis},
             ]
     }
     return [];
@@ -274,8 +303,25 @@ function StaticSection({meta, section}: StaticSectionProps) {
     </Paper>
 }
 
+function replacer(key: string, value: any) {
+    if (key === '__typename') {
+        return undefined;
+    }
+    return value;
+}
 
-function StaticMeta({meta}: DetailedHeaderProps) {
+function RawMeta({meta}: MetaViewProps) {
+    return <div>
+        <pre id="json">
+            {
+                JSON.stringify(meta, replacer, '\t')
+            }
+        </pre>
+    </div>
+}
+
+
+function StaticMeta({meta}: MetaViewProps) {
     const classes = useStyles();
     return <div>
         <Grid container spacing={1}>
@@ -319,6 +365,9 @@ function DetailedMeta({match, SetActiveBeamtime}: DetailedMetaProps) {
         SetActiveBeamtime(match.params.id);
     });
 
+    const [rawView, setRawView] = React.useState(false);
+
+
     const queryResult = useQuery<MetaDataDetails>(METAS_DETAILED,
         {variables: {filter: "beamtimeId = '" + match.params.id + "'"}});
     if (queryResult.error) {
@@ -352,11 +401,18 @@ function DetailedMeta({match, SetActiveBeamtime}: DetailedMetaProps) {
             </div>
         );
     }
+
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>
-            <DetailedHeader meta={queryResult.data!.meta[0]}/>
-            <StaticMeta meta={queryResult.data!.meta[0]}/>
+            <DetailedHeader meta={queryResult.data!.meta[0]} rawView={rawView} setRawView={setRawView}/>
+            {rawView ? (
+                <RawMeta meta={queryResult.data!.meta[0]}/>
+            ) : (
+                <div>
+                    <StaticMeta meta={queryResult.data!.meta[0]}/>
+                </div>
+            )}
         </div>
     );
 }

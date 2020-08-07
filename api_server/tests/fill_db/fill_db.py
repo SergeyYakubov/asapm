@@ -12,8 +12,8 @@ def randomMail():
 def randId():
     return randint(10000000,99999999)
 # Instantiate the client with a websocket endpoint.
-client = GraphqlClient(endpoint="http://guest-k8s-node3.desy.de/yakser/asapm/api/query")
-#client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query")
+#client = GraphqlClient(endpoint="http://guest-k8s-node3.desy.de/yakser/asapm/api/query")
+client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query")
 
 
 def random_date(start,intervalDays):
