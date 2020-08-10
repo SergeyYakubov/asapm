@@ -29,7 +29,21 @@ def addMeta():
       createMeta(
         input: {
           status: $status
-          customValues: { hello: { time: 1234, date: "1141" }, bye: "3445" }
+          customValues: {
+            city: "Hamburg",
+            tags: ["test1","test2"],
+            conditions: {
+               temp: 23,
+               humidity: 60
+               },
+            detector: {
+              name: "pilatus",
+              status: {
+                blocks: "1",
+                rate: "200Hz",
+              }
+            }
+          }
           applicant: {
             email: "$email"
             institute: "Deutsches Elektronen-Synchrotron"

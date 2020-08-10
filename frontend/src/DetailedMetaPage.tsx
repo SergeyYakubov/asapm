@@ -16,6 +16,9 @@ import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import Collapse from '@material-ui/core/Collapse';
 import clsx from "clsx";
 import KeyboardArrowRightIcon from '@material-ui/icons/KeyboardArrowRight';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import Container from '@material-ui/core/Container';
 
 import AddBox from '@material-ui/icons/AddBox';
 import ArrowDownward from '@material-ui/icons/ArrowDownward';
@@ -77,6 +80,10 @@ const useStyles = makeStyles((theme: Theme) =>
             tableTitle: {
                 marginLeft: theme.spacing(2),
             },
+            customDataTitle: {
+                marginTop: theme.spacing(3),
+                marginLeft: theme.spacing(2),
+            },
             chip: {
                 marginTop: theme.spacing(-2),
                 marginBottom: theme.spacing(2),
@@ -113,7 +120,21 @@ const useStyles = makeStyles((theme: Theme) =>
             },
             displayNone: {
                 display: 'none',
-            }
+            },
+            switch: {
+                marginLeft: 'auto',
+                marginRight: theme.spacing(2),
+            },
+            tabs: {
+                borderRight: `1px solid ${theme.palette.divider}`,
+            },
+            tabLabel: {
+                textTransform: 'none',
+                alignItems: "flex-start"
+            },
+            tabPanel: {
+                marginLeft: theme.spacing(2),
+            },
         }),
 );
 
@@ -135,14 +156,22 @@ type StaticSectionProps = {
     section: string,
 }
 
+type CustomTableProps = {
+    data: string[] | object,
+}
+
+
 function StringFromValue(value: any): string {
     if (!value) {
         return "undefined"
     }
-    if (typeof (value) === "object") {
+    
+    if (value.constructor.name == "Object") {
         return JSON.stringify(value)
     }
+
     return value.toString()
+
 }
 
 function TableFromObject(rowData: TableEntry) {
@@ -206,7 +235,7 @@ function DetailedHeader({meta, rawView, setRawView}: DetailedHeaderProps) {
                     </Box>
                 </Grid>
             </Grid>
-            <Grid container xs={12} justify="flex-end">
+            <Grid container justify="flex-end">
                 <FormControlLabel
                     control={
                         <Switch
@@ -277,29 +306,60 @@ function OnRowClick(event?: React.MouseEvent, rowData?: TableEntry, toggleDetail
     return toggleDetailPanel ? toggleDetailPanel() : {};
 }
 
+function Table({meta, section}: StaticSectionProps) {
+    return <MaterialTable
+        icons={tableIcons}
+        options={{
+            filtering: false,
+            header: false,
+            showTitle: false,
+            search: false,
+            paging: false,
+            toolbar: false,
+            draggable: false,
+            minBodyHeight: "50vh",
+        }}
+        columns={[
+            {title: 'Name', field: 'name'},
+            {title: 'Value', field: 'value'},
+        ]}
+        data={TableDataFromMeta(meta, section)}
+        detailPanel={[TableFromObject]}
+        onRowClick={OnRowClick}
+    />
+}
+
+function CustomTable({data}: CustomTableProps) {
+    return <MaterialTable
+        icons={tableIcons}
+        options={{
+            filtering: false,
+            header: false,
+            showTitle: false,
+            search: false,
+            paging: false,
+            toolbar: false,
+            draggable: false,
+            minBodyHeight: "50vh",
+        }}
+        columns={[
+            {title: 'Name', field: 'name'},
+            {title: 'Value', field: 'value'},
+        ]}
+
+        data={Object.entries(data).map(([key, value]) => ({
+            name: key,
+            value: StringFromValue(value),
+        }))}
+        onRowClick={OnRowClick}
+    />
+}
+
+
 function StaticSection({meta, section}: StaticSectionProps) {
     const classes = useStyles();
     return <Paper className={classes.paper}>
-        <MaterialTable
-            icons={tableIcons}
-            options={{
-                filtering: false,
-                header: false,
-                showTitle: false,
-                search: false,
-                paging: false,
-                toolbar: false,
-                draggable: false,
-                minBodyHeight: "50vh",
-            }}
-            columns={[
-                {title: 'Name', field: 'name'},
-                {title: 'Value', field: 'value'},
-            ]}
-            data={TableDataFromMeta(meta, section)}
-            detailPanel={[TableFromObject]}
-            onRowClick={OnRowClick}
-        />
+        <Table meta={meta} section={section}/>
     </Paper>
 }
 
@@ -354,6 +414,130 @@ function StaticMeta({meta}: MetaViewProps) {
         </Grid>
     </div>
 }
+
+
+function a11yProps(index: any) {
+    return {
+        id: `vertical-tab-${index}`,
+        'aria-controls': `vertical-tabpanel-${index}`,
+    };
+}
+
+
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: any;
+    value: any;
+    className?: any;
+}
+
+function TabPanel(props: TabPanelProps) {
+    const {children, value, index, ...other} = props;
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`vertical-tabpanel-${index}`}
+            aria-labelledby={`vertical-tab-${index}`}
+            {...other}
+        >
+            {value === index && (
+                children
+            )}
+        </div>
+    );
+}
+
+
+function CustomMeta({meta}: MetaViewProps) {
+    const classes = useStyles();
+    const [plainView, setPlainView] = React.useState(false);
+    const [tabValue, setTabValue] = React.useState(0);
+
+    const handleTabChange = (event: React.ChangeEvent<{}>, newTabValue: number) => {
+        setTabValue(newTabValue);
+    };
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setPlainView(event.target.checked);
+    };
+
+    let customCategories: {[k: string]: any} = {};
+    let mainCategory: {[k: string]: any} = {};
+    let isMainCategory = false;
+    for (const [key, value] of Object.entries(meta.customValues)) {
+        if (value.constructor.name == "Object") {
+            customCategories[key]=value;
+        }
+        else {
+            isMainCategory = true;
+            mainCategory[key] = value;
+        }
+    }
+
+    let n=0;
+    return <div>
+        <Grid container alignItems={'baseline'}>
+            <Typography variant="overline" align="center" className={classes.customDataTitle}>
+                Custom Metadata
+            </Typography>
+            <FormControlLabel
+                className={classes.switch}
+                control={
+                    <Switch
+                        checked={plainView}
+                        name="checked"
+                        onChange={handleChange}
+                        color="primary"
+                        size="small"
+                    />
+                }
+                label="Plain View"
+            />
+        </Grid>
+        <Paper className={classes.paper}>
+        <Grid container>
+            <Grid item xs={2}>
+                <Tabs
+                    orientation="vertical"
+                    variant="scrollable"
+                    value={tabValue}
+                    onChange={handleTabChange}
+                    aria-label="Vertical tabs example"
+                    className={classes.tabs}
+                >
+                    { isMainCategory &&
+                        <Tab classes={{wrapper: classes.tabLabel}} label="general" {...a11yProps(0)}/>
+                    }
+                    {
+
+                        Object.entries(customCategories).map(([key, value]) =>
+                        <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} />
+                        )
+                    }
+                </Tabs>
+            </Grid>
+            <Grid item xs={10}>
+                { isMainCategory &&
+                <TabPanel value={tabValue} index={n++} className={classes.tabPanel}>
+                    <CustomTable data={mainCategory} />
+                </TabPanel>
+                }
+
+                {
+                    Object.entries(customCategories).map(([key, value]) =>
+                    <TabPanel value={tabValue} index={n++} className={classes.tabPanel}>
+                        <CustomTable data={value}/>
+                    </TabPanel>
+                )
+                }
+
+            </Grid>
+        </Grid>
+        </Paper>
+    </div>
+}
+
 
 interface DetailedMetaProps extends RouteComponentProps<TParams> {
     SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>,
@@ -411,6 +595,7 @@ function DetailedMeta({match, SetActiveBeamtime}: DetailedMetaProps) {
             ) : (
                 <div>
                     <StaticMeta meta={queryResult.data!.meta[0]}/>
+                    <CustomMeta meta={queryResult.data!.meta[0]}/>
                 </div>
             )}
         </div>
