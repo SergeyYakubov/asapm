@@ -2,10 +2,10 @@ package utils
 
 import (
 	json "encoding/json"
+	"errors"
 	"io/ioutil"
 	"os"
 	"strings"
-	"errors"
 )
 
 func StringInSlice(a string, list []string) bool {

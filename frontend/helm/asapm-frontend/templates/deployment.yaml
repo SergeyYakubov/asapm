@@ -12,6 +12,9 @@ metadata:
   name: {{ include "asapm.resourceName" . }}
   annotations:
     kubernetes.io/ingress.class: "nginx"
+{{- if .Values.frontend.tls.enabled }}
+    cert-manager.io/cluster-issuer: letsencrypt-issuer
+{{- end }}
 spec:
   rules:
     - host: "{{ .Values.frontend.host }}"
@@ -21,6 +24,12 @@ spec:
             backend:
               serviceName: {{ include "asapm.resourceName" . }}
               servicePort: {{ .Values.frontend.internalPort }}
+{{- if .Values.frontend.tls.enabled }}
+  tls:
+    - hosts:
+        - "{{ .Values.frontend.host }}"
+      secretName: letsencrypt-asapm
+{{- end }}
 ---
 apiVersion: v1
 kind: Service

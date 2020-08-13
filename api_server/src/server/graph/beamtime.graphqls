@@ -84,7 +84,7 @@ type BeamtimeMeta {
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
-    beamlineAlias: String
+    beamlineAlias: String #@inputNeedAcl(acl: WRITE)
     beamtimeId: String!
     status: Status!
     contact: String
@@ -104,8 +104,17 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
+directive @needAcl(acl: Acls!) on FIELD_DEFINITION
+#directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
+
+enum Acls {
+    WRITE
+    READ
+}
+
+
 type Mutation {
-    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 

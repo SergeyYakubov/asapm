@@ -8,18 +8,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type ExtraJobClaims struct {
+		AuthorizationResponce
+		JobInd string
+}
+
+
 type JobClaim struct {
-	AuthorizationResponce
-	JobInd string
+	ExtraClaims struct {
+		ExtraJobClaims
+	}
 }
 
 
 func writeAuthResponse(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	var jc JobClaim
-	JobClaimFromContext(r, &jc)
-	w.Write([]byte(jc.UserName))
-	w.Write([]byte(jc.JobInd))
+	JobClaimFromContext(r.Context(), &jc)
+	w.Write([]byte(jc.ExtraClaims.UserName))
+	w.Write([]byte(jc.ExtraClaims.JobInd))
 }
 
 func TestGenerateJWTToken(t *testing.T) {
@@ -52,7 +59,7 @@ func TestProcessJWTAuth(t *testing.T) {
 	for _, test := range HJWTAuthtests {
 		req, _ := http.NewRequest("POST", "http://blabla", nil)
 
-		var claim JobClaim
+		var claim ExtraJobClaims
 		claim.UserName = test.User
 		claim.JobInd = test.jobID
 
@@ -84,3 +91,10 @@ func TestProcessJWTAuth(t *testing.T) {
 	}
 }
 
+func TestCheckRSAToken(t *testing.T) {
+// example rsa token, ever expires
+	token := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.POstGetfAytaZS82wHcjoTyoqhMyxXiWdR7Nn7A29DNSl0EiXLdwJ6xC6AfgZWF1bOsS_TuYI3OG85AmiExREkrS6tDfTQ2B3WXlrr-wp5AokiRbz3_oB4OxG-W9KcEEbDRcZc0nH3L7LzYptiy1PtAylQGxHTWZXtGz4ht0bAecBgmpdgXMguEIcoqPJ1n3pIWk_dUZegpqx0Lka21H6XxUTxiy8OcaarA8zdnPUnV6AmNP3ecFawIFYdvJB_cm-GvpCSbr8G8y_Mllj8f4x9nBH8pQux89_6gUY618iYv7tuPWBFfEbLxtF2pZS6YC1aSfLQxeNe8djT9YjpvRZA"
+	pubKey := "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnzyis1ZjfNB0bBgKFMSv\nvkTtwlvBsaJq7S5wA+kzeVOVpVWwkWdVha4s38XM/pa/yr47av7+z3VTmvDRyAHc\naT92whREFpLv9cj5lTeJSibyr/Mrm/YtjCZVWgaOYIhwrXwKLqPr/11inWsAkfIy\ntvHWTxZYEcXLgAXFuUuaS3uF9gEiNQwzGTU1v0FqkqTBr4B8nW3HCN47XUu0t8Y0\ne+lf4s4OxQawWD79J9/5d3Ry0vbV3Am1FtGJiJvOwRsIfVChDpYStTcHTCMqtvWb\nV6L11BWkpzGXSW4Hv43qa+GSYOD2QU68Mb59oSk2OB+BtOLpJofmbGEGgvmwyCI9\nMwIDAQAB\n-----END PUBLIC KEY-----"
+	_, ok := CheckJWTToken(token,pubKey)
+	assert.Equal(t,true,ok)
+}

@@ -7,10 +7,23 @@ import ApolloClient from 'apollo-boost';
 import UserService from "./userService";
 import { ApolloProvider } from '@apollo/react-hooks';
 import { BrowserRouter } from 'react-router-dom';
+import userService from "./userService";
 
 
 const client = new ApolloClient({
     uri: window.location.origin+process.env.PUBLIC_URL+process.env.REACT_APP_API_SUFFIX+"/query",
+    request: (operation) => {
+        return userService.updateToken(300).then(function() {
+            const token = userService.getToken()
+            operation.setContext({
+                headers: {
+                    authorization: token ? `Bearer ${token}` : "",
+                }
+            })
+        }).catch(function() {
+            console.log('Failed to refresh token');
+        });
+    }
 });
 
 const renderApp = () => ReactDOM.render(

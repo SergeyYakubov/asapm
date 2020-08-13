@@ -27,7 +27,13 @@ const doLogin = _kc.login;
 
 const doLogout = _kc.logout;
 
-const getToken = () => _kc.token;
+const getToken = function() {
+    return _kc.token;
+};
+
+const updateToken = function (minValidity: number) {
+    return _kc.updateToken(minValidity)
+}
 
 const getUserId = () => _kc.tokenParsed?.sub;
 
@@ -44,4 +50,5 @@ export default {
     getToken,
     getUserName,
     getUserId,
+    updateToken,
 }

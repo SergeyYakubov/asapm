@@ -13,7 +13,10 @@ def randId():
     return randint(10000000,99999999)
 # Instantiate the client with a websocket endpoint.
 #client = GraphqlClient(endpoint="http://guest-k8s-node3.desy.de/yakser/asapm/api/query")
-client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query")
+#token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkMW9wOG9yZFBSVndnTUNrQnQzazdVZXM0WXBLeHA0Wkt0YTFmUXU1VktNIn0.eyJleHAiOjE1OTc5NTc1OTUsImlhdCI6MTU5Nzg3MTE5NSwianRpIjoiNTYyOTRhYjItZjYwOS00MDcyLTlkYzgtMjMwNzRkODE3NmUwIiwiaXNzIjoiaHR0cHM6Ly9rdWJlLWtleWNsb2FrLmRlc3kuZGUvYXV0aC9yZWFsbXMvYXNhcCIsInN1YiI6ImVjNzkzNjRmLWRjOGEtNDVlZS04YWZlLTQxN2NjMTM0ODUyYSIsInR5cCI6IkJlYXJlciIsImF6cCI6ImFzYXBtLXNlcnZpY2UiLCJzZXNzaW9uX3N0YXRlIjoiZjdlY2IzOTctMWZlNC00MDM4LWIxZmQtMjVmNTg0Mzg0YjhkIiwiYWNyIjoiMSIsInNjb3BlIjoicHJvZmlsZSIsImNsaWVudElkIjoiYXNhcG0tc2VydmljZSIsImNsaWVudEhvc3QiOiI5MS4yNDguMjUxLjE5OCIsInJvbGVzIjpbImluZ2VzdG9yIl0sInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1hc2FwbS1zZXJ2aWNlIiwiY2xpZW50QWRkcmVzcyI6IjkxLjI0OC4yNTEuMTk4In0.ULRn2ixvJwWZ-dYbFfqE2VXY-x52wTcYtajIR0T1kSxnRRdDVfsbDlYhYepVNhVuBKE8wJoWj_hjbo4WxyBldQYygMe564U51hjdDMUg-zp6wRHGt-GSeFcu0oi5VYmg_y3BAwFB2PLTcg312HdN5EboskCw_VbH6iPw7BSAksG4cZtEAzeE_hCjwk_3h0wz-wI4i4ykHrqBKjzvzTDiJNKGfXyFnH-9eLdoo1JEUQwYMIlay4lzhALLs4KDAZyRJ4yVYD8xVL1UhSS-bnBWPMLTgg6Qlbn2Qosk0t1A4XWaH4KMf21WMOCW5KqVhxkf9gx3XZDfcs0_msA4bzkCEw"
+token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkMW9wOG9yZFBSVndnTUNrQnQzazdVZXM0WXBLeHA0Wkt0YTFmUXU1VktNIn0.eyJleHAiOjE1OTc5NTc4NTMsImlhdCI6MTU5Nzg3MTQ1MywianRpIjoiNjk1ODM3MjMtMWJiZC00YmU0LTkwNWEtMGIyNjdlNmI4NzFhIiwiaXNzIjoiaHR0cHM6Ly9rdWJlLWtleWNsb2FrLmRlc3kuZGUvYXV0aC9yZWFsbXMvYXNhcCIsInN1YiI6ImVjNzkzNjRmLWRjOGEtNDVlZS04YWZlLTQxN2NjMTM0ODUyYSIsInR5cCI6IkJlYXJlciIsImF6cCI6ImFzYXBtLXNlcnZpY2UiLCJzZXNzaW9uX3N0YXRlIjoiMmJmOTVjZjQtMDdjMy00NWRmLWE4YTktZDEzNzIzYmU3ZGQxIiwiYWNyIjoiMSIsInNjb3BlIjoicHJvZmlsZSIsImNsaWVudElkIjoiYXNhcG0tc2VydmljZSIsImNsaWVudEhvc3QiOiI5MS4yNDguMjUxLjE5OCIsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1hc2FwbS1zZXJ2aWNlIiwiY2xpZW50QWRkcmVzcyI6IjkxLjI0OC4yNTEuMTk4In0.dd1m1kwPWARm3GMcXv-nf5in-CTIOjvvtqprGI_aFdJDuDRSdc1cVjDO0Gj4K0zT5W29T5yfjVW65xvH8K6xkrCvQbVfFASDVp-hoyz_laLRK0VlgKY0sPpupMM5uvpA5SPAHcCyWsBK8_F1y0fVhTQlbSB_FWT0MZ2eFJiAiSSiEb9D7jT9-pudUFUyH1Be-hhBRKuaM6hVBmvzByBFX-m1saRXVXXbeJZg_uKD0XSWPSI6klCNuV63ul21jic3afDYgK1B17tYgMoI1KZbw73PTlIII-MYHgnY_9NcCQZDXgUUngzfYrPblSHwXKLg3uJXSe4smp5kkn1C3aRPqw"
+client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query",
+                       headers= {"Authorization": "Bearer "+ token})
 
 
 def random_date(start,intervalDays):
@@ -41,6 +44,10 @@ def addMeta():
               status: {
                 blocks: "1",
                 rate: "200Hz",
+                test: {
+                    b:2,
+                    a:1
+                }
               }
             }
           }
@@ -135,6 +142,7 @@ def addMeta():
     s = Template(query)
     query = s.substitute(d)
 #    print (query)
-    data = client.execute(query=query)
-for i in range(0, 10):
+    res = client.execute(query=query)
+    print (res)
+for i in range(0, 1):
     addMeta()

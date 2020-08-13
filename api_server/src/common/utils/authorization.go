@@ -2,9 +2,8 @@ package utils
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
@@ -12,6 +11,13 @@ import (
 	"strings"
 	"time"
 )
+
+type contextKey struct {
+	name string
+}
+
+var TokenClaimsCtxKey = &contextKey{"TokenClaims"}
+
 
 type AuthorizationRequest struct {
 	Token   string
@@ -132,10 +138,10 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 
 		if authType == "Bearer" {
 			if claims, ok := CheckJWTToken(token, key); !ok {
-				http.Error(w, "Authorization error - tocken does not match", http.StatusUnauthorized)
+				http.Error(w, "Authorization error - token does not match", http.StatusUnauthorized)
 				return
 			} else {
-				ctx = context.WithValue(ctx, "TokenClaims", claims)
+				ctx = context.WithValue(ctx, TokenClaimsCtxKey, claims)
 			}
 		} else {
 			http.Error(w, "Authorization error - wrong auth type", http.StatusUnauthorized)
@@ -151,7 +157,15 @@ func CheckJWTToken(token, key string) (jwt.Claims, bool) {
 		return nil, false
 	}
 
-	t, err := jwt.ParseWithClaims(token, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	t, err := jwt.ParseWithClaims(token, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); ok {
+			block, _ := pem.Decode([]byte(key))
+			if block== nil {
+				return nil,errors.New("cannot decode public key "+key)
+			}
+			return x509.ParsePKIXPublicKey(block.Bytes)
+		}
+
 		return []byte(key), nil
 	})
 
@@ -162,83 +176,11 @@ func CheckJWTToken(token, key string) (jwt.Claims, bool) {
 	return nil, false
 }
 
-func JobClaimFromContext(r *http.Request, val interface{}) error {
-	c := r.Context().Value("TokenClaims")
-
-	if c == nil {
+func JobClaimFromContext(ctx context.Context, val interface{}) error {
+	c,ok := ctx.Value(TokenClaimsCtxKey).(*jwt.MapClaims)
+	if c == nil || !ok {
 		return errors.New("Empty context")
 	}
 
-	claim := c.(*CustomClaims)
-
-	return MapToStruct(claim.ExtraClaims.(map[string]interface{}), val)
-}
-
-type HMACAuth struct {
-	Key string
-}
-
-func NewHMACAuth(key string) *HMACAuth {
-	a := HMACAuth{key}
-	return &a
-}
-
-func (a *HMACAuth) Name() string {
-	return "Bearer"
-}
-
-
-func generateHMACToken(value string, key string) string {
-	mac := hmac.New(sha256.New, []byte(key))
-	mac.Write([]byte(value))
-
-	return base64.URLEncoding.EncodeToString(mac.Sum(nil))
-	}
-
-func (h HMACAuth) GenerateToken(val ...interface{}) (string, error) {
-	if len(val) != 1 {
-		return "", errors.New("Wrong claims")
-	}
-	value, ok := val[0].(*string)
-	if !ok {
-		return "", errors.New("Wrong claims")
-	}
-
-	sha := generateHMACToken(*value, h.Key)
-
-	return sha, nil
-}
-
-func ProcessHMACAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		authType, token, err := ExtractAuthInfo(r)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-	// todo extract beamline from request
-		value := "beamline"
-		if authType == "HMAC-SHA-256" {
-			if !CheckHMACToken(value, token, key) {
-				http.Error(w, "Internal authorization error - tocken does not match", http.StatusUnauthorized)
-				return
-			}
-		} else {
-			http.Error(w, "Internal authorization error - wrong auth type", http.StatusUnauthorized)
-			return
-		}
-		fn(w, r)
-	}
-}
-
-func CheckHMACToken(value string, token, key string) bool {
-
-	if token == "" {
-		return false
-	}
-
-	generated_token := generateHMACToken(value, key)
-	return token == generated_token
+	return MapToStruct(*c, val)
 }

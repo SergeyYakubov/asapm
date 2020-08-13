@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -40,6 +41,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	NeedAcl func(ctx context.Context, obj interface{}, next graphql.Resolver, acl model.Acls) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -611,7 +613,7 @@ type BeamtimeMeta {
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
-    beamlineAlias: String
+    beamlineAlias: String #@inputNeedAcl(acl: WRITE)
     beamtimeId: String!
     status: Status!
     contact: String
@@ -631,8 +633,17 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
+directive @needAcl(acl: Acls!) on FIELD_DEFINITION
+#directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
+
+enum Acls {
+    WRITE
+    READ
+}
+
+
 type Mutation {
-    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 
@@ -671,6 +682,20 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_needAcl_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.Acls
+	if tmp, ok := rawArgs["acl"]; ok {
+		arg0, err = ec.unmarshalNAcls2asapmᚋserverᚋgraphᚋmodelᚐAcls(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["acl"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_BeamtimeMeta_customValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1658,8 +1683,32 @@ func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateMeta(rctx, args["input"].(model.NewBeamtimeMeta))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateMeta(rctx, args["input"].(model.NewBeamtimeMeta))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			acl, err := ec.unmarshalNAcls2asapmᚋserverᚋgraphᚋmodelᚐAcls(ctx, "WRITE")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.NeedAcl == nil {
+				return nil, errors.New("directive needAcl is not implemented")
+			}
+			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.BeamtimeMeta); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *asapm/server/graph/model.BeamtimeMeta`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4152,6 +4201,15 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) unmarshalNAcls2asapmᚋserverᚋgraphᚋmodelᚐAcls(ctx context.Context, v interface{}) (model.Acls, error) {
+	var res model.Acls
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNAcls2asapmᚋserverᚋgraphᚋmodelᚐAcls(ctx context.Context, sel ast.SelectionSet, v model.Acls) graphql.Marshaler {
+	return v
+}
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)

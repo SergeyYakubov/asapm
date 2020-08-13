@@ -20,5 +20,5 @@ FROM nginx:1.19.0
 ENV PUBLIC_URL=/
 ADD default.conf.template  /etc/nginx/templates/default.conf.template
 COPY --from=builder /src/build /usr/share/nginx/html
-COPY replace_public_url.sh /docker-entrypoint.d/30_replace_public_url.sh
-RUN chmod +x /docker-entrypoint.d/30_replace_public_url.sh
+COPY tweak_nginx.sh /docker-entrypoint.d/15_tweak_nginx.sh
+RUN chmod +x /docker-entrypoint.d/15_tweak_nginx.sh

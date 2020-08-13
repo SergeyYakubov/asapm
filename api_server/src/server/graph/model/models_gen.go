@@ -118,6 +118,47 @@ type Users struct {
 	Unknown []*string `json:"unknown" bson:"unknown"`
 }
 
+type Acls string
+
+const (
+	AclsWrite Acls = "WRITE"
+	AclsRead  Acls = "READ"
+)
+
+var AllAcls = []Acls{
+	AclsWrite,
+	AclsRead,
+}
+
+func (e Acls) IsValid() bool {
+	switch e {
+	case AclsWrite, AclsRead:
+		return true
+	}
+	return false
+}
+
+func (e Acls) String() string {
+	return string(e)
+}
+
+func (e *Acls) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Acls(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Acls", str)
+	}
+	return nil
+}
+
+func (e Acls) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type Status string
 
 const (

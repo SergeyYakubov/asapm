@@ -157,7 +157,7 @@ type StaticSectionProps = {
 }
 
 type CustomTableProps = {
-    data: string[] | object,
+    data: object,
 }
 
 
@@ -165,7 +165,7 @@ function StringFromValue(value: any): string {
     if (!value) {
         return "undefined"
     }
-    
+
     if (value.constructor.name == "Object") {
         return JSON.stringify(value)
     }
@@ -329,7 +329,21 @@ function Table({meta, section}: StaticSectionProps) {
     />
 }
 
+
+function plainDataFromObject(plainData: TableData, data:object,root:string) {
+    for (const [key, value] of Object.entries(data)) {
+        const fullKey = (root !== "" ? root+"." : "")+key
+        if (value.constructor.name === "Object") {
+            plainDataFromObject(plainData,value,fullKey)
+        } else {
+            plainData.push({name:fullKey,value:value.toString()})
+        }
+    }
+}
+
 function CustomTable({data}: CustomTableProps) {
+    let plainData: TableData=[]
+    plainDataFromObject(plainData,data,"")
     return <MaterialTable
         icons={tableIcons}
         options={{
@@ -346,11 +360,7 @@ function CustomTable({data}: CustomTableProps) {
             {title: 'Name', field: 'name'},
             {title: 'Value', field: 'value'},
         ]}
-
-        data={Object.entries(data).map(([key, value]) => ({
-            name: key,
-            value: StringFromValue(value),
-        }))}
+        data={plainData}
         onRowClick={OnRowClick}
     />
 }
@@ -448,34 +458,83 @@ function TabPanel(props: TabPanelProps) {
     );
 }
 
-
-function CustomMeta({meta}: MetaViewProps) {
+function CategorizedMeta({meta}: MetaViewProps) {
     const classes = useStyles();
-    const [plainView, setPlainView] = React.useState(false);
+
     const [tabValue, setTabValue] = React.useState(0);
 
     const handleTabChange = (event: React.ChangeEvent<{}>, newTabValue: number) => {
         setTabValue(newTabValue);
     };
 
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setPlainView(event.target.checked);
-    };
-
-    let customCategories: {[k: string]: any} = {};
-    let mainCategory: {[k: string]: any} = {};
+    let customCategories: { [k: string]: any } = {};
+    let mainCategory: { [k: string]: any } = {};
     let isMainCategory = false;
     for (const [key, value] of Object.entries(meta.customValues)) {
         if (value.constructor.name == "Object") {
-            customCategories[key]=value;
-        }
-        else {
+            customCategories[key] = value;
+        } else {
             isMainCategory = true;
             mainCategory[key] = value;
         }
     }
 
-    let n=0;
+
+    let n = 0;
+    return <Grid container>
+    <Grid item xs={2}>
+        <Tabs
+            orientation="vertical"
+            variant="scrollable"
+            value={tabValue}
+            onChange={handleTabChange}
+            aria-label="Vertical tabs example"
+            className={classes.tabs}
+        >
+            {isMainCategory &&
+            <Tab classes={{wrapper: classes.tabLabel}} label="general" {...a11yProps(0)}/>
+            }
+            {
+                Object.entries(customCategories).map(([key, value]) =>
+                    <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} />
+                )
+            }
+        </Tabs>
+    </Grid>
+    <Grid item xs={10}>
+        {isMainCategory &&
+        <TabPanel value={tabValue} index={n++} className={classes.tabPanel}>
+            <CustomTable data={mainCategory}/>
+        </TabPanel>
+        }
+        {
+            Object.entries(customCategories).map(([key, value]) =>
+                <TabPanel value={tabValue} index={n++} className={classes.tabPanel}>
+                    <CustomTable data={value}/>
+                </TabPanel>
+            )
+        }
+    </Grid>
+    </Grid>
+}
+
+function PlainMeta({meta}: MetaViewProps) {
+    return <Grid container>
+        <Grid item xs={12}>
+            <CustomTable data={meta.customValues}/>
+        </Grid>
+    </Grid>
+}
+
+function CustomMeta({meta}: MetaViewProps) {
+    const classes = useStyles();
+    const [plainView, setPlainView] = React.useState(false);
+
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setPlainView(event.target.checked);
+    };
+
     return <div>
         <Grid container alignItems={'baseline'}>
             <Typography variant="overline" align="center" className={classes.customDataTitle}>
@@ -496,44 +555,10 @@ function CustomMeta({meta}: MetaViewProps) {
             />
         </Grid>
         <Paper className={classes.paper}>
-        <Grid container>
-            <Grid item xs={2}>
-                <Tabs
-                    orientation="vertical"
-                    variant="scrollable"
-                    value={tabValue}
-                    onChange={handleTabChange}
-                    aria-label="Vertical tabs example"
-                    className={classes.tabs}
-                >
-                    { isMainCategory &&
-                        <Tab classes={{wrapper: classes.tabLabel}} label="general" {...a11yProps(0)}/>
-                    }
-                    {
-
-                        Object.entries(customCategories).map(([key, value]) =>
-                        <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} />
-                        )
-                    }
-                </Tabs>
-            </Grid>
-            <Grid item xs={10}>
-                { isMainCategory &&
-                <TabPanel value={tabValue} index={n++} className={classes.tabPanel}>
-                    <CustomTable data={mainCategory} />
-                </TabPanel>
-                }
-
-                {
-                    Object.entries(customCategories).map(([key, value]) =>
-                    <TabPanel value={tabValue} index={n++} className={classes.tabPanel}>
-                        <CustomTable data={value}/>
-                    </TabPanel>
-                )
-                }
-
-            </Grid>
-        </Grid>
+            {plainView
+            ? <PlainMeta meta={meta}/>
+            : <CategorizedMeta meta={meta}/>
+            }
         </Paper>
     </div>
 }
@@ -595,7 +620,9 @@ function DetailedMeta({match, SetActiveBeamtime}: DetailedMetaProps) {
             ) : (
                 <div>
                     <StaticMeta meta={queryResult.data!.meta[0]}/>
-                    <CustomMeta meta={queryResult.data!.meta[0]}/>
+                    { queryResult.data!.meta[0].customValues &&
+                        <CustomMeta meta={queryResult.data!.meta[0]}/>
+                    }
                 </div>
             )}
         </div>

@@ -2,13 +2,15 @@ package server
 
 import (
 	"asapm/common/logger"
+	"asapm/common/utils"
 	"asapm/database"
-	"asapm/server/graph"
 	"asapm/server/graph/generated"
 	"asapm/server/graph/model"
+	"context"
 	"encoding/json"
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"strings"
@@ -90,7 +92,7 @@ func structfromMap (resp_map map[string]interface{},resp_struct interface{})  {
 }
 
 func (suite *ProcessQueryTestSuite) TestCreateMeta() {
-	c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}})))
+	c:=createClient()
 
 
 	suite.mock_db.On("ProcessRequest", "beamtime", "meta","create_meta", mock.Anything).Return([]byte("{}"), nil)
@@ -107,10 +109,26 @@ func (suite *ProcessQueryTestSuite) TestCreateMeta() {
 	suite.Equal( model.StatusCompleted, resp.CreateMeta.Status)
 }
 
+func createClient() *client.Client {
+	sclaims:=`{"preferred_username":"dd","azp": "asapm-service", "roles": ["admin"]}`
+	var claim jwt.MapClaims
+	json.Unmarshal([]byte(sclaims),&claim)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
+
+
+	config := generateConfig()
+	return client.New(handler.NewDefaultServer(generated.NewExecutableSchema(config)),
+		func(bd *client.Request) {
+			bd.HTTP = bd.HTTP.WithContext(ctx)
+		})
+}
+
 func (suite *ProcessQueryTestSuite) TestReadMeta() {
-	c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}})))
 
 	suite.mock_db.On("ProcessRequest", "beamtime", "meta","create_meta",mock.Anything).Return([]byte("{}"), nil)
+
+	c:=createClient()
 
 	var map_resp map[string]interface{}
 	AddMeta(c,&map_resp)
@@ -135,7 +153,6 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	})
 
     logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request read_meta")))
-
 
 	c.MustPost(query, &map_resp)
 
