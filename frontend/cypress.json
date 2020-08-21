@@ -1,6 +1,6 @@
 {
   "env": {
-    "auth_base_url": "https://kube-keycloak.desy.de/auth",
+    "auth_base_url": "https://keycloak.desy.de/auth",
     "auth_realm": "asap",
     "auth_client_id": "asapm"
   },
