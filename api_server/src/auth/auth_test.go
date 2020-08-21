@@ -63,7 +63,7 @@ func TestGetServiceAccountProps(t *testing.T) {
 	json.Unmarshal([]byte(service_token),&claim)
 	props,err := userPropsFromClaim(claim)
 	assert.Nil(t,err)
-	assert.Equal(t,"service-account-asapm-service",props.Name)
+	assert.Equal(t,"service-account-asapm-service",props.UserName)
 	assert.Equal(t,"asapm-service",props.AuthorizedParty)
 
 	assert.ElementsMatch(t,[]string{"ingestor"},props.Roles)
@@ -75,7 +75,7 @@ func TestGetUserAccountProps(t *testing.T) {
 	json.Unmarshal([]byte(user_token),&claim)
 	props,err := userPropsFromClaim(claim)
 	assert.Nil(t,err)
-	assert.Equal(t,"test",props.Name)
+	assert.Equal(t,"test",props.UserName)
 	assert.ElementsMatch(t,[]string{"cmaxit","it-cluster","it-photon"},props.Groups)
 	assert.Equal(t,"asapm",props.AuthorizedParty)
 	assert.ElementsMatch(t,[]string{"admin"},props.Roles)
@@ -140,7 +140,7 @@ func TestMetaReadAclFromContext(t *testing.T) {
 		json.Unmarshal([]byte(test.claims),&claim)
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
-		acl,err := MetaReadAclFromContext(ctx)
+		acl,err := ReadAclFromContext(ctx)
 		if test.ok {
 			assert.Nil(t, err,test.Message)
 			assert.Equal(t,test.acl,acl,test.Message)
@@ -156,7 +156,7 @@ func TestSqlFilter(t *testing.T) {
 
 	filter:="meta.counter > 11"
 	res := AddAclToSqlFilter(acl,&filter)
-	assert.Equal(t,"",*res)
+	assert.Equal(t,"((beamtimeId IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))) AND (meta.counter > 11)",*res)
 }
 
 
@@ -165,7 +165,7 @@ func TestSqlNilFilter(t *testing.T) {
 
 	var filter *string
 	res := AddAclToSqlFilter(acl,filter)
-	assert.Equal(t,"",*res)
+	assert.Equal(t,"(beamtimeId IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))",*res)
 }
 
 

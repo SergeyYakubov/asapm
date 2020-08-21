@@ -9,12 +9,11 @@ import (
 )
 
 type userProps struct {
-	Name            string
+	UserName        string
 	Roles           []string
 	Groups          []string
 	AuthorizedParty string
 }
-
 
 type MetaAcl struct {
 	ImmediateDeny bool
@@ -43,7 +42,7 @@ func userPropsFromClaim(claim map[string]interface{}) (userProps, error) {
 		return props, errors.New("cannot set user name")
 	}
 
-	props.Name = fields.UserName
+	props.UserName = fields.UserName
 	props.Roles = fields.Roles
 	props.Groups = make([]string, len(fields.Groups))
 	props.AuthorizedParty = fields.AuthorizedParty
@@ -132,7 +131,7 @@ func addAllowedBeamlines(acl MetaAcl,props userProps) MetaAcl {
 	return acl
 }
 
-func MetaReadAclFromContext(ctx context.Context) (MetaAcl,error) {
+func ReadAclFromContext(ctx context.Context) (MetaAcl,error) {
 	var acl MetaAcl
 	props, err := userPropsFromContext(ctx)
 	if err != nil {
@@ -155,35 +154,27 @@ func MetaReadAclFromContext(ctx context.Context) (MetaAcl,error) {
 	return acl,nil
 }
 
-func AddAclToSqlFilter(acl MetaAcl,filter *string) *string {
-	sqlFilter:=""
-	if acl.AllowedBeamtimes != nil {
-		list := strings.Join(acl.AllowedBeamtimes, `','`)
-		sqlFilter = "(beamtimeId IN ('"+list+"'))"
-	}
-
-	if acl.AllowedBeamlines != nil {
-		list := strings.Join(acl.AllowedBeamlines, `','`)
-		if len(sqlFilter)==0 {
-			sqlFilter = "(beamline IN ('"+list+"'))"
+func addFilterForNameInList(currentFilter, name string, list []string) string {
+	if list != nil {
+		list := strings.Join(list, `','`)
+		if len(currentFilter)==0 {
+			currentFilter = "("+name+" IN ('"+list+"'))"
 		} else {
-			sqlFilter = sqlFilter + " OR " + "(beamline IN ('"+list+"'))"
+			currentFilter = currentFilter + " OR (" + name+ " IN ('"+list+"'))"
 		}
 	}
+	return currentFilter
+}
 
-	if acl.AllowedFacilities != nil {
-		list := strings.Join(acl.AllowedFacilities, `','`)
-		if len(sqlFilter)==0 {
-			sqlFilter = "(facility IN ('"+list+"'))"
-		} else {
-			sqlFilter = sqlFilter + " OR " + "(facility IN ('"+list+"'))"
-		}
-	}
+func AddAclToSqlFilter(acl MetaAcl, curFilter *string) *string {
+	aclFilter := addFilterForNameInList("","beamtimeId",acl.AllowedBeamtimes)
+	aclFilter = addFilterForNameInList(aclFilter,"beamline",acl.AllowedBeamlines)
+	aclFilter = addFilterForNameInList(aclFilter,"facility",acl.AllowedFacilities)
 
-	if filter != nil {
-		s := "("+sqlFilter+") AND ("+ *filter+")"
+	if curFilter != nil {
+		s := "("+ aclFilter +") AND ("+ *curFilter +")"
 		return &s
 	} else {
-		return &sqlFilter
+		return &aclFilter
 	}
 }

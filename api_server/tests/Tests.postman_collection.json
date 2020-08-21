@@ -248,6 +248,16 @@
 			"protocolProfileBehavior": {}
 		}
 	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{OAuth_Token}}",
+				"type": "string"
+			}
+		]
+	},
 	"event": [
 		{
 			"listen": "prerequest",
@@ -255,7 +265,46 @@
 				"id": "4b08f725-0318-46d4-a66c-e20987884efa",
 				"type": "text/javascript",
 				"exec": [
-					""
+					"// Refresh the OAuth token if necessary",
+					"var tokenDate = new Date(2010,1,1);",
+					"var tokenTimestamp = pm.environment.get(\"OAuth_Timestamp\");",
+					"if(tokenTimestamp){",
+					"  tokenDate = Date.parse(tokenTimestamp);",
+					"}",
+					"var expiresInTime = pm.environment.get(\"ExpiresInTime\");",
+					"if(!expiresInTime){",
+					"    expiresInTime = 300000; // Set default expiration time to 5 minutes",
+					"}",
+					"if((new Date() - tokenDate) >= expiresInTime) ",
+					"{",
+					"   pm.sendRequest({",
+					"      url:  pm.variables.get(\"Auth_Url\"), ",
+					"      method: 'POST',",
+					"      header: {",
+					"        'Accept': 'application/json',",
+					"        'Content-Type': 'application/x-www-form-urlencoded',",
+					"      },",
+					"      body: {",
+					"          mode: 'urlencoded',",
+					"          urlencoded: [",
+					"            {key: \"grant_type\", value: \"password\"},",
+					"            {key: \"client_id\", value: \"asapm\"},",
+					"            {key: \"username\", value: pm.variables.get(\"Username\")},",
+					"            {key: \"password\", value: pm.variables.get(\"Password\")}",
+					"        ]",
+					"      }",
+					"  }, function (err, res) {",
+					"        console.log(err,res)",
+					"        pm.environment.set(\"OAuth_Token\", res.json().access_token);",
+					"        pm.environment.set(\"OAuth_Timestamp\", new Date());",
+					"        ",
+					"        // Set the ExpiresInTime variable to the time given in the response if it exists",
+					"        if(res.json().expires_in){",
+					"            expiresInTime = res.json().expires_in * 1000;",
+					"        }",
+					"        pm.environment.set(\"ExpiresInTime\", expiresInTime);",
+					"  });",
+					"}"
 				]
 			}
 		},
@@ -268,6 +317,23 @@
 					""
 				]
 			}
+		}
+	],
+	"variable": [
+		{
+			"id": "581be64f-de85-411a-afbb-40face94852a",
+			"key": "Auth_Url",
+			"value": "https://keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token\n"
+		},
+		{
+			"id": "d98b70c5-53f2-465a-8c0f-924dac81ccd9",
+			"key": "Username",
+			"value": "asapm-test"
+		},
+		{
+			"id": "7e1a53c9-8b7c-449f-b5cd-2d67b95ecd05",
+			"key": "Password",
+			"value": "test"
 		}
 	],
 	"protocolProfileBehavior": {}

@@ -46,7 +46,7 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string
 	log_str := "processing request read_meta"
 	logger.Debug(log_str)
 
-	acl,err := auth.MetaReadAclFromContext(ctx)
+	acl,err := auth.ReadAclFromContext(ctx)
 	if err != nil {
 		logger.Error("access denied: "+err.Error())
 		return []*model.BeamtimeMeta{}, errors.New("access denied: "+err.Error())
