@@ -129,7 +129,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0b50d13e-9006-499b-a2aa-363233f5be49",
+								"id": "fe5fe3a3-ca3a-460d-a6de-583bbd0142d3",
 								"exec": [
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -141,10 +141,6 @@
 									"    pm.expect(jsonData.data.user.preferences.schema).to.eql(\"dark\");",
 									"    pm.expect(jsonData.data.user.id).to.eql(\"1234\");",
 									"});",
-									"",
-									"var body = JSON.parse(responseBody); ",
-									"var content = responseBody;",
-									"tests[\"Response Body\"+content]= body.length != 0",
 									""
 								],
 								"type": "text/javascript"
@@ -321,17 +317,17 @@
 	],
 	"variable": [
 		{
-			"id": "581be64f-de85-411a-afbb-40face94852a",
+			"id": "deb968f7-ecf8-4d3e-8176-b63f03d0cce9",
 			"key": "Auth_Url",
-			"value": "https://keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token\n"
+			"value": "https://keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token"
 		},
 		{
-			"id": "d98b70c5-53f2-465a-8c0f-924dac81ccd9",
+			"id": "08d6f586-6f35-4651-82dc-cf6166d28ed8",
 			"key": "Username",
 			"value": "asapm-test"
 		},
 		{
-			"id": "7e1a53c9-8b7c-449f-b5cd-2d67b95ecd05",
+			"id": "643024fa-ab62-46ff-b15f-0682b702220d",
 			"key": "Password",
 			"value": "test"
 		}
