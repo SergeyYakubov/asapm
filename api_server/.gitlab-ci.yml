@@ -1,7 +1,7 @@
 variables:
-  API_SERVER_IMAGE: $REGISTRY/yakubov/asapm/api_server:$CI_COMMIT_SHORT_SHA
-  API_SERVER_IMAGE_DEV: $REGISTRY/yakubov/asapm/api_server:dev.$CI_COMMIT_SHORT_SHA
-  API_SERVER_IMAGE_STATIC: $REGISTRY/yakubov/asapm/api_server
+  API_SERVER_IMAGE: $REGISTRY/mdp/asapm/api_server:$CI_COMMIT_SHORT_SHA
+  API_SERVER_IMAGE_DEV: $REGISTRY/mdp/asapm/api_server:dev.$CI_COMMIT_SHORT_SHA
+  API_SERVER_IMAGE_STATIC: $REGISTRY/mdp/asapm/api_server
   API_SERVER_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-api-${CI_COMMIT_SHORT_SHA}/asapm/api
 
 build_api_server_dev:
