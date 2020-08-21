@@ -4,12 +4,14 @@ package graph
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
+	"asapm/auth"
 	"asapm/common/logger"
 	"asapm/database"
 	"asapm/server/graph/generated"
 	"asapm/server/graph/model"
 	"context"
 	"encoding/json"
+	"errors"
 )
 
 func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
@@ -44,9 +46,24 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string
 	log_str := "processing request read_meta"
 	logger.Debug(log_str)
 
+	acl,err := auth.MetaReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: "+err.Error())
+		return []*model.BeamtimeMeta{}, errors.New("access denied: "+err.Error())
+	}
+
+	if acl.ImmediateDeny {
+		logger.Error("access denied, not enough permissions")
+		return []*model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")
+	}
+
+	if !acl.ImmediateAccess {
+		filter = auth.AddAclToSqlFilter(acl,filter)
+	}
+
 	var sResponse = []*model.BeamtimeMeta{}
 
-	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "read_meta",filter,orderBy,&sResponse)
+	_, err = database.GetDb().ProcessRequest("beamtime", "meta", "read_meta",filter,orderBy,&sResponse)
 	if err != nil {
 		return []*model.BeamtimeMeta{}, err
 	}

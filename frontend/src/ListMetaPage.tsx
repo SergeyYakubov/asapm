@@ -71,7 +71,7 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime}: Meta
     if (queryResult.loading || queryResult.error) {
         return <Paper className={clsx(classes.paper, classes.paperNoReducedPadding)}>
             <div>
-                {queryResult.loading ? <CircularProgress/> : <p>Internal server error, please try later...</p>}
+                {queryResult.loading ? <CircularProgress/> : <p>{queryResult.error!.message}...</p>}
             </div>
         </Paper>
     }

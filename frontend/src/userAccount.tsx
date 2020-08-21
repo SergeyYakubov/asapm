@@ -46,27 +46,12 @@ const StyledMenu = withStyles({
 
 export default function UserAccount() {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [username, setUsername] = React.useState("");
 
     const {loading, error, data} = userPreferences.useUserPreferences();
 
     const themeType = data?.user.preferences.schema || "light";
 
     const [changeTheme, res ] = userPreferences.useUpdateUserTheme("dark");
-
-    async function loadUsername() {
-        try {
-            const uname = await UserService.getUserName();
-            setUsername(uname);
-        } catch (err) {
-            setUsername(err.toString);
-        }
-    }
-
-    React.useEffect(() => {
-        loadUsername();
-    }, []);
-
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -107,7 +92,7 @@ export default function UserAccount() {
                             User Account
                         </Typography>
                         <Typography id="username" variant="body2" color="textSecondary" component="p">
-                            {username}
+                            {UserService.getUserName()}
                         </Typography>
                     </Container>
                 </MenuItem>

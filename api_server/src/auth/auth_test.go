@@ -113,3 +113,59 @@ func TestAuthorizeIngestor(t *testing.T) {
 }
 
 
+var aclTests = []struct {
+	claims  string
+	acl     MetaAcl
+	ok      bool
+	Message string
+}{
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin"]}`,
+		MetaAcl{ImmediateAccess: true}, true,"admin access"},
+	{`{"preferred_username":"dd","azp": "bla"}`,
+		MetaAcl{}, false,"wrong azp"},
+	{`{"preferred_username":"dd","azp": "asapm"}`,
+		MetaAcl{ImmediateDeny: true}, true,"no access"},
+	{`{"preferred_username":"dd","azp": "asapm","groups": ["fsdata"]}`,
+		MetaAcl{ImmediateAccess: true}, true,"fsdata access"},
+	{`{"preferred_username":"dd","azp": "asapm","groups": ["p01staff"]}`,
+		MetaAcl{AllowedBeamlines: []string{"p01"}}, true,"p01staff"},
+	{`{"preferred_username":"dd","azp": "asapm","groups": ["12345-clbt"]}`,
+		MetaAcl{AllowedBeamtimes: []string{"12345"}}, true,"beamtime 12345"},
+
+}
+
+func TestMetaReadAclFromContext(t *testing.T) {
+	for _, test := range aclTests {
+		var claim jwt.MapClaims
+		json.Unmarshal([]byte(test.claims),&claim)
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
+		acl,err := MetaReadAclFromContext(ctx)
+		if test.ok {
+			assert.Nil(t, err,test.Message)
+			assert.Equal(t,test.acl,acl,test.Message)
+		} else {
+			assert.NotNil(t, err,test.Message)
+		}
+	}
+}
+
+
+func TestSqlFilter(t *testing.T) {
+	acl :=MetaAcl{AllowedBeamtimes: []string{"bt"},AllowedBeamlines: []string{"bl"},AllowedFacilities: []string{"flty"}}
+
+	filter:="meta.counter > 11"
+	res := AddAclToSqlFilter(acl,&filter)
+	assert.Equal(t,"",*res)
+}
+
+
+func TestSqlNilFilter(t *testing.T) {
+	acl :=MetaAcl{AllowedBeamtimes: []string{"bt"},AllowedBeamlines: []string{"bl"},AllowedFacilities: []string{"flty"}}
+
+	var filter *string
+	res := AddAclToSqlFilter(acl,filter)
+	assert.Equal(t,"",*res)
+}
+
+

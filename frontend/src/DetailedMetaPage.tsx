@@ -585,7 +585,7 @@ function DetailedMeta({match, SetActiveBeamtime}: DetailedMetaProps) {
             <div className={classes.root}>
                 <Toolbar variant="dense"/>
                 <Typography variant="h3">
-                    server error, please try later
+                    {queryResult.error.message}
                 </Typography>
             </div>
         );
