@@ -3,7 +3,7 @@
 package generated
 
 import (
-	"asapm/server/graph/model"
+	"asapm/graphql/graph/model"
 	"bytes"
 	"context"
 	"errors"
@@ -688,7 +688,7 @@ func (ec *executionContext) dir_needAcl_args(ctx context.Context, rawArgs map[st
 	args := map[string]interface{}{}
 	var arg0 model.Acls
 	if tmp, ok := rawArgs["acl"]; ok {
-		arg0, err = ec.unmarshalNAcls2asapmᚋserverᚋgraphᚋmodelᚐAcls(ctx, tmp)
+		arg0, err = ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -724,7 +724,7 @@ func (ec *executionContext) field_Mutation_createMeta_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.NewBeamtimeMeta
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNNewBeamtimeMeta2asapmᚋserverᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx, tmp)
+		arg0, err = ec.unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -746,7 +746,7 @@ func (ec *executionContext) field_Mutation_setUserPreferences_args(ctx context.C
 	args["id"] = arg0
 	var arg1 model.InputUserPreferences
 	if tmp, ok := rawArgs["input"]; ok {
-		arg1, err = ec.unmarshalNInputUserPreferences2asapmᚋserverᚋgraphᚋmodelᚐInputUserPreferences(ctx, tmp)
+		arg1, err = ec.unmarshalNInputUserPreferences2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUserPreferences(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -869,7 +869,7 @@ func (ec *executionContext) _BeamtimeMeta_applicant(ctx context.Context, field g
 	}
 	res := resTmp.(*model.BeamtimeUser)
 	fc.Result = res
-	return ec.marshalOBeamtimeUser2ᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
+	return ec.marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_beamline(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -999,7 +999,7 @@ func (ec *executionContext) _BeamtimeMeta_status(ctx context.Context, field grap
 	}
 	res := resTmp.(model.Status)
 	fc.Result = res
-	return ec.marshalNStatus2asapmᚋserverᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
+	return ec.marshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_contact(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -1216,7 +1216,7 @@ func (ec *executionContext) _BeamtimeMeta_leader(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.BeamtimeUser)
 	fc.Result = res
-	return ec.marshalOBeamtimeUser2ᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
+	return ec.marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_onlineAnalysis(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -1247,7 +1247,7 @@ func (ec *executionContext) _BeamtimeMeta_onlineAnalysis(ctx context.Context, fi
 	}
 	res := resTmp.(*model.OnlineAnylysisMeta)
 	fc.Result = res
-	return ec.marshalOOnlineAnylysisMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐOnlineAnylysisMeta(ctx, field.Selections, res)
+	return ec.marshalOOnlineAnylysisMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐOnlineAnylysisMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_pi(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -1278,7 +1278,7 @@ func (ec *executionContext) _BeamtimeMeta_pi(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.BeamtimeUser)
 	fc.Result = res
-	return ec.marshalOBeamtimeUser2ᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
+	return ec.marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_proposalId(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -1433,7 +1433,7 @@ func (ec *executionContext) _BeamtimeMeta_users(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.Users)
 	fc.Result = res
-	return ec.marshalOUsers2ᚖasapmᚋserverᚋgraphᚋmodelᚐUsers(ctx, field.Selections, res)
+	return ec.marshalOUsers2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_customValues(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -1688,7 +1688,7 @@ func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field grap
 			return ec.resolvers.Mutation().CreateMeta(rctx, args["input"].(model.NewBeamtimeMeta))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋserverᚋgraphᚋmodelᚐAcls(ctx, "WRITE")
+			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "WRITE")
 			if err != nil {
 				return nil, err
 			}
@@ -1708,7 +1708,7 @@ func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field grap
 		if data, ok := tmp.(*model.BeamtimeMeta); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *asapm/server/graph/model.BeamtimeMeta`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *asapm/graphql/graph/model.BeamtimeMeta`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1719,7 +1719,7 @@ func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.BeamtimeMeta)
 	fc.Result = res
-	return ec.marshalOBeamtimeMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeMeta(ctx, field.Selections, res)
+	return ec.marshalOBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_setUserPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1757,7 +1757,7 @@ func (ec *executionContext) _Mutation_setUserPreferences(ctx context.Context, fi
 	}
 	res := resTmp.(*model.UserAccount)
 	fc.Result = res
-	return ec.marshalOUserAccount2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
+	return ec.marshalOUserAccount2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OnlineAnylysisMeta_asapoBeamtimeTokenPath(ctx context.Context, field graphql.CollectedField, obj *model.OnlineAnylysisMeta) (ret graphql.Marshaler) {
@@ -2012,7 +2012,7 @@ func (ec *executionContext) _Query_meta(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.([]*model.BeamtimeMeta)
 	fc.Result = res
-	return ec.marshalOBeamtimeMeta2ᚕᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeMeta(ctx, field.Selections, res)
+	return ec.marshalOBeamtimeMeta2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2050,7 +2050,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*model.UserAccount)
 	fc.Result = res
-	return ec.marshalOUserAccount2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
+	return ec.marshalOUserAccount2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2184,7 +2184,7 @@ func (ec *executionContext) _UserAccount_preferences(ctx context.Context, field 
 	}
 	res := resTmp.(*model.UserPreferences)
 	fc.Result = res
-	return ec.marshalOUserPreferences2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserPreferences(ctx, field.Selections, res)
+	return ec.marshalOUserPreferences2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserPreferences(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _UserPreferences_schema(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
@@ -3524,7 +3524,7 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 		switch k {
 		case "applicant":
 			var err error
-			it.Applicant, err = ec.unmarshalOInputBeamtimeUser2ᚖasapmᚋserverᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
+			it.Applicant, err = ec.unmarshalOInputBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3548,7 +3548,7 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			}
 		case "status":
 			var err error
-			it.Status, err = ec.unmarshalNStatus2asapmᚋserverᚋgraphᚋmodelᚐStatus(ctx, v)
+			it.Status, err = ec.unmarshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3590,19 +3590,19 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			}
 		case "leader":
 			var err error
-			it.Leader, err = ec.unmarshalOInputBeamtimeUser2ᚖasapmᚋserverᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
+			it.Leader, err = ec.unmarshalOInputBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "onlineAnalysis":
 			var err error
-			it.OnlineAnalysis, err = ec.unmarshalOInputOnlineAnylysisMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐInputOnlineAnylysisMeta(ctx, v)
+			it.OnlineAnalysis, err = ec.unmarshalOInputOnlineAnylysisMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputOnlineAnylysisMeta(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "pi":
 			var err error
-			it.Pi, err = ec.unmarshalOInputBeamtimeUser2ᚖasapmᚋserverᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
+			it.Pi, err = ec.unmarshalOInputBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3632,7 +3632,7 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			}
 		case "users":
 			var err error
-			it.Users, err = ec.unmarshalOInputUsers2ᚖasapmᚋserverᚋgraphᚋmodelᚐInputUsers(ctx, v)
+			it.Users, err = ec.unmarshalOInputUsers2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputUsers(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4202,12 +4202,12 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNAcls2asapmᚋserverᚋgraphᚋmodelᚐAcls(ctx context.Context, v interface{}) (model.Acls, error) {
+func (ec *executionContext) unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx context.Context, v interface{}) (model.Acls, error) {
 	var res model.Acls
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNAcls2asapmᚋserverᚋgraphᚋmodelᚐAcls(ctx context.Context, sel ast.SelectionSet, v model.Acls) graphql.Marshaler {
+func (ec *executionContext) marshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx context.Context, sel ast.SelectionSet, v model.Acls) graphql.Marshaler {
 	return v
 }
 
@@ -4239,20 +4239,20 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) unmarshalNInputUserPreferences2asapmᚋserverᚋgraphᚋmodelᚐInputUserPreferences(ctx context.Context, v interface{}) (model.InputUserPreferences, error) {
+func (ec *executionContext) unmarshalNInputUserPreferences2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUserPreferences(ctx context.Context, v interface{}) (model.InputUserPreferences, error) {
 	return ec.unmarshalInputInputUserPreferences(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNNewBeamtimeMeta2asapmᚋserverᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx context.Context, v interface{}) (model.NewBeamtimeMeta, error) {
+func (ec *executionContext) unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx context.Context, v interface{}) (model.NewBeamtimeMeta, error) {
 	return ec.unmarshalInputNewBeamtimeMeta(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNStatus2asapmᚋserverᚋgraphᚋmodelᚐStatus(ctx context.Context, v interface{}) (model.Status, error) {
+func (ec *executionContext) unmarshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx context.Context, v interface{}) (model.Status, error) {
 	var res model.Status
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNStatus2asapmᚋserverᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v model.Status) graphql.Marshaler {
+func (ec *executionContext) marshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v model.Status) graphql.Marshaler {
 	return v
 }
 
@@ -4496,11 +4496,11 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOBeamtimeMeta2asapmᚋserverᚋgraphᚋmodelᚐBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v model.BeamtimeMeta) graphql.Marshaler {
+func (ec *executionContext) marshalOBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v model.BeamtimeMeta) graphql.Marshaler {
 	return ec._BeamtimeMeta(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOBeamtimeMeta2ᚕᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v []*model.BeamtimeMeta) graphql.Marshaler {
+func (ec *executionContext) marshalOBeamtimeMeta2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v []*model.BeamtimeMeta) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4527,7 +4527,7 @@ func (ec *executionContext) marshalOBeamtimeMeta2ᚕᚖasapmᚋserverᚋgraphᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOBeamtimeMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeMeta(ctx, sel, v[i])
+			ret[i] = ec.marshalOBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4540,18 +4540,18 @@ func (ec *executionContext) marshalOBeamtimeMeta2ᚕᚖasapmᚋserverᚋgraphᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalOBeamtimeMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v *model.BeamtimeMeta) graphql.Marshaler {
+func (ec *executionContext) marshalOBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v *model.BeamtimeMeta) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._BeamtimeMeta(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOBeamtimeUser2asapmᚋserverᚋgraphᚋmodelᚐBeamtimeUser(ctx context.Context, sel ast.SelectionSet, v model.BeamtimeUser) graphql.Marshaler {
+func (ec *executionContext) marshalOBeamtimeUser2asapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx context.Context, sel ast.SelectionSet, v model.BeamtimeUser) graphql.Marshaler {
 	return ec._BeamtimeUser(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOBeamtimeUser2ᚖasapmᚋserverᚋgraphᚋmodelᚐBeamtimeUser(ctx context.Context, sel ast.SelectionSet, v *model.BeamtimeUser) graphql.Marshaler {
+func (ec *executionContext) marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx context.Context, sel ast.SelectionSet, v *model.BeamtimeUser) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4581,39 +4581,39 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOInputBeamtimeUser2asapmᚋserverᚋgraphᚋmodelᚐInputBeamtimeUser(ctx context.Context, v interface{}) (model.InputBeamtimeUser, error) {
+func (ec *executionContext) unmarshalOInputBeamtimeUser2asapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx context.Context, v interface{}) (model.InputBeamtimeUser, error) {
 	return ec.unmarshalInputInputBeamtimeUser(ctx, v)
 }
 
-func (ec *executionContext) unmarshalOInputBeamtimeUser2ᚖasapmᚋserverᚋgraphᚋmodelᚐInputBeamtimeUser(ctx context.Context, v interface{}) (*model.InputBeamtimeUser, error) {
+func (ec *executionContext) unmarshalOInputBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx context.Context, v interface{}) (*model.InputBeamtimeUser, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOInputBeamtimeUser2asapmᚋserverᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
+	res, err := ec.unmarshalOInputBeamtimeUser2asapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) unmarshalOInputOnlineAnylysisMeta2asapmᚋserverᚋgraphᚋmodelᚐInputOnlineAnylysisMeta(ctx context.Context, v interface{}) (model.InputOnlineAnylysisMeta, error) {
+func (ec *executionContext) unmarshalOInputOnlineAnylysisMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐInputOnlineAnylysisMeta(ctx context.Context, v interface{}) (model.InputOnlineAnylysisMeta, error) {
 	return ec.unmarshalInputInputOnlineAnylysisMeta(ctx, v)
 }
 
-func (ec *executionContext) unmarshalOInputOnlineAnylysisMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐInputOnlineAnylysisMeta(ctx context.Context, v interface{}) (*model.InputOnlineAnylysisMeta, error) {
+func (ec *executionContext) unmarshalOInputOnlineAnylysisMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputOnlineAnylysisMeta(ctx context.Context, v interface{}) (*model.InputOnlineAnylysisMeta, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOInputOnlineAnylysisMeta2asapmᚋserverᚋgraphᚋmodelᚐInputOnlineAnylysisMeta(ctx, v)
+	res, err := ec.unmarshalOInputOnlineAnylysisMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐInputOnlineAnylysisMeta(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) unmarshalOInputUsers2asapmᚋserverᚋgraphᚋmodelᚐInputUsers(ctx context.Context, v interface{}) (model.InputUsers, error) {
+func (ec *executionContext) unmarshalOInputUsers2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUsers(ctx context.Context, v interface{}) (model.InputUsers, error) {
 	return ec.unmarshalInputInputUsers(ctx, v)
 }
 
-func (ec *executionContext) unmarshalOInputUsers2ᚖasapmᚋserverᚋgraphᚋmodelᚐInputUsers(ctx context.Context, v interface{}) (*model.InputUsers, error) {
+func (ec *executionContext) unmarshalOInputUsers2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputUsers(ctx context.Context, v interface{}) (*model.InputUsers, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOInputUsers2asapmᚋserverᚋgraphᚋmodelᚐInputUsers(ctx, v)
+	res, err := ec.unmarshalOInputUsers2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUsers(ctx, v)
 	return &res, err
 }
 
@@ -4631,11 +4631,11 @@ func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.Selecti
 	return graphql.MarshalMap(v)
 }
 
-func (ec *executionContext) marshalOOnlineAnylysisMeta2asapmᚋserverᚋgraphᚋmodelᚐOnlineAnylysisMeta(ctx context.Context, sel ast.SelectionSet, v model.OnlineAnylysisMeta) graphql.Marshaler {
+func (ec *executionContext) marshalOOnlineAnylysisMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐOnlineAnylysisMeta(ctx context.Context, sel ast.SelectionSet, v model.OnlineAnylysisMeta) graphql.Marshaler {
 	return ec._OnlineAnylysisMeta(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOOnlineAnylysisMeta2ᚖasapmᚋserverᚋgraphᚋmodelᚐOnlineAnylysisMeta(ctx context.Context, sel ast.SelectionSet, v *model.OnlineAnylysisMeta) graphql.Marshaler {
+func (ec *executionContext) marshalOOnlineAnylysisMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐOnlineAnylysisMeta(ctx context.Context, sel ast.SelectionSet, v *model.OnlineAnylysisMeta) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -4720,33 +4720,33 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return ec.marshalOTime2timeᚐTime(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOUserAccount2asapmᚋserverᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v model.UserAccount) graphql.Marshaler {
+func (ec *executionContext) marshalOUserAccount2asapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v model.UserAccount) graphql.Marshaler {
 	return ec._UserAccount(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOUserAccount2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v *model.UserAccount) graphql.Marshaler {
+func (ec *executionContext) marshalOUserAccount2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v *model.UserAccount) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._UserAccount(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOUserPreferences2asapmᚋserverᚋgraphᚋmodelᚐUserPreferences(ctx context.Context, sel ast.SelectionSet, v model.UserPreferences) graphql.Marshaler {
+func (ec *executionContext) marshalOUserPreferences2asapmᚋgraphqlᚋgraphᚋmodelᚐUserPreferences(ctx context.Context, sel ast.SelectionSet, v model.UserPreferences) graphql.Marshaler {
 	return ec._UserPreferences(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOUserPreferences2ᚖasapmᚋserverᚋgraphᚋmodelᚐUserPreferences(ctx context.Context, sel ast.SelectionSet, v *model.UserPreferences) graphql.Marshaler {
+func (ec *executionContext) marshalOUserPreferences2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserPreferences(ctx context.Context, sel ast.SelectionSet, v *model.UserPreferences) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._UserPreferences(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOUsers2asapmᚋserverᚋgraphᚋmodelᚐUsers(ctx context.Context, sel ast.SelectionSet, v model.Users) graphql.Marshaler {
+func (ec *executionContext) marshalOUsers2asapmᚋgraphqlᚋgraphᚋmodelᚐUsers(ctx context.Context, sel ast.SelectionSet, v model.Users) graphql.Marshaler {
 	return ec._Users(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOUsers2ᚖasapmᚋserverᚋgraphᚋmodelᚐUsers(ctx context.Context, sel ast.SelectionSet, v *model.Users) graphql.Marshaler {
+func (ec *executionContext) marshalOUsers2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUsers(ctx context.Context, sel ast.SelectionSet, v *model.Users) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

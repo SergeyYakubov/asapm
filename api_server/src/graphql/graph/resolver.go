@@ -2,7 +2,7 @@ package graph
 //go:generate go run hooks/bson.go
 
 import (
-	"asapm/server/graph/model"
+	"asapm/graphql/graph/model"
 	"context"
 	"encoding/json"
 	"github.com/99designs/gqlgen/graphql"

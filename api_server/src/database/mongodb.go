@@ -4,7 +4,7 @@ package database
 
 import (
 	"asapm/common/utils"
-	"asapm/server/graph/model"
+	"asapm/graphql/graph/model"
 	"context"
 	"encoding/json"
 	"errors"

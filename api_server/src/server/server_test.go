@@ -4,8 +4,8 @@ import (
 	"asapm/common/logger"
 	"asapm/common/utils"
 	"asapm/database"
-	"asapm/server/graph/generated"
-	"asapm/server/graph/model"
+	"asapm/graphql/graph/generated"
+	"asapm/graphql/graph/model"
 	"context"
 	"encoding/json"
 	"github.com/99designs/gqlgen/client"
@@ -117,7 +117,7 @@ func createClient() *client.Client {
 	ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
 
 
-	config := generateConfig()
+	config := generateGqlConfig()
 	return client.New(handler.NewDefaultServer(generated.NewExecutableSchema(config)),
 		func(bd *client.Request) {
 			bd.HTTP = bd.HTTP.WithContext(ctx)

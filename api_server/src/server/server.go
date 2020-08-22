@@ -4,9 +4,9 @@ import (
 	"asapm/auth"
 	log "asapm/common/logger"
 	"asapm/common/utils"
-	"asapm/server/graph"
-	"asapm/server/graph/generated"
-	"asapm/server/graph/model"
+	"asapm/graphql/graph"
+	"asapm/graphql/graph/generated"
+	"asapm/graphql/graph/model"
 	"context"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
@@ -19,7 +19,7 @@ import (
 const defaultPort = "8080"
 const defaultEndpoint = "/"
 
-func generateConfig() generated.Config {
+func generateGqlConfig() generated.Config {
 	c := generated.Config{ Resolvers: &graph.Resolver{}}
 	c.Directives.NeedAcl = func(ctx context.Context, obj interface{}, next graphql.Resolver, acl model.Acls) (interface{}, error) {
 		if acl != model.AclsWrite {
@@ -44,9 +44,9 @@ func StartServer() {
 		endpoint = defaultEndpoint
 	}
 
-	config := generateConfig()
+	gqlConfig := generateGqlConfig()
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(gqlConfig))
 
 	http.Handle(endpoint, playground.Handler("GraphQL playground", endpoint+"/query"))
 
