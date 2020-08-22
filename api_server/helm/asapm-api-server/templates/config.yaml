@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "asapm.resourceName" . }}-config
+data:
+  config.json:  {{ tpl (.Files.Get ("config/config.json")) . | quote }}

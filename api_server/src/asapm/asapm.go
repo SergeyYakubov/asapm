@@ -2,34 +2,39 @@ package main
 
 import (
 	log "asapm/common/logger"
-	"asapm/common/utils"
 	"asapm/common/version"
 	"asapm/database"
 	"asapm/server"
+	"flag"
 	"os"
 )
 
-type Config struct {
-	dbEndpoint string
-}
-
-var config Config
-
-func setConfig() {
-	config.dbEndpoint = utils.GetEnv("ASAPM_DB_ENDPOINT","localhost:27017")
-}
 
 func main() {
-	log.SetSoucre("asapm api")
+	var fname = flag.String("config", "", "config file path")
 
-	log.SetLevel(log.DebugLevel)
+	if ret := version.ShowVersion(os.Stdout, "ASAPM Api Server"); ret {
+		return
+	}
+
+	log.SetSoucre("asapm api")
+	flag.Parse()
+	if *fname == "" {
+		PrintUsage()
+	}
+
+	logLevel, err := server.ReadConfig(*fname)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	log.SetLevel(logLevel)
+
 	log.Info("Starting ASAPM, version " + version.GetVersion())
 
-	setConfig()
-
-	err := database.InitDB(NewDefaultDatabase(),config.dbEndpoint)
+	err = database.InitDB(NewDefaultDatabase(),server.Config.DbEndpoint)
 	if err != nil {
-		log.Error("cannot init database at "+config.dbEndpoint+": "+err.Error())
+		log.Fatal("cannot init database at "+server.Config.DbEndpoint+": "+err.Error())
 	}
 	defer database.CleanupDB()
 

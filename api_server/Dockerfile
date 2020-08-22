@@ -8,5 +8,5 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/asapm-api-server asap
 
 FROM busybox:glibc
 COPY --from=base /app /app
-ENTRYPOINT /app/asapm-api-server
+ENTRYPOINT /app/asapm-api-server -config /etc/asapm/config.json
 

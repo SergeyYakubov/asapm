@@ -41,6 +41,14 @@ func ReadJsonFromFile(fname string, config interface{}) error {
 }
 
 
+func ReadFileAsString(fname string) (string, error) {
+	content, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return "",err
+	}
+	return string(content),nil
+}
+
 func ReadStringsFromFile(fname string) ([]string, error) {
 	content, err := ioutil.ReadFile(fname)
 	if err != nil {
@@ -50,7 +58,6 @@ func ReadStringsFromFile(fname string) ([]string, error) {
 
 	return lines,nil
 }
-
 
 func ReadFirstStringFromFile(fname string) (string, error) {
 	lines,err  := ReadStringsFromFile(fname)

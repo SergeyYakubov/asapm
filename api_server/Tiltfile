@@ -12,7 +12,7 @@ watch_file('helm/asapm-api-server')
 if mode == 'dev':
     docker_build_with_restart(
     'yakser/asapm-api-server','.',
-    entrypoint='/app/asapm-api-server',
+    entrypoint='/app/asapm-api-server -config /etc/asapm/config.json',
     only=[
         './src',
     ],
