@@ -72,6 +72,18 @@ func ReadFirstStringFromFile(fname string) (string, error) {
 	return lines[0],nil
 }
 
+func InterfaceToInterface(from interface{}, to interface{}) error {
+	tmp, err := json.Marshal(from)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(tmp, to)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 
 func MapToStruct(m map[string]interface{}, val interface{}) error {
 	tmp, err := json.Marshal(m)

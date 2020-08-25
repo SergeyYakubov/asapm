@@ -3,5 +3,8 @@
   "logLevel" : "{{ .Values.apiServer.logLevel }}",
   "port" : "{{ .Values.apiServer.internalPort }}",
   "basePath" : "{{ tpl .Values.apiServer.basePath . }}",
-  "publicKeyPath" : "/etc/asapm/keys/key.pub"
+  "publicKeyPath" : "/etc/asapm/keys/key.pub",
+  "authorization" : {
+    "enabled": {{ .Values.apiServer.authorization.enabled }}
+  }
 }

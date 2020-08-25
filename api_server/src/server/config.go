@@ -11,6 +11,9 @@ type serverConfig struct {
 	Port          string `json:"port"`
 	BasePath      string `json:"basePath"`
 	PublicKeyPath string `json:"publicKeyPath"`
+	Authorization struct {
+		Enabled bool `json:"enabled"`
+	}`json:"authorization"`
 	publicKey     string
 }
 

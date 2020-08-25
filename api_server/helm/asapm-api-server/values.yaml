@@ -6,6 +6,8 @@ apiServer:
   image: yakser/asapm-api-server
   basePath: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix}}/asapm/api"
   dbEndpoint: "{{ .Release.Name }}-mongodb:27017"
+  authorization:
+    enabled: true
   tls:
     enabled: false
   imageCredentials:

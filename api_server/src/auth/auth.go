@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/dgrijalva/jwt-go"
+	"net/http"
 	"strings"
 )
 
@@ -23,15 +25,31 @@ type MetaAcl struct {
 	AllowedFacilities []string
 }
 
+type claimFields struct {
+	UserName        string   `json:"preferred_username"`
+	Groups          []string `json:"groups"`
+	AuthorizedParty string   `json:"azp"`
+	Roles []string `json:"roles"`
+}
+
+func BypassAuth(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims := claimFields{Roles: []string{"admin"},UserName: "admin",AuthorizedParty: "asapm"}
+		jwtClaims := jwt.MapClaims{}
+
+		utils.InterfaceToInterface(&claims,&jwtClaims)
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &jwtClaims)
+		fn(w, r.WithContext(ctx))
+	}
+}
+
+
 func userPropsFromClaim(claim map[string]interface{}) (userProps, error) {
 	var props userProps
 	bClaim, _ := json.Marshal(&claim)
-	fields := struct {
-		UserName        string   `json:"preferred_username"`
-		Groups          []string `json:"groups"`
-		AuthorizedParty string   `json:"azp"`
-		Roles []string `json:"roles"`
-	}{}
+	fields := claimFields {}
 
 	err := json.Unmarshal(bClaim, &fields)
 
