@@ -105,7 +105,7 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime}: Meta
                                             Beamtime ID: {meta.beamtimeId}
                                         </Typography>
                                         <Typography component="span" align="right">
-                                            Beamline: {meta.beamline}
+                                            Beamline: {meta.beamline || "undefined"}
                                         </Typography>
                                     </React.Fragment>
                                 </Grid>

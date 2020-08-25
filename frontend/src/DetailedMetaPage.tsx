@@ -263,7 +263,7 @@ function IsoDateToStr(isoDate: String) {
 
 interface TableEntry {
     name: string
-    value: string
+    value: String
     data?: any
 }
 
@@ -274,24 +274,24 @@ function TableDataFromMeta(meta: MetaDetails, section: string): TableData {
     switch (section) {
         case "Beamtime":
             return [
-                {name: 'Beamtime ID', value: meta.beamtimeId as string},
-                {name: 'Facility', value: meta.facility as string},
-                {name: 'Beamline', value: meta.beamline as string},
+                {name: 'Beamtime ID', value: meta.beamtimeId},
+                {name: 'Facility', value: meta.facility || "undefined"},
+                {name: 'Beamline', value: meta.beamline || "undefined"},
                 {name: 'Generated', value: IsoDateToStr(meta.generated)},
                 {name: 'Start', value: IsoDateToStr(meta.eventStart)},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
             ]
         case "Proposal":
             return [
-                {name: 'Proposal ID', value: meta.proposalId as string},
-                {name: 'Type', value: meta.proposalType as string},
-                {name: 'Principal Investigator', value: meta.pi.lastname as string, data: meta.pi},
-                {name: 'Leader', value: meta.leader.lastname as string, data: meta.leader},
-                {name: 'Applicant', value: meta.applicant.lastname as string, data: meta.applicant},
+                {name: 'Proposal ID', value: meta.proposalId || "undefined"},
+                {name: 'Type', value: meta.proposalType || "undefined"},
+                {name: 'Principal Investigator', value: meta.pi?.lastname || "undefined", data: meta.pi},
+                {name: 'Leader', value: meta.leader?.lastname || "undefined", data: meta.leader},
+                {name: 'Applicant', value: meta.applicant?.lastname || "undefined", data: meta.applicant},
             ]
         case "Analysis":
             return [
-                {name: 'Core path', value: meta.corePath as string},
+                {name: 'Core path', value: meta.corePath || "undefined"},
                 {name: 'Online', value: meta.onlineAnalysis ? "Requested" : "Not requested", data: meta.onlineAnalysis},
             ]
     }
