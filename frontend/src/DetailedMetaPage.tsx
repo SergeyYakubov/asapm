@@ -74,7 +74,7 @@ const useStyles = makeStyles((theme: Theme) =>
                 margin: theme.spacing(2),
             },
             title: {
-                marginTop: theme.spacing(-2),
+                marginTop: theme.spacing(0),
                 marginBottom: theme.spacing(2),
             },
             tableTitle: {
@@ -85,9 +85,6 @@ const useStyles = makeStyles((theme: Theme) =>
                 marginLeft: theme.spacing(2),
             },
             chip: {
-                marginTop: theme.spacing(-2),
-                marginBottom: theme.spacing(2),
-                marginLeft: theme.spacing(4),
             },
             chipRunning: {
 //            backgroundColor: '#4caf50',
@@ -218,24 +215,22 @@ function DetailedHeader({meta, rawView, setRawView}: DetailedHeaderProps) {
         <div>
             <Grid container spacing={0}>
                 <Grid item xs={12}>
-                    <Typography variant="h6">
+                    <Typography variant="h6" color="textSecondary">
                         Detailed View
                     </Typography>
                 </Grid>
                 <Grid item xs={12}>
-                    <Box display="flex" justifyContent="center" alignItems="flex-end">
-                        <Typography variant="h4" align="center" className={classes.title}>
+                        <Typography variant="h5" align="center" className={classes.title}>
                             {meta.title}
                         </Typography>
-                        <Chip label={meta.status} variant="outlined" className={clsx(classes.chip, {
-                            [classes.chipRunning]: meta.status == 'Running',
-                            [classes.chipCompleted]: meta.status == 'Completed',
-                            [classes.chipScheduled]: meta.status == 'Scheduled',
-                        })}/>
-                    </Box>
                 </Grid>
             </Grid>
-            <Grid container justify="flex-end">
+            <Grid container direction="row" justify="space-between" alignItems="flex-end">
+                <Chip label={meta.status} variant="outlined" className={clsx(classes.chip, {
+                    [classes.chipRunning]: meta.status == 'Running',
+                    [classes.chipCompleted]: meta.status == 'Completed',
+                    [classes.chipScheduled]: meta.status == 'Scheduled',
+                })}/>
                 <FormControlLabel
                     control={
                         <Switch

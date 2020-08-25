@@ -42,7 +42,7 @@ function FilterBox() {
         <div className={classes.root}>
             <Grid container spacing={1}   alignItems="flex-end">
                 <Grid item xs={12}>
-                    <Typography variant="h6">
+                    <Typography variant="h6" color="textSecondary">
                         Metadata Board
                     </Typography>
                 </Grid>

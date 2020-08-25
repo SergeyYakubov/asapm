@@ -92,7 +92,7 @@ def addMeta():
           }
           proposalId: "$proposalId"
           proposalType: "C"
-          title: "$title"
+          title: "$title-$title-$title-$title-$title"
           unixId: "$unixId"
           users: {
             doorDb: ["user1", "user2", "user3"]
