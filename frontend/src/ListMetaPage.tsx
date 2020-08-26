@@ -151,28 +151,20 @@ function ListMeta({activeBeamtime,SetActiveBeamtime}:ListMetaProps) {
                 <Grid item xs={12}>
                     <Divider></Divider>
                 </Grid>
-                <Grid item xs={4}>
-                    <Typography variant="overline">
-                        Scheduled
-                    </Typography>
-                </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                     <Typography variant="overline">
                         Running
                     </Typography>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                     <Typography variant="overline">
                         Completed
                     </Typography>
                 </Grid>
-                <Grid item xs={4}>
-                    <MetaColumn activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Scheduled}/>
-                </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                     <MetaColumn  activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Running}/>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={6}>
                     <MetaColumn  activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Completed}/>
                 </Grid>
             </Grid>
