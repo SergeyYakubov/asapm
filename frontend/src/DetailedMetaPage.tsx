@@ -6,7 +6,6 @@ import {METAS_DETAILED, Status, MetaDataDetails, MetaDetails} from "./graphQLTyp
 import {useQuery} from "@apollo/react-hooks";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
-import Box from "@material-ui/core/Box";
 import {Divider} from "@material-ui/core";
 import Chip from '@material-ui/core/Chip';
 import Paper from "@material-ui/core/Paper";
@@ -363,9 +362,23 @@ function CustomTable({data}: CustomTableProps) {
 
 function StaticSection({meta, section}: StaticSectionProps) {
     const classes = useStyles();
-    return <Paper className={classes.paper}>
+    return  <Grid
+        container
+        direction="column"
+        justify="center"
+        alignItems="stretch"
+    >
+        <Grid  item xs={12}>
+            <Typography variant="overline" align="center" className={classes.tableTitle}>
+                {section}
+            </Typography>
+        </Grid>
+        <Grid  item xs={12}>
+            <Paper className={classes.paper}>
         <Table meta={meta} section={section}/>
-    </Paper>
+        </Paper>
+        </Grid>
+    </Grid>
 }
 
 function replacer(key: string, value: any) {
@@ -377,7 +390,7 @@ function replacer(key: string, value: any) {
 
 function RawMeta({meta}: MetaViewProps) {
     return <div>
-        <pre id="json">
+        <pre style={{whiteSpace: "pre-wrap"}} id="json">
             {
                 JSON.stringify(meta, replacer, '\t')
             }
@@ -389,32 +402,15 @@ function RawMeta({meta}: MetaViewProps) {
 function StaticMeta({meta}: MetaViewProps) {
     const classes = useStyles();
     return <div>
-        <Grid container spacing={1}>
-            <Grid item xs>
-                <Typography variant="overline" align="center" className={classes.tableTitle}>
-                    Beamtime
-                </Typography>
-            </Grid>
-            <Grid item xs>
-                <Typography variant="overline" align="center" className={classes.tableTitle}>
-                    Proposal
-                </Typography>
-            </Grid>
-            <Grid item xs>
-                <Typography variant="overline" align="center" className={classes.tableTitle}>
-                    Analysis
-                </Typography>
-            </Grid>
-        </Grid>
         <Grid container direction="row" alignItems="stretch" spacing={1}>
-            <Grid item xs={4}>
-                <StaticSection meta={meta} section={"Beamtime"}/>
+            <Grid item xs={12} sm={12} md={4}>
+                <StaticSection meta={meta} section="Beamtime"/>
             </Grid>
-            <Grid item xs={4}>
-                <StaticSection meta={meta} section={"Proposal"}/>
+            <Grid item xs={12} sm={12} md={4}>
+                <StaticSection meta={meta} section="Proposal"/>
             </Grid>
-            <Grid item xs={4}>
-                <StaticSection meta={meta} section={"Analysis"}/>
+            <Grid item xs={12} sm={12} md={4}>
+                <StaticSection meta={meta} section="Analysis"/>
             </Grid>
         </Grid>
     </div>

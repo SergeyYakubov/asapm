@@ -21,6 +21,7 @@ const useStyles = makeStyles((theme: Theme) =>
         root: {
             flexGrow: 1,
             margin: theme.spacing(1),
+            minWidth:0,
         },
         paper: {
             paddingTop: theme.spacing(1),
@@ -59,9 +60,10 @@ type MetaColumnProps = {
     status: Status,
     activeBeamtime: string,
     SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>,
+    title: string,
 }
 
-function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime}: MetaColumnProps) {
+function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}: MetaColumnProps) {
     const classes = useStyles();
     const history = useHistory();
 
@@ -90,7 +92,19 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime}: Meta
         }
     }
 
-    return <Paper className={classes.paper}>
+    return <Grid
+        container
+        direction="column"
+        justify="center"
+        alignItems="stretch"
+    >
+        <Grid  item xs={12}>
+            <Typography variant="overline">
+                {title}
+            </Typography>
+        </Grid>
+        <Grid  item xs={12}>
+        <Paper className={classes.paper}>
         <List component="nav">
             {queryResult.data && queryResult.data!.meta.filter(meta => meta.status == status).map(meta =>
                     <ListItem button className={classes.listItem} onDoubleClick={handleDoubleClick} onClick={handleClick}
@@ -129,6 +143,8 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime}: Meta
             }
         </List>
     </Paper>
+        </Grid>
+    </Grid>
 }
 
 
@@ -151,21 +167,11 @@ function ListMeta({activeBeamtime,SetActiveBeamtime}:ListMetaProps) {
                 <Grid item xs={12}>
                     <Divider></Divider>
                 </Grid>
-                <Grid item xs={6}>
-                    <Typography variant="overline">
-                        Running
-                    </Typography>
+                <Grid item xs={12} sm={6}>
+                    <MetaColumn  title="Running" activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Running}/>
                 </Grid>
-                <Grid item xs={6}>
-                    <Typography variant="overline">
-                        Completed
-                    </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                    <MetaColumn  activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Running}/>
-                </Grid>
-                <Grid item xs={6}>
-                    <MetaColumn  activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Completed}/>
+                <Grid item xs={12} sm={6}>
+                    <MetaColumn  title="Completed" activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Completed}/>
                 </Grid>
             </Grid>
         </div>

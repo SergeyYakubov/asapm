@@ -146,6 +146,12 @@ func addAllowedBeamtimes(acl MetaAcl,props userProps) MetaAcl {
 func addAllowedBeamlines(acl MetaAcl,props userProps) MetaAcl {
 	beamlineSuffixes := []string{"dmgt","staff"}
 	acl.AllowedBeamlines = extractGroupWithSuffix(acl.AllowedBeamlines,beamlineSuffixes,props)
+	for i,bl := range(acl.AllowedBeamlines) {
+		if bl=="p021" || bl=="p022" || bl=="p211" || bl=="p212" {
+			bl_new := bl[:3] + "." + bl[3:]
+			acl.AllowedBeamlines[i] = bl_new
+		}
+	}
 	return acl
 }
 

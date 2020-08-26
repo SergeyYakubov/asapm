@@ -129,6 +129,8 @@ var aclTests = []struct {
 		MetaAcl{ImmediateAccess: true}, true,"fsdata access"},
 	{`{"preferred_username":"dd","azp": "asapm","groups": ["p01staff"]}`,
 		MetaAcl{AllowedBeamlines: []string{"p01"}}, true,"p01staff"},
+	{`{"preferred_username":"dd","azp": "asapm","groups": ["p021staff","p022staff","p211staff","p212staff"]}`,
+		MetaAcl{AllowedBeamlines: []string{"p02.1","p02.2","p21.1","p21.2"}}, true,"p01staff"},
 	{`{"preferred_username":"dd","azp": "asapm","groups": ["12345-clbt"]}`,
 		MetaAcl{AllowedBeamtimes: []string{"12345"}}, true,"beamtime 12345"},
 
