@@ -23,6 +23,7 @@ func AddMeta(c * client.Client, resp interface{} ) {
     input: {
       beamtimeId: "sss"
       status: Completed
+      childCollectionName: "scans"
       customValues: { hello: { time: 123, date: "111" }, bye: "345" }
     }
   ) {
@@ -35,6 +36,25 @@ func AddMeta(c * client.Client, resp interface{} ) {
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request create_meta")))
 	c.MustPost(query, resp)
 }
+
+
+func AddCollectionEntry(c * client.Client, resp interface{} ) {
+	query := `mutation {
+  addCollectionEntry(
+    input: {
+      id: "sss.scan1"
+      customValues: { hello: { time: 123, date: "111" }, bye: "345" }
+    }
+  ) {
+	id
+    customValues(removeFields: ["bye"])
+  }
+}
+`
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request add_collection_entry")))
+	c.MustPost(query, resp)
+}
+
 
 func assertExpectations(t *testing.T, mock_db *database.MockedDatabase) {
 	mock_db.AssertExpectations(t)
@@ -91,23 +111,6 @@ func structfromMap (resp_map map[string]interface{},resp_struct interface{})  {
 	json.Unmarshal([]byte(replaced), resp_struct)
 }
 
-func (suite *ProcessQueryTestSuite) TestCreateMeta() {
-	c:=createClient()
-
-
-	suite.mock_db.On("ProcessRequest", "beamtime", "meta","create_meta", mock.Anything).Return([]byte("{}"), nil)
-
-	var b map[string]interface{}
-	AddMeta(c,&b)
-
-	var resp struct {
-		CreateMeta model.BeamtimeMeta
-	}
-	structfromMap(b,&resp)
-
-	suite.Equal( "sss", resp.CreateMeta.BeamtimeID)
-	suite.Equal( model.StatusCompleted, resp.CreateMeta.Status)
-}
 
 func createClient() *client.Client {
 	sclaims:=`{"preferred_username":"dd","azp": "asapm-service", "roles": ["admin"]}`
@@ -124,16 +127,46 @@ func createClient() *client.Client {
 		})
 }
 
+func (suite *ProcessQueryTestSuite) TestCreateMeta() {
+	c:=createClient()
+
+	suite.mock_db.On("ProcessRequest", "beamtime", kBeamtimeMetaNameInDb,"create_record", mock.Anything).Return([]byte("{}"), nil)
+
+	var b map[string]interface{}
+	AddMeta(c,&b)
+
+	var resp struct {
+		CreateMeta model.BeamtimeMeta
+	}
+	structfromMap(b,&resp)
+	suite.Equal( "sss", resp.CreateMeta.BeamtimeID)
+	suite.Equal( model.StatusCompleted, resp.CreateMeta.Status)
+}
+
+func (suite *ProcessQueryTestSuite) TestAddCollectionEntry() {
+	c:=createClient()
+
+	suite.mock_db.On("ProcessRequest", "beamtime", "collection-meta","add_record", mock.Anything).Return([]byte("{}"), nil)
+
+	var b map[string]interface{}
+	AddCollectionEntry(c,&b)
+	var resp struct {
+		AddCollectionEntry model.CollectionEntry
+	}
+	structfromMap(b,&resp)
+	suite.Equal( "sss.scan1", *resp.AddCollectionEntry.ID)
+}
+
 func (suite *ProcessQueryTestSuite) TestReadMeta() {
 
-	suite.mock_db.On("ProcessRequest", "beamtime", "meta","create_meta",mock.Anything).Return([]byte("{}"), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", kBeamtimeMetaNameInDb,"create_record",mock.Anything).Return([]byte("{}"), nil)
 
 	c:=createClient()
 
 	var map_resp map[string]interface{}
 	AddMeta(c,&map_resp)
 	query := `query {
-  	meta {
+  	meta (filter:"beamline = 'p05'",orderBy:"beamtimeId DESC") {
     	beamtimeId
     	customValues
 		status
@@ -141,13 +174,16 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	}`
 	assertExpectations(suite.T(), suite.mock_db)
 
-	var filter *string = nil
-	var orderBy *string = nil
+	var fs  = database.FilterAndSort{
+		Filter: "beamline = 'p05'",
+		Order:  "beamtimeId DESC",
+		IdName: "beamtimeId",
+	}
 
-	params := []interface {}{filter,orderBy,&[]*model.BeamtimeMeta{}}
-	suite.mock_db.On("ProcessRequest", "beamtime", "meta","read_meta",params).Return([]byte("{}"), nil).
+	params := []interface {}{fs,&[]*model.BeamtimeMeta{}}
+	suite.mock_db.On("ProcessRequest", "beamtime", kBeamtimeMetaNameInDb,"read_records",params).Return([]byte("{}"), nil).
 		Run(func(args mock.Arguments) {
-		arg := args.Get(3).([]interface {})[2].(*[]*model.BeamtimeMeta)
+		arg := args.Get(3).([]interface {})[1].(*[]*model.BeamtimeMeta)
 		v := []byte("[{\"_id\":\"1234\"}]")
 		json.Unmarshal(v,arg)
 	})

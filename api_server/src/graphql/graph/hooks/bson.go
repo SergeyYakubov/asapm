@@ -6,13 +6,17 @@ import (
 "github.com/99designs/gqlgen/api"
 "github.com/99designs/gqlgen/codegen/config"
 "github.com/99designs/gqlgen/plugin/modelgen"
+	"strings"
 )
 
 func mutateHook(b *modelgen.ModelBuild) *modelgen.ModelBuild {
 	for _, model := range b.Models {
 		for _, field := range model.Fields {
 			name := field.Name
-			if name == "beamtimeId" {
+			if strings.HasSuffix(model.Name,"BeamtimeMeta") && name == "beamtimeId" {
+				name = "_id"
+			}
+			if strings.HasSuffix(model.Name,"CollectionEntry") && name == "id" {
 				name = "_id"
 			}
 			field.Tag = `json:"` + name + `"` + ` bson:"` + name + `"`

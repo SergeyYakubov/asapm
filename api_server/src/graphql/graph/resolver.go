@@ -2,9 +2,7 @@ package graph
 //go:generate go run hooks/bson.go
 
 import (
-	"asapm/graphql/graph/model"
 	"context"
-	"encoding/json"
 	"github.com/99designs/gqlgen/graphql"
 )
 
@@ -15,50 +13,22 @@ import (
 type Resolver struct{
 }
 
-func DeepCopy(a, b interface{}) {
-	byt, _ := json.Marshal(a)
-	json.Unmarshal(byt, b)
-}
-
-func keepFields(ctx context.Context, meta *model.BeamtimeMeta)  {
-	names := map[string]interface{}{}
-	for _, f := range graphql.CollectFieldsCtx(ctx, nil) {
-		for _, a := range f.Arguments {
-			if a.Name == "selectFields" {
-				for _, child := range a.Value.Children {
-					names[child.Value.Raw] = 1
-				}
-			}
-		}
-	}
-	if len(names) == 0 {
-		return
-	}
-
-	for key, _ := range meta.CustomValues {
-		_, ok := names[key]
-		if !ok {
-			delete(meta.CustomValues, key)
-		}
-	}
-	return
-}
-func removeFields(ctx context.Context, source *map[string]interface{}) {
+func extractModificationFields(ctx context.Context) ([]string,[]string) {
+	keep := make([]string,0)
+	remove := make([]string,0)
 	for _, f := range graphql.CollectFieldsCtx(ctx, nil) {
 		for _, a := range f.Arguments {
 			if a.Name == "removeFields" {
 				for _, child := range a.Value.Children {
-					delete(*source, child.Value.Raw)
+					remove = append(remove,child.Value.Raw)
+				}
+ 			} else if a.Name == "selectFields" {
+				for _, child := range a.Value.Children {
+					keep = append(keep,child.Value.Raw)
 				}
 			}
+
 		}
 	}
-}
-func updateFields(ctx context.Context, meta *model.BeamtimeMeta) {
-	oldLength := len(meta.CustomValues)
-	keepFields(ctx, meta)
-	if len(meta.CustomValues) == oldLength {
-		removeFields(ctx, &meta.CustomValues)
-	}
-	return
+	return keep,remove
 }

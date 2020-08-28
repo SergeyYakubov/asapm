@@ -104,3 +104,7 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
+func DeepCopy(a, b interface{}) {
+	byt, _ := json.Marshal(a)
+	json.Unmarshal(byt, b)
+}

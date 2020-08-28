@@ -6,41 +6,54 @@ package graph
 import (
 	"asapm/auth"
 	"asapm/common/logger"
-	"asapm/database"
 	"asapm/graphql/graph/generated"
 	"asapm/graphql/graph/model"
+	"asapm/graphql/meta"
 	"context"
-	"encoding/json"
 	"errors"
 )
+
+func (r *mutationResolver) AddCollectionEntry(ctx context.Context, input model.NewCollectionEntry) (*model.CollectionEntry, error) {
+	log_str := "processing request add_collection_entry"
+	logger.Debug(log_str)
+
+	acl,err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: "+err.Error())
+		return nil, errors.New("access denied: "+err.Error())
+	}
+
+	res,err := meta.AddCollectionEntry(acl,input)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	return res, err
+}
+
+
+func (r *queryResolver) Collections(ctx context.Context, filter *string,orderBy *string) ([]*model.CollectionEntry, error) {
+	acl,err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: "+err.Error())
+		return []*model.CollectionEntry{}, errors.New("access denied: "+err.Error())
+	}
+
+	keep,remove := extractModificationFields(ctx)
+
+	res,err := meta.ReadCollectionsMeta(acl,filter,orderBy,keep,remove)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	return res, err
+}
+
 
 func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
 	log_str := "processing request create_meta"
 	logger.Debug(log_str)
-
-	meta := &model.BeamtimeMeta{}
-	DeepCopy(&input, meta)
-
-	_, err := database.GetDb().ProcessRequest("beamtime", "meta", "create_meta", input)
-	if err != nil {
-		return &model.BeamtimeMeta{}, err
-	}
-
-	updateFields(ctx, meta)
-	return meta, nil
+	return meta.CreateBeamtimeMeta(input)
 }
 
-func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
-	_, err := database.GetDb().ProcessRequest("users", "preferences", "update_user_preferences", id, &input)
-	if err != nil {
-		return &model.UserAccount{}, err
-	}
-	var pref = model.UserAccount{}
-	pref.Preferences = new(model.UserPreferences)
-	pref.Preferences.Schema = input.Schema
-	pref.ID = id
-	return &pref, err
-}
 
 func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string) ([]*model.BeamtimeMeta, error) {
 	log_str := "processing request read_meta"
@@ -52,41 +65,22 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string
 		return []*model.BeamtimeMeta{}, errors.New("access denied: "+err.Error())
 	}
 
-	if acl.ImmediateDeny {
-		logger.Error("access denied, not enough permissions")
-		return []*model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")
-	}
+	keep,remove := extractModificationFields(ctx)
 
-	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl,filter)
-	}
-
-	var sResponse = []*model.BeamtimeMeta{}
-
-	_, err = database.GetDb().ProcessRequest("beamtime", "meta", "read_meta",filter,orderBy,&sResponse)
+	res,err := meta.ReadBeamtimeMeta(acl,filter,orderBy,keep,remove)
 	if err != nil {
-		return []*model.BeamtimeMeta{}, err
+		logger.Error(err.Error())
 	}
+	return res, err
+}
 
-	for _, meta := range sResponse {
-		updateFields(ctx, meta)
-	}
 
-	return sResponse, nil
+func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
+	return meta.SetUserPreferences(id,input)
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.UserAccount, error) {
-	res, err := database.GetDb().ProcessRequest("users", "preferences", "get_user_preferences", id)
-	if err != nil {
-		return &model.UserAccount{}, err
-	}
-	var ac model.UserAccount
-	ac.ID = id
-	err = json.Unmarshal(res, &ac.Preferences)
-	if err != nil {
-		return &model.UserAccount{}, err
-	}
-	return &ac, nil
+	return meta.GetUserPreferences(id)
 }
 
 // Mutation returns generated.MutationResolver implementation.

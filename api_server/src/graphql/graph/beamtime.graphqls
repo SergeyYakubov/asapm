@@ -57,7 +57,6 @@ enum Status {
     Completed
 }
 
-
 type BeamtimeMeta {
     applicant: BeamtimeUser
     beamline: String
@@ -78,6 +77,30 @@ type BeamtimeMeta {
     title: String
     unixId: String
     users: Users
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+}
+
+type BaseCollectionEntry {
+    id: String
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    beamline: String
+    facility: String
+}
+
+type CollectionEntry {
+    id: String
+    beamtimeId: String
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    beamline: String
+    facility: String
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
 }
 
@@ -101,6 +124,16 @@ input NewBeamtimeMeta {
     title: String
     unixId: String
     users: InputUsers
+    childCollectionName: String
+    customValues: Map
+}
+
+input NewCollectionEntry {
+    id: String!
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    childCollectionName: String
     customValues: Map
 }
 
@@ -115,11 +148,13 @@ enum Acls {
 
 type Mutation {
     createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
+    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: WRITE)
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 
 type Query {
     meta (filter: String, orderBy: String): [BeamtimeMeta]
+    collections (filter: String, orderBy: String): [CollectionEntry]
     user (id: ID!): UserAccount
 }
 

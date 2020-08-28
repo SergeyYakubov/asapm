@@ -6,6 +6,12 @@ import (
 )
 
 
+type FilterAndSort struct {
+	Filter string
+	Order string
+	IdName string
+}
+
 type Agent interface {
 	ProcessRequest(db_name string, data_collection_name string, op string, extra_params ...interface{}) ([]byte, error)
 	Ping() error

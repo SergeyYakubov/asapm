@@ -4,7 +4,6 @@ package database
 
 import (
 	"asapm/common/utils"
-	"asapm/graphql/graph/model"
 	"context"
 	"encoding/json"
 	"errors"
@@ -132,6 +131,7 @@ func (db *Mongodb) checkDatabaseOperationPrerequisites(db_name string, collectio
 func (db *Mongodb) insertRecord(dbname string, collection_name string, s interface{}) error {
 	if db.client == nil {
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
+		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
 	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
@@ -140,7 +140,7 @@ func (db *Mongodb) insertRecord(dbname string, collection_name string, s interfa
 	return err
 }
 
-func (db *Mongodb) updateUserPreferences(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 2 {
 		return nil, errors.New("wrong number of parameters")
 	}
@@ -162,7 +162,7 @@ func (db *Mongodb) updateUserPreferences(dbName string, dataCollectionName strin
 	return nil, err
 }
 
-func (db *Mongodb) getUserPreferences(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+func (db *Mongodb) readRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 1 {
 		return nil, errors.New("wrong number of parameters")
 	}
@@ -180,54 +180,104 @@ func (db *Mongodb) getUserPreferences(dbName string, dataCollectionName string, 
 	return json.Marshal(resMap)
 }
 
-func (db *Mongodb) createMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 1 {
 		return nil, errors.New("wrong number of parameters")
 	}
-	meta, ok := extra_params[0].(model.NewBeamtimeMeta)
-	if !ok {
-		return nil, errors.New("mongo: first argument must be NewBeamtimeMeta")
-	}
+	record := extra_params[0]
 	c := db.client.Database(dbName).Collection(dataCollectionName)
-	_, err := c.InsertOne(context.TODO(), meta, options.InsertOne())
+	_, err := c.InsertOne(context.TODO(), record, options.InsertOne())
 	if err != nil {
 		return nil, err
 	}
 	return nil, err
 }
 
-func (db *Mongodb) readMeta(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
-	c := db.client.Database(dbName).Collection(dataCollectionName)
-
+func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 3 {
 		return nil, errors.New("wrong number of parameters")
 	}
 
-	filter, ok := extra_params[0].(*string)
+	id, ok := extra_params[0].(string)
 	if !ok {
-		return nil, errors.New("mongo: filter must be string")
+		return nil, errors.New("an argument must be string")
 	}
-	orderBy, ok := extra_params[1].(*string)
+
+	key, ok := extra_params[1].(string)
 	if !ok {
-		return nil, errors.New("mongo: filter must be string")
+		return nil, errors.New("an argument must be string")
 	}
+
+	record := extra_params[2]
+
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	q := bson.M{"$and": []bson.M{bson.M{"_id": id},bson.M{key: bson.M{"$exists": true}}}}
+
+	update := bson.M{
+		"$addToSet": bson.M{
+			key: record,
+		},
+	}
+	res, err := c.UpdateOne(context.TODO(), q, update)
+	if err!=nil {
+		return nil,err
+	}
+	if res.MatchedCount == 0 {
+		return nil, errors.New("record not found")
+	}
+
+	if res.ModifiedCount + res.UpsertedCount == 0 {
+		return nil, errors.New("record not inserted")
+	}
+	return nil, err
+}
+
+
+
+
+func getQueryString(fs FilterAndSort) string {
+	queryStr := ""
+
+	if fs.Filter != "" {
+		queryStr = " where " + fs.Filter
+	}
+
+	if fs.Order != "" {
+		queryStr = queryStr + " order by " + fs.Order
+	}
+
+	if queryStr == "" {
+		return ""
+	}
+
+	if fs.IdName == "" {
+		fs.IdName = "_id"
+	}
+
+	return strings.Replace(queryStr, fs.IdName, "_id", -1)
+}
+
+func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+
+	if len(extra_params) != 2 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	fs, ok := extra_params[0].(FilterAndSort)
+	if !ok {
+		return nil, errors.New("mongo: filter and sort must be set")
+	}
+
+	res := extra_params[1]
 
 	q := bson.M{}
 	sort := bson.M{}
 	var err error
 	opts := options.Find()
-	queryStr := ""
-
-	if filter != nil {
-		queryStr = " where " + *filter
-	}
-
-	if orderBy != nil {
-		queryStr = queryStr + " order by " + *orderBy
-	}
+	queryStr := getQueryString(fs)
 
 	if queryStr != "" {
-		queryStr = strings.Replace(queryStr, "beamtimeId", "_id", -1)
 		q, sort, err = db.BSONFromSQL(dbName, queryStr)
 		if err != nil {
 			return nil, err
@@ -235,14 +285,12 @@ func (db *Mongodb) readMeta(dbName string, dataCollectionName string, extra_para
 		opts.SetSort(sort)
 	}
 
-	res := extra_params[2]
-
 	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
 		return nil, err
 	}
-	err = cursor.All(context.TODO(), res)
 
+	err = cursor.All(context.TODO(), res)
 	if err != nil {
 		return nil, err
 	}
@@ -254,14 +302,16 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return nil, err
 	}
 	switch op {
-	case "update_user_preferences":
-		return db.updateUserPreferences(db_name, data_collection_name, extra_params...)
-	case "get_user_preferences":
-		return db.getUserPreferences(db_name, data_collection_name, extra_params...)
-	case "create_meta":
-		return db.createMeta(db_name, data_collection_name, extra_params...)
-	case "read_meta":
-		return db.readMeta(db_name, data_collection_name, extra_params...)
+	case "update_record":
+		return db.updateRecord(db_name, data_collection_name, extra_params...)
+	case "read_record":
+		return db.readRecord(db_name, data_collection_name, extra_params...)
+	case "create_record":
+		return db.createRecord(db_name, data_collection_name, extra_params...)
+	case "read_records":
+		return db.readRecords(db_name, data_collection_name, extra_params...)
+	case "add_array_element":
+		return db.addArrayElement(db_name, data_collection_name, extra_params...)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)
