@@ -20,9 +20,7 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 	}
 	beamtimeId := ids[0]
 
-
-
-	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", kBeamtimeMetaNameInDb, "read_record",beamtimeId)
+	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "read_record",beamtimeId)
 	if err != nil {
 		return &model.CollectionEntry{}, err
 	}
@@ -40,12 +38,11 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 
 
 	if len(ids) == 2 {
-		_, err = database.GetDb().ProcessRequest("beamtime", kBeamtimeMetaNameInDb, "add_array_element",beamtimeId,kChildCollectionKey,baseEntry)
+		_, err = database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "add_array_element",beamtimeId, KChildCollectionKey,baseEntry)
 	} else {
 		parentId:=strings.Join(ids[:len(ids)-1],".")
-		_, err = database.GetDb().ProcessRequest("beamtime", kCollectionMetaNameIndb, "add_array_element",parentId,kChildCollectionKey,baseEntry)
+		_, err = database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "add_array_element",parentId, KChildCollectionKey,baseEntry)
 	}
-
 
 	if err != nil {
 		return &model.CollectionEntry{}, err
@@ -55,11 +52,11 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 		entry.ChildCollection = []*model.BaseCollectionEntry{}
 	}
 	if entry.ChildCollectionName==nil {
-		col:=kDefaultCollectionName
+		col:= KDefaultCollectionName
 		entry.ChildCollectionName=&col
 	}
 
-	_, err = database.GetDb().ProcessRequest("beamtime", kCollectionMetaNameIndb, "create_record",entry)
+	_, err = database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "create_record",entry)
 	if err != nil {
 		return &model.CollectionEntry{}, err
 	}
@@ -82,12 +79,13 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 
 	fs := getFilterAndSort("beamtimeId",filter,orderBy)
 
-	_, err := database.GetDb().ProcessRequest("beamtime", kCollectionMetaNameIndb, "read_records",fs,&cResponse)
+	_, err := database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "read_records",fs,&cResponse)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
 	}
 
-	_, err = database.GetDb().ProcessRequest("beamtime", kBeamtimeMetaNameInDb, "read_records",fs,&bResponse)
+	fs = getFilterAndSort("id",filter,orderBy)
+	_, err = database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "read_records",fs,&bResponse)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
 	}

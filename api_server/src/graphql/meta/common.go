@@ -4,12 +4,10 @@ import (
 	"strings"
 )
 
-const kDefaultCollectionName= "datasets"
-const kChildCollectionKey = "childCollection"
-const kBeamtimeMetaNameInDb = "meta"
-const kCollectionMetaNameIndb = "meta-collections"
-
-
+const KDefaultCollectionName = "datasets"
+const KChildCollectionKey = "childCollection"
+const KBeamtimeMetaNameInDb = "meta"
+const KCollectionMetaNameIndb = "meta-collections"
 
 func keepFields(m map[string]interface{}, keep []string, prefix string) map[string]interface{} {
 	for key, v := range m {

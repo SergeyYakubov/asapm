@@ -33,7 +33,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepField
 
 	fs := getFilterAndSort("beamtimeId",filter,orderBy)
 
-	_, err := database.GetDb().ProcessRequest("beamtime", kBeamtimeMetaNameInDb, "read_records",fs,&sResponse)
+	_, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "read_records",fs,&sResponse)
 	if err != nil {
 		return []*model.BeamtimeMeta{}, err
 	}
@@ -54,10 +54,10 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 		meta.ChildCollection = []*model.BaseCollectionEntry{}
 	}
 	if meta.ChildCollectionName==nil {
-		col:=kDefaultCollectionName
+		col:= KDefaultCollectionName
 		meta.ChildCollectionName=&col
 	}
-	_, err := database.GetDb().ProcessRequest("beamtime", kBeamtimeMetaNameInDb, "create_record", meta)
+	_, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "create_record", meta)
 	if err != nil {
 		return &model.BeamtimeMeta{}, err
 	}

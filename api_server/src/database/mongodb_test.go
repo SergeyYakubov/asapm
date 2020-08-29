@@ -102,6 +102,11 @@ func TestMongoDBAddRecord(t *testing.T) {
 func TestMongoDBAddArrayElement(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
+	rec1 := TestMetaRecord{"123",[]TestCollectionEntry{}}
+
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
+
+
 	rec := TestCollectionEntry{"123.123","bla"}
 	_, err = mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec)
 	assert.Nil(t, err)
