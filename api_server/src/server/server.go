@@ -1,34 +1,48 @@
 package server
 
 import (
-	"asapm/server/graph"
-	"asapm/server/graph/generated"
-	"log"
-	"net/http"
-	"os"
+	"asapm/auth"
+	log "asapm/common/logger"
+	"asapm/common/utils"
+	"asapm/graphql/graph"
+	"asapm/graphql/graph/generated"
+	"asapm/graphql/graph/model"
+	"context"
+	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"net/http"
 )
 
-const defaultPort = "8080"
-const defaultEndpoint = "/"
+func generateGqlConfig() generated.Config {
+	c := generated.Config{ Resolvers: &graph.Resolver{}}
+	c.Directives.NeedAcl = func(ctx context.Context, obj interface{}, next graphql.Resolver, acl model.Acls) (interface{}, error) {
+		if acl != model.AclsWrite {
+			return next(ctx)
+		}
+		if  err := auth.AuthorizeWrite(ctx); err != nil {
+			return nil, fmt.Errorf("Access denied: " + err.Error())
+		}
+		return next(ctx)
+	}
+	return c
+}
 
 func StartServer() {
-	port := os.Getenv("ASAPM_API_PORT")
-	if port == "" {
-		port = defaultPort
+
+	gqlConfig := generateGqlConfig()
+
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(gqlConfig))
+
+	http.Handle(Config.BasePath, playground.Handler("GraphQL playground", Config.BasePath+"/query"))
+	if Config.Authorization.Enabled {
+		http.Handle(Config.BasePath+"/query", utils.ProcessJWTAuth(srv.ServeHTTP,Config.publicKey))
+	} else {
+		log.Warning("authorization disabled")
+		http.Handle(Config.BasePath+"/query", auth.BypassAuth(srv.ServeHTTP))
 	}
 
-	endpoint := os.Getenv("ASAPM_API_ENDPOINT")
-	if endpoint == "" {
-		endpoint = defaultEndpoint
-	}
-
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
-
-	http.Handle(endpoint, playground.Handler("GraphQL playground", endpoint+"query"))
-	http.Handle(endpoint+"/query", srv)
-
-	log.Printf("connect to http://localhost:%s%s for GraphQL playground", port,endpoint)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Info(fmt.Sprintf("connect to http://localhost:%s%s for GraphQL playground", Config.Port,Config.BasePath))
+	log.Fatal(http.ListenAndServe(":"+Config.Port, nil))
 }

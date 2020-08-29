@@ -1,0 +1,166 @@
+type BeamtimeUser {
+    applicant: String
+    email: String
+    institute: String
+    lastname: String
+    userId: String
+    username: String
+}
+
+input InputBeamtimeUser {
+    applicant: String
+    email: String
+    institute: String
+    lastname: String
+    userId: String
+    username: String
+}
+
+type OnlineAnylysisMeta {
+    asapoBeamtimeTokenPath: String
+    reservedNodes: [String]
+    slurmReservation: String
+    slurmPartition: String
+    sshPrivateKeyPath: String
+    sshPublicKeyPath: String
+    userAccount: String
+}
+
+input InputOnlineAnylysisMeta {
+    asapoBeamtimeTokenPath: String
+    reservedNodes: [String]
+    slurmReservation: String
+    slurmPartition: String
+    sshPrivateKeyPath: String
+    sshPublicKeyPath: String
+    userAccount: String
+}
+
+
+scalar Time
+
+type Users {
+    doorDb: [String]
+    special: [String]
+    unknown: [String]
+}
+
+input InputUsers {
+    doorDb: [String]
+    special: [String]
+    unknown: [String]
+}
+
+enum Status {
+    Scheduled
+    Running
+    Completed
+}
+
+type BeamtimeMeta {
+    applicant: BeamtimeUser
+    beamline: String
+    beamlineAlias: String
+    beamtimeId: String!
+    status: Status!
+    contact: String
+    corePath: String
+    eventEnd: Time
+    eventStart: Time
+    facility: String
+    generated: Time
+    leader: BeamtimeUser
+    onlineAnalysis: OnlineAnylysisMeta
+    pi: BeamtimeUser
+    proposalId: String
+    proposalType: String
+    title: String
+    unixId: String
+    users: Users
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+}
+
+type BaseCollectionEntry {
+    id: String
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    beamline: String
+    facility: String
+}
+
+type CollectionEntry {
+    id: String
+    beamtimeId: String
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    beamline: String
+    facility: String
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+}
+
+input NewBeamtimeMeta {
+    applicant: InputBeamtimeUser
+    beamline: String
+    beamlineAlias: String #@inputNeedAcl(acl: WRITE)
+    beamtimeId: String!
+    status: Status!
+    contact: String
+    corePath: String
+    eventEnd: Time
+    eventStart: Time
+    facility: String
+    generated: Time
+    leader: InputBeamtimeUser
+    onlineAnalysis: InputOnlineAnylysisMeta
+    pi: InputBeamtimeUser
+    proposalId: String
+    proposalType: String
+    title: String
+    unixId: String
+    users: InputUsers
+    childCollectionName: String
+    customValues: Map
+}
+
+input NewCollectionEntry {
+    id: String!
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    childCollectionName: String
+    customValues: Map
+}
+
+directive @needAcl(acl: Acls!) on FIELD_DEFINITION
+#directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
+
+enum Acls {
+    WRITE
+    READ
+}
+
+
+type Mutation {
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
+    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: WRITE)
+    setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
+}
+
+type Query {
+    meta (filter: String, orderBy: String): [BeamtimeMeta]
+    collections (filter: String, orderBy: String): [CollectionEntry]
+    user (id: ID!): UserAccount
+}
+
+type UserAccount {
+    id: ID!
+    preferences: UserPreferences
+}
+
+

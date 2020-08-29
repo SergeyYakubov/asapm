@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "asapm.resourceName" . }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+  {{- if .Values.apiServer.tls.enabled }}
+cert-manager.io/cluster-issuer: letsencrypt-issuer
+  {{- end }}
+spec:
+  rules:
+    - host: "{{ .Values.apiServer.host }}"
+      http:
+        paths:
+          - path: {{ tpl .Values.apiServer.basePath . }}
+            backend:
+              serviceName: {{ include "asapm.resourceName" . }}
+              servicePort: {{ .Values.apiServer.internalPort }}
+  {{- if .Values.apiServer.tls.enabled }}
+tls:
+  - hosts:
+      - "{{ .Values.apiServer.host }}"
+    secretName: letsencrypt-asapm
+  {{- end }}

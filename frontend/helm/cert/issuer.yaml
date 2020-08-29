@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: letsencrypt-prod
+  namespace: yakser
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: sergey.yakubov@desy.de
+    privateKeySecretRef:
+      name: letsencrypt-asapm
+    solvers:
+      # An empty 'selector' means that this solver matches all domains
+      - selector: {}
+        http01:
+          ingress:
+            class: nginx

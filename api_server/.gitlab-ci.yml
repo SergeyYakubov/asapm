@@ -1,6 +1,7 @@
 variables:
-  API_SERVER_IMAGE: $REGISTRY/yakubov/asapm/api_server:$CI_COMMIT_SHORT_SHA
-  API_SERVER_IMAGE_STATIC: $REGISTRY/yakubov/asapm/api_server
+  API_SERVER_IMAGE: $REGISTRY/mdp/asapm/api_server:$CI_COMMIT_SHORT_SHA
+  API_SERVER_IMAGE_DEV: $REGISTRY/mdp/asapm/api_server:dev.$CI_COMMIT_SHORT_SHA
+  API_SERVER_IMAGE_STATIC: $REGISTRY/mdp/asapm/api_server
   API_SERVER_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-api-${CI_COMMIT_SHORT_SHA}/asapm/api
 
 build_api_server_dev:
@@ -10,7 +11,7 @@ build_api_server_dev:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE
+    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE_DEV
   tags:
     - kubernetes-executor
 
@@ -18,13 +19,15 @@ unit_tests_api_server:
   variables:
     GIT_CHECKOUT: "false"
   stage: unit_tests
+  services:
+    - mongo
   image:
-    name: $API_SERVER_IMAGE
+    name: $API_SERVER_IMAGE_DEV
     entrypoint: [""]
   before_script:
     - cd /app/src
   script:
-    - go test ./...
+    - ASAPM_DATABASE=mongo:27017 go test --tags=integration_tests ./...
   tags:
     - kubernetes-executor
 
@@ -48,13 +51,14 @@ deploy-api-server:
     - DYNAMIC_ENVIRONMENT_URL=$(echo ${API_SERVER_URL})
     - echo "DYNAMIC_ENVIRONMENT_URL=$DYNAMIC_ENVIRONMENT_URL" >> deploy.env    # Add the value to a dotenv file.
     - helm install
-      --set apiServer.image=${API_SERVER_IMAGE}
+      --set apiServer.image=$API_SERVER_IMAGE
       --set resourceSuffix="-${CI_COMMIT_SHORT_SHA}"
       --set apiServer.imageCredentials.use=true
       --set apiServer.imageCredentials.registry=eosc-pan-git.desy.de:5555
       --set apiServer.imageCredentials.username=${REGISTRY_USERNAME}
       --set apiServer.imageCredentials.password=${REGISTRY_PASS}
       --set apiServer.host="*.desy.de"
+      --set apiServer.dbEndpoint=asapm-api-server-${CI_COMMIT_SHORT_SHA}-mongodb
       --wait --timeout 2m0s
       asapm-api-server-${CI_COMMIT_SHORT_SHA} api_server/helm/asapm-api-server
   artifacts:

@@ -8,12 +8,12 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UserService from "./userService";
-import {PaletteType} from "@material-ui/core";
 
 import Typography from '@material-ui/core/Typography';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
 import Divider from '@material-ui/core/Divider';
 import Container from '@material-ui/core/Container';
+import userPreferences from "./userPreferences";
 
 const useStyles = makeStyles((theme) => ({
     userAccountButton: {
@@ -44,28 +44,14 @@ const StyledMenu = withStyles({
     />
 ));
 
-export type TopBarProps = {
-    themeType: PaletteType;
-    onChangeThemeType: (newValue: PaletteType) => void;
-}
-
-export default function UserAccount({themeType, onChangeThemeType}: TopBarProps) {
+export default function UserAccount() {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [username, setUsername] = React.useState("");
 
-    async function loadUsername() {
-        try {
-            const uname = await UserService.getUserName();
-            setUsername(uname);
-        } catch (err) {
-            setUsername(err.toString);
-        }
-    }
+    const {loading, error, data} = userPreferences.useUserPreferences();
 
-    React.useEffect(() => {
-        loadUsername();
-    }, []);
+    const themeType = data?.user.preferences.schema || "light";
 
+    const [changeTheme, res ] = userPreferences.useUpdateUserTheme("dark");
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -82,7 +68,7 @@ export default function UserAccount({themeType, onChangeThemeType}: TopBarProps)
     const otherTheme = themeType === "light" ? "dark" : "light"
 
     const handleChangeTheme = () => {
-        onChangeThemeType(otherTheme);
+        changeTheme({variables: { schema:otherTheme.toString()}});
         handleClose();
     };
 
@@ -106,7 +92,7 @@ export default function UserAccount({themeType, onChangeThemeType}: TopBarProps)
                             User Account
                         </Typography>
                         <Typography id="username" variant="body2" color="textSecondary" component="p">
-                            {username}
+                            {UserService.getUserName()}
                         </Typography>
                     </Container>
                 </MenuItem>

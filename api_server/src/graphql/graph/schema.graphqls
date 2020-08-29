@@ -1,0 +1,16 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+#union Field = String | Int
+
+scalar Map
+
+type UserPreferences {
+ schema: String
+}
+
+input InputUserPreferences {
+  schema: String
+}
+

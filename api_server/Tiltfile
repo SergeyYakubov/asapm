@@ -4,15 +4,15 @@ mode=cfg.get('mode','dev')
 
 load('ext://restart_process', 'docker_build_with_restart')
 
-k8s_yaml(helm('helm/asapm-api-server'))
+k8s_yaml(helm('helm/asapm-api-server',name='asapm',set=['apiServer.authorization.enabled=false']))
 
 #allow_k8s_contexts('guest-k8s')
-#watch_file('helm/asapm-api-server')
+watch_file('helm/asapm-api-server')
 
 if mode == 'dev':
     docker_build_with_restart(
     'yakser/asapm-api-server','.',
-    entrypoint='/app/asapm-api-server',
+    entrypoint='/app/asapm-api-server -config /etc/asapm/config.json',
     only=[
         './src',
     ],

@@ -5,6 +5,8 @@ frontend:
   host: "localhost"
   image: yakser/asapm-frontend
   basePathTemplate: "/{{ .Release.Namespace }}{{ .Values.resourceSuffix }}/asapm"
+  tls:
+    enabled: false
   imageCredentials:
     use : false
     registry: quay.io

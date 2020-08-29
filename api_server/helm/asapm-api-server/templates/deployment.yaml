@@ -1,39 +1,3 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ include "asapm.resourceName" . }}
-type: kubernetes.io/dockerconfigjson
-data:
-  .dockerconfigjson: {{ template "imagePullSecret" . }}
----
-apiVersion: networking.k8s.io/v1beta1
-kind: Ingress
-metadata:
-  name: {{ include "asapm.resourceName" . }}
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-spec:
-  rules:
-    - host: "{{ .Values.apiServer.host }}"
-      http:
-        paths:
-          - path: {{ tpl .Values.apiServer.basePathTemplate . }}
-            backend:
-              serviceName: {{ include "asapm.resourceName" . }}
-              servicePort: {{ .Values.apiServer.internalPort }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "asapm.resourceName" . }}
-spec:
-  type: ClusterIP
-  ports:
-    - protocol: TCP
-      port: {{ .Values.apiServer.internalPort }}
-  selector:
-    app: {{ include "asapm.resourceName" . }}
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,16 +14,24 @@ spec:
       labels:
         app: {{ include "asapm.resourceName" . }}
     spec:
+      volumes:
+        - name: {{ include "asapm.resourceName" . }}-config
+          configMap:
+            name: {{ include "asapm.resourceName" . }}-config
+        - name: {{ include "asapm.resourceName" . }}-pubkey
+          secret:
+            secretName: {{ include "asapm.resourceName" . }}-pubkey
       containers:
         - name: {{ include "asapm.resourceName" . }}
           image: "{{ .Values.apiServer.image }}"
+          imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.apiServer.internalPort }}
-          env:
-            - name: ASAPM_API_PORT
-              value:  "{{ .Values.apiServer.internalPort }}"
-            - name: ASAPM_API_ENDPOINT
-              value:  "{{ tpl .Values.apiServer.basePathTemplate . }}"
+          volumeMounts:
+            - mountPath: "/etc/asapm"
+              name: {{ include "asapm.resourceName" . }}-config
+            - mountPath: "/etc/asapm/keys"
+              name: {{ include "asapm.resourceName" . }}-pubkey
   {{- if .Values.apiServer.imageCredentials.use }}
       imagePullSecrets:
         - name: {{ include "asapm.resourceName" . }}
