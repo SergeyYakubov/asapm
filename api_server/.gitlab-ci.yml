@@ -53,6 +53,7 @@ deploy-api-server:
     - helm install
       --set apiServer.image=$API_SERVER_IMAGE
       --set resourceSuffix="-${CI_COMMIT_SHORT_SHA}"
+      --set apiServer.authorization.enabled=false
       --set apiServer.imageCredentials.use=true
       --set apiServer.imageCredentials.registry=eosc-pan-git.desy.de:5555
       --set apiServer.imageCredentials.username=${REGISTRY_USERNAME}
