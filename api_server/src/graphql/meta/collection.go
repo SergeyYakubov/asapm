@@ -77,18 +77,21 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 	var cResponse = []*model.CollectionEntry{}
 	var bResponse = []*model.CollectionEntry{}
 
-	fs := getFilterAndSort("beamtimeId",filter,orderBy)
-
+	fs := getFilterAndSort([]string{"id"},filter,orderBy)
 	_, err := database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "read_records",fs,&cResponse)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
 	}
 
-	fs = getFilterAndSort("id",filter,orderBy)
+	fs = getFilterAndSort([]string{"id","beamtimeId"},filter,orderBy)
 	_, err = database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "read_records",fs,&bResponse)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
 	}
+	for ind,_ := range (bResponse) {
+		bResponse[ind].BeamtimeID = bResponse[ind].ID
+	}
+
 
 	response:= append(bResponse,cResponse...)
 

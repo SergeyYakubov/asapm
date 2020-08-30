@@ -75,6 +75,11 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string
 }
 
 
+func (r *mutationResolver)  DeleteMeta(ctx context.Context, id string) (*string, error) {
+	return meta.DeleteBeamtimeMetaAndCollections(id)
+}
+
+
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
 	return meta.SetUserPreferences(id,input)
 }

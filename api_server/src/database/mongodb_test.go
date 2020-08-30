@@ -99,6 +99,34 @@ func TestMongoDBAddRecord(t *testing.T) {
 }
 
 
+func TestMongoDBDeleteRecordNotFound(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	id := "12345"
+	var fs = FilterAndSort{
+		Filter: "beamtimeId = '"+id+"'",
+		IdNames: []string{"beamtimeId"},
+	}
+	_, err = mongodb.ProcessRequest(dbname, collection, "delete_record", fs, true)
+	assert.NotNil(t, err)
+}
+
+
+func TestMongoDBDeleteRecord(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	id := "12345"
+	rec := TestMetaRecord{id,[]TestCollectionEntry{}}
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
+	var fs = FilterAndSort{
+		Filter: "beamtimeId = '"+id+"'",
+		IdNames: []string{"beamtimeId"},
+	}
+	_, err = mongodb.ProcessRequest(dbname, collection, "delete_records", fs ,true)
+	assert.Nil(t, err)
+}
+
+
 func TestMongoDBAddArrayElement(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()

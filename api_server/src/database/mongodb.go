@@ -250,12 +250,51 @@ func getQueryString(fs FilterAndSort) string {
 		return ""
 	}
 
-	if fs.IdName == "" {
-		fs.IdName = "_id"
+	for _,id:=range fs.IdNames {
+		queryStr = strings.Replace(queryStr, id, "_id", -1)
 	}
 
-	return strings.Replace(queryStr, fs.IdName, "_id", -1)
+	return queryStr
 }
+
+func (db *Mongodb) deleteRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+
+	if len(extra_params) != 2 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	fs, ok := extra_params[0].(FilterAndSort)
+	if !ok {
+		return nil, errors.New("mongo: filter must be set")
+	}
+
+	errorOnNoDocuments, ok := extra_params[1].(bool)
+	if !ok {
+		return nil, errors.New("mongo: errorOnNoDocuments must be bool")
+	}
+
+	q := bson.M{}
+	var err error
+	queryStr := getQueryString(fs)
+
+	if queryStr != "" {
+		q, _, err = db.BSONFromSQL(queryStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+	deleted, err := c.DeleteMany(context.TODO(), q, options.Delete())
+	if err != nil {
+		return nil, err
+	}
+
+	if deleted.DeletedCount == 0 && errorOnNoDocuments {
+		return nil,errors.New("did not find any documents")
+	}
+	return nil,nil
+}
+
 
 func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	c := db.client.Database(dbName).Collection(dataCollectionName)
@@ -278,7 +317,7 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 	queryStr := getQueryString(fs)
 
 	if queryStr != "" {
-		q, sort, err = db.BSONFromSQL(dbName, queryStr)
+		q, sort, err = db.BSONFromSQL(queryStr)
 		if err != nil {
 			return nil, err
 		}
@@ -310,6 +349,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.createRecord(db_name, data_collection_name, extra_params...)
 	case "read_records":
 		return db.readRecords(db_name, data_collection_name, extra_params...)
+	case "delete_records":
+		return db.deleteRecords(db_name, data_collection_name, extra_params...)
 	case "add_array_element":
 		return db.addArrayElement(db_name, data_collection_name, extra_params...)
 	}

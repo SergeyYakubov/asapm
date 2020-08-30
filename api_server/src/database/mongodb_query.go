@@ -197,14 +197,11 @@ func getSortBSONFromOrderArray(order_array sqlparser.OrderBy) (bson.M, error) {
 	return bson.M{name: sign}, nil
 }
 
-func (db *Mongodb) BSONFromSQL(dbname string, query string) (bson.M, bson.M, error) {
-	fmt.Println(query)
-	stmt, err := sqlparser.Parse("select * from " + dbname + query)
+func (db *Mongodb) BSONFromSQL(query string) (bson.M, bson.M, error) {
+	stmt, err := sqlparser.Parse("select * from dbname "  + query)
 	if err != nil {
 		return bson.M{}, bson.M{}, err
 	}
-	fmt.Println("ok")
-
 	sel, _ := stmt.(*sqlparser.Select)
 	query_mongo := bson.M{}
 	sort_mongo :=  bson.M{}

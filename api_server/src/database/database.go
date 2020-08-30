@@ -9,7 +9,7 @@ import (
 type FilterAndSort struct {
 	Filter string
 	Order string
-	IdName string
+	IdNames []string
 }
 
 type Agent interface {

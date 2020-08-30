@@ -8,7 +8,7 @@ import (
 	"errors"
 )
 
-func getFilterAndSort(idName string,filter *string,orderBy *string) database.FilterAndSort {
+func getFilterAndSort(idNames []string,filter *string,orderBy *string) database.FilterAndSort {
 	fs := database.FilterAndSort{}
 	if filter !=nil {
 		fs.Filter =*filter
@@ -16,7 +16,7 @@ func getFilterAndSort(idName string,filter *string,orderBy *string) database.Fil
 	if orderBy !=nil {
 		fs.Order =*orderBy
 	}
-	fs.IdName = idName
+	fs.IdNames = idNames
 	return fs
 }
 
@@ -31,7 +31,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepField
 
 	var sResponse = []*model.BeamtimeMeta{}
 
-	fs := getFilterAndSort("beamtimeId",filter,orderBy)
+	fs := getFilterAndSort([]string{"beamtimeId"},filter,orderBy)
 
 	_, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "read_records",fs,&sResponse)
 	if err != nil {
@@ -62,4 +62,21 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 		return &model.BeamtimeMeta{}, err
 	}
 	return meta, nil
+}
+
+
+func  DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
+	filter:= "beamtimeId = '" + id+"'"
+	fs := getFilterAndSort([]string{"beamtimeId"},&filter,nil)
+
+	if _, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "delete_records", fs, true);err!=nil {
+		return nil,err
+	}
+
+	fs.IdNames = []string{"id"}
+	if _, err := database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "delete_records", fs, false);err!=nil {
+		return nil,err
+	}
+
+	return &id,nil
 }

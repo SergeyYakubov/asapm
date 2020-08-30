@@ -178,7 +178,7 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	var fs  = database.FilterAndSort{
 		Filter: "beamline = 'p05'",
 		Order:  "beamtimeId DESC",
-		IdName: "beamtimeId",
+		IdNames: []string{"beamtimeId"},
 	}
 
 	params := []interface {}{fs,&[]*model.BeamtimeMeta{}}
