@@ -147,7 +147,6 @@ function RawMeta({meta}: MetaViewProps) {
 
 interface DetailedMetaProps extends RouteComponentProps<TParams> {
     isBeamtime: boolean
-    SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>
 }
 
 function useQueryOrErrorString(id:string,isBeamtime:boolean) {
@@ -171,11 +170,8 @@ function useQueryOrErrorString(id:string,isBeamtime:boolean) {
     return queryResult
 }
 
-function DetailedBeamtime({match, SetActiveBeamtime,isBeamtime}: DetailedMetaProps) {
+function DetailedBeamtime({match, isBeamtime}: DetailedMetaProps) {
     const classes = useStyles();
-    useEffect(() => {
-            SetActiveBeamtime(match.params.id);
-    });
 
     const [rawView, setRawView] = React.useState(false);
 

@@ -81,11 +81,8 @@ function usePersistedState<S>(key:string, defaultValue:S) {
     return [state, setState];
 }
 
-type SideBarProps = {
-    activeBeamtime: string,
-}
 
-export default function SideBar({activeBeamtime}:SideBarProps) {
+export default function SideBar() {
     const classes = useStyles();
     const [open, setOpen] = usePersistedState("sidebarState",true);
 

@@ -33,7 +33,6 @@ const useStyles = makeStyles((theme: Theme) =>
 function App() {
     const classes = useStyles();
     const {pathname} = useLocation();
-    const [activeBeamtime, SetActiveBeamtime] = React.useState("");
 
     const {loading, error, data} = userPreferences.useUserPreferences();
     if (loading) return <p>Loading user preferences...</p>;
@@ -68,19 +67,19 @@ function App() {
             <CssBaseline/>
             <div className={classes.root}>
                 <TopBar/>
-                <SideBar activeBeamtime={activeBeamtime}/>
+                <SideBar/>
                 <Switch>
                     <Route exact path="/">
                         <Redirect to="/metaboard"/>
                     </Route>
                     <Route path="/metaboard" render={(props) => (
-                        <ListMeta {...props} activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime}/>
+                        <ListMeta/>
                     )} exact/>
                     <Route key="beamtime" path={"/detailed/:id"} render={(props) => (
-                        <DetailedBeamtime {...props} SetActiveBeamtime={SetActiveBeamtime} isBeamtime={true}/>
+                        <DetailedBeamtime {...props}  isBeamtime={true}/>
                     )} exact/>
                     <Route key="colection" path={"/detailedcollection/:id"} render={(props) => (
-                        <DetailedBeamtime {...props} SetActiveBeamtime={SetActiveBeamtime} isBeamtime={false}/>
+                        <DetailedBeamtime {...props}  isBeamtime={false}/>
                     )} exact/>
                 </Switch>
             </div>

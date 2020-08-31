@@ -59,12 +59,10 @@ const useStyles = makeStyles((theme: Theme) =>
 type MetaColumnProps = {
     queryResult: QueryResult<MetaData>,
     status: Status,
-    activeBeamtime: string,
-    SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>,
     title: string,
 }
 
-function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}: MetaColumnProps) {
+function MetaColumn({queryResult, status,title}: MetaColumnProps) {
     const classes = useStyles();
     const history = useHistory();
 
@@ -81,7 +79,6 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         const path = "/detailed/" + event.currentTarget.id;
-        SetActiveBeamtime(event.currentTarget.id);
         history.push(path);
     }
 
@@ -101,7 +98,7 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
         <List component="nav">
             {queryResult.data && queryResult.data!.meta.filter(meta => meta.status == status).map(meta =>
                     <ListItem button className={classes.listItem} onClick={handleClick}
-                              id={meta.beamtimeId as string} key={meta.beamtimeId as string} selected={meta.beamtimeId as string === activeBeamtime}>
+                              id={meta.beamtimeId as string} key={meta.beamtimeId as string} >
                         <ListItemText
                             primaryTypographyProps={{noWrap: true}}
                             primary={meta.title}
@@ -140,13 +137,7 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
     </Grid>
 }
 
-
-type ListMetaProps = {
-    activeBeamtime: string,
-    SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>,
-}
-
-function ListMeta({activeBeamtime,SetActiveBeamtime}:ListMetaProps) {
+function ListMeta() {
     const queryResult = useQuery<MetaData>(METAS, {
         pollInterval: 5000,
     });
@@ -161,10 +152,10 @@ function ListMeta({activeBeamtime,SetActiveBeamtime}:ListMetaProps) {
                     <Divider></Divider>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <MetaColumn  title="Running" activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Running}/>
+                    <MetaColumn  title="Running"  queryResult={queryResult} status={Status.Running}/>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <MetaColumn  title="Completed" activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Completed}/>
+                    <MetaColumn  title="Completed" queryResult={queryResult} status={Status.Completed}/>
                 </Grid>
             </Grid>
         </div>
