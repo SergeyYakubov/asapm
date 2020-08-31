@@ -1,6 +1,5 @@
 import React, {forwardRef, useEffect} from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
-import { MetaDetails} from "./graphQLTypes"
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
@@ -27,6 +26,9 @@ import ViewColumn from '@material-ui/icons/ViewColumn';
 import MaterialTable, {Action, MaterialTableProps, Icons} from "material-table";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
+
+import {TableEntry, TableData, TableFromData} from "./common"
+import {CollectionDetails, MetaDetails} from "./meta";
 
 const tableIcons: Icons = {
     Add: forwardRef((props, ref) => <AddBox {...props} ref={ref}/>),
@@ -124,12 +126,21 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 type MetaViewProps = {
-    meta: MetaDetails
+    meta: MetaDetails | CollectionDetails
 }
 
+type StaticMetaProps = {
+    meta: MetaDetails | CollectionDetails
+    isBeamtime: boolean
+    tableFromMeta: TableFromData,
+}
+
+
 type StaticSectionProps = {
-    meta: MetaDetails,
-    section: string,
+    meta: MetaDetails | CollectionDetails
+    tableFromMeta: TableFromData
+    section: string
+    isBeamtime:boolean
 }
 
 type CustomTableProps = {
@@ -183,50 +194,6 @@ function TableFromObject(rowData: TableEntry) {
     }
 }
 
-function IsoDateToStr(isoDate: String) {
-    if (typeof (isoDate) != "string") {
-        return "undefined";
-    }
-    return (isoDate as string).slice(0, 16).replace('T', ' ');
-}
-
-interface TableEntry {
-    name: string
-    value: String
-    data?: any
-}
-
-interface TableData extends Array<TableEntry> {
-}
-
-function TableDataFromMeta(meta: MetaDetails, section: string): TableData {
-    switch (section) {
-        case "Beamtime":
-            return [
-                {name: 'Beamtime ID', value: meta.beamtimeId},
-                {name: 'Facility', value: meta.facility || "undefined"},
-                {name: 'Beamline', value: meta.beamline || "undefined"},
-                {name: 'Generated', value: IsoDateToStr(meta.generated)},
-                {name: 'Start', value: IsoDateToStr(meta.eventStart)},
-                {name: 'End', value: IsoDateToStr(meta.eventEnd)},
-            ]
-        case "Proposal":
-            return [
-                {name: 'Proposal ID', value: meta.proposalId || "undefined"},
-                {name: 'Type', value: meta.proposalType || "undefined"},
-                {name: 'Principal Investigator', value: meta.pi?.lastname || "undefined", data: meta.pi},
-                {name: 'Leader', value: meta.leader?.lastname || "undefined", data: meta.leader},
-                {name: 'Applicant', value: meta.applicant?.lastname || "undefined", data: meta.applicant},
-            ]
-        case "Analysis":
-            return [
-                {name: 'Core path', value: meta.corePath || "undefined"},
-                {name: 'Online', value: meta.onlineAnalysis ? "Requested" : "Not requested", data: meta.onlineAnalysis},
-            ]
-    }
-    return [];
-}
-
 function OnRowClick(event?: React.MouseEvent, rowData?: TableEntry, toggleDetailPanel?: (panelIndex?: number) => void) {
     console.log(typeof rowData!.data)
     if (!rowData!.data) {
@@ -235,7 +202,7 @@ function OnRowClick(event?: React.MouseEvent, rowData?: TableEntry, toggleDetail
     return toggleDetailPanel ? toggleDetailPanel() : {};
 }
 
-function Table({meta, section}: StaticSectionProps) {
+function Table({meta, section,tableFromMeta}: StaticSectionProps) {
     return <MaterialTable
         icons={tableIcons}
         options={{
@@ -252,7 +219,7 @@ function Table({meta, section}: StaticSectionProps) {
             {title: 'Name', field: 'name'},
             {title: 'Value', field: 'value'},
         ]}
-        data={TableDataFromMeta(meta, section)}
+        data={tableFromMeta(meta, section)}
         detailPanel={[TableFromObject]}
         onRowClick={OnRowClick}
     />
@@ -294,8 +261,7 @@ function CustomTable({data}: CustomTableProps) {
     />
 }
 
-
-function StaticSection({meta, section}: StaticSectionProps) {
+function StaticSection({meta, section,tableFromMeta, isBeamtime}: StaticSectionProps) {
     const classes = useStyles();
     return  <Grid
         container
@@ -310,7 +276,7 @@ function StaticSection({meta, section}: StaticSectionProps) {
         </Grid>
         <Grid  item xs={12}>
             <Paper className={classes.paper}>
-        <Table meta={meta} section={section}/>
+        <Table meta={meta} tableFromMeta={tableFromMeta} section={section} isBeamtime={isBeamtime}/>
         </Paper>
         </Grid>
     </Grid>
@@ -324,19 +290,27 @@ function replacer(key: string, value: any) {
 }
 
 
-function StaticMeta({meta}: MetaViewProps) {
+function StaticMeta({meta,tableFromMeta,isBeamtime}: StaticMetaProps) {
     return <div>
+        {isBeamtime?
         <Grid container direction="row" alignItems="stretch" spacing={1}>
             <Grid item xs={12} sm={12} md={4}>
-                <StaticSection meta={meta} section="Beamtime"/>
+                <StaticSection meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime} section="Beamtime"/>
             </Grid>
             <Grid item xs={12} sm={12} md={4}>
-                <StaticSection meta={meta} section="Proposal"/>
+                <StaticSection meta={meta}  tableFromMeta={tableFromMeta} isBeamtime={isBeamtime} section="Proposal"/>
             </Grid>
             <Grid item xs={12} sm={12} md={4}>
-                <StaticSection meta={meta} section="Analysis"/>
+                <StaticSection meta={meta}  tableFromMeta={tableFromMeta} isBeamtime={isBeamtime} section="Analysis"/>
             </Grid>
         </Grid>
+            :
+            <Grid container direction="row" alignItems="stretch" spacing={1}>
+                <Grid item xs={12}>
+                    <StaticSection meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime} section="General"/>
+                </Grid>
+            </Grid>
+        }
     </div>
 }
 
@@ -478,10 +452,10 @@ function CustomMeta({meta}: MetaViewProps) {
     </div>
 }
 
-function DetailedMetaTab({meta}: MetaViewProps) {
+function DetailedMetaTab({meta,tableFromMeta,isBeamtime}: StaticMetaProps) {
     return (
                 <div>
-                    <StaticMeta meta={meta}/>
+                    <StaticMeta meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}/>
                     { meta.customValues &&
                         <CustomMeta meta={meta}/>
                     }

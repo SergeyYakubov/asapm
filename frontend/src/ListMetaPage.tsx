@@ -14,7 +14,8 @@ import {QueryResult} from "@apollo/react-common";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";
-import {MetaData, Status, METAS } from  "./graphQLTypes"
+import {METAS } from  "./graphQLSchemes"
+import {MetaData, Status } from  "./meta"
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -78,18 +79,10 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
         </Paper>
     }
 
-    const handleDoubleClick = (event: React.MouseEvent<HTMLElement>) => {
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         const path = "/detailed/" + event.currentTarget.id;
         SetActiveBeamtime(event.currentTarget.id);
         history.push(path);
-    }
-
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        if (activeBeamtime === event.currentTarget.id) {
-            SetActiveBeamtime("")
-        } else {
-            SetActiveBeamtime(event.currentTarget.id);
-        }
     }
 
     return <Grid
@@ -107,7 +100,7 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
         <Paper className={classes.paper}>
         <List component="nav">
             {queryResult.data && queryResult.data!.meta.filter(meta => meta.status == status).map(meta =>
-                    <ListItem button className={classes.listItem} onDoubleClick={handleDoubleClick} onClick={handleClick}
+                    <ListItem button className={classes.listItem} onClick={handleClick}
                               id={meta.beamtimeId as string} key={meta.beamtimeId as string} selected={meta.beamtimeId as string === activeBeamtime}>
                         <ListItemText
                             primaryTypographyProps={{noWrap: true}}

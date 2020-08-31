@@ -2,7 +2,8 @@ import React, {forwardRef, useEffect} from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import {RouteComponentProps} from "react-router-dom";
-import {METAS_DETAILED, Status, MetaDataDetails, MetaDetails} from "./graphQLTypes"
+import {METAS_DETAILED,COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes"
+import {Status, MetaDataDetails,CollectionEntitiesDetails, MetaDetails,CollectionDetails} from "./meta"
 import {useQuery} from "@apollo/react-hooks";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -66,17 +67,18 @@ const useStyles = makeStyles((theme: Theme) =>
 type TParams = { id: string };
 
 type DetailedHeaderProps = {
-    meta: MetaDetails,
+    meta: MetaDetails | CollectionDetails,
     rawView: boolean,
     setRawView: React.Dispatch<React.SetStateAction<boolean>>
+    isBeamtime: boolean
 }
 
 type MetaViewProps = {
-    meta: MetaDetails
+    meta: MetaDetails | CollectionDetails
 }
 
 
-function DetailedHeader({meta, rawView, setRawView}: DetailedHeaderProps) {
+function DetailedHeader({meta, rawView, setRawView,isBeamtime}: DetailedHeaderProps) {
     const classes = useStyles();
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,16 +95,18 @@ function DetailedHeader({meta, rawView, setRawView}: DetailedHeaderProps) {
                 </Grid>
                 <Grid item xs={12}>
                         <Typography variant="h5" align="center" className={classes.title}>
-                            {meta.title}
+                            {isBeamtime? meta.title : meta.title || (meta as CollectionDetails).id}
                         </Typography>
                 </Grid>
             </Grid>
-            <Grid container direction="row" justify="space-between" alignItems="flex-end">
-                <Chip label={meta.status} variant="outlined" className={clsx(classes.chip, {
-                    [classes.chipRunning]: meta.status == 'Running',
-                    [classes.chipCompleted]: meta.status == 'Completed',
-                    [classes.chipScheduled]: meta.status == 'Scheduled',
+            <Grid container direction="row" justify={isBeamtime?"space-between":"flex-end"} alignItems="flex-end" >
+                { isBeamtime &&
+                <Chip label={(meta as MetaDetails).status} variant="outlined" className={clsx(classes.chip, {
+                    [classes.chipRunning]: (meta as MetaDetails).status == 'Running',
+                    [classes.chipCompleted]: (meta as MetaDetails).status == 'Completed',
+                    [classes.chipScheduled]: (meta as MetaDetails).status == 'Scheduled',
                 })}/>
+                }
                 <FormControlLabel
                     control={
                         <Switch
@@ -142,14 +146,15 @@ function RawMeta({meta}: MetaViewProps) {
 }
 
 interface DetailedMetaProps extends RouteComponentProps<TParams> {
-    SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>,
+    isBeamtime: boolean
+    SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>
 }
 
-function useQueryOrErrorString(id:string) {
-    const queryResult = useQuery<MetaDataDetails>(METAS_DETAILED,
+function useQueryOrErrorString(id:string,isBeamtime:boolean) {
+    const queryResult = useQuery<MetaDataDetails|CollectionEntitiesDetails>(isBeamtime?METAS_DETAILED:COLLECTION_ENTITY_DETAILED,
         {
             pollInterval: 5000,
-            variables: {filter: "beamtimeId = '" + id + "'"}});
+            variables: {filter: (isBeamtime?"beamtimeId = '":"id = '") + id + "'"}});
     if (queryResult.error) {
         console.log(queryResult.error);
         return queryResult.error.message;
@@ -157,21 +162,24 @@ function useQueryOrErrorString(id:string) {
     if (queryResult.loading) {
         return "loading ...";
     }
-    if (queryResult.data!.meta.length != 1) {
+    if (isBeamtime && (queryResult.data! as MetaDataDetails).meta.length != 1) {
+        return "no data found";
+    }
+    if (!isBeamtime && (queryResult.data! as CollectionEntitiesDetails).collections.length != 1) {
         return "no data found";
     }
     return queryResult
 }
 
-function DetailedBeamtime({match, SetActiveBeamtime}: DetailedMetaProps) {
+function DetailedBeamtime({match, SetActiveBeamtime,isBeamtime}: DetailedMetaProps) {
     const classes = useStyles();
     useEffect(() => {
-        SetActiveBeamtime(match.params.id);
+            SetActiveBeamtime(match.params.id);
     });
 
     const [rawView, setRawView] = React.useState(false);
 
-    const queryResult = useQueryOrErrorString(match.params.id);
+    const queryResult = useQueryOrErrorString(match.params.id,isBeamtime);
     if (typeof queryResult == "string") {
         return (
             <div className={classes.root}>
@@ -182,14 +190,16 @@ function DetailedBeamtime({match, SetActiveBeamtime}: DetailedMetaProps) {
             </div>)
     }
 
+    let data : MetaDetails | CollectionDetails = isBeamtime?(queryResult.data! as MetaDataDetails).meta[0]:
+        (queryResult.data! as CollectionEntitiesDetails).collections[0]
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>
-            <DetailedHeader meta={queryResult.data!.meta[0]} rawView={rawView} setRawView={setRawView}/>
+            <DetailedHeader meta={data} rawView={rawView} setRawView={setRawView} isBeamtime={isBeamtime}/>
             {rawView ? (
-                <RawMeta meta={queryResult.data!.meta[0]}/>
+                <RawMeta meta={data}/>
             ) : (
-                <BeamtimeTabs meta={queryResult.data!.meta[0]}/>
+                <BeamtimeTabs meta={data} isBeamtime={isBeamtime}/>
             )}
         </div>
     );

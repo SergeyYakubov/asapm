@@ -15,7 +15,7 @@ import { NavLink as RouterLink, LinkProps as RouterLinkProps } from 'react-route
 import Link from '@material-ui/core/Link';
 import { Omit } from '@material-ui/types';
 import {QueryResult} from "@apollo/react-common";
-import {MetaData, Status} from "./graphQLTypes";
+import {MetaData, Status} from "./meta";
 
 const drawerWidth = 180;
 
@@ -114,10 +114,6 @@ export default function SideBar({activeBeamtime}:SideBarProps) {
                     <ListItem button key="Board View" component={RouterLink} to={"/metaboard"} exact activeClassName="Mui-selected">
                         <ListItemIcon className={classes.listItem}><ViewListIcon/></ListItemIcon>
                         <ListItemText primary="Board View"/>
-                    </ListItem>
-                    <ListItem button key="Detailed View" component={RouterLink} to={"/detailed/"+activeBeamtime } activeClassName="Mui-selected" disabled={!activeBeamtime}>
-                        <ListItemIcon className={classes.listItem}> <MenuBookIcon/></ListItemIcon>
-                        <ListItemText primary="Detailed View"/>
                     </ListItem>
                 </List>
             </div>

@@ -76,8 +76,11 @@ function App() {
                     <Route path="/metaboard" render={(props) => (
                         <ListMeta {...props} activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime}/>
                     )} exact/>
-                    <Route path={"/detailed/:id"} render={(props) => (
-                        <DetailedBeamtime {...props} SetActiveBeamtime={SetActiveBeamtime}/>
+                    <Route key="beamtime" path={"/detailed/:id"} render={(props) => (
+                        <DetailedBeamtime {...props} SetActiveBeamtime={SetActiveBeamtime} isBeamtime={true}/>
+                    )} exact/>
+                    <Route key="colection" path={"/detailedcollection/:id"} render={(props) => (
+                        <DetailedBeamtime {...props} SetActiveBeamtime={SetActiveBeamtime} isBeamtime={false}/>
                     )} exact/>
                 </Switch>
             </div>

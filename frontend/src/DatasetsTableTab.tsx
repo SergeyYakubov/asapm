@@ -1,6 +1,6 @@
 import React, {forwardRef, useEffect} from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
-import { MetaDetails} from "./graphQLTypes"
+import {CollectionDetails, MetaDetails} from "./meta"
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
@@ -27,6 +27,8 @@ import ViewColumn from '@material-ui/icons/ViewColumn';
 import MaterialTable, {Action, MaterialTableProps, Icons} from "material-table";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
+import ListItem from "@material-ui/core/ListItem";
+import {useHistory} from "react-router-dom";
 
 const tableIcons: Icons = {
     Add: forwardRef((props, ref) => <AddBox {...props} ref={ref}/>),
@@ -124,7 +126,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 type MetaViewProps = {
-    meta: MetaDetails
+    meta: MetaDetails | CollectionDetails
 }
 
 
@@ -163,7 +165,7 @@ interface TableEntry {
 interface TableData extends Array<TableEntry> {
 }
 
-function TableDataFromDataset(meta: MetaDetails): TableData {
+function TableDataFromDataset(meta: MetaDetails | CollectionDetails): TableData {
             return meta.childCollection.map(collection => {
                     return {id: collection.id, title: collection.title,eventStart:IsoDateToStr(collection.eventStart),eventEnd:IsoDateToStr(collection.eventEnd)};
                 }
@@ -171,8 +173,19 @@ function TableDataFromDataset(meta: MetaDetails): TableData {
 }
 
 function DatasetTable({meta}: MetaViewProps) {
+    const history = useHistory();
+    const handleClick = (
+        event?: React.MouseEvent,
+        rowData?: TableEntry,
+        toggleDetailPanel?: (panelIndex?: number) => void
+    ) => {
+        const path = "/detailedcollection/" + rowData?.id;
+        history.push(path);
+    }
+
     return <MaterialTable
         icons={tableIcons}
+        onRowClick={handleClick}
         options={{
             filtering: false,
             header: true,
