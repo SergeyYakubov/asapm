@@ -17,7 +17,7 @@ import { Omit } from '@material-ui/types';
 import {QueryResult} from "@apollo/react-common";
 import {MetaData, Status} from "./meta";
 
-const drawerWidth = 180;
+const drawerWidth = 200;
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -108,9 +108,9 @@ export default function SideBar() {
             <Toolbar variant="dense"/>
             <div className={classes.drawer}>
                 <List>
-                    <ListItem button key="Board View" component={RouterLink} to={"/metaboard"} exact activeClassName="Mui-selected">
+                    <ListItem button key="Beamtime Board" component={RouterLink} to={"/metaboard"} exact activeClassName="Mui-selected">
                         <ListItemIcon className={classes.listItem}><ViewListIcon/></ListItemIcon>
-                        <ListItemText primary="Board View"/>
+                        <ListItemText primary="Beamtime Board"/>
                     </ListItem>
                 </List>
             </div>

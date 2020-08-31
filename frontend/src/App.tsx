@@ -75,10 +75,10 @@ function App() {
                     <Route path="/metaboard" render={(props) => (
                         <ListMeta/>
                     )} exact/>
-                    <Route key="beamtime" path={"/detailed/:id"} render={(props) => (
+                    <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
                         <DetailedBeamtime {...props}  isBeamtime={true}/>
                     )} exact/>
-                    <Route key="colection" path={"/detailedcollection/:id"} render={(props) => (
+                    <Route key="colection" path={"/detailedcollection/:id/:section"} render={(props) => (
                         <DetailedBeamtime {...props}  isBeamtime={false}/>
                     )} exact/>
                 </Switch>

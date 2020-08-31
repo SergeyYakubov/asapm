@@ -179,7 +179,7 @@ function DatasetTable({meta}: MetaViewProps) {
         rowData?: TableEntry,
         toggleDetailPanel?: (panelIndex?: number) => void
     ) => {
-        const path = "/detailedcollection/" + rowData?.id;
+        const path = "/detailedcollection/" + rowData?.id+"/meta";
         history.push(path);
     }
 

@@ -43,7 +43,7 @@ function FilterBox() {
             <Grid container spacing={1}   alignItems="flex-end">
                 <Grid item xs={12}>
                     <Typography variant="h6" color="textSecondary">
-                        Metadata Board
+                        Beamtimes
                     </Typography>
                 </Grid>
                 <Grid item md={6} sm={12} xs={12}>

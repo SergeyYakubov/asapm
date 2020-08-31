@@ -78,7 +78,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
     }
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        const path = "/detailed/" + event.currentTarget.id;
+        const path = "/detailed/" + event.currentTarget.id+"/meta";
         history.push(path);
     }
 

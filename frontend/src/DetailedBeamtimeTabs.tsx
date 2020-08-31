@@ -7,6 +7,7 @@ import Box from '@material-ui/core/Box';
 import {MetaDetails, TableDataFromMeta, TableDataFromCollection, CollectionDetails} from "./meta";
 import DetailedMetaTab from "./DetailedMetaTab"
 import DatasetsTableTab from "./DatasetsTableTab";
+import {useHistory} from "react-router-dom";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -55,24 +56,57 @@ const useStyles = makeStyles((theme: Theme) => ({
 type BeamtimeTabsProps = {
     meta: MetaDetails | CollectionDetails
     isBeamtime: boolean
+    section: string
 }
 
-function BeamtimeTabs({meta,isBeamtime}: BeamtimeTabsProps) {
+function BeamtimeTabs({meta,isBeamtime,section}: BeamtimeTabsProps) {
     const classes = useStyles();
-    const [value, setValue] = React.useState(0);
-    console.log(value)
+    let value=0;
+    const showDataset = meta.childCollection && (meta.childCollection.length > 0);
+    console.log(section,showDataset)
+    switch(section) {
+        case "meta": {
+            value = 0;
+            break;
+        }
+        case "collections": {
+            value = 1;
+            break;
+        }
+        case "logbook": {
+            value = showDataset?2:1;
+            break;
+        }
+        default: {
+            value = 0;
+            break;
+        }
+    }
+    const history = useHistory();
     const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-        setValue(newValue);
+        let subpath="/meta";
+        switch(newValue) {
+            case 1: {
+                subpath = showDataset?"/collections":"/logbook";
+                break;
+            }
+            case 2: {
+                subpath = "/logbook";
+                break;
+            }
+        }
+        const path = isBeamtime? "/detailed/" + meta.beamtimeId+subpath:"/detailedcollection/" + (meta as CollectionDetails).id+subpath;
+        console.log(path)
+        history.replace(path);
     };
 
-    const showDataset = meta.childCollection && (meta.childCollection.length > 0);
     return (
         <div className={classes.root}>
             <AppBar position="static" color="default" className={classes.navBar}>
                 <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
                     <Tab label="Metadata" {...a11yProps(0)} />
                     {showDataset && <Tab label={meta.childCollectionName} {...a11yProps(1)} />}
-                    <Tab label="Logbook" {...a11yProps(2)} />
+                    <Tab label="Logbook" {...a11yProps(showDataset ? 2 : 1)} />
                 </Tabs>
             </AppBar>
             <div className={classes.marginLeftRight}>

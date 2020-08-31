@@ -1,13 +1,13 @@
 import React, {forwardRef, useEffect} from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
-import {RouteComponentProps} from "react-router-dom";
-import {METAS_DETAILED,COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes"
-import {Status, MetaDataDetails,CollectionEntitiesDetails, MetaDetails,CollectionDetails} from "./meta"
+import {Link, RouteComponentProps} from "react-router-dom";
+import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes"
+import {Status, MetaDataDetails, CollectionEntitiesDetails, MetaDetails, CollectionDetails} from "./meta"
 import {useQuery} from "@apollo/react-hooks";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
-import {Divider} from "@material-ui/core";
+import {Box, Breadcrumbs, Divider} from "@material-ui/core";
 import Chip from '@material-ui/core/Chip';
 import clsx from "clsx";
 
@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme: Theme) =>
             root: {
                 flexGrow: 1,
                 margin: theme.spacing(0),
-                minWidth:0,
+                minWidth: 0,
             },
             divider: {
                 marginLeft: theme.spacing(0),
@@ -64,7 +64,7 @@ const useStyles = makeStyles((theme: Theme) =>
         }),
 );
 
-type TParams = { id: string };
+type TParams = { id: string, section: string };
 
 type DetailedHeaderProps = {
     meta: MetaDetails | CollectionDetails,
@@ -77,30 +77,63 @@ type MetaViewProps = {
     meta: MetaDetails | CollectionDetails
 }
 
+type BreadcrumbsProps = {
+    meta: CollectionDetails
+}
 
-function DetailedHeader({meta, rawView, setRawView,isBeamtime}: DetailedHeaderProps) {
+
+function Navmenu({meta}: BreadcrumbsProps) {
+    let cols = meta.id.split(".")
+    const first = cols.shift()
+    const last = cols.pop()
+    const btPath = "/detailed/" + meta.beamtimeId + "/meta";
+    const path = "/detailedcollection/" + meta.id + "/meta";
+    let curPath = "/detailedcollection/"+meta.beamtimeId;
+
+    return <Breadcrumbs aria-label="breadcrumb">
+        <Link color="inherit" to="/metaboard">
+            Beamtime Board
+        </Link>
+        <Link color="inherit" to={btPath}>
+            {first}
+        </Link>
+        {cols.map(value => {
+            curPath+="."+value;
+            return <Link color="inherit" to={curPath+"/meta"}>
+                {value}
+                </Link>
+        })}
+        <Link
+            color="textPrimary"
+            to={path}
+            aria-current="page"
+        >
+            {last}
+        </Link>
+    </Breadcrumbs>
+}
+
+function DetailedHeader({meta, rawView, setRawView, isBeamtime}: DetailedHeaderProps) {
     const classes = useStyles();
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setRawView(event.target.checked);
     };
-
     return (
         <div className={classes.header}>
-            <Grid container spacing={0}>
+            <Grid container spacing={0} justify={"space-between"} alignItems="flex-end">
+                <Typography variant="h6" color="textSecondary">
+                    Detailed {isBeamtime ? "Beamtime" : "Collection"} View
+                </Typography>
+                {!isBeamtime && <Navmenu meta={meta as CollectionDetails}/>}
                 <Grid item xs={12}>
-                    <Typography variant="h6" color="textSecondary">
-                        Detailed View
+                    <Typography variant="h5" align="center" className={classes.title}>
+                        {isBeamtime ? meta.title : meta.title || (meta as CollectionDetails).id}
                     </Typography>
                 </Grid>
-                <Grid item xs={12}>
-                        <Typography variant="h5" align="center" className={classes.title}>
-                            {isBeamtime? meta.title : meta.title || (meta as CollectionDetails).id}
-                        </Typography>
-                </Grid>
             </Grid>
-            <Grid container direction="row" justify={isBeamtime?"space-between":"flex-end"} alignItems="flex-end" >
-                { isBeamtime &&
+            <Grid container direction="row" justify={isBeamtime ? "space-between" : "flex-end"} alignItems="flex-end">
+                {isBeamtime &&
                 <Chip label={(meta as MetaDetails).status} variant="outlined" className={clsx(classes.chip, {
                     [classes.chipRunning]: (meta as MetaDetails).status == 'Running',
                     [classes.chipCompleted]: (meta as MetaDetails).status == 'Completed',
@@ -135,13 +168,13 @@ function RawMeta({meta}: MetaViewProps) {
     const classes = useStyles();
     return <div>
         <Divider className={classes.divider}/>
-    <div className={classes.marginLeftRight}>
+        <div className={classes.marginLeftRight}>
         <pre style={{whiteSpace: "pre-wrap"}} id="json">
             {
                 JSON.stringify(meta, replacer, '\t')
             }
         </pre>
-    </div>
+        </div>
     </div>
 }
 
@@ -149,11 +182,12 @@ interface DetailedMetaProps extends RouteComponentProps<TParams> {
     isBeamtime: boolean
 }
 
-function useQueryOrErrorString(id:string,isBeamtime:boolean) {
-    const queryResult = useQuery<MetaDataDetails|CollectionEntitiesDetails>(isBeamtime?METAS_DETAILED:COLLECTION_ENTITY_DETAILED,
+function useQueryOrErrorString(id: string, isBeamtime: boolean) {
+    const queryResult = useQuery<MetaDataDetails | CollectionEntitiesDetails>(isBeamtime ? METAS_DETAILED : COLLECTION_ENTITY_DETAILED,
         {
             pollInterval: 5000,
-            variables: {filter: (isBeamtime?"beamtimeId = '":"id = '") + id + "'"}});
+            variables: {filter: (isBeamtime ? "beamtimeId = '" : "id = '") + id + "'"}
+        });
     if (queryResult.error) {
         console.log(queryResult.error);
         return queryResult.error.message;
@@ -172,10 +206,9 @@ function useQueryOrErrorString(id:string,isBeamtime:boolean) {
 
 function DetailedBeamtime({match, isBeamtime}: DetailedMetaProps) {
     const classes = useStyles();
-
     const [rawView, setRawView] = React.useState(false);
-
-    const queryResult = useQueryOrErrorString(match.params.id,isBeamtime);
+    const section = match.params.section
+    const queryResult = useQueryOrErrorString(match.params.id, isBeamtime);
     if (typeof queryResult == "string") {
         return (
             <div className={classes.root}>
@@ -186,7 +219,7 @@ function DetailedBeamtime({match, isBeamtime}: DetailedMetaProps) {
             </div>)
     }
 
-    let data : MetaDetails | CollectionDetails = isBeamtime?(queryResult.data! as MetaDataDetails).meta[0]:
+    let data: MetaDetails | CollectionDetails = isBeamtime ? (queryResult.data! as MetaDataDetails).meta[0] :
         (queryResult.data! as CollectionEntitiesDetails).collections[0]
     return (
         <div className={classes.root}>
@@ -195,7 +228,7 @@ function DetailedBeamtime({match, isBeamtime}: DetailedMetaProps) {
             {rawView ? (
                 <RawMeta meta={data}/>
             ) : (
-                <BeamtimeTabs meta={data} isBeamtime={isBeamtime}/>
+                <BeamtimeTabs meta={data} section={section} isBeamtime={isBeamtime}/>
             )}
         </div>
     );

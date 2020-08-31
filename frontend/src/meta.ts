@@ -128,6 +128,7 @@ export function TableDataFromMeta(meta: MetaDetails, section: string): TableData
 
 export function TableDataFromCollection(meta: CollectionDetails, section: string): TableData {
             return [
+                {name: 'ID', value: meta.id},
                 {name: 'Beamtime ID', value: meta.beamtimeId},
                 {name: 'Facility', value: meta.facility || "undefined"},
                 {name: 'Beamline', value: meta.beamline || "undefined"},
