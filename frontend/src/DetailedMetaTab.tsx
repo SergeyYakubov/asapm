@@ -1,23 +1,13 @@
 import React, {forwardRef, useEffect} from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
-import Toolbar from '@material-ui/core/Toolbar';
-import {RouteComponentProps} from "react-router-dom";
-import {METAS_DETAILED, Status, MetaDataDetails, MetaDetails} from "./graphQLTypes"
-import {useQuery} from "@apollo/react-hooks";
+import { MetaDetails} from "./graphQLTypes"
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
-import {Divider} from "@material-ui/core";
-import Chip from '@material-ui/core/Chip';
 import Paper from "@material-ui/core/Paper";
-import IconButton from '@material-ui/core/IconButton';
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
-import Collapse from '@material-ui/core/Collapse';
-import clsx from "clsx";
 import KeyboardArrowRightIcon from '@material-ui/icons/KeyboardArrowRight';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import Container from '@material-ui/core/Container';
 
 import AddBox from '@material-ui/icons/AddBox';
 import ArrowDownward from '@material-ui/icons/ArrowDownward';
@@ -35,8 +25,6 @@ import SaveAlt from '@material-ui/icons/SaveAlt';
 import Search from '@material-ui/icons/Search';
 import ViewColumn from '@material-ui/icons/ViewColumn';
 import MaterialTable, {Action, MaterialTableProps, Icons} from "material-table";
-import {UnfoldLess, UnfoldMore} from "@material-ui/icons";
-import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
@@ -134,14 +122,6 @@ const useStyles = makeStyles((theme: Theme) =>
         }),
 );
 
-type TParams = { id: string };
-
-type DetailedHeaderProps = {
-    meta: MetaDetails,
-    rawView: boolean,
-    setRawView: React.Dispatch<React.SetStateAction<boolean>>
-}
-
 
 type MetaViewProps = {
     meta: MetaDetails
@@ -201,51 +181,6 @@ function TableFromObject(rowData: TableEntry) {
             />
         }
     }
-}
-
-function DetailedHeader({meta, rawView, setRawView}: DetailedHeaderProps) {
-    const classes = useStyles();
-
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setRawView(event.target.checked);
-    };
-
-    return (
-        <div>
-            <Grid container spacing={0}>
-                <Grid item xs={12}>
-                    <Typography variant="h6" color="textSecondary">
-                        Detailed View
-                    </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                        <Typography variant="h5" align="center" className={classes.title}>
-                            {meta.title}
-                        </Typography>
-                </Grid>
-            </Grid>
-            <Grid container direction="row" justify="space-between" alignItems="flex-end">
-                <Chip label={meta.status} variant="outlined" className={clsx(classes.chip, {
-                    [classes.chipRunning]: meta.status == 'Running',
-                    [classes.chipCompleted]: meta.status == 'Completed',
-                    [classes.chipScheduled]: meta.status == 'Scheduled',
-                })}/>
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={rawView}
-                            onChange={handleChange}
-                            name="checked"
-                            color="primary"
-                            size="small"
-                        />
-                    }
-                    label="Raw JSON"
-                />
-            </Grid>
-            <Divider className={classes.divider}/>
-        </div>
-    );
 }
 
 function IsoDateToStr(isoDate: String) {
@@ -388,19 +323,8 @@ function replacer(key: string, value: any) {
     return value;
 }
 
-function RawMeta({meta}: MetaViewProps) {
-    return <div>
-        <pre style={{whiteSpace: "pre-wrap"}} id="json">
-            {
-                JSON.stringify(meta, replacer, '\t')
-            }
-        </pre>
-    </div>
-}
-
 
 function StaticMeta({meta}: MetaViewProps) {
-    const classes = useStyles();
     return <div>
         <Grid container direction="row" alignItems="stretch" spacing={1}>
             <Grid item xs={12} sm={12} md={4}>
@@ -487,20 +411,20 @@ function CategorizedMeta({meta}: MetaViewProps) {
             }
             {
                 Object.entries(customCategories).map(([key, value]) =>
-                    <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} />
+                    <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} key={key}/>
                 )
             }
         </Tabs>
     </Grid>
     <Grid item xs={10}>
         {isMainCategory &&
-        <TabPanel value={tabValue} index={n++} className={classes.tabPanel}>
+        <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={4}>
             <CustomTable data={mainCategory}/>
         </TabPanel>
         }
         {
             Object.entries(customCategories).map(([key, value]) =>
-                <TabPanel value={tabValue} index={n++} className={classes.tabPanel}>
+                <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={n}>
                     <CustomTable data={value}/>
                 </TabPanel>
             )
@@ -554,71 +478,16 @@ function CustomMeta({meta}: MetaViewProps) {
     </div>
 }
 
-
-interface DetailedMetaProps extends RouteComponentProps<TParams> {
-    SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>,
-}
-
-function DetailedMeta({match, SetActiveBeamtime}: DetailedMetaProps) {
-    const classes = useStyles();
-    useEffect(() => {
-        SetActiveBeamtime(match.params.id);
-    });
-
-    const [rawView, setRawView] = React.useState(false);
-
-
-    const queryResult = useQuery<MetaDataDetails>(METAS_DETAILED,
-        {variables: {filter: "beamtimeId = '" + match.params.id + "'"}});
-    if (queryResult.error) {
-        console.log(queryResult.error)
-        return (
-            <div className={classes.root}>
-                <Toolbar variant="dense"/>
-                <Typography variant="h3">
-                    {queryResult.error.message}
-                </Typography>
-            </div>
-        );
-    }
-    if (queryResult.loading) {
-        return (
-            <div className={classes.root}>
-                <Toolbar variant="dense"/>
-                <Typography variant="h3">
-                    loading ...
-                </Typography>
-            </div>
-        );
-    }
-    if (queryResult.data!.meta.length != 1) {
-        return (
-            <div className={classes.root}>
-                <Toolbar variant="dense"/>
-                <Typography variant="h3">
-                    no data found
-                </Typography>
-            </div>
-        );
-    }
-
+function DetailedMetaTab({meta}: MetaViewProps) {
     return (
-        <div className={classes.root}>
-            <Toolbar variant="dense"/>
-            <DetailedHeader meta={queryResult.data!.meta[0]} rawView={rawView} setRawView={setRawView}/>
-            {rawView ? (
-                <RawMeta meta={queryResult.data!.meta[0]}/>
-            ) : (
                 <div>
-                    <StaticMeta meta={queryResult.data!.meta[0]}/>
-                    { queryResult.data!.meta[0].customValues &&
-                        <CustomMeta meta={queryResult.data!.meta[0]}/>
+                    <StaticMeta meta={meta}/>
+                    { meta.customValues &&
+                        <CustomMeta meta={meta}/>
                     }
                 </div>
-            )}
-        </div>
     );
 }
 
 
-export default DetailedMeta;
+export default DetailedMetaTab;

@@ -10,7 +10,7 @@ import SideBar from "./SideBar";
 import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {Route, Switch, Redirect, useLocation} from 'react-router-dom';
-import DetailedMeta from "./DetailedMetaPage";
+import DetailedBeamtime from "./DetailedBeamtimePage";
 
 declare module "@material-ui/core/styles/createPalette" {
     interface Palette {
@@ -35,7 +35,6 @@ function App() {
     const {pathname} = useLocation();
     const [activeBeamtime, SetActiveBeamtime] = React.useState("");
 
-
     const {loading, error, data} = userPreferences.useUserPreferences();
     if (loading) return <p>Loading user preferences...</p>;
     let themeType: PaletteType = "light";
@@ -44,7 +43,6 @@ function App() {
     } else {
         themeType = data!.user.preferences.schema;
     }
-    ;
 
     const theme = createMuiTheme({
         overrides: {
@@ -79,7 +77,7 @@ function App() {
                         <ListMeta {...props} activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime}/>
                     )} exact/>
                     <Route path={"/detailed/:id"} render={(props) => (
-                        <DetailedMeta {...props} SetActiveBeamtime={SetActiveBeamtime}/>
+                        <DetailedBeamtime {...props} SetActiveBeamtime={SetActiveBeamtime}/>
                     )} exact/>
                 </Switch>
             </div>

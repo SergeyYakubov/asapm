@@ -38,7 +38,6 @@ interface BeamtimeUser {
     username: String
 }
 
-
 interface OnlineAnylysisMeta {
     asapoBeamtimeTokenPath: String
     reservedNodes: [String]
@@ -55,6 +54,14 @@ interface Users {
     unknown: [String]
 }
 
+interface BaseCollection {
+    id: String
+    eventStart: String
+    eventEnd: String
+    title: String
+    beamline: String
+    facility: String
+}
 
 export interface MetaDataDetails {
     meta: MetaDetails[];
@@ -81,6 +88,8 @@ export interface MetaDetails {
     unixId: String
     users: Users
     customValues: Object
+    childCollectionName: String
+    childCollection: [BaseCollection]
 }
 
 export const METAS_DETAILED = gql`
@@ -134,6 +143,13 @@ export const METAS_DETAILED = gql`
      doorDb
      special
      special
+    }
+    childCollectionName
+    childCollection {
+      id
+      title      
+      eventStart
+      eventEnd
     }
     customValues
   }

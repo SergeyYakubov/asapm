@@ -2,7 +2,7 @@ variables:
   FRONTEND_IMAGE: $REGISTRY/mdp/asapm/frontend:$CI_COMMIT_SHORT_SHA
   FRONTEND_IMAGE_DEV: $REGISTRY/mdp/asapm/frontend:dev.$CI_COMMIT_SHORT_SHA
   FRONTEND_IMAGE_STATIC: $REGISTRY/mdp/asapm/frontend
-  FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-frontend-${CI_COMMIT_SHORT_SHA}/asapm/
+  FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-frontend/asapm-${CI_COMMIT_SHORT_SHA}/
 
 build_frontend_dev:
   stage: build_dev

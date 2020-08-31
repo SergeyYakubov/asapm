@@ -3,8 +3,8 @@ set -e
 
 HOST="*.desy.de"
 
-TAG=0.6
+TAG=0.21
 
-helm upgrade --install  --set apiServer.host=$HOST --set apiServer.image="yakser/asapm-api-server:$TAG" asapm-api-server api_server/helm/asapm-api-server
-helm upgrade --install --set frontend.host=$HOST --set frontend.image="yakser/asapm-frontend:$TAG" asapm-frontend frontend/helm/asapm-frontend 
+helm upgrade --install --set apiServer.authorization.enabled=false --set resourceSuffix="-dev" --set apiServer.host=$HOST --set apiServer.image="yakser/asapm-api-server:$TAG" asapm-api-server-dev api_server/helm/asapm-api-server
+helm upgrade --install --set resourceSuffix="-dev" --set frontend.host=$HOST --set frontend.image="yakser/asapm-frontend:$TAG" asapm-frontend-dev frontend/helm/asapm-frontend 
 
