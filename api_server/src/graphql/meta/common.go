@@ -6,8 +6,9 @@ import (
 
 const KDefaultCollectionName = "datasets"
 const KChildCollectionKey = "childCollection"
-const KBeamtimeMetaNameInDb = "meta"
-const KCollectionMetaNameIndb = "meta-collections"
+const KMetaNameInDb = "meta"
+const KCollectionTypeName = "collection"
+const KBeamtimeTypeName = "beamtime"
 
 func keepFields(m map[string]interface{}, keep []string, prefix string) map[string]interface{} {
 	for key, v := range m {

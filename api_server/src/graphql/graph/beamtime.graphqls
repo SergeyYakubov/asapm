@@ -57,7 +57,37 @@ enum Status {
     Completed
 }
 
-type BeamtimeMeta {
+
+interface CollectionEntryInterface {
+    id: String!
+    beamtimeId: String
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    beamline: String
+    facility: String
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
+}
+
+type CollectionEntry implements CollectionEntryInterface {
+    id: String!
+    beamtimeId: String
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    beamline: String
+    facility: String
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
+}
+
+type BeamtimeMeta implements CollectionEntryInterface {
+    id: String!
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
@@ -80,6 +110,7 @@ type BeamtimeMeta {
     childCollectionName: String
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
 }
 
 type BaseCollectionEntry {
@@ -91,24 +122,21 @@ type BaseCollectionEntry {
     facility: String
 }
 
-type CollectionEntry {
-    id: String
-    beamtimeId: String
+
+input NewCollectionEntry {
+    id: String!
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
     childCollectionName: String
-    childCollection: [BaseCollectionEntry]
-    customValues (selectFields: [String],removeFields: [String]): Map
+    customValues: Map
 }
 
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
     beamlineAlias: String #@inputNeedAcl(acl: WRITE)
-    beamtimeId: String!
+    id: String!
     status: Status!
     contact: String
     corePath: String
@@ -124,15 +152,6 @@ input NewBeamtimeMeta {
     title: String
     unixId: String
     users: InputUsers
-    childCollectionName: String
-    customValues: Map
-}
-
-input NewCollectionEntry {
-    id: String!
-    eventStart: Time
-    eventEnd: Time
-    title: String
     childCollectionName: String
     customValues: Map
 }

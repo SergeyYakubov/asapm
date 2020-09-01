@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+type CollectionEntryInterface interface {
+	IsCollectionEntryInterface()
+}
+
 type BaseCollectionEntry struct {
 	ID         *string    `json:"_id" bson:"_id"`
 	EventStart *time.Time `json:"eventStart" bson:"eventStart"`
@@ -19,10 +23,11 @@ type BaseCollectionEntry struct {
 }
 
 type BeamtimeMeta struct {
+	ID                  string                 `json:"_id" bson:"_id"`
 	Applicant           *BeamtimeUser          `json:"applicant" bson:"applicant"`
 	Beamline            *string                `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamtimeID          string                 `json:"_id" bson:"_id"`
+	BeamtimeID          string                 `json:"beamtimeId" bson:"beamtimeId"`
 	Status              Status                 `json:"status" bson:"status"`
 	Contact             *string                `json:"contact" bson:"contact"`
 	CorePath            *string                `json:"corePath" bson:"corePath"`
@@ -41,7 +46,10 @@ type BeamtimeMeta struct {
 	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
 	ChildCollection     []*BaseCollectionEntry `json:"childCollection" bson:"childCollection"`
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
+	Type                string                 `json:"type" bson:"type"`
 }
+
+func (BeamtimeMeta) IsCollectionEntryInterface() {}
 
 type BeamtimeUser struct {
 	Applicant *string `json:"applicant" bson:"applicant"`
@@ -53,7 +61,7 @@ type BeamtimeUser struct {
 }
 
 type CollectionEntry struct {
-	ID                  *string                `json:"_id" bson:"_id"`
+	ID                  string                 `json:"_id" bson:"_id"`
 	BeamtimeID          *string                `json:"beamtimeId" bson:"beamtimeId"`
 	EventStart          *time.Time             `json:"eventStart" bson:"eventStart"`
 	EventEnd            *time.Time             `json:"eventEnd" bson:"eventEnd"`
@@ -63,7 +71,10 @@ type CollectionEntry struct {
 	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
 	ChildCollection     []*BaseCollectionEntry `json:"childCollection" bson:"childCollection"`
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
+	Type                string                 `json:"type" bson:"type"`
 }
+
+func (CollectionEntry) IsCollectionEntryInterface() {}
 
 type InputBeamtimeUser struct {
 	Applicant *string `json:"applicant" bson:"applicant"`
@@ -98,7 +109,7 @@ type NewBeamtimeMeta struct {
 	Applicant           *InputBeamtimeUser       `json:"applicant" bson:"applicant"`
 	Beamline            *string                  `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                  `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamtimeID          string                   `json:"_id" bson:"_id"`
+	ID                  string                   `json:"_id" bson:"_id"`
 	Status              Status                   `json:"status" bson:"status"`
 	Contact             *string                  `json:"contact" bson:"contact"`
 	CorePath            *string                  `json:"corePath" bson:"corePath"`

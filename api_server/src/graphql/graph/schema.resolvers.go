@@ -76,6 +76,8 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string
 
 
 func (r *mutationResolver)  DeleteMeta(ctx context.Context, id string) (*string, error) {
+	log_str := "processing request delete_meta"
+	logger.Debug(log_str)
 	return meta.DeleteBeamtimeMetaAndCollections(id)
 }
 

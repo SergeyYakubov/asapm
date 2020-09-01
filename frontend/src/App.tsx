@@ -32,7 +32,6 @@ const useStyles = makeStyles((theme: Theme) =>
 
 function App() {
     const classes = useStyles();
-    const {pathname} = useLocation();
 
     const {loading, error, data} = userPreferences.useUserPreferences();
     if (loading) return <p>Loading user preferences...</p>;

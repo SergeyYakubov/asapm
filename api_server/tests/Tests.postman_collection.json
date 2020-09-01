@@ -274,7 +274,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  createMeta(\n    input: {\n      status: Running\n      customValues: { hello: { time: 1234, date: \"1141\" }, bye: \"3445\" }\n      beamline: \"p05\"\n      beamlineAlias: \"p05\"\n      beamtimeId: \"81999366\"\n      contact: \"graceful.graceful@graceful.com\"\n      eventEnd: \"2020-01-02T00:45:00Z\"\n      eventStart: \"2020-01-01T03:26:00Z\"\n      facility: \"facility\"\n      generated: \"2019-12-31T14:46:00Z\"\n      proposalId: \"47007954\"\n      proposalType: \"C\"\n      title: \"brilliant-tireless-anaconda-of-chemistry\"\n      unixId: \"1615\"\n      users: {\n        doorDb: [\"user1\", \"user2\", \"user3\"]\n        special: []\n        unknown: []\n      }\n    }\n  ) {\n    beamtimeId\n    childCollection {\n      id\n    }\n    beamline\n    status\n    title\n    generated\n  }\n}\n",
+								"query": "mutation {\n  createMeta(\n    input: {\n      status: Running\n      customValues: { hello: { time: 1234, date: \"1141\" }, bye: \"3445\" }\n      beamline: \"p05\"\n      beamlineAlias: \"p05\"\n      id: \"81999366\"\n      contact: \"graceful.graceful@graceful.com\"\n      eventEnd: \"2020-01-02T00:45:00Z\"\n      eventStart: \"2020-01-01T03:26:00Z\"\n      facility: \"facility\"\n      generated: \"2019-12-31T14:46:00Z\"\n      proposalId: \"47007954\"\n      proposalType: \"C\"\n      title: \"brilliant-tireless-anaconda-of-chemistry\"\n      unixId: \"1615\"\n      users: {\n        doorDb: [\"user1\", \"user2\", \"user3\"]\n        special: []\n        unknown: []\n      }\n    }\n  ) {\n    beamtimeId\n    childCollection {\n      id\n    }\n    beamline\n    status\n    title\n    generated\n  }\n}\n",
 								"variables": ""
 							}
 						},
@@ -389,7 +389,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  createMeta(\n    input: {\n      status: Running\n      customValues: { hello: { time: 1234, date: \"1141\" }, bye: \"3445\" }\n      beamline: \"p05\"\n      beamlineAlias: \"p05\"\n      beamtimeId: \"81999365\"\n      contact: \"graceful.graceful@graceful.com\"\n      eventEnd: \"2020-01-02T00:45:00Z\"\n      eventStart: \"2020-01-01T03:26:00Z\"\n      facility: \"facility\"\n      generated: \"2019-12-31T14:46:00Z\"\n      proposalId: \"47007954\"\n      proposalType: \"C\"\n      title: \"brilliant-tireless-anaconda-of-chemistry\"\n      unixId: \"1615\"\n      users: {\n        doorDb: [\"user1\", \"user2\", \"user3\"]\n        special: []\n        unknown: []\n      }\n    }\n  ) {\n    beamtimeId\n    childCollection {\n      id\n    }\n    beamline\n    status\n    title\n    generated\n  }\n}\n",
+								"query": "mutation {\n  createMeta(\n    input: {\n      status: Running\n      customValues: { hello: { time: 1234, date: \"1141\" }, bye: \"3445\" }\n      beamline: \"p05\"\n      beamlineAlias: \"p05\"\n      id: \"81999365\"\n      contact: \"graceful.graceful@graceful.com\"\n      eventEnd: \"2020-01-02T00:45:00Z\"\n      eventStart: \"2020-01-01T03:26:00Z\"\n      facility: \"facility\"\n      generated: \"2019-12-31T14:46:00Z\"\n      proposalId: \"47007954\"\n      proposalType: \"C\"\n      title: \"brilliant-tireless-anaconda-of-chemistry\"\n      unixId: \"1615\"\n      users: {\n        doorDb: [\"user1\", \"user2\", \"user3\"]\n        special: []\n        unknown: []\n      }\n    }\n  ) {\n    beamtimeId\n    childCollection {\n      id\n    }\n    beamline\n    status\n    title\n    generated\n  }\n}\n",
 								"variables": ""
 							}
 						},
@@ -955,9 +955,9 @@
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData.data.collections.length).to.eql(4);",
 									"    pm.expect(jsonData.data.collections[0].id).to.eql(\"81999365\");",
-									"    pm.expect(jsonData.data.collections[1].id).to.eql(\"81999366\");",
-									"    pm.expect(jsonData.data.collections[2].id).to.eql(\"81999365.scan1\");",
-									"    pm.expect(jsonData.data.collections[3].id).to.eql(\"81999365.scan2\");    ",
+									"    pm.expect(jsonData.data.collections[1].id).to.eql(\"81999365.scan1\");",
+									"    pm.expect(jsonData.data.collections[2].id).to.eql(\"81999365.scan2\");    ",
+									"    pm.expect(jsonData.data.collections[3].id).to.eql(\"81999366\");",
 									"});",
 									""
 								],
@@ -1365,17 +1365,17 @@
 	],
 	"variable": [
 		{
-			"id": "dce950d3-384a-4fb2-b87f-87ca6ae3b4db",
+			"id": "bb3e64c8-5699-47ae-9ee2-c4797b3ea50e",
 			"key": "Auth_Url",
 			"value": "https://keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token"
 		},
 		{
-			"id": "a1dfefc6-cd6d-43d0-ad77-8d408fc18877",
+			"id": "e5f6b0b0-caa2-4811-859c-b41039e63ea2",
 			"key": "Username",
 			"value": "asapm-test"
 		},
 		{
-			"id": "1223f21c-2e81-40cf-b069-a98a55f37461",
+			"id": "6075f0b5-8805-4088-b80f-f418cc98d3f4",
 			"key": "Password",
 			"value": "test"
 		}

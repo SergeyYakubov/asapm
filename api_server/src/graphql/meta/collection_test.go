@@ -81,9 +81,9 @@ var AddCollectionEntryTests = []struct {
 	dbCollectionName       string
 	message    string
 }{
-	{aclImmediateAccess, true,"12345.scan1","12345",KBeamtimeMetaNameInDb,"first layer"},
-	{aclImmediateAccess, true,"12345.scan1.subscan1","12345.scan1",KCollectionMetaNameIndb,"second layer"},
-//	{aclImmediateDeny, false,"12345.scan1","12345",KBeamtimeMetaNameInDb,"access denied"},
+	{aclImmediateAccess, true,"12345.scan1","12345", KMetaNameInDb,"first layer"},
+	{aclImmediateAccess, true,"12345.scan1.subscan1","12345.scan1",KMetaNameInDb,"second layer"},
+//	{aclImmediateDeny, false,"12345.scan1","12345",KMetaNameInDb,"access denied"},
 }
 
 func (suite *CollectionTestSuite) TestAddCollectionEntry() {
@@ -114,7 +114,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		}
 
 		params_read := []interface{}{"12345"}
-		suite.mock_db.On("ProcessRequest", "beamtime", KBeamtimeMetaNameInDb, "read_record", params_read).Return([]byte(beamtime_meta), nil)
+		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return([]byte(beamtime_meta), nil)
 
 		params_update := []interface{}{test.parentId, "childCollection", baseInput}
 		suite.mock_db.On("ProcessRequest", "beamtime", test.dbCollectionName, "add_array_element", params_update).Return([]byte(""), nil)
@@ -124,19 +124,22 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		input_entry.Facility = &fcl
 		input_entry.Beamline = &bl
 		input_entry.BeamtimeID = &bt
+		input_entry.Type = KCollectionTypeName
 		input_entry.ChildCollection = []*model.BaseCollectionEntry{}
 		col := KDefaultCollectionName
 		input_entry.ChildCollectionName = &col
 
 		params_create := []interface{}{&input_entry}
-		suite.mock_db.On("ProcessRequest", "beamtime", KCollectionMetaNameIndb, "create_record", params_create).Return([]byte("{}"), nil)
+		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "create_record", params_create).Return([]byte("{}"), nil)
 
 		entry, err := AddCollectionEntry(test.acl, input)
 
 		suite.Nil(err)
 		suite.Equal("p05", *entry.Beamline)
 		suite.Equal("facility", *entry.Facility)
-		suite.Equal(test.collectionId, *entry.ID)
+		suite.Equal(test.collectionId, entry.ID)
 		suite.Equal("12345", *entry.BeamtimeID)
+		suite.Equal("collection", entry.Type)
+
 	}
 }

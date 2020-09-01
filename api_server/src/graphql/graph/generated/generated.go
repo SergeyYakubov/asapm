@@ -68,6 +68,7 @@ type ComplexityRoot struct {
 		EventStart          func(childComplexity int) int
 		Facility            func(childComplexity int) int
 		Generated           func(childComplexity int) int
+		ID                  func(childComplexity int) int
 		Leader              func(childComplexity int) int
 		OnlineAnalysis      func(childComplexity int) int
 		Pi                  func(childComplexity int) int
@@ -75,6 +76,7 @@ type ComplexityRoot struct {
 		ProposalType        func(childComplexity int) int
 		Status              func(childComplexity int) int
 		Title               func(childComplexity int) int
+		Type                func(childComplexity int) int
 		UnixID              func(childComplexity int) int
 		Users               func(childComplexity int) int
 	}
@@ -99,6 +101,7 @@ type ComplexityRoot struct {
 		Facility            func(childComplexity int) int
 		ID                  func(childComplexity int) int
 		Title               func(childComplexity int) int
+		Type                func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -305,6 +308,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BeamtimeMeta.Generated(childComplexity), true
 
+	case "BeamtimeMeta.id":
+		if e.complexity.BeamtimeMeta.ID == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.ID(childComplexity), true
+
 	case "BeamtimeMeta.leader":
 		if e.complexity.BeamtimeMeta.Leader == nil {
 			break
@@ -353,6 +363,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeMeta.Title(childComplexity), true
+
+	case "BeamtimeMeta.type":
+		if e.complexity.BeamtimeMeta.Type == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.Type(childComplexity), true
 
 	case "BeamtimeMeta.unixId":
 		if e.complexity.BeamtimeMeta.UnixID == nil {
@@ -484,6 +501,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CollectionEntry.Title(childComplexity), true
+
+	case "CollectionEntry.type":
+		if e.complexity.CollectionEntry.Type == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.Type(childComplexity), true
 
 	case "Mutation.addCollectionEntry":
 		if e.complexity.Mutation.AddCollectionEntry == nil {
@@ -783,7 +807,37 @@ enum Status {
     Completed
 }
 
-type BeamtimeMeta {
+
+interface CollectionEntryInterface {
+    id: String!
+    beamtimeId: String
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    beamline: String
+    facility: String
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
+}
+
+type CollectionEntry implements CollectionEntryInterface {
+    id: String!
+    beamtimeId: String
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    beamline: String
+    facility: String
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
+}
+
+type BeamtimeMeta implements CollectionEntryInterface {
+    id: String!
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
@@ -806,6 +860,7 @@ type BeamtimeMeta {
     childCollectionName: String
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
 }
 
 type BaseCollectionEntry {
@@ -817,24 +872,21 @@ type BaseCollectionEntry {
     facility: String
 }
 
-type CollectionEntry {
-    id: String
-    beamtimeId: String
+
+input NewCollectionEntry {
+    id: String!
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
     childCollectionName: String
-    childCollection: [BaseCollectionEntry]
-    customValues (selectFields: [String],removeFields: [String]): Map
+    customValues: Map
 }
 
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
     beamlineAlias: String #@inputNeedAcl(acl: WRITE)
-    beamtimeId: String!
+    id: String!
     status: Status!
     contact: String
     corePath: String
@@ -850,15 +902,6 @@ input NewBeamtimeMeta {
     title: String
     unixId: String
     users: InputUsers
-    childCollectionName: String
-    customValues: Map
-}
-
-input NewCollectionEntry {
-    id: String!
-    eventStart: Time
-    eventEnd: Time
-    title: String
     childCollectionName: String
     customValues: Map
 }
@@ -1330,6 +1373,40 @@ func (ec *executionContext) _BaseCollectionEntry_facility(ctx context.Context, f
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BeamtimeMeta_id(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_applicant(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -2027,6 +2104,40 @@ func (ec *executionContext) _BeamtimeMeta_customValues(ctx context.Context, fiel
 	return ec.marshalOMap2map(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _BeamtimeMeta_type(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _BeamtimeUser_applicant(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeUser) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2237,11 +2348,14 @@ func (ec *executionContext) _CollectionEntry_id(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CollectionEntry_beamtimeId(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
@@ -2528,6 +2642,40 @@ func (ec *executionContext) _CollectionEntry_customValues(ctx context.Context, f
 	res := resTmp.(map[string]interface{})
 	fc.Result = res
 	return ec.marshalOMap2map(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_type(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4572,9 +4720,9 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
-		case "beamtimeId":
+		case "id":
 			var err error
-			it.BeamtimeID, err = ec.unmarshalNString2string(ctx, v)
+			it.ID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4738,6 +4886,29 @@ func (ec *executionContext) unmarshalInputNewCollectionEntry(ctx context.Context
 
 // region    ************************** interface.gotpl ***************************
 
+func (ec *executionContext) _CollectionEntryInterface(ctx context.Context, sel ast.SelectionSet, obj model.CollectionEntryInterface) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.CollectionEntry:
+		return ec._CollectionEntry(ctx, sel, &obj)
+	case *model.CollectionEntry:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._CollectionEntry(ctx, sel, obj)
+	case model.BeamtimeMeta:
+		return ec._BeamtimeMeta(ctx, sel, &obj)
+	case *model.BeamtimeMeta:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BeamtimeMeta(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
@@ -4776,7 +4947,7 @@ func (ec *executionContext) _BaseCollectionEntry(ctx context.Context, sel ast.Se
 	return out
 }
 
-var beamtimeMetaImplementors = []string{"BeamtimeMeta"}
+var beamtimeMetaImplementors = []string{"BeamtimeMeta", "CollectionEntryInterface"}
 
 func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.SelectionSet, obj *model.BeamtimeMeta) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, beamtimeMetaImplementors)
@@ -4787,6 +4958,11 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("BeamtimeMeta")
+		case "id":
+			out.Values[i] = ec._BeamtimeMeta_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "applicant":
 			out.Values[i] = ec._BeamtimeMeta_applicant(ctx, field, obj)
 		case "beamline":
@@ -4837,6 +5013,11 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._BeamtimeMeta_childCollection(ctx, field, obj)
 		case "customValues":
 			out.Values[i] = ec._BeamtimeMeta_customValues(ctx, field, obj)
+		case "type":
+			out.Values[i] = ec._BeamtimeMeta_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4882,7 +5063,7 @@ func (ec *executionContext) _BeamtimeUser(ctx context.Context, sel ast.Selection
 	return out
 }
 
-var collectionEntryImplementors = []string{"CollectionEntry"}
+var collectionEntryImplementors = []string{"CollectionEntry", "CollectionEntryInterface"}
 
 func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.SelectionSet, obj *model.CollectionEntry) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, collectionEntryImplementors)
@@ -4895,6 +5076,9 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 			out.Values[i] = graphql.MarshalString("CollectionEntry")
 		case "id":
 			out.Values[i] = ec._CollectionEntry_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "beamtimeId":
 			out.Values[i] = ec._CollectionEntry_beamtimeId(ctx, field, obj)
 		case "eventStart":
@@ -4913,6 +5097,11 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._CollectionEntry_childCollection(ctx, field, obj)
 		case "customValues":
 			out.Values[i] = ec._CollectionEntry_customValues(ctx, field, obj)
+		case "type":
+			out.Values[i] = ec._CollectionEntry_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
