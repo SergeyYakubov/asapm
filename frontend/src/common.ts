@@ -18,3 +18,4 @@ export function IsoDateToStr(isoDate: String) {
     }
     return (isoDate as string).slice(0, 16).replace('T', ' ');
 }
+

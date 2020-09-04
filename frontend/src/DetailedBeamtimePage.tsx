@@ -1,13 +1,13 @@
-import React, {forwardRef, useEffect} from 'react';
+import React from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import {Link, RouteComponentProps} from "react-router-dom";
 import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes"
-import {Status, MetaDataDetails, CollectionEntitiesDetails, MetaDetails, CollectionDetails} from "./meta"
+import {MetaDataDetails, CollectionEntitiesDetails, MetaDetails, CollectionDetails} from "./meta"
 import {useQuery} from "@apollo/react-hooks";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
-import {Box, Breadcrumbs, Divider} from "@material-ui/core";
+import {Breadcrumbs, Divider} from "@material-ui/core";
 import Chip from '@material-ui/core/Chip';
 import clsx from "clsx";
 
@@ -91,9 +91,6 @@ function Navmenu({meta}: BreadcrumbsProps) {
     let curPath = "/detailedcollection/"+meta.beamtimeId;
 
     return <Breadcrumbs aria-label="breadcrumb">
-        <Link color="inherit" to="/metaboard">
-            Beamtime Board
-        </Link>
         <Link color="inherit" to={btPath}>
             {first}
         </Link>
@@ -135,9 +132,9 @@ function DetailedHeader({meta, rawView, setRawView, isBeamtime}: DetailedHeaderP
             <Grid container direction="row" justify={isBeamtime ? "space-between" : "flex-end"} alignItems="flex-end">
                 {isBeamtime &&
                 <Chip label={(meta as MetaDetails).status} variant="outlined" className={clsx(classes.chip, {
-                    [classes.chipRunning]: (meta as MetaDetails).status == 'Running',
-                    [classes.chipCompleted]: (meta as MetaDetails).status == 'Completed',
-                    [classes.chipScheduled]: (meta as MetaDetails).status == 'Scheduled',
+                    [classes.chipRunning]: (meta as MetaDetails).status === 'Running',
+                    [classes.chipCompleted]: (meta as MetaDetails).status === 'Completed',
+                    [classes.chipScheduled]: (meta as MetaDetails).status === 'Scheduled',
                 })}/>
                 }
                 <FormControlLabel
@@ -195,10 +192,10 @@ function useQueryOrErrorString(id: string, isBeamtime: boolean) {
     if (queryResult.loading) {
         return "loading ...";
     }
-    if (isBeamtime && (queryResult.data! as MetaDataDetails).meta.length != 1) {
+    if (isBeamtime && (queryResult.data! as MetaDataDetails).meta.length !== 1) {
         return "no data found";
     }
-    if (!isBeamtime && (queryResult.data! as CollectionEntitiesDetails).collections.length != 1) {
+    if (!isBeamtime && (queryResult.data! as CollectionEntitiesDetails).collections.length !== 1) {
         return "no data found";
     }
     return queryResult

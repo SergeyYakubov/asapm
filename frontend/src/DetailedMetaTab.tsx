@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect} from 'react';
+import React, {forwardRef} from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -8,48 +8,13 @@ import KeyboardArrowRightIcon from '@material-ui/icons/KeyboardArrowRight';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
-import AddBox from '@material-ui/icons/AddBox';
-import ArrowDownward from '@material-ui/icons/ArrowDownward';
-import Check from '@material-ui/icons/Check';
-import ChevronLeft from '@material-ui/icons/ChevronLeft';
-import ChevronRight from '@material-ui/icons/ChevronRight';
-import Clear from '@material-ui/icons/Clear';
-import DeleteOutline from '@material-ui/icons/DeleteOutline';
-import Edit from '@material-ui/icons/Edit';
-import FilterList from '@material-ui/icons/FilterList';
-import FirstPage from '@material-ui/icons/FirstPage';
-import LastPage from '@material-ui/icons/LastPage';
-import Remove from '@material-ui/icons/Remove';
-import SaveAlt from '@material-ui/icons/SaveAlt';
-import Search from '@material-ui/icons/Search';
-import ViewColumn from '@material-ui/icons/ViewColumn';
-import MaterialTable, {Action, MaterialTableProps, Icons} from "material-table";
+import MaterialTable, {Icons} from "material-table";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
 import {TableEntry, TableData, TableFromData} from "./common"
 import {CollectionDetails, MetaDetails} from "./meta";
-
-const tableIcons: Icons = {
-    Add: forwardRef((props, ref) => <AddBox {...props} ref={ref}/>),
-    Check: forwardRef((props, ref) => <Check {...props} ref={ref}/>),
-    Clear: forwardRef((props, ref) => <Clear {...props} ref={ref}/>),
-    Delete: forwardRef((props, ref) => <DeleteOutline {...props} ref={ref}/>),
-    DetailPanel: forwardRef((props, ref) => <ChevronRight {...props} ref={ref}/>),
-    Edit: forwardRef((props, ref) => <Edit {...props} ref={ref}/>),
-    Export: forwardRef((props, ref) => <SaveAlt {...props} ref={ref}/>),
-    Filter: forwardRef((props, ref) => <FilterList {...props} ref={ref}/>),
-    FirstPage: forwardRef((props, ref) => <FirstPage {...props} ref={ref}/>),
-    LastPage: forwardRef((props, ref) => <LastPage {...props} ref={ref}/>),
-    NextPage: forwardRef((props, ref) => <ChevronRight {...props} ref={ref}/>),
-    PreviousPage: forwardRef((props, ref) => <ChevronLeft {...props} ref={ref}/>),
-    ResetSearch: forwardRef((props, ref) => <Clear {...props} ref={ref}/>),
-    Search: forwardRef((props, ref) => <Search {...props} ref={ref}/>),
-    SortArrow: forwardRef((props, ref) => <ArrowDownward {...props} ref={ref}/>),
-    ThirdStateCheck: forwardRef((props, ref) => <Remove {...props} ref={ref}/>),
-    ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref}/>)
-};
-
+import {TableIcons} from "./TableIcons";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -153,7 +118,7 @@ function StringFromValue(value: any): string {
         return "undefined"
     }
 
-    if (value.constructor.name == "Object") {
+    if (value.constructor.name === "Object") {
         return JSON.stringify(value)
     }
 
@@ -169,7 +134,7 @@ function TableFromObject(rowData: TableEntry) {
         openIcon: KeyboardArrowUpIcon,
         render: () => {
             return <MaterialTable
-                icons={tableIcons}
+                icons={TableIcons}
                 style={{paddingLeft: '60px', paddingBottom: '1vw', boxShadow: 'none'}}
                 options={{
                     filtering: false,
@@ -185,7 +150,7 @@ function TableFromObject(rowData: TableEntry) {
                     {title: 'Name', field: 'name'},
                     {title: 'Value', field: 'value'},
                 ]}
-                data={Object.entries(rowData.data!).filter(([key, value]) => (key != "__typename")).map(([key, value]) => ({
+                data={Object.entries(rowData.data!).filter(([key, value]) => (key !== "__typename")).map(([key, value]) => ({
                     name: key,
                     value: StringFromValue(value),
                 }))}
@@ -204,7 +169,7 @@ function OnRowClick(event?: React.MouseEvent, rowData?: TableEntry, toggleDetail
 
 function Table({meta, section,tableFromMeta}: StaticSectionProps) {
     return <MaterialTable
-        icons={tableIcons}
+        icons={TableIcons}
         options={{
             filtering: false,
             header: false,
@@ -241,7 +206,7 @@ function CustomTable({data}: CustomTableProps) {
     let plainData: TableData=[]
     plainDataFromObject(plainData,data,"")
     return <MaterialTable
-        icons={tableIcons}
+        icons={TableIcons}
         options={{
             filtering: false,
             header: false,
@@ -281,14 +246,6 @@ function StaticSection({meta, section,tableFromMeta, isBeamtime}: StaticSectionP
         </Grid>
     </Grid>
 }
-
-function replacer(key: string, value: any) {
-    if (key === '__typename') {
-        return undefined;
-    }
-    return value;
-}
-
 
 function StaticMeta({meta,tableFromMeta,isBeamtime}: StaticMetaProps) {
     return <div>
@@ -360,7 +317,7 @@ function CategorizedMeta({meta}: MetaViewProps) {
     let mainCategory: { [k: string]: any } = {};
     let isMainCategory = false;
     for (const [key, value] of Object.entries(meta.customValues)) {
-        if (value.constructor.name == "Object") {
+        if (value.constructor.name === "Object") {
             customCategories[key] = value;
         } else {
             isMainCategory = true;

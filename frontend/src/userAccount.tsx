@@ -47,11 +47,11 @@ const StyledMenu = withStyles({
 export default function UserAccount() {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
-    const {loading, error, data} = userPreferences.useUserPreferences();
+    const {data} = userPreferences.useUserPreferences();
 
     const themeType = data?.user.preferences.schema || "light";
 
-    const [changeTheme, res ] = userPreferences.useUpdateUserTheme("dark");
+    const [changeTheme] = userPreferences.useUpdateUserTheme("dark");
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);

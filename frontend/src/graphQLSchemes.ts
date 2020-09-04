@@ -97,3 +97,19 @@ export const METAS = gql`
   }
 }
 `;
+
+export const COLLECTIONS = gql`
+   query ($filter:String,$orderBy:String) {
+    collections (filter: $filter,orderBy: $orderBy){
+    id
+    title
+    beamtimeId
+    facility
+    beamline
+    eventStart
+    eventEnd
+    type
+    customValues
+  }
+}
+`;

@@ -8,7 +8,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Toolbar from '@material-ui/core/Toolbar';
-import FilterBox from "./filterBox";
+import {FilterBox} from "./filterBox";
 import Divider from "@material-ui/core/Divider";
 import {QueryResult} from "@apollo/react-common";
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -96,7 +96,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
         <Grid  item xs={12}>
         <Paper className={classes.paper}>
         <List component="nav">
-            {queryResult.data && queryResult.data!.meta.filter(meta => meta.status == status).map(meta =>
+            {queryResult.data && queryResult.data!.meta.filter(meta => meta.status === status).map(meta =>
                     <ListItem button className={classes.listItem} onClick={handleClick}
                               id={meta.beamtimeId as string} key={meta.beamtimeId as string} >
                         <ListItemText

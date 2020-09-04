@@ -35,9 +35,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 function FilterBox() {
-
     const classes = useStyles();
-
     return (
         <div className={classes.root}>
             <Grid container spacing={1}   alignItems="flex-end">
@@ -67,5 +65,25 @@ function FilterBox() {
     );
 }
 
+function CollectionFilterBox() {
+    const classes = useStyles();
+    return (
+        <div className={classes.root}>
+            <Grid container spacing={1}   alignItems="flex-end">
+                <Grid item xs={12}>
+                    <Typography variant="h6" color="textSecondary">
+                        Collections
+                    </Typography>
+                </Grid>
+            </Grid>
+        </div>
+    );
+}
 
-export default FilterBox;
+
+
+export {
+    FilterBox,
+    CollectionFilterBox
+}
+

@@ -5,12 +5,14 @@ import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
 import {PaletteType} from "@material-ui/core";
 import userPreferences from "./userPreferences";
 import ListMeta from "./ListMetaPage";
+import ListCollections from "./ListCollectionsPage";
 import {grey} from '@material-ui/core/colors';
 import SideBar from "./SideBar";
 import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import {Route, Switch, Redirect, useLocation} from 'react-router-dom';
+import {Route, Switch, Redirect} from 'react-router-dom';
 import DetailedBeamtime from "./DetailedBeamtimePage";
+import Logbooks from "./Logbooks";
 
 declare module "@material-ui/core/styles/createPalette" {
     interface Palette {
@@ -69,7 +71,7 @@ function App() {
                 <SideBar/>
                 <Switch>
                     <Route exact path="/">
-                        <Redirect to="/metaboard"/>
+                        <Redirect to="/collections"/>
                     </Route>
                     <Route path="/metaboard" render={(props) => (
                         <ListMeta/>
@@ -77,8 +79,14 @@ function App() {
                     <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
                         <DetailedBeamtime {...props}  isBeamtime={true}/>
                     )} exact/>
-                    <Route key="colection" path={"/detailedcollection/:id/:section"} render={(props) => (
+                    <Route key="collection" path={"/detailedcollection/:id/:section"} render={(props) => (
                         <DetailedBeamtime {...props}  isBeamtime={false}/>
+                    )} exact/>
+                    <Route path="/collections" render={(props) => (
+                        <ListCollections/>
+                    )} exact/>
+                    <Route path="/logbooks" render={(props) => (
+                        <Logbooks/>
                     )} exact/>
                 </Switch>
             </div>

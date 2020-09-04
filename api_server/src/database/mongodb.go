@@ -194,7 +194,7 @@ func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_
 }
 
 func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
-	if len(extra_params) != 3 {
+	if len(extra_params) != 4 {
 		return nil, errors.New("wrong number of parameters")
 	}
 
@@ -210,8 +210,13 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 
 	record := extra_params[2]
 
+	uniqueId, ok := extra_params[3].(string)
+	if !ok {
+		return nil, errors.New("an argument must be string")
+	}
+
 	c := db.client.Database(dbName).Collection(dataCollectionName)
-	q := bson.M{"$and": []bson.M{bson.M{"_id": id},bson.M{key: bson.M{"$exists": true}}}}
+	q := bson.M{"$and": []bson.M{bson.M{"_id": id},bson.M{key: bson.M{"$exists": true}},bson.M{key+"._id": bson.M{"$ne":uniqueId}}}}
 
 	update := bson.M{
 		"$addToSet": bson.M{
@@ -223,7 +228,7 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 		return nil,err
 	}
 	if res.MatchedCount == 0 {
-		return nil, errors.New("record not found")
+		return nil, errors.New("record not found or duplicate entry")
 	}
 
 	if res.ModifiedCount + res.UpsertedCount == 0 {

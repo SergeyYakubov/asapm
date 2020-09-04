@@ -1,9 +1,6 @@
-config.define_string ( 'mode' , args=False , usage='mode: prod or dev (default)')
-config.define_string ( 'targetHost' , args=False , usage='targetHost for nginx ingress')
+mode = os.getenv('TILT_MODE')
+targetHost = os.getenv('TILT_TARGET_HOST')
 
-cfg = config.parse()
-mode=cfg.get('mode','dev')
-targetHost=cfg.get('targetHost','localhost')
 
 repo = local_git_repo('..')
 

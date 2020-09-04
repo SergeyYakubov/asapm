@@ -50,6 +50,7 @@ interface Users {
     unknown: [String]
 }
 
+
 interface BaseCollection {
     id: String
     eventStart: String
@@ -67,6 +68,7 @@ export interface CollectionDetails {
     title: String
     beamline: String
     facility: String
+    type: String
     childCollectionName: String
     childCollection: [BaseCollection]
     customValues: Object
@@ -132,7 +134,7 @@ export function TableDataFromCollection(meta: CollectionDetails, section: string
                 {name: 'Beamtime ID', value: meta.beamtimeId},
                 {name: 'Facility', value: meta.facility || "undefined"},
                 {name: 'Beamline', value: meta.beamline || "undefined"},
-                {name: 'Start', value: IsoDateToStr(meta.eventStart)},
+                {name: 'Start', value: meta.eventStart?meta.eventStart.toString():""},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
             ]
 }

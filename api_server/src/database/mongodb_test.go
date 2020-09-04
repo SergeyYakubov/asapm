@@ -80,7 +80,7 @@ func TestMongoDBGetUserPreferences(t *testing.T) {
 
 
 type TestCollectionEntry struct {
-	ID                  string                `json:"id" bson:"id"`
+	ID                  string                `json:"_id" bson:"_id"`
 	Beamline            string                `json:"beamline" bson:"beamline"`
 }
 
@@ -136,6 +136,25 @@ func TestMongoDBAddArrayElement(t *testing.T) {
 
 
 	rec := TestCollectionEntry{"123.123","bla"}
-	_, err = mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec)
+	_, err = mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec,rec.ID)
 	assert.Nil(t, err)
 }
+
+
+func TestMongoDBAddArrayElementFailesIfSame(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	rec1 := TestMetaRecord{"123",[]TestCollectionEntry{}}
+
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
+
+
+	rec := TestCollectionEntry{"123.123","bla"}
+	_, err = mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec,rec.ID)
+
+	rec.Beamline="bla1"
+	_, err1 := mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec,rec.ID)
+	assert.Nil(t, err)
+	assert.NotNil(t, err1)
+}
+

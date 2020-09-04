@@ -5,18 +5,14 @@ import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-import ViewListIcon from '@material-ui/icons/ViewList';
-import MenuBookIcon from '@material-ui/icons/MenuBook';
+import ReorderIcon from '@material-ui/icons/Reorder';
+import DashboardIcon from '@material-ui/icons/Dashboard';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import IconButton from "@material-ui/core/IconButton";
 import clsx from 'clsx';
-import { NavLink as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
-import Link from '@material-ui/core/Link';
-import { Omit } from '@material-ui/types';
-import {QueryResult} from "@apollo/react-common";
-import {MetaData, Status} from "./meta";
-
+import { NavLink as RouterLink} from 'react-router-dom';
+import CollectionsBookmarkIcon from '@material-ui/icons/CollectionsBookmark';
 const drawerWidth = 200;
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -108,9 +104,17 @@ export default function SideBar() {
             <Toolbar variant="dense"/>
             <div className={classes.drawer}>
                 <List>
+                    <ListItem button key="Collection List" component={RouterLink} to={"/collections"} exact activeClassName="Mui-selected">
+                        <ListItemIcon className={classes.listItem}><ReorderIcon/></ListItemIcon>
+                        <ListItemText primary="Collection List"/>
+                    </ListItem>
                     <ListItem button key="Beamtime Board" component={RouterLink} to={"/metaboard"} exact activeClassName="Mui-selected">
-                        <ListItemIcon className={classes.listItem}><ViewListIcon/></ListItemIcon>
+                        <ListItemIcon className={classes.listItem}><DashboardIcon/></ListItemIcon>
                         <ListItemText primary="Beamtime Board"/>
+                    </ListItem>
+                    <ListItem button key="Logbooks" component={RouterLink} to={"/logbooks"} exact activeClassName="Mui-selected">
+                        <ListItemIcon className={classes.listItem}><CollectionsBookmarkIcon/></ListItemIcon>
+                        <ListItemText primary="Logbooks"/>
                     </ListItem>
                 </List>
             </div>
