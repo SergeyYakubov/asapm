@@ -98,7 +98,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
         <List component="nav">
             {queryResult.data && queryResult.data!.meta.filter(meta => meta.status === status).map(meta =>
                     <ListItem button className={classes.listItem} onClick={handleClick}
-                              id={meta.beamtimeId as string} key={meta.beamtimeId as string} >
+                              id={meta.id as string} key={meta.id as string} >
                         <ListItemText
                             primaryTypographyProps={{noWrap: true}}
                             primary={meta.title}
@@ -106,7 +106,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
                                 <Grid container justify="space-between" component="span">
                                     <React.Fragment>
                                         <Typography component="span">
-                                            Beamtime ID: {meta.beamtimeId}
+                                            Beamtime ID: {meta.id}
                                         </Typography>
                                         <Typography component="span" align="right">
                                             Beamline: {meta.beamline || "undefined"}

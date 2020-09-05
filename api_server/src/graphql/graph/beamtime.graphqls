@@ -60,30 +60,48 @@ enum Status {
 
 interface CollectionEntryInterface {
     id: String!
-    beamtimeId: String
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
     childCollectionName: String
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
 }
 
 type CollectionEntry implements CollectionEntryInterface {
     id: String!
-    beamtimeId: String
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
     childCollectionName: String
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
+}
+
+type ParentBeamtimeMeta {
+    id: String!
+    applicant: BeamtimeUser
+    beamline: String
+    beamlineAlias: String
+    status: Status!
+    contact: String
+    corePath: String
+    eventEnd: Time
+    eventStart: Time
+    facility: String
+    generated: Time
+    leader: BeamtimeUser
+    onlineAnalysis: OnlineAnylysisMeta
+    pi: BeamtimeUser
+    proposalId: String
+    proposalType: String
+    title: String
+    unixId: String
+    users: Users
 }
 
 type BeamtimeMeta implements CollectionEntryInterface {
@@ -91,7 +109,6 @@ type BeamtimeMeta implements CollectionEntryInterface {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
-    beamtimeId: String!
     status: Status!
     contact: String
     corePath: String
@@ -111,6 +128,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
 }
 
 type BaseCollectionEntry {
@@ -118,8 +136,6 @@ type BaseCollectionEntry {
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
 }
 
 

@@ -1,5 +1,5 @@
 import {useQuery} from "@apollo/react-hooks";
-import {CollectionDetails, CollectionEntitiesDetails, MetaDetails} from "./meta";
+import {CollectionDetails, CollectionEntitiesDetails} from "./meta";
 import {COLLECTIONS} from "./graphQLSchemes";
 import Toolbar from "@material-ui/core/Toolbar";
 import {CollectionFilterBox} from "./filterBox";
@@ -10,7 +10,7 @@ import Divider from "@material-ui/core/Divider";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import MaterialTable from "material-table";
 import {TableIcons} from "./TableIcons";
-import {IsoDateToStr, TableData, TableEntry} from "./common";
+import {IsoDateToStr} from "./common";
 import {useHistory} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
 
@@ -116,9 +116,10 @@ function PossibleKeyListfromCollections(collections:CollectionDetails[]) {
     let keys:KeyList = [
         {fieldName:"id",alias:"ID"},
         {fieldName:"title",alias:"Title"},
-        {fieldName:"beamtimeId",alias:"Beamtime ID"},
-        {fieldName:"beamline",alias:"Beamline"},
-        {fieldName:"facility",alias:"Facility"},
+        {fieldName:"parentBeamtimeMeta.id",alias:"Beamtime ID"},
+        {fieldName:"parentBeamtimeMeta.beamline",alias:"Beamline"},
+        {fieldName:"parentBeamtimeMeta.facility",alias:"Facility"},
+        {fieldName:"parentBeamtimeMeta.users.doorDb",alias:"Door users"},
         {fieldName:"eventStart",alias:"Started At",type:KeyType.String},
     ]
     collections.forEach(col => {

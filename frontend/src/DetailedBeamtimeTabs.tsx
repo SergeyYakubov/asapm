@@ -95,7 +95,7 @@ function BeamtimeTabs({meta,isBeamtime,section}: BeamtimeTabsProps) {
                 break;
             }
         }
-        const path = isBeamtime? "/detailed/" + meta.beamtimeId+subpath:"/detailedcollection/" + (meta as CollectionDetails).id+subpath;
+        const path = isBeamtime? "/detailed/" + meta.id+subpath:"/detailedcollection/" + (meta as CollectionDetails).id+subpath;
         console.log(path)
         history.replace(path);
     };

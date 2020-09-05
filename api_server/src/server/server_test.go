@@ -167,8 +167,8 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	var map_resp map[string]interface{}
 	AddMeta(c,&map_resp)
 	query := `query {
-  	meta (filter:"beamline = 'p05'",orderBy:"beamtimeId DESC") {
-    	beamtimeId
+  	meta (filter:"beamline = 'p05'",orderBy:"id DESC") {
+    	id
     	customValues
 		status
 		}
@@ -177,7 +177,7 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 
 	var fs  = database.FilterAndSort{
 		Filter: "(beamline = 'p05') AND type='beamtime'",
-		Order:  "beamtimeId DESC",
+		Order:  "id DESC",
 		IdNames: []string{"id"},
 	}
 
@@ -185,7 +185,7 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	suite.mock_db.On("ProcessRequest", "beamtime", meta.KMetaNameInDb,"read_records",params).Return([]byte("{}"), nil).
 		Run(func(args mock.Arguments) {
 		arg := args.Get(3).([]interface {})[1].(*[]*model.BeamtimeMeta)
-		v := []byte("[{\"beamtimeId\":\"1234\"}]")
+		v := []byte("[{\"_id\":\"1234\"}]")
 		json.Unmarshal(v,arg)
 	})
 
@@ -198,6 +198,6 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	}
 	structfromMap(map_resp,&resp)
 
-	suite.Equal( "1234", resp.Meta[0].BeamtimeID)
+	suite.Equal( "1234", resp.Meta[0].ID)
 
 }

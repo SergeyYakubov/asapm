@@ -191,7 +191,7 @@ func addFilterForNameInList(currentFilter, name string, list []string) string {
 }
 
 func AddAclToSqlFilter(acl MetaAcl, curFilter *string) *string {
-	aclFilter := addFilterForNameInList("","beamtimeId",acl.AllowedBeamtimes)
+	aclFilter := addFilterForNameInList("","id",acl.AllowedBeamtimes)
 	aclFilter = addFilterForNameInList(aclFilter,"beamline",acl.AllowedBeamlines)
 	aclFilter = addFilterForNameInList(aclFilter,"facility",acl.AllowedFacilities)
 

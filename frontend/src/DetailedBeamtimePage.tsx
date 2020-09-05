@@ -86,9 +86,9 @@ function Navmenu({meta}: BreadcrumbsProps) {
     let cols = meta.id.split(".")
     const first = cols.shift()
     const last = cols.pop()
-    const btPath = "/detailed/" + meta.beamtimeId + "/meta";
+    const btPath = "/detailed/" + meta.parentBeamtimeMeta.id + "/meta";
     const path = "/detailedcollection/" + meta.id + "/meta";
-    let curPath = "/detailedcollection/"+meta.beamtimeId;
+    let curPath = "/detailedcollection/"+meta.id;
 
     return <Breadcrumbs aria-label="breadcrumb">
         <Link color="inherit" to={btPath}>
@@ -183,7 +183,7 @@ function useQueryOrErrorString(id: string, isBeamtime: boolean) {
     const queryResult = useQuery<MetaDataDetails | CollectionEntitiesDetails>(isBeamtime ? METAS_DETAILED : COLLECTION_ENTITY_DETAILED,
         {
             pollInterval: 5000,
-            variables: {filter: (isBeamtime ? "beamtimeId = '" : "id = '") + id + "'"}
+            variables: {filter: "id = '" + id + "'"}
         });
     if (queryResult.error) {
         console.log(queryResult.error);

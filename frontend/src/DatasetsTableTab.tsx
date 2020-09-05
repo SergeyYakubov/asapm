@@ -1,10 +1,10 @@
-import React, {forwardRef} from 'react';
+import React from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import {CollectionDetails, MetaDetails} from "./meta"
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 
-import MaterialTable, {Icons} from "material-table";
+import MaterialTable from "material-table";
 import {useHistory} from "react-router-dom";
 import {TableIcons} from "./TableIcons";
 import {IsoDateToStr} from "./common";

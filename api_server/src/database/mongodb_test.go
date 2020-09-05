@@ -85,7 +85,7 @@ type TestCollectionEntry struct {
 }
 
 type TestMetaRecord struct {
-	BeamtimeID          string                 `json:"_id" bson:"_id"`
+	ID          string                 `json:"_id" bson:"_id"`
 	ChildCollection     []TestCollectionEntry `json:"childCollection" bson:"childCollection"`
 }
 
@@ -104,8 +104,8 @@ func TestMongoDBDeleteRecordNotFound(t *testing.T) {
 	defer cleanup()
 	id := "12345"
 	var fs = FilterAndSort{
-		Filter: "beamtimeId = '"+id+"'",
-		IdNames: []string{"beamtimeId"},
+		Filter: "id = '"+id+"'",
+		IdNames: []string{"id"},
 	}
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_record", fs, true)
 	assert.NotNil(t, err)
@@ -119,8 +119,8 @@ func TestMongoDBDeleteRecord(t *testing.T) {
 	rec := TestMetaRecord{id,[]TestCollectionEntry{}}
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	var fs = FilterAndSort{
-		Filter: "beamtimeId = '"+id+"'",
-		IdNames: []string{"beamtimeId"},
+		Filter: "id = '"+id+"'",
+		IdNames: []string{"id"},
 	}
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_records", fs ,true)
 	assert.Nil(t, err)

@@ -6,6 +6,7 @@ import (
 	"asapm/common/utils"
 	"asapm/database"
 	"asapm/graphql/graph/model"
+	"encoding/json"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -51,7 +52,7 @@ func (suite *CollectionTestSuite) TearDownTest() {
 var beamtime_meta=`
 {
 	"beamline": "p05",
-	"beamtimeId": "81999364",
+	"id": "81999364",
 	"eventEnd": "2019-12-31T19:46:00Z",
 	"facility": "facility",
 	"generated": "2019-12-31T14:46:00Z",
@@ -60,6 +61,19 @@ var beamtime_meta=`
 	"users": {
 		"doorDb": ["aaa"],
 		"special": ["bbb"]
+	},
+	"parentBeamtimeMeta" : {
+		"beamline": "p05",
+		"id": "81999364",
+		"eventEnd": "2019-12-31T19:46:00Z",
+		"facility": "facility",
+		"generated": "2019-12-31T14:46:00Z",
+		"proposalId": "propid12345",
+		"title": "brilliant-tireless-anaconda-of-chemistry",
+		"users": {
+			"doorDb": ["aaa"],
+			"special": ["bbb"]
+		}
 	}
 }	`
 
@@ -101,16 +115,11 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			suite.NotNil(err)
 			continue
 		}
-		bl := "p05"
-		fcl := "facility"
-		bt := "12345"
 		baseInput := model.BaseCollectionEntry{
 			ID:         &input.ID,
 			EventStart: input.EventStart,
 			EventEnd:   input.EventEnd,
 			Title:      input.Title,
-			Beamline:   &bl,
-			Facility:   &fcl,
 		}
 
 		params_read := []interface{}{"12345"}
@@ -119,13 +128,15 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		params_update := []interface{}{test.parentId, "childCollection", baseInput,*baseInput.ID}
 		suite.mock_db.On("ProcessRequest", "beamtime", test.dbCollectionName, "add_array_element", params_update).Return([]byte(""), nil)
 
+
+		var meta model.BeamtimeMeta
+		json.Unmarshal([]byte(beamtime_meta),&meta)
+
 		var input_entry model.CollectionEntry
 		utils.DeepCopy(input, &input_entry)
-		input_entry.Facility = &fcl
-		input_entry.Beamline = &bl
-		input_entry.BeamtimeID = &bt
 		input_entry.Type = KCollectionTypeName
 		input_entry.ChildCollection = []*model.BaseCollectionEntry{}
+		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
 		col := KDefaultCollectionName
 		input_entry.ChildCollectionName = &col
 
@@ -135,10 +146,10 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		entry, err := AddCollectionEntry(test.acl, input)
 
 		suite.Nil(err)
-		suite.Equal("p05", *entry.Beamline)
-		suite.Equal("facility", *entry.Facility)
+		suite.Equal("p05", *entry.ParentBeamtimeMeta.Beamline)
+		suite.Equal("facility", *entry.ParentBeamtimeMeta.Facility)
 		suite.Equal(test.collectionId, entry.ID)
-		suite.Equal("12345", *entry.BeamtimeID)
+		suite.Equal(meta.ID, entry.ParentBeamtimeMeta.ID)
 		suite.Equal("collection", entry.Type)
 
 	}

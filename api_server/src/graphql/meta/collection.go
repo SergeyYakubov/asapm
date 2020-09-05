@@ -18,9 +18,9 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 	if len(ids)<2 {
 		return &model.CollectionEntry{}, errors.New("wrong id format")
 	}
-	beamtimeId := ids[0]
+	id := ids[0]
 
-	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record",beamtimeId)
+	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record",id)
 	if err != nil {
 		return &model.CollectionEntry{}, err
 	}
@@ -31,14 +31,10 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 	}
 
 	var baseEntry model.BaseCollectionEntry
-	entry.Facility = btMeta.Facility
-	entry.Beamline = btMeta.Beamline
-	entry.BeamtimeID = &beamtimeId
 	utils.DeepCopy(entry,&baseEntry)
 
-
 	if len(ids) == 2 {
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",beamtimeId, KChildCollectionKey,baseEntry,*baseEntry.ID)
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",id, KChildCollectionKey,baseEntry,*baseEntry.ID)
 	} else {
 		parentId:=strings.Join(ids[:len(ids)-1],".")
 		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,*baseEntry.ID)
@@ -55,7 +51,7 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 		col:= KDefaultCollectionName
 		entry.ChildCollectionName=&col
 	}
-
+	entry.ParentBeamtimeMeta = btMeta.ParentBeamtimeMeta
 	entry.Type = KCollectionTypeName
 
 	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "create_record",entry)

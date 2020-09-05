@@ -12,7 +12,7 @@ export const METAS_DETAILED = gql`
     }
     beamline
     beamlineAlias
-    beamtimeId
+    id
     status
     contact
     corePath
@@ -69,9 +69,11 @@ export const COLLECTION_ENTITY_DETAILED = gql`
     collections (filter: $filter){
     id
     title
-    beamtimeId
-    facility
-    beamline
+    parentBeamtimeMeta {
+        id
+        facility
+        beamline
+    }
     eventStart
     eventEnd
     childCollectionName
@@ -90,7 +92,7 @@ export const COLLECTION_ENTITY_DETAILED = gql`
 export const METAS = gql`
  {
   meta {
-    beamtimeId
+    id
     beamline
     title
     status
@@ -103,9 +105,57 @@ export const COLLECTIONS = gql`
     collections (filter: $filter,orderBy: $orderBy){
     id
     title
-    beamtimeId
-    facility
-    beamline
+    parentBeamtimeMeta {
+        applicant {
+         email
+         institute
+         lastname
+         userId
+         username
+        }
+        beamline
+        beamlineAlias
+        id
+        status
+        contact
+        corePath
+        eventEnd
+        eventStart
+        facility
+        generated
+        leader {
+         email
+         institute
+         lastname
+         userId
+         username
+        }    
+        onlineAnalysis {
+         asapoBeamtimeTokenPath
+         reservedNodes
+         slurmReservation
+         slurmPartition
+         sshPrivateKeyPath
+         sshPublicKeyPath
+         userAccount
+        }
+        pi {
+         email
+         institute
+         lastname
+         userId
+         username
+        }
+        proposalId
+        proposalType
+        title
+        unixId
+        users {
+         doorDb
+         special
+         special
+        }
+    }
     eventStart
     eventEnd
     type

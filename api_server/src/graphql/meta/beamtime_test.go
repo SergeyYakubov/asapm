@@ -31,7 +31,7 @@ func (suite *MetaSuite) TestDeleteMeta() {
 	id := "12345"
 
 	var fs = database.FilterAndSort{
-		Filter: "beamtimeId = '"+id+"'",
+		Filter: "parentBeamtimeMeta.id = '"+id+"'",
 		IdNames: []string{"id"},
 	}
 

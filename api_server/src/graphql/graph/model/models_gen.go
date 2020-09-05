@@ -18,8 +18,6 @@ type BaseCollectionEntry struct {
 	EventStart *time.Time `json:"eventStart" bson:"eventStart"`
 	EventEnd   *time.Time `json:"eventEnd" bson:"eventEnd"`
 	Title      *string    `json:"title" bson:"title"`
-	Beamline   *string    `json:"beamline" bson:"beamline"`
-	Facility   *string    `json:"facility" bson:"facility"`
 }
 
 type BeamtimeMeta struct {
@@ -27,7 +25,6 @@ type BeamtimeMeta struct {
 	Applicant           *BeamtimeUser          `json:"applicant" bson:"applicant"`
 	Beamline            *string                `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamtimeID          string                 `json:"beamtimeId" bson:"beamtimeId"`
 	Status              Status                 `json:"status" bson:"status"`
 	Contact             *string                `json:"contact" bson:"contact"`
 	CorePath            *string                `json:"corePath" bson:"corePath"`
@@ -47,6 +44,7 @@ type BeamtimeMeta struct {
 	ChildCollection     []*BaseCollectionEntry `json:"childCollection" bson:"childCollection"`
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
 	Type                string                 `json:"type" bson:"type"`
+	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta" bson:"parentBeamtimeMeta"`
 }
 
 func (BeamtimeMeta) IsCollectionEntryInterface() {}
@@ -62,16 +60,14 @@ type BeamtimeUser struct {
 
 type CollectionEntry struct {
 	ID                  string                 `json:"_id" bson:"_id"`
-	BeamtimeID          *string                `json:"beamtimeId" bson:"beamtimeId"`
 	EventStart          *time.Time             `json:"eventStart" bson:"eventStart"`
 	EventEnd            *time.Time             `json:"eventEnd" bson:"eventEnd"`
 	Title               *string                `json:"title" bson:"title"`
-	Beamline            *string                `json:"beamline" bson:"beamline"`
-	Facility            *string                `json:"facility" bson:"facility"`
 	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
 	ChildCollection     []*BaseCollectionEntry `json:"childCollection" bson:"childCollection"`
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
 	Type                string                 `json:"type" bson:"type"`
+	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta" bson:"parentBeamtimeMeta"`
 }
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
@@ -146,6 +142,28 @@ type OnlineAnylysisMeta struct {
 	SSHPrivateKeyPath      *string   `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
 	SSHPublicKeyPath       *string   `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
 	UserAccount            *string   `json:"userAccount" bson:"userAccount"`
+}
+
+type ParentBeamtimeMeta struct {
+	ID             string              `json:"_id" bson:"_id"`
+	Applicant      *BeamtimeUser       `json:"applicant" bson:"applicant"`
+	Beamline       *string             `json:"beamline" bson:"beamline"`
+	BeamlineAlias  *string             `json:"beamlineAlias" bson:"beamlineAlias"`
+	Status         Status              `json:"status" bson:"status"`
+	Contact        *string             `json:"contact" bson:"contact"`
+	CorePath       *string             `json:"corePath" bson:"corePath"`
+	EventEnd       *time.Time          `json:"eventEnd" bson:"eventEnd"`
+	EventStart     *time.Time          `json:"eventStart" bson:"eventStart"`
+	Facility       *string             `json:"facility" bson:"facility"`
+	Generated      *time.Time          `json:"generated" bson:"generated"`
+	Leader         *BeamtimeUser       `json:"leader" bson:"leader"`
+	OnlineAnalysis *OnlineAnylysisMeta `json:"onlineAnalysis" bson:"onlineAnalysis"`
+	Pi             *BeamtimeUser       `json:"pi" bson:"pi"`
+	ProposalID     *string             `json:"proposalId" bson:"proposalId"`
+	ProposalType   *string             `json:"proposalType" bson:"proposalType"`
+	Title          *string             `json:"title" bson:"title"`
+	UnixID         *string             `json:"unixId" bson:"unixId"`
+	Users          *Users              `json:"users" bson:"users"`
 }
 
 type UserAccount struct {

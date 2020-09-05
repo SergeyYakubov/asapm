@@ -16,7 +16,7 @@ export enum Status {
 
 
 interface Meta {
-    beamtimeId: String;
+    id: String;
     beamline: String;
     status: Status
     title: String;
@@ -56,29 +56,47 @@ interface BaseCollection {
     eventStart: String
     eventEnd: String
     title: String
-    beamline: String
-    facility: String
 }
 
 export interface CollectionDetails {
     id: String
-    beamtimeId: String
     eventStart: String
     eventEnd: String
     title: String
-    beamline: String
-    facility: String
     type: String
     childCollectionName: String
     childCollection: [BaseCollection]
     customValues: Object
+    parentBeamtimeMeta: ParentMetaDetails
+}
+
+export interface ParentMetaDetails  {
+    applicant: BeamtimeUser
+    beamline: String
+    beamlineAlias: String
+    id: String
+    status: Status
+    contact: String
+    corePath: String
+    eventEnd: String
+    eventStart: String
+    facility: String
+    generated: String
+    leader: BeamtimeUser
+    onlineAnalysis: OnlineAnylysisMeta
+    pi: BeamtimeUser
+    proposalId: String
+    proposalType: String
+    title: String
+    unixId: String
+    users: Users
 }
 
 export interface MetaDetails  {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
-    beamtimeId: String
+    id: String
     status: Status
     contact: String
     corePath: String
@@ -104,7 +122,7 @@ export function TableDataFromMeta(meta: MetaDetails, section: string): TableData
     switch (section) {
         case "Beamtime":
             return [
-                {name: 'Beamtime ID', value: meta.beamtimeId},
+                {name: 'Beamtime ID', value: meta.id},
                 {name: 'Facility', value: meta.facility || "undefined"},
                 {name: 'Beamline', value: meta.beamline || "undefined"},
                 {name: 'Generated', value: IsoDateToStr(meta.generated)},
@@ -131,9 +149,9 @@ export function TableDataFromMeta(meta: MetaDetails, section: string): TableData
 export function TableDataFromCollection(meta: CollectionDetails, section: string): TableData {
             return [
                 {name: 'ID', value: meta.id},
-                {name: 'Beamtime ID', value: meta.beamtimeId},
-                {name: 'Facility', value: meta.facility || "undefined"},
-                {name: 'Beamline', value: meta.beamline || "undefined"},
+                {name: 'Beamtime ID', value: meta.parentBeamtimeMeta.id},
+                {name: 'Facility', value: meta.parentBeamtimeMeta.facility || "undefined"},
+                {name: 'Beamline', value: meta.parentBeamtimeMeta.beamline || "undefined"},
                 {name: 'Start', value: meta.eventStart?meta.eventStart.toString():""},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
             ]

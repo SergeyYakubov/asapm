@@ -46,10 +46,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	BaseCollectionEntry struct {
-		Beamline   func(childComplexity int) int
 		EventEnd   func(childComplexity int) int
 		EventStart func(childComplexity int) int
-		Facility   func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Title      func(childComplexity int) int
 	}
@@ -58,7 +56,6 @@ type ComplexityRoot struct {
 		Applicant           func(childComplexity int) int
 		Beamline            func(childComplexity int) int
 		BeamlineAlias       func(childComplexity int) int
-		BeamtimeID          func(childComplexity int) int
 		ChildCollection     func(childComplexity int) int
 		ChildCollectionName func(childComplexity int) int
 		Contact             func(childComplexity int) int
@@ -71,6 +68,7 @@ type ComplexityRoot struct {
 		ID                  func(childComplexity int) int
 		Leader              func(childComplexity int) int
 		OnlineAnalysis      func(childComplexity int) int
+		ParentBeamtimeMeta  func(childComplexity int) int
 		Pi                  func(childComplexity int) int
 		ProposalID          func(childComplexity int) int
 		ProposalType        func(childComplexity int) int
@@ -91,15 +89,13 @@ type ComplexityRoot struct {
 	}
 
 	CollectionEntry struct {
-		Beamline            func(childComplexity int) int
-		BeamtimeID          func(childComplexity int) int
 		ChildCollection     func(childComplexity int) int
 		ChildCollectionName func(childComplexity int) int
 		CustomValues        func(childComplexity int, selectFields []*string, removeFields []*string) int
 		EventEnd            func(childComplexity int) int
 		EventStart          func(childComplexity int) int
-		Facility            func(childComplexity int) int
 		ID                  func(childComplexity int) int
+		ParentBeamtimeMeta  func(childComplexity int) int
 		Title               func(childComplexity int) int
 		Type                func(childComplexity int) int
 	}
@@ -119,6 +115,28 @@ type ComplexityRoot struct {
 		SlurmPartition         func(childComplexity int) int
 		SlurmReservation       func(childComplexity int) int
 		UserAccount            func(childComplexity int) int
+	}
+
+	ParentBeamtimeMeta struct {
+		Applicant      func(childComplexity int) int
+		Beamline       func(childComplexity int) int
+		BeamlineAlias  func(childComplexity int) int
+		Contact        func(childComplexity int) int
+		CorePath       func(childComplexity int) int
+		EventEnd       func(childComplexity int) int
+		EventStart     func(childComplexity int) int
+		Facility       func(childComplexity int) int
+		Generated      func(childComplexity int) int
+		ID             func(childComplexity int) int
+		Leader         func(childComplexity int) int
+		OnlineAnalysis func(childComplexity int) int
+		Pi             func(childComplexity int) int
+		ProposalID     func(childComplexity int) int
+		ProposalType   func(childComplexity int) int
+		Status         func(childComplexity int) int
+		Title          func(childComplexity int) int
+		UnixID         func(childComplexity int) int
+		Users          func(childComplexity int) int
 	}
 
 	Query struct {
@@ -170,13 +188,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "BaseCollectionEntry.beamline":
-		if e.complexity.BaseCollectionEntry.Beamline == nil {
-			break
-		}
-
-		return e.complexity.BaseCollectionEntry.Beamline(childComplexity), true
-
 	case "BaseCollectionEntry.eventEnd":
 		if e.complexity.BaseCollectionEntry.EventEnd == nil {
 			break
@@ -190,13 +201,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BaseCollectionEntry.EventStart(childComplexity), true
-
-	case "BaseCollectionEntry.facility":
-		if e.complexity.BaseCollectionEntry.Facility == nil {
-			break
-		}
-
-		return e.complexity.BaseCollectionEntry.Facility(childComplexity), true
 
 	case "BaseCollectionEntry.id":
 		if e.complexity.BaseCollectionEntry.ID == nil {
@@ -232,13 +236,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeMeta.BeamlineAlias(childComplexity), true
-
-	case "BeamtimeMeta.beamtimeId":
-		if e.complexity.BeamtimeMeta.BeamtimeID == nil {
-			break
-		}
-
-		return e.complexity.BeamtimeMeta.BeamtimeID(childComplexity), true
 
 	case "BeamtimeMeta.childCollection":
 		if e.complexity.BeamtimeMeta.ChildCollection == nil {
@@ -328,6 +325,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeMeta.OnlineAnalysis(childComplexity), true
+
+	case "BeamtimeMeta.parentBeamtimeMeta":
+		if e.complexity.BeamtimeMeta.ParentBeamtimeMeta == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.ParentBeamtimeMeta(childComplexity), true
 
 	case "BeamtimeMeta.pi":
 		if e.complexity.BeamtimeMeta.Pi == nil {
@@ -427,20 +431,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BeamtimeUser.Username(childComplexity), true
 
-	case "CollectionEntry.beamline":
-		if e.complexity.CollectionEntry.Beamline == nil {
-			break
-		}
-
-		return e.complexity.CollectionEntry.Beamline(childComplexity), true
-
-	case "CollectionEntry.beamtimeId":
-		if e.complexity.CollectionEntry.BeamtimeID == nil {
-			break
-		}
-
-		return e.complexity.CollectionEntry.BeamtimeID(childComplexity), true
-
 	case "CollectionEntry.childCollection":
 		if e.complexity.CollectionEntry.ChildCollection == nil {
 			break
@@ -481,19 +471,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CollectionEntry.EventStart(childComplexity), true
 
-	case "CollectionEntry.facility":
-		if e.complexity.CollectionEntry.Facility == nil {
-			break
-		}
-
-		return e.complexity.CollectionEntry.Facility(childComplexity), true
-
 	case "CollectionEntry.id":
 		if e.complexity.CollectionEntry.ID == nil {
 			break
 		}
 
 		return e.complexity.CollectionEntry.ID(childComplexity), true
+
+	case "CollectionEntry.parentBeamtimeMeta":
+		if e.complexity.CollectionEntry.ParentBeamtimeMeta == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.ParentBeamtimeMeta(childComplexity), true
 
 	case "CollectionEntry.title":
 		if e.complexity.CollectionEntry.Title == nil {
@@ -605,6 +595,139 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OnlineAnylysisMeta.UserAccount(childComplexity), true
+
+	case "ParentBeamtimeMeta.applicant":
+		if e.complexity.ParentBeamtimeMeta.Applicant == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Applicant(childComplexity), true
+
+	case "ParentBeamtimeMeta.beamline":
+		if e.complexity.ParentBeamtimeMeta.Beamline == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Beamline(childComplexity), true
+
+	case "ParentBeamtimeMeta.beamlineAlias":
+		if e.complexity.ParentBeamtimeMeta.BeamlineAlias == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.BeamlineAlias(childComplexity), true
+
+	case "ParentBeamtimeMeta.contact":
+		if e.complexity.ParentBeamtimeMeta.Contact == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Contact(childComplexity), true
+
+	case "ParentBeamtimeMeta.corePath":
+		if e.complexity.ParentBeamtimeMeta.CorePath == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.CorePath(childComplexity), true
+
+	case "ParentBeamtimeMeta.eventEnd":
+		if e.complexity.ParentBeamtimeMeta.EventEnd == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.EventEnd(childComplexity), true
+
+	case "ParentBeamtimeMeta.eventStart":
+		if e.complexity.ParentBeamtimeMeta.EventStart == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.EventStart(childComplexity), true
+
+	case "ParentBeamtimeMeta.facility":
+		if e.complexity.ParentBeamtimeMeta.Facility == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Facility(childComplexity), true
+
+	case "ParentBeamtimeMeta.generated":
+		if e.complexity.ParentBeamtimeMeta.Generated == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Generated(childComplexity), true
+
+	case "ParentBeamtimeMeta.id":
+		if e.complexity.ParentBeamtimeMeta.ID == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.ID(childComplexity), true
+
+	case "ParentBeamtimeMeta.leader":
+		if e.complexity.ParentBeamtimeMeta.Leader == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Leader(childComplexity), true
+
+	case "ParentBeamtimeMeta.onlineAnalysis":
+		if e.complexity.ParentBeamtimeMeta.OnlineAnalysis == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.OnlineAnalysis(childComplexity), true
+
+	case "ParentBeamtimeMeta.pi":
+		if e.complexity.ParentBeamtimeMeta.Pi == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Pi(childComplexity), true
+
+	case "ParentBeamtimeMeta.proposalId":
+		if e.complexity.ParentBeamtimeMeta.ProposalID == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.ProposalID(childComplexity), true
+
+	case "ParentBeamtimeMeta.proposalType":
+		if e.complexity.ParentBeamtimeMeta.ProposalType == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.ProposalType(childComplexity), true
+
+	case "ParentBeamtimeMeta.status":
+		if e.complexity.ParentBeamtimeMeta.Status == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Status(childComplexity), true
+
+	case "ParentBeamtimeMeta.title":
+		if e.complexity.ParentBeamtimeMeta.Title == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Title(childComplexity), true
+
+	case "ParentBeamtimeMeta.unixId":
+		if e.complexity.ParentBeamtimeMeta.UnixID == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.UnixID(childComplexity), true
+
+	case "ParentBeamtimeMeta.users":
+		if e.complexity.ParentBeamtimeMeta.Users == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Users(childComplexity), true
 
 	case "Query.collections":
 		if e.complexity.Query.Collections == nil {
@@ -810,30 +933,48 @@ enum Status {
 
 interface CollectionEntryInterface {
     id: String!
-    beamtimeId: String
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
     childCollectionName: String
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
 }
 
 type CollectionEntry implements CollectionEntryInterface {
     id: String!
-    beamtimeId: String
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
     childCollectionName: String
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
+}
+
+type ParentBeamtimeMeta {
+    id: String!
+    applicant: BeamtimeUser
+    beamline: String
+    beamlineAlias: String
+    status: Status!
+    contact: String
+    corePath: String
+    eventEnd: Time
+    eventStart: Time
+    facility: String
+    generated: Time
+    leader: BeamtimeUser
+    onlineAnalysis: OnlineAnylysisMeta
+    pi: BeamtimeUser
+    proposalId: String
+    proposalType: String
+    title: String
+    unixId: String
+    users: Users
 }
 
 type BeamtimeMeta implements CollectionEntryInterface {
@@ -841,7 +982,6 @@ type BeamtimeMeta implements CollectionEntryInterface {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
-    beamtimeId: String!
     status: Status!
     contact: String
     corePath: String
@@ -861,6 +1001,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
 }
 
 type BaseCollectionEntry {
@@ -868,8 +1009,6 @@ type BaseCollectionEntry {
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
 }
 
 
@@ -1313,68 +1452,6 @@ func (ec *executionContext) _BaseCollectionEntry_title(ctx context.Context, fiel
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _BaseCollectionEntry_beamline(ctx context.Context, field graphql.CollectedField, obj *model.BaseCollectionEntry) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "BaseCollectionEntry",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Beamline, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _BaseCollectionEntry_facility(ctx context.Context, field graphql.CollectedField, obj *model.BaseCollectionEntry) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "BaseCollectionEntry",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Facility, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _BeamtimeMeta_id(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1500,40 +1577,6 @@ func (ec *executionContext) _BeamtimeMeta_beamlineAlias(ctx context.Context, fie
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _BeamtimeMeta_beamtimeId(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "BeamtimeMeta",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.BeamtimeID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_status(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -2138,6 +2181,37 @@ func (ec *executionContext) _BeamtimeMeta_type(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _BeamtimeMeta_parentBeamtimeMeta(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentBeamtimeMeta, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ParentBeamtimeMeta)
+	fc.Result = res
+	return ec.marshalOParentBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐParentBeamtimeMeta(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _BeamtimeUser_applicant(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeUser) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2358,37 +2432,6 @@ func (ec *executionContext) _CollectionEntry_id(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _CollectionEntry_beamtimeId(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "CollectionEntry",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.BeamtimeID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _CollectionEntry_eventStart(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2469,68 +2512,6 @@ func (ec *executionContext) _CollectionEntry_title(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Title, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CollectionEntry_beamline(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "CollectionEntry",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Beamline, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _CollectionEntry_facility(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "CollectionEntry",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Facility, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2676,6 +2657,37 @@ func (ec *executionContext) _CollectionEntry_type(ctx context.Context, field gra
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_parentBeamtimeMeta(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentBeamtimeMeta, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ParentBeamtimeMeta)
+	fc.Result = res
+	return ec.marshalOParentBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐParentBeamtimeMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3117,6 +3129,601 @@ func (ec *executionContext) _OnlineAnylysisMeta_userAccount(ctx context.Context,
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_id(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_applicant(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Applicant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.BeamtimeUser)
+	fc.Result = res
+	return ec.marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_beamline(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Beamline, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_beamlineAlias(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BeamlineAlias, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_status(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.Status)
+	fc.Result = res
+	return ec.marshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_contact(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Contact, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_corePath(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CorePath, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_eventEnd(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EventEnd, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_eventStart(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EventStart, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_facility(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Facility, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_generated(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Generated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_leader(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Leader, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.BeamtimeUser)
+	fc.Result = res
+	return ec.marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_onlineAnalysis(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OnlineAnalysis, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OnlineAnylysisMeta)
+	fc.Result = res
+	return ec.marshalOOnlineAnylysisMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐOnlineAnylysisMeta(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_pi(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pi, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.BeamtimeUser)
+	fc.Result = res
+	return ec.marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_proposalId(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProposalID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_proposalType(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProposalType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_title(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_unixId(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UnixID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_users(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Users, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Users)
+	fc.Result = res
+	return ec.marshalOUsers2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUsers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_meta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4932,10 +5539,6 @@ func (ec *executionContext) _BaseCollectionEntry(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._BaseCollectionEntry_eventEnd(ctx, field, obj)
 		case "title":
 			out.Values[i] = ec._BaseCollectionEntry_title(ctx, field, obj)
-		case "beamline":
-			out.Values[i] = ec._BaseCollectionEntry_beamline(ctx, field, obj)
-		case "facility":
-			out.Values[i] = ec._BaseCollectionEntry_facility(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4969,11 +5572,6 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._BeamtimeMeta_beamline(ctx, field, obj)
 		case "beamlineAlias":
 			out.Values[i] = ec._BeamtimeMeta_beamlineAlias(ctx, field, obj)
-		case "beamtimeId":
-			out.Values[i] = ec._BeamtimeMeta_beamtimeId(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "status":
 			out.Values[i] = ec._BeamtimeMeta_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -5018,6 +5616,8 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "parentBeamtimeMeta":
+			out.Values[i] = ec._BeamtimeMeta_parentBeamtimeMeta(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5079,18 +5679,12 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "beamtimeId":
-			out.Values[i] = ec._CollectionEntry_beamtimeId(ctx, field, obj)
 		case "eventStart":
 			out.Values[i] = ec._CollectionEntry_eventStart(ctx, field, obj)
 		case "eventEnd":
 			out.Values[i] = ec._CollectionEntry_eventEnd(ctx, field, obj)
 		case "title":
 			out.Values[i] = ec._CollectionEntry_title(ctx, field, obj)
-		case "beamline":
-			out.Values[i] = ec._CollectionEntry_beamline(ctx, field, obj)
-		case "facility":
-			out.Values[i] = ec._CollectionEntry_facility(ctx, field, obj)
 		case "childCollectionName":
 			out.Values[i] = ec._CollectionEntry_childCollectionName(ctx, field, obj)
 		case "childCollection":
@@ -5102,6 +5696,8 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "parentBeamtimeMeta":
+			out.Values[i] = ec._CollectionEntry_parentBeamtimeMeta(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5172,6 +5768,72 @@ func (ec *executionContext) _OnlineAnylysisMeta(ctx context.Context, sel ast.Sel
 			out.Values[i] = ec._OnlineAnylysisMeta_sshPublicKeyPath(ctx, field, obj)
 		case "userAccount":
 			out.Values[i] = ec._OnlineAnylysisMeta_userAccount(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var parentBeamtimeMetaImplementors = []string{"ParentBeamtimeMeta"}
+
+func (ec *executionContext) _ParentBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, obj *model.ParentBeamtimeMeta) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, parentBeamtimeMetaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ParentBeamtimeMeta")
+		case "id":
+			out.Values[i] = ec._ParentBeamtimeMeta_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "applicant":
+			out.Values[i] = ec._ParentBeamtimeMeta_applicant(ctx, field, obj)
+		case "beamline":
+			out.Values[i] = ec._ParentBeamtimeMeta_beamline(ctx, field, obj)
+		case "beamlineAlias":
+			out.Values[i] = ec._ParentBeamtimeMeta_beamlineAlias(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._ParentBeamtimeMeta_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "contact":
+			out.Values[i] = ec._ParentBeamtimeMeta_contact(ctx, field, obj)
+		case "corePath":
+			out.Values[i] = ec._ParentBeamtimeMeta_corePath(ctx, field, obj)
+		case "eventEnd":
+			out.Values[i] = ec._ParentBeamtimeMeta_eventEnd(ctx, field, obj)
+		case "eventStart":
+			out.Values[i] = ec._ParentBeamtimeMeta_eventStart(ctx, field, obj)
+		case "facility":
+			out.Values[i] = ec._ParentBeamtimeMeta_facility(ctx, field, obj)
+		case "generated":
+			out.Values[i] = ec._ParentBeamtimeMeta_generated(ctx, field, obj)
+		case "leader":
+			out.Values[i] = ec._ParentBeamtimeMeta_leader(ctx, field, obj)
+		case "onlineAnalysis":
+			out.Values[i] = ec._ParentBeamtimeMeta_onlineAnalysis(ctx, field, obj)
+		case "pi":
+			out.Values[i] = ec._ParentBeamtimeMeta_pi(ctx, field, obj)
+		case "proposalId":
+			out.Values[i] = ec._ParentBeamtimeMeta_proposalId(ctx, field, obj)
+		case "proposalType":
+			out.Values[i] = ec._ParentBeamtimeMeta_proposalType(ctx, field, obj)
+		case "title":
+			out.Values[i] = ec._ParentBeamtimeMeta_title(ctx, field, obj)
+		case "unixId":
+			out.Values[i] = ec._ParentBeamtimeMeta_unixId(ctx, field, obj)
+		case "users":
+			out.Values[i] = ec._ParentBeamtimeMeta_users(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6116,6 +6778,17 @@ func (ec *executionContext) marshalOOnlineAnylysisMeta2ᚖasapmᚋgraphqlᚋgrap
 		return graphql.Null
 	}
 	return ec._OnlineAnylysisMeta(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOParentBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐParentBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v model.ParentBeamtimeMeta) graphql.Marshaler {
+	return ec._ParentBeamtimeMeta(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOParentBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐParentBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v *model.ParentBeamtimeMeta) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ParentBeamtimeMeta(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

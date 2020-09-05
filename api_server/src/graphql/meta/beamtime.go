@@ -63,8 +63,12 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 		col:= KDefaultCollectionName
 		meta.ChildCollectionName=&col
 	}
-	meta.BeamtimeID = meta.ID
 	meta.Type = KBeamtimeTypeName
+
+	parentMeta:=model.ParentBeamtimeMeta{}
+	utils.DeepCopy(meta, &parentMeta)
+	meta.ParentBeamtimeMeta = &parentMeta
+
 
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "create_record", meta)
 	if err != nil {
@@ -75,7 +79,7 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 
 
 func  DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
-	filter:= "beamtimeId = '" + id+"'"
+	filter:= "parentBeamtimeMeta.id = '" + id+"'"
 	fs := getFilterAndSort([]string{"id"},&filter,nil)
 
 	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true);err!=nil {

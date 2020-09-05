@@ -158,7 +158,7 @@ func TestSqlFilter(t *testing.T) {
 
 	filter:="meta.counter > 11"
 	res := AddAclToSqlFilter(acl,&filter)
-	assert.Equal(t,"((beamtimeId IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))) AND (meta.counter > 11)",*res)
+	assert.Equal(t,"((id IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))) AND (meta.counter > 11)",*res)
 }
 
 
@@ -167,7 +167,7 @@ func TestSqlNilFilter(t *testing.T) {
 
 	var filter *string
 	res := AddAclToSqlFilter(acl,filter)
-	assert.Equal(t,"(beamtimeId IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))",*res)
+	assert.Equal(t,"(id IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))",*res)
 }
 
 
