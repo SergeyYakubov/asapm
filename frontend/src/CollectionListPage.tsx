@@ -2,7 +2,7 @@ import {useQuery} from "@apollo/react-hooks";
 import {CollectionDetails, CollectionEntitiesDetails} from "./meta";
 import {COLLECTIONS} from "./graphQLSchemes";
 import Toolbar from "@material-ui/core/Toolbar";
-import {CollectionFilterBox} from "./filterBox";
+import {CollectionFilterBox} from "./FilterBoxes";
 import Grid from "@material-ui/core/Grid";
 import React from "react";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
@@ -167,7 +167,7 @@ function CollectionTable({collections}:CollectionProps) {
     </div>
 }
 
-function ListCollections() {
+function CollectionListPage() {
     const classes = useStyles();
 
     const queryResult = useQuery<CollectionEntitiesDetails>(COLLECTIONS, {
@@ -202,4 +202,4 @@ function ListCollections() {
 }
 
 
-export default ListCollections;
+export default CollectionListPage;

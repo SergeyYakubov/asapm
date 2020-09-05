@@ -8,13 +8,13 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Toolbar from '@material-ui/core/Toolbar';
-import {FilterBox} from "./filterBox";
+import {BeamtimeFilterBox} from "./FilterBoxes";
 import Divider from "@material-ui/core/Divider";
 import {QueryResult} from "@apollo/react-common";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";
-import {METAS } from  "./graphQLSchemes"
+import {METAS } from "./graphQLSchemes"
 import {MetaData, Status } from  "./meta"
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -137,7 +137,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
     </Grid>
 }
 
-function ListMeta() {
+function MetaListPage() {
     const queryResult = useQuery<MetaData>(METAS, {
         pollInterval: 5000,
     });
@@ -146,7 +146,7 @@ function ListMeta() {
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>
-            <FilterBox></FilterBox>
+            <BeamtimeFilterBox/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
                     <Divider></Divider>
@@ -163,4 +163,4 @@ function ListMeta() {
 }
 
 
-export default ListMeta;
+export default MetaListPage;

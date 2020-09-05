@@ -13,8 +13,6 @@ export enum Status {
     Running = "Running",
     Scheduled = "Scheduled"
 }
-
-
 interface Meta {
     id: String;
     beamline: String;
@@ -156,4 +154,3 @@ export function TableDataFromCollection(meta: CollectionDetails, section: string
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
             ]
 }
-

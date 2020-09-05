@@ -68,8 +68,14 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 		return []*model.CollectionEntry{}, errors.New("access denied, not enough permissions")
 	}
 
+	ff := auth.FilterFields{
+		BeamtimeId: "parentBeamtimeMeta.id",
+		Beamline:   "parentBeamtimeMeta.beamline",
+		Facility:   "parentBeamtimeMeta.facility",
+	}
+
 	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl,filter)
+		filter = auth.AddAclToSqlFilter(acl,filter,ff)
 	}
 
 	var response = []*model.CollectionEntry{}

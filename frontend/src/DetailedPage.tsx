@@ -14,7 +14,7 @@ import clsx from "clsx";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
-import BeamtimeTabs from "./DetailedBeamtimeTabs";
+import DetailedTabs from "./DetailedTabs";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -201,7 +201,7 @@ function useQueryOrErrorString(id: string, isBeamtime: boolean) {
     return queryResult
 }
 
-function DetailedBeamtime({match, isBeamtime}: DetailedMetaProps) {
+function DetailedPage({match, isBeamtime}: DetailedMetaProps) {
     const classes = useStyles();
     const [rawView, setRawView] = React.useState(false);
     const section = match.params.section
@@ -225,11 +225,11 @@ function DetailedBeamtime({match, isBeamtime}: DetailedMetaProps) {
             {rawView ? (
                 <RawMeta meta={data}/>
             ) : (
-                <BeamtimeTabs meta={data} section={section} isBeamtime={isBeamtime}/>
+                <DetailedTabs meta={data} section={section} isBeamtime={isBeamtime}/>
             )}
         </div>
     );
 }
 
 
-export default DetailedBeamtime;
+export default DetailedPage;

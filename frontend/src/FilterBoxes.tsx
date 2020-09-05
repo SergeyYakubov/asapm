@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 
-function FilterBox() {
+function BeamtimeFilterBox() {
     const classes = useStyles();
     return (
         <div className={classes.root}>
@@ -83,7 +83,7 @@ function CollectionFilterBox() {
 
 
 export {
-    FilterBox,
+    BeamtimeFilterBox,
     CollectionFilterBox
 }
 

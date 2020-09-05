@@ -53,13 +53,13 @@ const useStyles = makeStyles((theme: Theme) => ({
     navBar: {},
 }));
 
-type BeamtimeTabsProps = {
+type DetailedTabsProps = {
     meta: MetaDetails | CollectionDetails
     isBeamtime: boolean
     section: string
 }
 
-function BeamtimeTabs({meta,isBeamtime,section}: BeamtimeTabsProps) {
+function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps) {
     const classes = useStyles();
     let value=0;
     const showDataset = meta.childCollection && (meta.childCollection.length > 0);
@@ -127,4 +127,4 @@ function BeamtimeTabs({meta,isBeamtime,section}: BeamtimeTabsProps) {
 }
 
 
-export default BeamtimeTabs;
+export default DetailedTabs;

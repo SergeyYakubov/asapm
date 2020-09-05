@@ -25,8 +25,14 @@ func ReadBeamtimeMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepField
 		return []*model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")
 	}
 
+	ff := auth.FilterFields{
+		BeamtimeId: "id",
+		Beamline:   "beamline",
+		Facility:   "facility",
+	}
+
 	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl,filter)
+		filter = auth.AddAclToSqlFilter(acl,filter,ff)
 	}
 
 	var sResponse = []*model.BeamtimeMeta{}

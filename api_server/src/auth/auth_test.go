@@ -156,18 +156,27 @@ func TestMetaReadAclFromContext(t *testing.T) {
 func TestSqlFilter(t *testing.T) {
 	acl :=MetaAcl{AllowedBeamtimes: []string{"bt"},AllowedBeamlines: []string{"bl"},AllowedFacilities: []string{"flty"}}
 
+	ff := FilterFields{
+		BeamtimeId: "id",
+		Beamline:   "beamline",
+		Facility:   "facility",
+	}
 	filter:="meta.counter > 11"
-	res := AddAclToSqlFilter(acl,&filter)
+	res := AddAclToSqlFilter(acl,&filter,ff)
 	assert.Equal(t,"((id IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))) AND (meta.counter > 11)",*res)
 }
 
 
 func TestSqlNilFilter(t *testing.T) {
 	acl :=MetaAcl{AllowedBeamtimes: []string{"bt"},AllowedBeamlines: []string{"bl"},AllowedFacilities: []string{"flty"}}
-
+	ff := FilterFields{
+		BeamtimeId: "parentBeamtimeMeta.id",
+		Beamline:   "beamline",
+		Facility:   "facility",
+	}
 	var filter *string
-	res := AddAclToSqlFilter(acl,filter)
-	assert.Equal(t,"(id IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))",*res)
+	res := AddAclToSqlFilter(acl,filter,ff)
+	assert.Equal(t,"(parentBeamtimeMeta.id IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))",*res)
 }
 
 

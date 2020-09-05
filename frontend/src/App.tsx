@@ -1,17 +1,17 @@
 import React from 'react';
 import './App.css';
-import TopBar from "./topBar";
+import TopBar from "./TopBar";
 import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
 import {PaletteType} from "@material-ui/core";
 import userPreferences from "./userPreferences";
-import ListMeta from "./ListMetaPage";
-import ListCollections from "./ListCollectionsPage";
+import MetaListPage from "./MetaListPage";
+import CollectionListPage from "./CollectionListPage";
 import {grey} from '@material-ui/core/colors';
 import SideBar from "./SideBar";
 import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {Route, Switch, Redirect} from 'react-router-dom';
-import DetailedBeamtime from "./DetailedBeamtimePage";
+import DetailedPage from "./DetailedPage";
 import Logbooks from "./Logbooks";
 
 declare module "@material-ui/core/styles/createPalette" {
@@ -74,16 +74,16 @@ function App() {
                         <Redirect to="/collections"/>
                     </Route>
                     <Route path="/metaboard" render={(props) => (
-                        <ListMeta/>
+                        <MetaListPage/>
                     )} exact/>
                     <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
-                        <DetailedBeamtime {...props}  isBeamtime={true}/>
+                        <DetailedPage {...props}  isBeamtime={true}/>
                     )} exact/>
                     <Route key="collection" path={"/detailedcollection/:id/:section"} render={(props) => (
-                        <DetailedBeamtime {...props}  isBeamtime={false}/>
+                        <DetailedPage {...props}  isBeamtime={false}/>
                     )} exact/>
                     <Route path="/collections" render={(props) => (
-                        <ListCollections/>
+                        <CollectionListPage/>
                     )} exact/>
                     <Route path="/logbooks" render={(props) => (
                         <Logbooks/>
