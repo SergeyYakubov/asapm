@@ -924,13 +924,6 @@ input InputUsers {
     unknown: [String]
 }
 
-enum Status {
-    Scheduled
-    Running
-    Completed
-}
-
-
 interface CollectionEntryInterface {
     id: String!
     eventStart: Time
@@ -960,7 +953,7 @@ type ParentBeamtimeMeta {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
-    status: Status!
+    status: String!
     contact: String
     corePath: String
     eventEnd: Time
@@ -982,7 +975,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
-    status: Status!
+    status: String!
     contact: String
     corePath: String
     eventEnd: Time
@@ -1026,7 +1019,7 @@ input NewBeamtimeMeta {
     beamline: String
     beamlineAlias: String #@inputNeedAcl(acl: WRITE)
     id: String!
-    status: Status!
+    status: String!
     contact: String
     corePath: String
     eventEnd: Time
@@ -1608,9 +1601,9 @@ func (ec *executionContext) _BeamtimeMeta_status(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Status)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_contact(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -3287,9 +3280,9 @@ func (ec *executionContext) _ParentBeamtimeMeta_status(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.Status)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ParentBeamtimeMeta_contact(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
@@ -5335,7 +5328,7 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			}
 		case "status":
 			var err error
-			it.Status, err = ec.unmarshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx, v)
+			it.Status, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6281,15 +6274,6 @@ func (ec *executionContext) unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋ
 
 func (ec *executionContext) unmarshalNNewCollectionEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐNewCollectionEntry(ctx context.Context, v interface{}) (model.NewCollectionEntry, error) {
 	return ec.unmarshalInputNewCollectionEntry(ctx, v)
-}
-
-func (ec *executionContext) unmarshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx context.Context, v interface{}) (model.Status, error) {
-	var res model.Status
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalNStatus2asapmᚋgraphqlᚋgraphᚋmodelᚐStatus(ctx context.Context, sel ast.SelectionSet, v model.Status) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

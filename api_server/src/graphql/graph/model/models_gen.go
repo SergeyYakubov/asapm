@@ -25,7 +25,7 @@ type BeamtimeMeta struct {
 	Applicant           *BeamtimeUser          `json:"applicant" bson:"applicant"`
 	Beamline            *string                `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                `json:"beamlineAlias" bson:"beamlineAlias"`
-	Status              Status                 `json:"status" bson:"status"`
+	Status              string                 `json:"status" bson:"status"`
 	Contact             *string                `json:"contact" bson:"contact"`
 	CorePath            *string                `json:"corePath" bson:"corePath"`
 	EventEnd            *time.Time             `json:"eventEnd" bson:"eventEnd"`
@@ -106,7 +106,7 @@ type NewBeamtimeMeta struct {
 	Beamline            *string                  `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                  `json:"beamlineAlias" bson:"beamlineAlias"`
 	ID                  string                   `json:"_id" bson:"_id"`
-	Status              Status                   `json:"status" bson:"status"`
+	Status              string                   `json:"status" bson:"status"`
 	Contact             *string                  `json:"contact" bson:"contact"`
 	CorePath            *string                  `json:"corePath" bson:"corePath"`
 	EventEnd            *time.Time               `json:"eventEnd" bson:"eventEnd"`
@@ -149,7 +149,7 @@ type ParentBeamtimeMeta struct {
 	Applicant      *BeamtimeUser       `json:"applicant" bson:"applicant"`
 	Beamline       *string             `json:"beamline" bson:"beamline"`
 	BeamlineAlias  *string             `json:"beamlineAlias" bson:"beamlineAlias"`
-	Status         Status              `json:"status" bson:"status"`
+	Status         string              `json:"status" bson:"status"`
 	Contact        *string             `json:"contact" bson:"contact"`
 	CorePath       *string             `json:"corePath" bson:"corePath"`
 	EventEnd       *time.Time          `json:"eventEnd" bson:"eventEnd"`
@@ -219,48 +219,5 @@ func (e *Acls) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Acls) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type Status string
-
-const (
-	StatusScheduled Status = "Scheduled"
-	StatusRunning   Status = "Running"
-	StatusCompleted Status = "Completed"
-)
-
-var AllStatus = []Status{
-	StatusScheduled,
-	StatusRunning,
-	StatusCompleted,
-}
-
-func (e Status) IsValid() bool {
-	switch e {
-	case StatusScheduled, StatusRunning, StatusCompleted:
-		return true
-	}
-	return false
-}
-
-func (e Status) String() string {
-	return string(e)
-}
-
-func (e *Status) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = Status(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid Status", str)
-	}
-	return nil
-}
-
-func (e Status) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

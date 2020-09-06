@@ -3,7 +3,7 @@ from string import Template
 from random import randint,randrange
 from coolname import generate_slug,generate
 import datetime
-
+import json
 def rname():
   return generate()[0]
 def randomMail():
@@ -28,91 +28,83 @@ def random_date(start,intervalDays):
         return start + datetime.timedelta(minutes=randrange(intervalDays*24*60))
 
 def addMeta():
-    # Create the query string and variables required for the request.
-    query = """
-    mutation {
-      createMeta(
-        input: {
-          status: $status
-          customValues: {
-            city: "Hamburg",
-            tags: ["test1","test2"],
-            conditions: {
-               temp: 23,
-               humidity: 60
+    vals = {
+          "status": "$status",
+          "customValues": {
+            "city": "Hamburg",
+            "tags": ["test1","test2"],
+            "conditions": {
+               "temp": 23,
+               "humidity": 60
                },
-            detector: {
-              name: "pilatus",
-              status: {
-                blocks: "1",
-                rate: "200Hz",
-                test: {
-                    b:2,
-                    a:1
+            "detector": {
+              "name": "pilatus",
+              "status": {
+                "blocks": "1",
+                "rate": "200Hz",
+                "test": {
+                    "b":2,
+                    "a":1
                 }
               }
             }
-          }
-          applicant: {
-            email: "$email"
-            institute: "Deutsches Elektronen-Synchrotron"
-            lastname: "$lastname"
-            userId: "$uid"
-            username: "$uname"
-          }
-          beamline: "$beamline"
-          beamlineAlias: "$beamline"
-          beamtimeId: "$beamtimeId"
-          contact: "$contact"
-          corePath: "/asap3/petra3/gpfs/$beamline/2020/data/$beamtimeId"
-          eventEnd: "$eventEnd"
-          eventStart: "$eventStart"
-          facility: "facility"
-          generated: "$generated"
-          onlineAnalysis: {
-           asapoBeamtimeTokenPath: "/shared/asapo_token"
-           reservedNodes: ["node1", "node2", "node2"]
-           slurmReservation: "ponline"
-           slurmPartition: "$beamtimeId"
-           sshPrivateKeyPath: "shared/rsa-key.pem"
-           sshPublicKeyPath: "shared/rsa-key.pub"
-           userAccount: "bttest03"
-          }         
-          leader: {
-            email: "$lemail"
-            institute: "$linstitute"
-            lastname: "$llastname"
-            userId: "$luserId"
-            username: "$lusername"
-          }
-          pi: {
-            email: "$piemail"
-            institute: "$piinstitute"
-            lastname: "$pilastname"
-            userId: "$piuserId"
-            username: "$piusername"
-          }
-          proposalId: "$proposalId"
-          proposalType: "C"
-          title: "$title-$title-$title-$title-$title"
-          unixId: "$unixId"
-          users: {
-            doorDb: ["user1", "user2", "user3"]
-            special: []
-            unknown: []
+          },
+          "applicant": {
+            "email": "$email",
+            "institute": "Deutsches Elektronen-Synchrotron",
+            "lastname": "$lastname",
+            "userId": "$uid",
+            "username": "$uname"
+          },
+          "beamline": "$beamline",
+          "beamlineAlias": "$beamline",
+          "id": "$beamtimeId",
+          "contact": "$contact",
+          "corePath": "/asap3/petra3/gpfs/$beamline/2020/data/$beamtimeId",
+          "eventEnd": "$eventEnd",
+          "eventStart": "$eventStart",
+          "facility": "facility",
+          "generated": "$generated",
+          "onlineAnalysis": {
+           "asapoBeamtimeTokenPath": "/shared/asapo_token",
+           "reservedNodes": ["node1", "node2", "node2"],
+           "slurmReservation": "ponline",
+           "slurmPartition": "$beamtimeId",
+           "sshPrivateKeyPath": "shared/rsa-key.pem",
+           "sshPublicKeyPath": "shared/rsa-key.pub",
+           "userAccount": "bttest03"
+          },
+          "leader": {
+            "email": "$lemail",
+            "institute": "$linstitute",
+            "lastname": "$llastname",
+            "userId": "$luserId",
+            "username": "$lusername"
+          },
+          "pi": {
+            "email": "$piemail",
+            "institute": "$piinstitute",
+            "lastname": "$pilastname",
+            "userId": "$piuserId",
+            "username": "$piusername"
+          },
+          "proposalId": "$proposalId",
+          "proposalType": "C",
+          "title": "$title-$title-$title-$title-$title",
+          "unixId": "$unixId",
+          "users": {
+            "doorDb": ["user1", "user2", "user3"],
+            "special": [],
+            "unknown": []
           }
         }
-      ) {
-        beamtimeId
-        beamline
-        status
-        title
-        generated
-      }
-    }
-    """
 
-    statuses=['Completed','Scheduled','Running']
+    json_object = json.dumps(vals)
+
+# Create the query string and variables required for the request.
+    query = " mutation { createMeta( input: " + json_object + ") {id, beamline, status, title, generated } } "
+
+    statuses=['completed','running']
     facilities=['PETRA III','Flash']
 
     refDate = datetime.datetime(2020, 1, 1,00,00)
@@ -123,7 +115,7 @@ def addMeta():
     d = dict(title=generate_slug(4),email=randomMail(),lastname=rname(),
              uname=rname(),uid=randId(),beamline='p0'+str(randint(1,9)),
              beamtimeId=randId(),proposalId=randId(),
-             status=statuses[randint(0,2)],
+             status=statuses[randint(0,1)],
              contact=randomMail(),
              facility=facilities[randint(0,1)],
              unixId = randint(1000,9999),
@@ -143,7 +135,7 @@ def addMeta():
     )
     s = Template(query)
     query = s.substitute(d)
-#    print (query)
+    print (query)
     res = client.execute(query=query)
     print (res)
 for i in range(0, 1):

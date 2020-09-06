@@ -274,7 +274,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  createMeta(\n    input: {\n      status: Running\n      customValues: { hello: { time: 1234, date: \"1141\" }, bye: \"3445\" }\n      beamline: \"p05\"\n      beamlineAlias: \"p05\"\n      id: \"81999366\"\n      contact: \"graceful.graceful@graceful.com\"\n      eventEnd: \"2020-01-02T00:45:00Z\"\n      eventStart: \"2020-01-01T03:26:00Z\"\n      facility: \"facility\"\n      generated: \"2019-12-31T14:46:00Z\"\n      proposalId: \"47007954\"\n      proposalType: \"C\"\n      title: \"brilliant-tireless-anaconda-of-chemistry\"\n      unixId: \"1615\"\n      users: {\n        doorDb: [\"user1\", \"user2\", \"user3\"]\n        special: []\n        unknown: []\n      }\n    }\n  ) {\n    id\n    childCollection {\n      id\n    }\n    beamline\n    status\n    title\n    generated\n  }\n}\n",
+								"query": "mutation {\n  createMeta(\n    input: {\n      status: \"running\"\n      \"customValues\": { \"hello\": { \"time\": 1234, \"date\": \"1141\" }, \"bye\": \"3445\" }\n      \"beamline\": \"p05\"\n      beamlineAlias: \"p05\"\n      id: \"81999366\"\n      contact: \"graceful.graceful@graceful.com\"\n      eventEnd: \"2020-01-02T00:45:00Z\"\n      eventStart: \"2020-01-01T03:26:00Z\"\n      facility: \"facility\"\n      generated: \"2019-12-31T14:46:00Z\"\n      proposalId: \"47007954\"\n      proposalType: \"C\"\n      title: \"brilliant-tireless-anaconda-of-chemistry\"\n      unixId: \"1615\"\n      users: {\n        doorDb: [\"user1\", \"user2\", \"user3\"]\n        special: []\n        unknown: []\n      }\n    }\n  ) {\n    id\n    childCollection {\n      id\n    }\n    beamline\n    status\n    title\n    generated\n  }\n}\n",
 								"variables": ""
 							}
 						},
@@ -389,7 +389,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  createMeta(\n    input: {\n      status: Running\n      customValues: { hello: { time: 1234, date: \"1141\" }, bye: \"3445\" }\n      beamline: \"p05\"\n      beamlineAlias: \"p05\"\n      id: \"81999365\"\n      contact: \"graceful.graceful@graceful.com\"\n      eventEnd: \"2020-01-02T00:45:00Z\"\n      eventStart: \"2020-01-01T03:26:00Z\"\n      facility: \"facility\"\n      generated: \"2019-12-31T14:46:00Z\"\n      proposalId: \"47007954\"\n      proposalType: \"C\"\n      title: \"brilliant-tireless-anaconda-of-chemistry\"\n      unixId: \"1615\"\n      users: {\n        doorDb: [\"user1\", \"user2\", \"user3\"]\n        special: []\n        unknown: []\n      }\n    }\n  ) {\n    id\n    childCollection {\n      id\n    }\n    beamline\n    status\n    title\n    generated\n  }\n}\n",
+								"query": "mutation {\n  createMeta(\n    input: {\n      status: \"running\"\n      customValues: { hello: { time: 1234, date: \"1141\" }, bye: \"3445\" }\n      beamline: \"p05\"\n      beamlineAlias: \"p05\"\n      id: \"81999365\"\n      contact: \"graceful.graceful@graceful.com\"\n      eventEnd: \"2020-01-02T00:45:00Z\"\n      eventStart: \"2020-01-01T03:26:00Z\"\n      facility: \"facility\"\n      generated: \"2019-12-31T14:46:00Z\"\n      proposalId: \"47007954\"\n      proposalType: \"C\"\n      title: \"brilliant-tireless-anaconda-of-chemistry\"\n      unixId: \"1615\"\n      users: {\n        doorDb: [\"user1\", \"user2\", \"user3\"]\n        special: []\n        unknown: []\n      }\n    }\n  ) {\n    id\n    childCollection {\n      id\n    }\n    beamline\n    status\n    title\n    generated\n  }\n}\n",
 								"variables": ""
 							}
 						},
@@ -1368,17 +1368,17 @@
 	],
 	"variable": [
 		{
-			"id": "b31571d9-4308-4f4b-a0d3-a725a0a4a64c",
+			"id": "8642372a-454f-4cdd-9930-13f9696ac4cc",
 			"key": "Auth_Url",
 			"value": "https://keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token"
 		},
 		{
-			"id": "8d7f740d-1c4c-4f99-9758-4e6204bb758b",
+			"id": "277df1e5-0dbc-4471-8d70-c48ad582fe7a",
 			"key": "Username",
 			"value": "asapm-test"
 		},
 		{
-			"id": "a1224209-6bd5-4601-933e-9be3d7b7d42f",
+			"id": "55678038-506f-4914-b93f-85823e39a304",
 			"key": "Password",
 			"value": "test"
 		}

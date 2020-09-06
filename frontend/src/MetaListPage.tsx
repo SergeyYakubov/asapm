@@ -15,7 +15,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";
 import {METAS } from "./graphQLSchemes"
-import {MetaData, Status } from  "./meta"
+import {MetaData} from  "./meta"
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -58,7 +58,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 type MetaColumnProps = {
     queryResult: QueryResult<MetaData>,
-    status: Status,
+    status: String,
     title: string,
 }
 
@@ -152,10 +152,10 @@ function MetaListPage() {
                     <Divider></Divider>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <MetaColumn  title="Running"  queryResult={queryResult} status={Status.Running}/>
+                    <MetaColumn  title="Running"  queryResult={queryResult} status={"running"}/>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <MetaColumn  title="Completed" queryResult={queryResult} status={Status.Completed}/>
+                    <MetaColumn  title="Completed" queryResult={queryResult} status={"completed"}/>
                 </Grid>
             </Grid>
         </div>

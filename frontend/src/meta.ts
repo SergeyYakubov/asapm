@@ -8,15 +8,10 @@ export interface CollectionEntitiesDetails {
     collections: CollectionDetails[];
 }
 
-export enum Status {
-    Completed = "Completed",
-    Running = "Running",
-    Scheduled = "Scheduled"
-}
 interface Meta {
     id: String;
     beamline: String;
-    status: Status
+    status: String
     title: String;
 }
 
@@ -73,7 +68,7 @@ export interface ParentMetaDetails  {
     beamline: String
     beamlineAlias: String
     id: String
-    status: Status
+    status: String
     contact: String
     corePath: String
     eventEnd: String
@@ -95,7 +90,7 @@ export interface MetaDetails  {
     beamline: String
     beamlineAlias: String
     id: String
-    status: Status
+    status: String
     contact: String
     corePath: String
     eventEnd: String

@@ -57,6 +57,10 @@ function ValueToString(value:any,keyType:KeyType|undefined) {
     if (!value) {
         return "";
     }
+    if (value.constructor.name === "Array" ) {
+        return value.join(", ")
+    }
+
     let strval = value.toString();
     if (keyType === KeyType.String) {
         strval = IsoDateToStr(strval)
@@ -91,6 +95,7 @@ function TableDataFromCollections(collections: CollectionDetails[],keys: KeyList
     )
 }
 function possibleKeyListfromCustomValues(vals: Object,root:string,keys:KeyList) {
+    if (!vals) return;
     for (const [key, value] of Object.entries(vals)) {
         const fullKey = (root !== "" ? root+"." : "")+key
         if (!value) continue;
@@ -152,7 +157,9 @@ function CollectionTable({collections}:CollectionProps) {
             header: true,
             showTitle: false,
             search: false,
-            paging: false,
+            paging: true,
+            pageSize : 20,
+            pageSizeOptions: [20,40,100],
             toolbar: false,
             draggable: false,
             sorting: false,

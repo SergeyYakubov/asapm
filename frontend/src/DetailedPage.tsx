@@ -132,9 +132,9 @@ function DetailedHeader({meta, rawView, setRawView, isBeamtime}: DetailedHeaderP
             <Grid container direction="row" justify={isBeamtime ? "space-between" : "flex-end"} alignItems="flex-end">
                 {isBeamtime &&
                 <Chip label={(meta as MetaDetails).status} variant="outlined" className={clsx(classes.chip, {
-                    [classes.chipRunning]: (meta as MetaDetails).status === 'Running',
-                    [classes.chipCompleted]: (meta as MetaDetails).status === 'Completed',
-                    [classes.chipScheduled]: (meta as MetaDetails).status === 'Scheduled',
+                    [classes.chipRunning]: (meta as MetaDetails).status === 'running',
+                    [classes.chipCompleted]: (meta as MetaDetails).status === 'completed',
+                    [classes.chipScheduled]: (meta as MetaDetails).status === 'scheduled',
                 })}/>
                 }
                 <FormControlLabel

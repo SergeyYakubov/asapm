@@ -1,10 +1,14 @@
 package utils
 
 import (
+	"bytes"
 	json "encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -107,4 +111,15 @@ func GetEnv(key, fallback string) string {
 func DeepCopy(a, b interface{}) {
 	byt, _ := json.Marshal(a)
 	json.Unmarshal(byt, b)
+}
+
+
+func RemoveQuotes(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		b,_ := ioutil.ReadAll(r.Body)
+		fmt.Println(string(b))
+		b = regexp.MustCompile(`\\\"([\w-\.]*?)\\\":`).ReplaceAll(b,[]byte(`$1:`))
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+		fn(w, r)
+	}
 }

@@ -115,11 +115,15 @@ type CustomTableProps = {
 
 function StringFromValue(value: any): string {
     if (!value) {
-        return "undefined"
+        return ""
     }
 
     if (value.constructor.name === "Object") {
         return JSON.stringify(value)
+    }
+
+    if (value.constructor.name === "Array") {
+        return value.join(", ")
     }
 
     return value.toString()
@@ -197,7 +201,7 @@ function plainDataFromObject(plainData: TableData, data:object,root:string) {
         if (value.constructor.name === "Object") {
             plainDataFromObject(plainData,value,fullKey)
         } else {
-            plainData.push({name:fullKey,value:value.toString()})
+            plainData.push({name:fullKey,value:StringFromValue(value)})
         }
     }
 }

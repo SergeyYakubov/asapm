@@ -23,7 +23,7 @@ func AddMeta(c * client.Client, resp interface{} ) {
   createMeta(
     input: {
       id: "sss"
-      status: Completed
+      status: "completed"
       childCollectionName: "scans"
       customValues: { hello: { time: 123, date: "111" }, bye: "345" }
     }
@@ -141,7 +141,7 @@ func (suite *ProcessQueryTestSuite) TestCreateMeta() {
 	}
 	structfromMap(b,&resp)
 	suite.Equal( "sss", resp.CreateMeta.ID)
-	suite.Equal( model.StatusCompleted, resp.CreateMeta.Status)
+	suite.Equal( "completed", resp.CreateMeta.Status)
 }
 
 /*func (suite *ProcessQueryTestSuite) TestAddCollectionEntry() {

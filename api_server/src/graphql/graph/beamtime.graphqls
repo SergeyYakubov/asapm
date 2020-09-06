@@ -51,13 +51,6 @@ input InputUsers {
     unknown: [String]
 }
 
-enum Status {
-    Scheduled
-    Running
-    Completed
-}
-
-
 interface CollectionEntryInterface {
     id: String!
     eventStart: Time
@@ -87,7 +80,7 @@ type ParentBeamtimeMeta {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
-    status: Status!
+    status: String!
     contact: String
     corePath: String
     eventEnd: Time
@@ -109,7 +102,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
-    status: Status!
+    status: String!
     contact: String
     corePath: String
     eventEnd: Time
@@ -153,7 +146,7 @@ input NewBeamtimeMeta {
     beamline: String
     beamlineAlias: String #@inputNeedAcl(acl: WRITE)
     id: String!
-    status: Status!
+    status: String!
     contact: String
     corePath: String
     eventEnd: Time
