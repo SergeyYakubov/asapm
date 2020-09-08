@@ -5,6 +5,7 @@ import (
 	"asapm/common/utils"
 	"asapm/database"
 	"asapm/graphql/graph/model"
+	"encoding/json"
 	"errors"
 )
 
@@ -73,8 +74,11 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 
 	parentMeta:=model.ParentBeamtimeMeta{}
 	utils.DeepCopy(meta, &parentMeta)
-	meta.ParentBeamtimeMeta = &parentMeta
 
+	bmeta,_ := json.Marshal(&meta)
+	smeta := string(bmeta)
+	meta.JSONString =&smeta
+	meta.ParentBeamtimeMeta = &parentMeta
 
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "create_record", meta)
 	if err != nil {

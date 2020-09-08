@@ -61,6 +61,7 @@ interface CollectionEntryInterface {
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
 }
 
 type CollectionEntry implements CollectionEntryInterface {
@@ -73,6 +74,7 @@ type CollectionEntry implements CollectionEntryInterface {
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
 }
 
 type ParentBeamtimeMeta {
@@ -122,6 +124,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
 }
 
 type BaseCollectionEntry {

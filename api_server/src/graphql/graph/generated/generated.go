@@ -66,6 +66,7 @@ type ComplexityRoot struct {
 		Facility            func(childComplexity int) int
 		Generated           func(childComplexity int) int
 		ID                  func(childComplexity int) int
+		JSONString          func(childComplexity int) int
 		Leader              func(childComplexity int) int
 		OnlineAnalysis      func(childComplexity int) int
 		ParentBeamtimeMeta  func(childComplexity int) int
@@ -95,6 +96,7 @@ type ComplexityRoot struct {
 		EventEnd            func(childComplexity int) int
 		EventStart          func(childComplexity int) int
 		ID                  func(childComplexity int) int
+		JSONString          func(childComplexity int) int
 		ParentBeamtimeMeta  func(childComplexity int) int
 		Title               func(childComplexity int) int
 		Type                func(childComplexity int) int
@@ -312,6 +314,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BeamtimeMeta.ID(childComplexity), true
 
+	case "BeamtimeMeta.jsonString":
+		if e.complexity.BeamtimeMeta.JSONString == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.JSONString(childComplexity), true
+
 	case "BeamtimeMeta.leader":
 		if e.complexity.BeamtimeMeta.Leader == nil {
 			break
@@ -477,6 +486,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CollectionEntry.ID(childComplexity), true
+
+	case "CollectionEntry.jsonString":
+		if e.complexity.CollectionEntry.JSONString == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.JSONString(childComplexity), true
 
 	case "CollectionEntry.parentBeamtimeMeta":
 		if e.complexity.CollectionEntry.ParentBeamtimeMeta == nil {
@@ -934,6 +950,7 @@ interface CollectionEntryInterface {
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
 }
 
 type CollectionEntry implements CollectionEntryInterface {
@@ -946,6 +963,7 @@ type CollectionEntry implements CollectionEntryInterface {
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
 }
 
 type ParentBeamtimeMeta {
@@ -995,6 +1013,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     customValues (selectFields: [String],removeFields: [String]): Map
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
 }
 
 type BaseCollectionEntry {
@@ -2205,6 +2224,37 @@ func (ec *executionContext) _BeamtimeMeta_parentBeamtimeMeta(ctx context.Context
 	return ec.marshalOParentBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐParentBeamtimeMeta(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _BeamtimeMeta_jsonString(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JSONString, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _BeamtimeUser_applicant(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeUser) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2681,6 +2731,37 @@ func (ec *executionContext) _CollectionEntry_parentBeamtimeMeta(ctx context.Cont
 	res := resTmp.(*model.ParentBeamtimeMeta)
 	fc.Result = res
 	return ec.marshalOParentBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐParentBeamtimeMeta(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_jsonString(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JSONString, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5611,6 +5692,8 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			}
 		case "parentBeamtimeMeta":
 			out.Values[i] = ec._BeamtimeMeta_parentBeamtimeMeta(ctx, field, obj)
+		case "jsonString":
+			out.Values[i] = ec._BeamtimeMeta_jsonString(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5691,6 +5774,8 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 			}
 		case "parentBeamtimeMeta":
 			out.Values[i] = ec._CollectionEntry_parentBeamtimeMeta(ctx, field, obj)
+		case "jsonString":
+			out.Values[i] = ec._CollectionEntry_jsonString(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

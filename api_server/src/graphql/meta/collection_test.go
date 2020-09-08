@@ -6,6 +6,7 @@ import (
 	"asapm/common/utils"
 	"asapm/database"
 	"asapm/graphql/graph/model"
+	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -136,9 +137,15 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		utils.DeepCopy(input, &input_entry)
 		input_entry.Type = KCollectionTypeName
 		input_entry.ChildCollection = []*model.BaseCollectionEntry{}
-		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
 		col := KDefaultCollectionName
 		input_entry.ChildCollectionName = &col
+
+		bentry,_ := json.Marshal(&input_entry)
+		sentry := string(bentry)
+		input_entry.JSONString =&sentry
+
+
+		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
 
 		params_create := []interface{}{&input_entry}
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "create_record", params_create).Return([]byte("{}"), nil)
@@ -152,5 +159,17 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		suite.Equal(meta.ID, entry.ParentBeamtimeMeta.ID)
 		suite.Equal("collection", entry.Type)
 
+	}
+}
+
+
+func BenchmarkFib10(b *testing.B) {
+	mb:=[]byte(beamtime_meta)
+	subb:=[]byte("Eiger")
+	for n := 0; n < b.N; n++ {
+		var meta model.BeamtimeMeta
+		if bytes.Contains(mb,subb) {
+			json.Unmarshal([]byte(beamtime_meta),&meta)
+		}
 	}
 }

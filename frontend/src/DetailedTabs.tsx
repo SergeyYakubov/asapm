@@ -63,7 +63,6 @@ function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps) {
     const classes = useStyles();
     let value=0;
     const showDataset = meta.childCollection && (meta.childCollection.length > 0);
-    console.log(section,showDataset)
     switch(section) {
         case "meta": {
             value = 0;
@@ -96,7 +95,6 @@ function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps) {
             }
         }
         const path = isBeamtime? "/detailed/" + meta.id+subpath:"/detailedcollection/" + (meta as CollectionDetails).id+subpath;
-        console.log(path)
         history.replace(path);
     };
 

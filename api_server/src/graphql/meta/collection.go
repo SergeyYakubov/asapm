@@ -51,8 +51,13 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 		col:= KDefaultCollectionName
 		entry.ChildCollectionName=&col
 	}
-	entry.ParentBeamtimeMeta = btMeta.ParentBeamtimeMeta
 	entry.Type = KCollectionTypeName
+
+	bentry,_ := json.Marshal(&entry)
+	sentry := string(bentry)
+	entry.JSONString =&sentry
+
+	entry.ParentBeamtimeMeta = btMeta.ParentBeamtimeMeta
 
 	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "create_record",entry)
 	if err != nil {

@@ -322,13 +322,13 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 	queryStr := getQueryString(fs)
 
 	if queryStr != "" {
+		queryStr = strings.ReplaceAll(queryStr,"\\","\\\\")
 		q, sort, err = db.BSONFromSQL(queryStr)
 		if err != nil {
 			return nil, err
 		}
 		opts.SetSort(sort)
 	}
-
 	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
 		return nil, err

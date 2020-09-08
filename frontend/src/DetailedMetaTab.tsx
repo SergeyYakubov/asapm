@@ -164,7 +164,6 @@ function TableFromObject(rowData: TableEntry) {
 }
 
 function OnRowClick(event?: React.MouseEvent, rowData?: TableEntry, toggleDetailPanel?: (panelIndex?: number) => void) {
-    console.log(typeof rowData!.data)
     if (!rowData!.data) {
         return {};
     }

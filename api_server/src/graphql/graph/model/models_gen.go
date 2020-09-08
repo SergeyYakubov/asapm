@@ -45,6 +45,7 @@ type BeamtimeMeta struct {
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
 	Type                string                 `json:"type" bson:"type"`
 	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta" bson:"parentBeamtimeMeta"`
+	JSONString          *string                `json:"jsonString" bson:"jsonString"`
 }
 
 func (BeamtimeMeta) IsCollectionEntryInterface() {}
@@ -68,6 +69,7 @@ type CollectionEntry struct {
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
 	Type                string                 `json:"type" bson:"type"`
 	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta" bson:"parentBeamtimeMeta"`
+	JSONString          *string                `json:"jsonString" bson:"jsonString"`
 }
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
