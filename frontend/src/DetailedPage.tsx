@@ -4,7 +4,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import {Link, RouteComponentProps} from "react-router-dom";
 import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes"
 import {MetaDataDetails, CollectionEntitiesDetails, MetaDetails, CollectionDetails} from "./meta"
-import {useQuery} from "@apollo/react-hooks";
+import {useQuery} from "@apollo/client";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import {Breadcrumbs, Divider} from "@material-ui/core";

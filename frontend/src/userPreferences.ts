@@ -1,6 +1,5 @@
 import {PaletteType} from "@material-ui/core";
-import {gql} from "apollo-boost";
-import {useQuery,useMutation} from "@apollo/react-hooks";
+import {gql, useQuery,useMutation} from "@apollo/client";
 import userService from "./userService";
 
 interface UserData {

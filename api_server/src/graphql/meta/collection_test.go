@@ -139,13 +139,13 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		input_entry.ChildCollection = []*model.BaseCollectionEntry{}
 		col := KDefaultCollectionName
 		input_entry.ChildCollectionName = &col
+		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
 
 		bentry,_ := json.Marshal(&input_entry)
 		sentry := string(bentry)
 		input_entry.JSONString =&sentry
 
 
-		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
 
 		params_create := []interface{}{&input_entry}
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "create_record", params_create).Return([]byte("{}"), nil)

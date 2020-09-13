@@ -20,6 +20,9 @@ client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query",
 #client = GraphqlClient(endpoint="https://asapm.desy.de/api/query",
 #                       headers= {"Authorization": "Bearer "+ token})
 
+#client = GraphqlClient(endpoint="http://guest-k8s-node3.desy.de/yakser/asapm-dev/api/query",
+#                       headers= {"Authorization": "Bearer "+ token})
+
 
 def random_date(start,intervalDays):
     if intervalDays<0:
@@ -138,5 +141,5 @@ def addMeta():
     print (query)
     res = client.execute(query=query)
     print (res)
-for i in range(0, 1):
+for i in range(0, 50):
     addMeta()

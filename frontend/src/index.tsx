@@ -3,27 +3,31 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import ApolloClient from 'apollo-boost';
 import UserService from "./userService";
-import { ApolloProvider } from '@apollo/react-hooks';
 import { BrowserRouter } from 'react-router-dom';
 import userService from "./userService";
+import { cache } from './CollectionListPage';
+import {ApolloClient, createHttpLink, ApolloProvider} from "@apollo/client";
+import {setContext} from "@apollo/client/link/context";
 
 
-const client = new ApolloClient({
+const httpLink = createHttpLink({
     uri: window.location.origin+process.env.PUBLIC_URL+process.env.REACT_APP_API_SUFFIX+"/query",
-    request: (operation) => {
-        return userService.updateToken(300).then(function() {
-            const token = userService.getToken()
-            operation.setContext({
-                headers: {
-                    authorization: token ? `Bearer ${token}` : "",
-                }
-            })
-        }).catch(function() {
-            console.log('Failed to refresh token');
-        });
+});
+
+const authLink = setContext((_, { headers }) => {
+    const token = userService.getToken()
+    return {
+        headers: {
+            ...headers,
+            authorization: token ? `Bearer ${token}` : "",
+        }
     }
+});
+
+export const client = new ApolloClient({
+    cache:cache,
+    link:authLink.concat(httpLink)
 });
 
 const renderApp = () => ReactDOM.render(

@@ -25,3 +25,5 @@ export interface CollectionFilter {
     textSearch: string
 }
 
+
+

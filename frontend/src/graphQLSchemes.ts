@@ -1,4 +1,4 @@
-import {gql} from "apollo-boost";
+import {gql} from "@apollo/client";
 
 export const METAS_DETAILED = gql`
    query ($filter:String) {

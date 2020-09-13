@@ -1,5 +1,5 @@
 import React from 'react';
-import {useQuery} from '@apollo/react-hooks';
+import {QueryResult, useQuery} from '@apollo/client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
@@ -10,7 +10,6 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Toolbar from '@material-ui/core/Toolbar';
 import {BeamtimeFilterBox} from "./FilterBoxes";
 import Divider from "@material-ui/core/Divider";
-import {QueryResult} from "@apollo/react-common";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";

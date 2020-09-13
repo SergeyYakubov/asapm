@@ -1,18 +1,28 @@
-import {useQuery} from "@apollo/react-hooks";
-import {CollectionDetails, CollectionEntitiesDetails} from "./meta";
-import {COLLECTIONS} from "./graphQLSchemes";
+import {useQuery} from "@apollo/client";
+import {CollectionDetails} from "./meta";
 import Toolbar from "@material-ui/core/Toolbar";
 import {CollectionFilterBox} from "./FilterBoxes";
 import Grid from "@material-ui/core/Grid";
 import React from "react";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import Divider from "@material-ui/core/Divider";
-import CircularProgress from "@material-ui/core/CircularProgress";
 import MaterialTable from "material-table";
 import {TableIcons} from "./TableIcons";
 import {CollectionFilter, IsoDateToStr} from "./common";
 import {useHistory} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
+import {gql, InMemoryCache, makeVar} from "@apollo/client";
+
+import {
+    Box,
+    Checkbox,
+    FormControl, FormControlLabel,
+    FormGroup,
+    FormLabel,
+    IconButton,
+    Popover
+} from "@material-ui/core";
+import ViewColumnIcon from '@material-ui/icons/ViewColumn';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -20,6 +30,10 @@ const useStyles = makeStyles((theme: Theme) =>
             flexGrow: 1,
             margin: theme.spacing(1),
             minWidth: 0,
+        },
+        toolBox: {
+            margin: theme.spacing(0),
+            background: theme.palette.background.paper
         },
         paper: {
             paddingTop: theme.spacing(1),
@@ -43,17 +57,14 @@ interface BasicCollectionDetails {
     type: String
 }
 
-enum KeyType {
-    String
-}
-
-type KeyList = {
+type ColumnList = {
     fieldName: string
-    alias?: string
-    type?: KeyType
+    alias: string | null
+    type: string | null
+    active: boolean
 }[]
 
-function ValueToString(value: any, keyType: KeyType | undefined) {
+function ValueToString(value: any, columnType: string | undefined) {
     if (!value) {
         return "";
     }
@@ -62,23 +73,23 @@ function ValueToString(value: any, keyType: KeyType | undefined) {
     }
 
     let strval = value.toString();
-    if (keyType === KeyType.String) {
+    if (columnType === "string") {
         strval = IsoDateToStr(strval)
     }
     return strval
 }
 
-function plainDataFromObject(plainData: BasicCollectionDetails, data: object, root: string, keys: KeyList) {
-    for (const [key, value] of Object.entries(data)) {
-        const fullKey = (root !== "" ? root + "." : "") + key
+function plainDataFromObject(plainData: BasicCollectionDetails, data: object, root: string, columns: ColumnList) {
+    for (const [column, value] of Object.entries(data)) {
+        const fullColumn = (root !== "" ? root + "." : "") + column
         if (!value) continue;
         if (value.constructor.name === "Object") {
-            plainDataFromObject(plainData, value, fullKey, keys)
+            plainDataFromObject(plainData, value, fullColumn, columns)
         } else {
-            for (let i = 0; i < keys.length; i++) {
-                if (fullKey === keys[i].fieldName) {
+            for (let i = 0; i < columns.length; i++) {
+                if (fullColumn === columns[i].fieldName) {
                     // @ts-ignore
-                    plainData[fullKey] = ValueToString(value, keys[i].type)
+                    plainData[fullColumn] = ValueToString(value, columns[i].type)
                     break;
                 }
             }
@@ -86,57 +97,131 @@ function plainDataFromObject(plainData: BasicCollectionDetails, data: object, ro
     }
 }
 
-function TableDataFromCollections(collections: CollectionDetails[], keys: KeyList): BasicCollectionDetails[] {
+function TableDataFromCollections(collections: CollectionDetails[], columns: ColumnList): BasicCollectionDetails[] {
     return collections.map(collection => {
             var res: BasicCollectionDetails = {id: collection.id, type: collection.type};
-            plainDataFromObject(res, collection, "", keys);
+            plainDataFromObject(res, collection, "", columns);
             return res
         }
     )
 }
 
-function possibleKeyListfromCustomValues(vals: Object, root: string, keys: KeyList) {
+function possibleColumnListfromCustomValues(vals: Object, root: string, columns: ColumnList) {
     if (!vals) return;
-    for (const [key, value] of Object.entries(vals)) {
-        const fullKey = (root !== "" ? root + "." : "") + key
+    for (const [column, value] of Object.entries(vals)) {
+        const fullColumn = (root !== "" ? root + "." : "") + column
         if (!value) continue;
         if (value.constructor.name === "Object") {
-            possibleKeyListfromCustomValues(value, fullKey, keys)
+            possibleColumnListfromCustomValues(value, fullColumn, columns)
         } else {
-            let found = false;
-            for (let i = 0; i < keys.length; i++) {
-                if ("customValues." + fullKey === keys[i].fieldName) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                keys.push({fieldName: "customValues." + fullKey, alias: fullKey})
+            if (!columns.find(column => column.fieldName === "customValues." + fullColumn)) {
+                columns.push({fieldName: "customValues." + fullColumn, alias: fullColumn, active: false,type:null});
             }
         }
     }
-
 }
 
-function PossibleKeyListfromCollections(collections: CollectionDetails[]) {
-    let keys: KeyList = [
-        {fieldName: "id", alias: "ID"},
-        {fieldName: "title", alias: "Title"},
-        {fieldName: "parentBeamtimeMeta.id", alias: "Beamtime ID"},
-        {fieldName: "parentBeamtimeMeta.beamline", alias: "Beamline"},
-        {fieldName: "parentBeamtimeMeta.facility", alias: "Facility"},
-        {fieldName: "parentBeamtimeMeta.users.doorDb", alias: "Door users"},
-        {fieldName: "eventStart", alias: "Started At", type: KeyType.String},
-    ]
+function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionDetails[]) {
+    let columns = currentColumns.map(a => Object.assign({}, a));
     collections.forEach(col => {
-        possibleKeyListfromCustomValues(col.customValues, "", keys)
+        possibleColumnListfromCustomValues(col.customValues, "", columns)
     })
+    return columns
+}
 
-    return keys
+type SelectColumnsProps = {
+    columns: ColumnList
+    collections: CollectionDetails[]
+}
 
+function SelectColumns({collections, columns}: SelectColumnsProps) {
+    const possibleColumns: ColumnList = PossibleColumnListfromCollections(columns, collections);
+    const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        columnsVar(columns);
+    };
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        let ind = possibleColumns.findIndex(colval => colval.fieldName === event.target.name);
+        possibleColumns[ind].active = !possibleColumns[ind].active;
+        columnsVar(possibleColumns);
+    };
+
+
+    return <Box margin={"2"}>
+        <FormControl component="fieldset">
+            <FormLabel component="legend">Select columns</FormLabel>
+            <FormGroup>
+                {possibleColumns.map(column => {
+                    return <FormControlLabel
+                        key={column.fieldName}
+                        control={<Checkbox checked={column.active} onChange={handleChange} name={column.fieldName}/>}
+                        label={column.alias || column.fieldName + ":" + column.fieldName}
+                    />
+                })}
+            </FormGroup>
+        </FormControl>
+
+        <IconButton color="secondary" aria-label="select columns" aria-haspopup="true" onClick={handleButtonClick}>
+            <ViewColumnIcon/>
+        </IconButton>
+
+    </Box>
+}
+
+const defaultColumns: ColumnList = [
+    {fieldName: "id", alias: "ID", active: true,type:null},
+    {fieldName: "title", alias: "Title", active: true,type:null},
+    {fieldName: "parentBeamtimeMeta.id", alias: "Beamtime ID", active: true,type:null},
+    {fieldName: "parentBeamtimeMeta.beamline", alias: "Beamline", active: true,type:null},
+    {fieldName: "parentBeamtimeMeta.facility", alias: "Facility", active: true,type:null},
+    {fieldName: "parentBeamtimeMeta.users.doorDb", alias: "Door users", active: true,type:null},
+    {fieldName: "eventStart", alias: "Started At", type: "string", active: true},
+]
+
+export const columnsVar = makeVar<ColumnList>(
+    defaultColumns
+);
+
+export const cache: InMemoryCache = new InMemoryCache({
+    typePolicies: {
+        Query: {
+            fields: {
+                columns: {
+                    read () {
+                        return columnsVar();
+                    },
+                },
+                type() {
+                    return "blabalba"
+                }
+
+            }
+        }
+    }
+});
+
+export const GET_COLUMNS = gql`
+  query GetColumns {
+    columns @client { 
+      fieldName  
+      alias  
+      active
+      type
+    }
+  }
+`
+
+export interface ColumnData {
+    columns: ColumnList;
 }
 
 function CollectionTable({collections}: CollectionProps) {
+    const classes = useStyles();
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+    const {data} = useQuery<ColumnData>(GET_COLUMNS);
+    console.log("data:", data)
+    const columns: ColumnList = data!.columns;
     const history = useHistory();
     const handleClick = (
         event?: React.MouseEvent,
@@ -146,19 +231,51 @@ function CollectionTable({collections}: CollectionProps) {
         const path = (rowData!.type === "collection" ? "/detailedcollection/" : "/detailed/") + rowData!.id + "/meta";
         history.push(path);
     }
-    const keys: KeyList = PossibleKeyListfromCollections(collections)
+
+    const handleColumnButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleColumnsSelect = () => {
+        setAnchorEl(null);
+    };
 
     return <div>
+        <Box display="flex" justifyContent={"flex-end"} className={classes.toolBox}>
+            <IconButton color="secondary" aria-label="select columns" aria-haspopup="true"
+                        onClick={handleColumnButtonClick}>
+                <ViewColumnIcon/>
+            </IconButton>
+            <Popover
+                id="simple-menu"
+                anchorEl={anchorEl}
+                keepMounted
+                open={Boolean(anchorEl)}
+                onClose={handleColumnsSelect}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                }}
+            >
+                <SelectColumns columns={columns} collections={collections}/>
+            </Popover>
+        </Box>
         <MaterialTable
             icons={TableIcons}
             onRowClick={handleClick}
             options={{
                 filtering: false,
                 header: true,
+                emptyRowsWhenPaging: false,
                 showTitle: false,
                 search: false,
                 paging: true,
                 pageSize: 20,
+                paginationPosition: collections.length > 10 ? "both" : "bottom",
                 pageSizeOptions: [20, 40, 100],
                 toolbar: false,
                 draggable: false,
@@ -168,72 +285,35 @@ function CollectionTable({collections}: CollectionProps) {
                     fontWeight: 'bold',
                 }
             }}
-            columns={keys.map(key => {
-                return {title: key.alias || key.fieldName, field: key.fieldName}
+            columns={columns.filter(column => column.active).map(column => {
+                return {title: column.alias || column.fieldName, field: column.fieldName}
             })}
-            data={TableDataFromCollections(collections, keys)}
+            data={TableDataFromCollections(collections, columns)}
         />
     </div>
-}
-
-function getFilterString(filter: CollectionFilter) {
-    let filterString = ""
-    if (filter.showBeamtime && !filter.showSubcollections) {
-        filterString = "type = 'beamtime'"
-    }
-    if (!filter.showBeamtime && filter.showSubcollections) {
-        filterString =  "type = 'collection'"
-    }
-
-    if (!filter.showBeamtime && !filter.showSubcollections) {
-        filterString =  "type = 'bla'"
-    }
-
-    if (filter.textSearch === "") {
-        return filterString
-    }
-
-    if (filterString) {
-        filterString = filterString + "AND jsonString regexp '"+filter.textSearch+"'"
-    } else {
-        filterString = "jsonString regexp '"+filter.textSearch+"'"
-    }
-    return filterString
 }
 
 function CollectionListPage() {
     const classes = useStyles();
 
+    const [collections, setCollections] = React.useState<CollectionDetails[]>([])
     const [filter, setFilter] = React.useState<CollectionFilter>({
         showBeamtime: true,
         showSubcollections: true,
-        textSearch:""
+        textSearch: ""
     });
 
-    const queryResult = useQuery<CollectionEntitiesDetails>(COLLECTIONS, {
-        pollInterval: 5000,
-        variables: {filter: getFilterString(filter), orderBy: "id"}
-    });
-    if (queryResult.error) {
-        console.log(queryResult.error.message)
-    }
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>
-            <CollectionFilterBox filter={filter} setFilter={setFilter}/>
+            <CollectionFilterBox filter={filter} setFilter={setFilter} setCollections={setCollections}/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
                     <Divider></Divider>
                 </Grid>
                 <Grid item xs={12}>
                     <Paper className={classes.paper}>
-                        {
-                            queryResult.loading || queryResult.error ?
-                                <div>
-                                    {queryResult.loading ? <CircularProgress/> : <p>{queryResult.error!.message}...</p>}
-                                </div> :
-                                <CollectionTable collections={queryResult.data!.collections}/>
-                        }
+                        <CollectionTable collections={collections}/>
                     </Paper>
                 </Grid>
             </Grid>
