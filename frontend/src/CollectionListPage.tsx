@@ -6,23 +6,16 @@ import Grid from "@material-ui/core/Grid";
 import React from "react";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import Divider from "@material-ui/core/Divider";
-import MaterialTable from "material-table";
+import MaterialTable, {Column} from "material-table";
 import {TableIcons} from "./TableIcons";
 import {CollectionFilter, IsoDateToStr} from "./common";
 import {useHistory} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
 import {gql, InMemoryCache, makeVar} from "@apollo/client";
-
-import {
-    Box,
-    Checkbox,
-    FormControl, FormControlLabel,
-    FormGroup,
-    FormLabel,
-    IconButton,
-    Popover
-} from "@material-ui/core";
+import SettingsBackupRestoreIcon from '@material-ui/icons/SettingsBackupRestore';
+import {Box, Button, IconButton, Popover} from "@material-ui/core";
 import ViewColumnIcon from '@material-ui/icons/ViewColumn';
+import CloseIcon from '@material-ui/icons/Close';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -30,6 +23,13 @@ const useStyles = makeStyles((theme: Theme) =>
             flexGrow: 1,
             margin: theme.spacing(1),
             minWidth: 0,
+        },
+        columnsHeader: {
+            margin: theme.spacing(1),
+            marginBottom: theme.spacing(2),
+        },
+        columnFieldText:{
+            fontSize:'0.9rem',
         },
         toolBox: {
             margin: theme.spacing(0),
@@ -44,6 +44,9 @@ const useStyles = makeStyles((theme: Theme) =>
             background: theme.palette.lightBackground.main,
             borderRadius: 0,
         },
+        secondaryAction: {
+            margin: theme.spacing(0),
+        },
 
     }),
 );
@@ -57,12 +60,14 @@ interface BasicCollectionDetails {
     type: String
 }
 
-type ColumnList = {
+type ColumnItem = {
     fieldName: string
     alias: string | null
     type: string | null
     active: boolean
-}[]
+}
+
+type ColumnList = ColumnItem[];
 
 function ValueToString(value: any, columnType: string | undefined) {
     if (!value) {
@@ -132,40 +137,83 @@ function PossibleColumnListfromCollections(currentColumns: ColumnList, collectio
 type SelectColumnsProps = {
     columns: ColumnList
     collections: CollectionDetails[]
+    close: () => void
 }
 
-function SelectColumns({collections, columns}: SelectColumnsProps) {
+function SelectColumns({collections, columns, close}: SelectColumnsProps) {
     const possibleColumns: ColumnList = PossibleColumnListfromCollections(columns, collections);
-    const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        columnsVar(columns);
+    const handleColumnButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        columnsVar(defaultColumns);
     };
 
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        let ind = possibleColumns.findIndex(colval => colval.fieldName === event.target.name);
-        possibleColumns[ind].active = !possibleColumns[ind].active;
+    const classes = useStyles();
+
+    const UpdateAlias = (
+        newValue: any,
+        oldValue: any,
+        rowData: ColumnItem,
+        columnDef: Column<any>
+        ) :Promise<void>  => {
+        return new Promise((resolve, reject) => {
+            let ind = possibleColumns.findIndex(col => col.fieldName === rowData.fieldName);
+            possibleColumns[ind].alias = newValue;
+            columnsVar(possibleColumns);
+        });
+    }
+
+    const handleSelectionChange = (
+        data: ColumnList
+    ) => {
+        possibleColumns.forEach(row => {
+            let ind = data.findIndex(selectedCol => selectedCol.fieldName === row.fieldName);
+            if (ind>-1) {
+                row.active = true
+            } else {
+                row.active = false
+            }
+        })
         columnsVar(possibleColumns);
-    };
+    }
 
-
-    return <Box margin={"2"}>
-        <FormControl component="fieldset">
-            <FormLabel component="legend">Select columns</FormLabel>
-            <FormGroup>
-                {possibleColumns.map(column => {
-                    return <FormControlLabel
-                        key={column.fieldName}
-                        control={<Checkbox checked={column.active} onChange={handleChange} name={column.fieldName}/>}
-                        label={column.alias || column.fieldName + ":" + column.fieldName}
-                    />
-                })}
-            </FormGroup>
-        </FormControl>
-
-        <IconButton color="secondary" aria-label="select columns" aria-haspopup="true" onClick={handleButtonClick}>
-            <ViewColumnIcon/>
-        </IconButton>
-
-    </Box>
+    return <Box className={classes.root}>
+        <Grid container justify={'space-between'} className={classes.columnsHeader} >
+            <Button variant="contained" color="secondary" onClick={handleColumnButtonClick} startIcon={<SettingsBackupRestoreIcon/>}>
+                    Restore defaults
+            </Button>
+            <IconButton onClick={close}     size="small">
+                <CloseIcon/>
+            </IconButton>
+        </Grid>
+        <MaterialTable
+            icons={TableIcons}
+            options={{
+                filtering: false,
+                header: true,
+                showTitle: false,
+                search: true,
+                paging: false,
+                toolbar: true,
+                draggable: false,
+                sorting: true,
+                minBodyHeight: "50vh",
+                selection: true,
+                showTextRowsSelected: false,
+                headerStyle: {
+                    fontWeight: 'bold',
+                },
+            }}
+            cellEditable={{
+                onCellEditApproved: UpdateAlias,
+            }}
+            onSelectionChange={handleSelectionChange}
+            columns={[
+                { title: 'Key Name', field: 'fieldName',editable:'never'},
+                { title: 'Alias', field: 'alias' },
+            ]}
+            data={possibleColumns.map(column => { return {fieldName:column.fieldName,alias:column.alias || column.fieldName,type:null, active:column.active,
+                tableData: { checked: column.active } }})}
+        />
+   </Box>
 }
 
 const defaultColumns: ColumnList = [
@@ -191,10 +239,6 @@ export const cache: InMemoryCache = new InMemoryCache({
                         return columnsVar();
                     },
                 },
-                type() {
-                    return "blabalba"
-                }
-
             }
         }
     }
@@ -220,7 +264,6 @@ function CollectionTable({collections}: CollectionProps) {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
     const {data} = useQuery<ColumnData>(GET_COLUMNS);
-    console.log("data:", data)
     const columns: ColumnList = data!.columns;
     const history = useHistory();
     const handleClick = (
@@ -261,7 +304,7 @@ function CollectionTable({collections}: CollectionProps) {
                     horizontal: 'left',
                 }}
             >
-                <SelectColumns columns={columns} collections={collections}/>
+                <SelectColumns close={handleColumnsSelect} columns={columns} collections={collections}/>
             </Popover>
         </Box>
         <MaterialTable

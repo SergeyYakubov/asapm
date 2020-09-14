@@ -115,19 +115,6 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
                             }
                         />
                     </ListItem>
-                /*      Object.entries(meta.customValues).map(([key, value]) => {
-                              switch (typeof value) {
-                                  case "object":
-                                      return <Typography variant="h5" component="h2">
-                                          {key}: {JSON.stringify(value)}
-                                      </Typography>
-                                  default:
-                                      return <Typography variant="h5" component="h2">
-                                          {key}: {value}
-                                      </Typography>
-                              }
-                          }
-                      )*/
             )
             }
         </List>
