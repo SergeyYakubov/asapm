@@ -158,3 +158,17 @@ func TestMongoDBAddArrayElementFailesIfSame(t *testing.T) {
 	assert.NotNil(t, err1)
 }
 
+
+func TestMongoDBUniqueFields(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	rec1 := TestMetaRecord{"123",[]TestCollectionEntry{}}
+	rec2 := TestMetaRecord{"345",[]TestCollectionEntry{}}
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec2)
+
+	res, err := mongodb.ProcessRequest(dbname, collection, "unique_fields", "_id")
+	assert.Nil(t, err)
+	assert.Equal(t, "[\"123\",\"345\"]",string(res))
+
+}

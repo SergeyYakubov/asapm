@@ -142,9 +142,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Collections func(childComplexity int, filter *string, orderBy *string) int
-		Meta        func(childComplexity int, filter *string, orderBy *string) int
-		User        func(childComplexity int, id string) int
+		Collections  func(childComplexity int, filter *string, orderBy *string) int
+		Meta         func(childComplexity int, filter *string, orderBy *string) int
+		UniqueFields func(childComplexity int, keys []string) int
+		User         func(childComplexity int, id string) int
+	}
+
+	UniqueField struct {
+		KeyName func(childComplexity int) int
+		Values  func(childComplexity int) int
 	}
 
 	UserAccount struct {
@@ -172,6 +178,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error)
 	Collections(ctx context.Context, filter *string, orderBy *string) ([]*model.CollectionEntry, error)
+	UniqueFields(ctx context.Context, keys []string) ([]*model.UniqueField, error)
 	User(ctx context.Context, id string) (*model.UserAccount, error)
 }
 
@@ -769,6 +776,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Meta(childComplexity, args["filter"].(*string), args["orderBy"].(*string)), true
 
+	case "Query.uniqueFields":
+		if e.complexity.Query.UniqueFields == nil {
+			break
+		}
+
+		args, err := ec.field_Query_uniqueFields_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.UniqueFields(childComplexity, args["keys"].([]string)), true
+
 	case "Query.user":
 		if e.complexity.Query.User == nil {
 			break
@@ -780,6 +799,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.User(childComplexity, args["id"].(string)), true
+
+	case "UniqueField.keyName":
+		if e.complexity.UniqueField.KeyName == nil {
+			break
+		}
+
+		return e.complexity.UniqueField.KeyName(childComplexity), true
+
+	case "UniqueField.values":
+		if e.complexity.UniqueField.Values == nil {
+			break
+		}
+
+		return e.complexity.UniqueField.Values(childComplexity), true
 
 	case "UserAccount.id":
 		if e.complexity.UserAccount.ID == nil {
@@ -1057,7 +1090,14 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
-directive @needAcl(acl: Acls!) on FIELD_DEFINITION
+`, BuiltIn: false},
+	&ast.Source{Name: "graph/filters.graphqls", Input: `type UniqueField {
+    keyName: String!
+    values: [String!]!
+}
+
+`, BuiltIn: false},
+	&ast.Source{Name: "graph/queries.graphqls", Input: `directive @needAcl(acl: Acls!) on FIELD_DEFINITION
 #directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
 
 enum Acls {
@@ -1076,23 +1116,10 @@ type Mutation {
 type Query {
     meta (filter: String, orderBy: String): [BeamtimeMeta]
     collections (filter: String, orderBy: String): [CollectionEntry]
+    uniqueFields  (keys: [String!]!): [UniqueField]
     user (id: ID!): UserAccount
-}
-
-type UserAccount {
-    id: ID!
-    preferences: UserPreferences
-}
-
-
-`, BuiltIn: false},
-	&ast.Source{Name: "graph/schema.graphqls", Input: `# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
-
-#union Field = String | Int
-
-scalar Map
+}`, BuiltIn: false},
+	&ast.Source{Name: "graph/user.graphqls", Input: `scalar Map
 
 type UserPreferences {
  schema: String
@@ -1100,6 +1127,11 @@ type UserPreferences {
 
 input InputUserPreferences {
   schema: String
+}
+
+type UserAccount {
+    id: ID!
+    preferences: UserPreferences
 }
 
 `, BuiltIn: false},
@@ -1287,6 +1319,20 @@ func (ec *executionContext) field_Query_meta_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["orderBy"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_uniqueFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []string
+	if tmp, ok := rawArgs["keys"]; ok {
+		arg0, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["keys"] = arg0
 	return args, nil
 }
 
@@ -3876,6 +3922,44 @@ func (ec *executionContext) _Query_collections(ctx context.Context, field graphq
 	return ec.marshalOCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntry(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_uniqueFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_uniqueFields_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UniqueFields(rctx, args["keys"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.UniqueField)
+	fc.Result = res
+	return ec.marshalOUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3981,6 +4065,74 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UniqueField_keyName(ctx context.Context, field graphql.CollectedField, obj *model.UniqueField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "UniqueField",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.KeyName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _UniqueField_values(ctx context.Context, field graphql.CollectedField, obj *model.UniqueField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "UniqueField",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Values, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _UserAccount_id(ctx context.Context, field graphql.CollectedField, obj *model.UserAccount) (ret graphql.Marshaler) {
@@ -5960,6 +6112,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_collections(ctx, field)
 				return res
 			})
+		case "uniqueFields":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_uniqueFields(ctx, field)
+				return res
+			})
 		case "user":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -5975,6 +6138,38 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(ctx, field)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var uniqueFieldImplementors = []string{"UniqueField"}
+
+func (ec *executionContext) _UniqueField(ctx context.Context, sel ast.SelectionSet, obj *model.UniqueField) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, uniqueFieldImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UniqueField")
+		case "keyName":
+			out.Values[i] = ec._UniqueField_keyName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "values":
+			out.Values[i] = ec._UniqueField_values(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6373,6 +6568,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -6936,6 +7160,57 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 		return graphql.Null
 	}
 	return ec.marshalOTime2timeᚐTime(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOUniqueField2asapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx context.Context, sel ast.SelectionSet, v model.UniqueField) graphql.Marshaler {
+	return ec._UniqueField(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx context.Context, sel ast.SelectionSet, v []*model.UniqueField) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOUniqueField2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalOUniqueField2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx context.Context, sel ast.SelectionSet, v *model.UniqueField) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UniqueField(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOUserAccount2asapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v model.UserAccount) graphql.Marshaler {

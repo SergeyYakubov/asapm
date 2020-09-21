@@ -38,7 +38,7 @@ const SAVE_USER_PREFERENCES = gql`
 `;
 
 interface NewPreferences {
-    id: number
+    id: string
     schema: string;
 }
 
@@ -57,9 +57,7 @@ const useUserPreferences = () => {
 }
 
 const useUpdateUserTheme = (theme: PaletteType) => {
-    const id = userService.getUserId() || "";
-    return useMutation<{response: NewPreferencesResponse, variables:NewPreferences}>(SAVE_USER_PREFERENCES,
-        {variables: { id:id,schema:theme.toString()}});
+    return useMutation<{response: NewPreferencesResponse, variables:NewPreferences}>(SAVE_USER_PREFERENCES);
 }
 
 export default {

@@ -1,0 +1,5 @@
+type UniqueField {
+    keyName: String!
+    values: [String!]!
+}
+

@@ -102,6 +102,10 @@ export const METAS = gql`
 
 export const COLLECTIONS = gql`
    query ($filter:String,$orderBy:String) {
+   uniqueFields (keys:["parentBeamtimeMeta.beamline","parentBeamtimeMeta.facility","parentBeamtimeMeta.users.doorDb"]){
+        keyName
+        values
+    }
     collections (filter: $filter,orderBy: $orderBy){
     id
     title

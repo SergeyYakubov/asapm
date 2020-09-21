@@ -168,31 +168,3 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
-directive @needAcl(acl: Acls!) on FIELD_DEFINITION
-#directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
-
-enum Acls {
-    WRITE
-    READ
-}
-
-
-type Mutation {
-    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
-    deleteMeta(id: String!): String @needAcl(acl: WRITE)
-    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: WRITE)
-    setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
-}
-
-type Query {
-    meta (filter: String, orderBy: String): [BeamtimeMeta]
-    collections (filter: String, orderBy: String): [CollectionEntry]
-    user (id: ID!): UserAccount
-}
-
-type UserAccount {
-    id: ID!
-    preferences: UserPreferences
-}
-
-

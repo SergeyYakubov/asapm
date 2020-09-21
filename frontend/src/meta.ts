@@ -4,19 +4,26 @@ export interface MetaDataDetails {
     meta: MetaDetails[];
 }
 
+export interface UniqueField {
+    keyName: String
+    values: String[]
+}
+
+
 export interface CollectionEntitiesDetails {
-    collections: CollectionDetails[];
+    collections: CollectionDetails[]
+    uniqueFields: UniqueField[]
 }
 
 interface Meta {
-    id: String;
-    beamline: String;
+    id: String
+    beamline: String
     status: String
-    title: String;
+    title: String
 }
 
 export interface MetaData {
-    meta: Meta[];
+    meta: Meta[]
 }
 
 interface BeamtimeUser {
@@ -148,4 +155,16 @@ export function TableDataFromCollection(meta: CollectionDetails, section: string
                 {name: 'Start', value: meta.eventStart?meta.eventStart.toString():""},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
             ]
+}
+
+export function GetUniqueNamesForField(fields : UniqueField[] | undefined ,name : string): UniqueField {
+    if (!fields) {
+        return {keyName:name,values:[]};
+    }
+    const field =  fields.find(field => field.keyName === name);
+    if (field) {
+        return field;
+    } else {
+        return {keyName:name,values:[]};
+    }
 }

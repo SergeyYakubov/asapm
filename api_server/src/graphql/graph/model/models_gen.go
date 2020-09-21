@@ -168,6 +168,11 @@ type ParentBeamtimeMeta struct {
 	Users          *Users              `json:"users" bson:"users"`
 }
 
+type UniqueField struct {
+	KeyName string   `json:"keyName" bson:"keyName"`
+	Values  []string `json:"values" bson:"values"`
+}
+
 type UserAccount struct {
 	ID          string           `json:"id" bson:"id"`
 	Preferences *UserPreferences `json:"preferences" bson:"preferences"`

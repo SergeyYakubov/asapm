@@ -74,6 +74,12 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string
 	return res, err
 }
 
+func (r *queryResolver) UniqueFields(ctx context.Context, keys []string) ([]*model.UniqueField, error) {
+	log_str := "processing request UniqueFields"
+	logger.Debug(log_str)
+	return meta.UniqueFields(keys)
+}
+
 
 func (r *mutationResolver)  DeleteMeta(ctx context.Context, id string) (*string, error) {
 	log_str := "processing request delete_meta"

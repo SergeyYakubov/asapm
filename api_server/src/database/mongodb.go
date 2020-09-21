@@ -193,6 +193,27 @@ func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_
 	return nil, err
 }
 
+func (db *Mongodb) uniqueFields(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 1 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	key, ok := extra_params[0].(string)
+	if !ok {
+		return nil, errors.New("an argument must be string")
+	}
+
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	q := bson.M{}
+	res,err := c.Distinct(context.TODO(),key,q)
+	if err!=nil {
+		return nil, err
+	}
+	return json.Marshal(&res)
+}
+
+
+
 func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 4 {
 		return nil, errors.New("wrong number of parameters")
@@ -358,6 +379,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.deleteRecords(db_name, data_collection_name, extra_params...)
 	case "add_array_element":
 		return db.addArrayElement(db_name, data_collection_name, extra_params...)
+	case "unique_fields":
+		return db.uniqueFields(db_name, data_collection_name, extra_params...)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

@@ -1,2 +1,1 @@
-killall tilt
 tilt down
