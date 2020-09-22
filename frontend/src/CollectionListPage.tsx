@@ -343,7 +343,8 @@ function CollectionListPage() {
     const [filter, setFilter] = React.useState<CollectionFilter>({
         showBeamtime: true,
         showSubcollections: true,
-        textSearch: ""
+        textSearch: "",
+        fieldFilters: [],
     });
 
     return (

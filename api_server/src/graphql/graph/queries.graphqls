@@ -17,6 +17,6 @@ type Mutation {
 type Query {
     meta (filter: String, orderBy: String): [BeamtimeMeta]
     collections (filter: String, orderBy: String): [CollectionEntry]
-    uniqueFields  (keys: [String!]!): [UniqueField]
+    uniqueFields  (filter: String,keys: [String!]!): [UniqueField]
     user (id: ID!): UserAccount
 }

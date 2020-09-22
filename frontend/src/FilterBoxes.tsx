@@ -4,13 +4,10 @@ import {makeStyles, createStyles, Theme, withStyles} from '@material-ui/core/sty
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
 import Box from '@material-ui/core/Box';
-import FormLabel from '@material-ui/core/FormLabel';
-import FormControl from '@material-ui/core/FormControl';
-import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Paper from "@material-ui/core/Paper";
-import {CollectionFilter} from "./common";
+import {CollectionFilter, FieldFilter, GetFilterString,RemoveDuplicates,RemoveElement} from "./common";
 import debounce from 'lodash.debounce';
 import {CollectionDetails, CollectionEntitiesDetails, GetUniqueNamesForField, UniqueField} from "./meta";
 import {useQuery} from "@apollo/client";
@@ -20,13 +17,11 @@ import {MenuProps} from "@material-ui/core/Menu";
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import {DateRangePicker, DateRange} from "materialui-daterange-picker";
 import DateRangeIcon from '@material-ui/icons/DateRange';
-import {columnsVar} from "./CollectionListPage";
 import SearchIcon from '@material-ui/icons/Search';
 import Icon from '@material-ui/core/Icon';
-import SettingsIcon from '@material-ui/icons/Settings';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
-import AddCircleTwoToneIcon from '@material-ui/icons/AddCircleTwoTone';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
+
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
@@ -37,6 +32,10 @@ const useStyles = makeStyles((theme: Theme) =>
         },
         rangeLabel: {
             marginLeft: theme.spacing(1),
+
+        },
+        filterChip: {
+            margin: "5px",
         },
         filterPaper: {
             marginTop: theme.spacing(2),
@@ -106,34 +105,11 @@ type CollectionFilterBoxProps = {
     setCollections: React.Dispatch<React.SetStateAction<CollectionDetails[]>>
 }
 
-function getFilterString(filter: CollectionFilter) {
-    let filterString = ""
-    if (filter.showBeamtime && !filter.showSubcollections) {
-        filterString = "type = 'beamtime'"
-    }
-    if (!filter.showBeamtime && filter.showSubcollections) {
-        filterString = "type = 'collection'"
-    }
-
-    if (!filter.showBeamtime && !filter.showSubcollections) {
-        filterString = "type = 'bla'"
-    }
-
-    if (filter.textSearch === "") {
-        return filterString
-    }
-
-    if (filterString) {
-        filterString = filterString + "AND jsonString regexp '" + filter.textSearch + "'"
-    } else {
-        filterString = "jsonString regexp '" + filter.textSearch + "'"
-    }
-    return filterString
-}
-
 interface SelectFieldsProps {
     alias: string
     uniqueFields: UniqueField
+    filter: CollectionFilter
+    setFilter: React.Dispatch<React.SetStateAction<CollectionFilter>>
 }
 
 const StyledMenu = withStyles({
@@ -156,7 +132,7 @@ const StyledMenu = withStyles({
     />
 ));
 
-function SelectFields({alias, uniqueFields}: SelectFieldsProps) {
+function SelectFields({alias, uniqueFields,filter,setFilter}: SelectFieldsProps) {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -166,12 +142,20 @@ function SelectFields({alias, uniqueFields}: SelectFieldsProps) {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    const handleMenuClick = (value: String) => {
+        const fieldFilter: FieldFilter = {alias:alias,key:uniqueFields.keyName as string,value:value as string,negate:false};
+        setFilter({...filter,fieldFilters: RemoveDuplicates([...(filter.fieldFilters),fieldFilter])});
+        handleClose();
+    };
+
     return (
         <div>
             <Button aria-controls="simple-menu" aria-haspopup="true" size="small" color="secondary"
                     endIcon={<ArrowDropDownIcon/>}
                     onClick={handleClick}
                     className={classes.filtersFields}
+                    disabled={uniqueFields.values.length === 0}
             >
                 {alias}
             </Button>
@@ -183,7 +167,7 @@ function SelectFields({alias, uniqueFields}: SelectFieldsProps) {
                 onClose={handleClose}
             >
                 {uniqueFields.values.map(value => {
-                    return <MenuItem onClick={handleClose}>{value}</MenuItem>;
+                    return <MenuItem onClick={() => handleMenuClick(value)}>{value}</MenuItem>;
                 })}
             </StyledMenu>
         </div>
@@ -215,7 +199,7 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
 
     const queryResult = useQuery<CollectionEntitiesDetails>(COLLECTIONS, {
         pollInterval: 5000,
-        variables: {filter: getFilterString(filter), orderBy: "id"}
+        variables: {filter: GetFilterString(filter), orderBy: "id"}
     });
     if (queryResult.error) {
         setCollections([])
@@ -225,7 +209,6 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
     useEffect(() => {
         if (queryResult.loading === false && queryResult.data) {
             console.log("set collection");
-            console.log(queryResult.data!.uniqueFields);
             setCollections(queryResult.data!.collections);
         }
     }, [queryResult.loading, queryResult.data, setCollections])
@@ -252,6 +235,9 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
     const handleAddFilterClick = () => {
     };
 
+    const handleFieldFilterDelete = (fieldFilter:FieldFilter) => {
+        setFilter({...filter,fieldFilters: RemoveElement(fieldFilter,filter.fieldFilters)});
+    }
 
     const classes = useStyles();
     return (
@@ -295,11 +281,11 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
                             <Typography variant="overline">
                                 Add Filter:
                             </Typography>
-                            <SelectFields alias={"facility"}
+                            <SelectFields alias={"facility"} filter={filter} setFilter={setFilter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.facility")}/>
-                            <SelectFields alias={"beamline"}
+                            <SelectFields alias={"beamline"} filter={filter} setFilter={setFilter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.beamline")}/>
-                            <SelectFields alias={"door users"}
+                            <SelectFields alias={"door user"} filter={filter} setFilter={setFilter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.users.doorDb")}/>
                         </Box>
                     </Grid>
@@ -360,11 +346,19 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
                     </Grid>
                     <Grid item xs={12}>
                         <Paper variant="outlined" className={classes.filterPaper}>
-                            <Box display={'flex'} className={classes.filterBox} >
+                            <Box flexWrap="wrap" display={'flex'} className={classes.filterBox} >
                                 <IconButton>
                                     <MoreVertIcon/>
                                 </IconButton>
+                                {filter.fieldFilters.map(fieldFilter =>{
+                                    return  <Chip
+                                        className={classes.filterChip}
+                                        label={fieldFilter.alias + " = " + fieldFilter.value}
+                                        onDelete={() => handleFieldFilterDelete(fieldFilter)}
+                                    />
+                                })}
                                 <Chip
+                                    className={classes.filterChip}
                                     color="secondary"
                                     icon={<AddCircleIcon />}
                                     label="Add custom filter"

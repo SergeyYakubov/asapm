@@ -194,17 +194,34 @@ func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_
 }
 
 func (db *Mongodb) uniqueFields(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
-	if len(extra_params) != 1 {
+	if len(extra_params) != 2 {
 		return nil, errors.New("wrong number of parameters")
 	}
 
-	key, ok := extra_params[0].(string)
+	fs, ok := extra_params[0].(FilterAndSort)
+	if !ok {
+		return nil, errors.New("mongo: filter must be set")
+	}
+
+
+	key, ok := extra_params[1].(string)
 	if !ok {
 		return nil, errors.New("an argument must be string")
 	}
 
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 	q := bson.M{}
+	var err error
+	queryStr := getQueryString(fs)
+
+	if queryStr != "" {
+		queryStr = strings.ReplaceAll(queryStr,"\\","\\\\")
+		q, _, err = db.BSONFromSQL(queryStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	res,err := c.Distinct(context.TODO(),key,q)
 	if err!=nil {
 		return nil, err

@@ -144,7 +144,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Collections  func(childComplexity int, filter *string, orderBy *string) int
 		Meta         func(childComplexity int, filter *string, orderBy *string) int
-		UniqueFields func(childComplexity int, keys []string) int
+		UniqueFields func(childComplexity int, filter *string, keys []string) int
 		User         func(childComplexity int, id string) int
 	}
 
@@ -178,7 +178,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error)
 	Collections(ctx context.Context, filter *string, orderBy *string) ([]*model.CollectionEntry, error)
-	UniqueFields(ctx context.Context, keys []string) ([]*model.UniqueField, error)
+	UniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error)
 	User(ctx context.Context, id string) (*model.UserAccount, error)
 }
 
@@ -786,7 +786,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.UniqueFields(childComplexity, args["keys"].([]string)), true
+		return e.complexity.Query.UniqueFields(childComplexity, args["filter"].(*string), args["keys"].([]string)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -1116,7 +1116,7 @@ type Mutation {
 type Query {
     meta (filter: String, orderBy: String): [BeamtimeMeta]
     collections (filter: String, orderBy: String): [CollectionEntry]
-    uniqueFields  (keys: [String!]!): [UniqueField]
+    uniqueFields  (filter: String,keys: [String!]!): [UniqueField]
     user (id: ID!): UserAccount
 }`, BuiltIn: false},
 	&ast.Source{Name: "graph/user.graphqls", Input: `scalar Map
@@ -1325,14 +1325,22 @@ func (ec *executionContext) field_Query_meta_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_Query_uniqueFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []string
-	if tmp, ok := rawArgs["keys"]; ok {
-		arg0, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+	var arg0 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["keys"] = arg0
+	args["filter"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["keys"]; ok {
+		arg1, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["keys"] = arg1
 	return args, nil
 }
 
@@ -3946,7 +3954,7 @@ func (ec *executionContext) _Query_uniqueFields(ctx context.Context, field graph
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().UniqueFields(rctx, args["keys"].([]string))
+		return ec.resolvers.Query().UniqueFields(rctx, args["filter"].(*string), args["keys"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
