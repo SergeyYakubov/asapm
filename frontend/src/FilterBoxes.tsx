@@ -167,7 +167,7 @@ function SelectFields({alias, uniqueFields,filter,setFilter}: SelectFieldsProps)
                 onClose={handleClose}
             >
                 {uniqueFields.values.map(value => {
-                    return <MenuItem onClick={() => handleMenuClick(value)}>{value}</MenuItem>;
+                    return <MenuItem key={value as string} onClick={() => handleMenuClick(value)}>{value}</MenuItem>;
                 })}
             </StyledMenu>
         </div>
@@ -352,6 +352,7 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
                                 </IconButton>
                                 {filter.fieldFilters.map(fieldFilter =>{
                                     return  <Chip
+                                        key={fieldFilter.value}
                                         className={classes.filterChip}
                                         label={fieldFilter.alias + " = " + fieldFilter.value}
                                         onDelete={() => handleFieldFilterDelete(fieldFilter)}

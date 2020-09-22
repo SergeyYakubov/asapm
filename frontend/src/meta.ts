@@ -36,7 +36,7 @@ interface BeamtimeUser {
 
 interface OnlineAnylysisMeta {
     asapoBeamtimeTokenPath: String
-    reservedNodes: [String]
+    reservedNodes: String[]
     slurmReservation: String
     slurmPartition: String
     sshPrivateKeyPath: String
@@ -45,9 +45,9 @@ interface OnlineAnylysisMeta {
 }
 
 interface Users {
-    doorDb: [String]
-    special: [String]
-    unknown: [String]
+    doorDb: String[]
+    special: String[]
+    unknown: String[]
 }
 
 
@@ -65,7 +65,7 @@ export interface CollectionDetails {
     title: String
     type: String
     childCollectionName: String
-    childCollection: [BaseCollection]
+    childCollection: BaseCollection[]
     customValues: Object
     parentBeamtimeMeta: ParentMetaDetails
 }
@@ -114,7 +114,7 @@ export interface MetaDetails  {
     users: Users
     customValues: Object
     childCollectionName: String
-    childCollection: [BaseCollection]
+    childCollection: BaseCollection[]
 }
 
 
