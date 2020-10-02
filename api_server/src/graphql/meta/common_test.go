@@ -30,6 +30,9 @@ var updateFieldsTests = []struct {
 		[]string{"hello.time","bye"},[]string{"bye"},`{"bye":"345","hello":{"time":123}}`,"keep and remove" },
 	{`{"bla":"345","tra":{"date":"111","time":123}}`,
 		[]string{"hello.time","bye"},[]string{},`null`,"remove all" },
+	{`{"bye":"345","hello":{"date":"111","time":123}}`,
+		[]string{"hell"},[]string{},`null`,"do not keep if prefix not exact" },
+
 
 }
 

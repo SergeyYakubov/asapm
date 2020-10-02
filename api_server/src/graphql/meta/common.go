@@ -18,13 +18,12 @@ func keepFields(m map[string]interface{}, keep []string, prefix string) map[stri
 		}
 		shouldKeep := false
 		for _, k := range keep {
-			if strings.HasPrefix(full_key,k) {
+			if full_key==k || strings.HasPrefix(full_key,k+".") {
 				shouldKeep = true
 			}
 		}
 		switch v.(type) {
 		case map[string]interface{}:
-//			m[key]			 = keepFields(v.(map[string]interface{}), keep, full_key)
 			val := keepFields(v.(map[string]interface{}), keep, full_key)
 			if len(val)!=0 {
 				m[key] = val
