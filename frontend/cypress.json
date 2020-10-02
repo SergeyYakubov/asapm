@@ -4,5 +4,7 @@
     "auth_realm": "asap",
     "auth_client_id": "asapm"
   },
-  "chromeWebSecurity": false
+  "chromeWebSecurity": false,
+  "video": false,
+  "screenshotOnRunFailure": false
 }

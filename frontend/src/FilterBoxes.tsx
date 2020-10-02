@@ -7,7 +7,7 @@ import Box from '@material-ui/core/Box';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Paper from "@material-ui/core/Paper";
-import {CollectionFilter, FieldFilter, GetFilterString,RemoveDuplicates,RemoveElement} from "./common";
+import {CollectionFilter, FieldFilter, GetFilterString, RemoveDuplicates, RemoveElement} from "./common";
 import debounce from 'lodash.debounce';
 import {CollectionDetails, CollectionEntitiesDetails, GetUniqueNamesForField, UniqueField} from "./meta";
 import {useQuery} from "@apollo/client";
@@ -41,7 +41,7 @@ const useStyles = makeStyles((theme: Theme) =>
             marginTop: theme.spacing(2),
         },
         filterBox: {
-            alignItems:"center",
+            alignItems: "center",
         },
         paper: {
             paddingTop: theme.spacing(1),
@@ -100,8 +100,6 @@ function BeamtimeFilterBox() {
 }
 
 type CollectionFilterBoxProps = {
-    filter: CollectionFilter
-    setFilter: React.Dispatch<React.SetStateAction<CollectionFilter>>
     setCollections: React.Dispatch<React.SetStateAction<CollectionDetails[]>>
 }
 
@@ -132,7 +130,7 @@ const StyledMenu = withStyles({
     />
 ));
 
-function SelectFields({alias, uniqueFields,filter,setFilter}: SelectFieldsProps) {
+function SelectFields({alias, uniqueFields, filter, setFilter}: SelectFieldsProps) {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -144,8 +142,13 @@ function SelectFields({alias, uniqueFields,filter,setFilter}: SelectFieldsProps)
     };
 
     const handleMenuClick = (value: String) => {
-        const fieldFilter: FieldFilter = {alias:alias,key:uniqueFields.keyName as string,value:value as string,negate:false};
-        setFilter({...filter,fieldFilters: RemoveDuplicates([...(filter.fieldFilters),fieldFilter])});
+        const fieldFilter: FieldFilter = {
+            alias: alias,
+            key: uniqueFields.keyName as string,
+            value: value as string,
+            negate: false
+        };
+        setFilter({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
         handleClose();
     };
 
@@ -175,14 +178,23 @@ function SelectFields({alias, uniqueFields,filter,setFilter}: SelectFieldsProps)
 
 }
 
-function DataRangeToString(range: DateRange){
+function DataRangeToString(range: DateRange) {
     if (!range || !range.startDate || !range.endDate) {
         return "";
     }
-    return range.startDate.toLocaleDateString()+" - "+range.endDate.toLocaleDateString()
+    return range.startDate.toLocaleDateString() + " - " + range.endDate.toLocaleDateString()
 }
 
-function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilterBoxProps) {
+function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
+    const [filter, setFilter] = React.useState<CollectionFilter>({
+        showBeamtime: true,
+        showSubcollections: true,
+        textSearch: "",
+        fieldFilters: [],
+        dateFrom: undefined,
+        dateTo: undefined,
+    });
+
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setFilter({...filter, [event.target.name]: event.target.checked});
     };
@@ -201,19 +213,18 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
         pollInterval: 5000,
         variables: {filter: GetFilterString(filter), orderBy: "id"}
     });
-    if (queryResult.error) {
-        setCollections([])
-        console.log(queryResult.error.message)
-    }
 
     useEffect(() => {
+        console.log("set collection");
+        if (queryResult.error) {
+            setCollections([])
+            console.log(queryResult.error.message)
+        }
         if (queryResult.loading === false && queryResult.data) {
-            console.log("set collection");
             setCollections(queryResult.data!.collections);
         }
-    }, [queryResult.loading, queryResult.data, setCollections])
+    }, [queryResult.error,queryResult.loading, queryResult.data, setCollections])
 
-    const [dateRange, setDateRange] = React.useState<DateRange>({});
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
     const toggle = () => {
@@ -221,13 +232,13 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
     }
 
     const handleDataRangeChange = (range: DateRange) => {
-        setDateRange(range)
+        setFilter({...filter, dateFrom: range.startDate, dateTo: range.endDate})
         toggle()
     }
 
     const handleRangeTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.value === "") {
-            setDateRange({})
+            setFilter({...filter, dateFrom: undefined, dateTo: undefined})
         }
     };
 
@@ -235,8 +246,8 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
     const handleAddFilterClick = () => {
     };
 
-    const handleFieldFilterDelete = (fieldFilter:FieldFilter) => {
-        setFilter({...filter,fieldFilters: RemoveElement(fieldFilter,filter.fieldFilters)});
+    const handleFieldFilterDelete = (fieldFilter: FieldFilter) => {
+        setFilter({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
     }
 
     const classes = useStyles();
@@ -297,7 +308,8 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
                             <Icon>
                                 <SearchIcon/>
                             </Icon>
-                            <TextField className={classes.textField} id="standard-search" margin="dense" fullWidth={true}
+                            <TextField className={classes.textField} id="standard-search" margin="dense"
+                                       fullWidth={true}
                                        label="Search field" type="search" onChange={handleTextSearchChange}/>
                         </Box>
                     </Grid>
@@ -335,7 +347,7 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
                                 className={classes.rangeLabel}
                                 label="Time Range"
                                 id="range-text"
-                                value={DataRangeToString(dateRange)}
+                                value={DataRangeToString({startDate:filter.dateFrom,endDate:filter.dateTo})}
                                 type="search"
                                 margin="dense"
                                 size="small"
@@ -346,12 +358,12 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
                     </Grid>
                     <Grid item xs={12}>
                         <Paper variant="outlined" className={classes.filterPaper}>
-                            <Box flexWrap="wrap" display={'flex'} className={classes.filterBox} >
+                            <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
                                 <IconButton>
                                     <MoreVertIcon/>
                                 </IconButton>
-                                {filter.fieldFilters.map(fieldFilter =>{
-                                    return  <Chip
+                                {filter.fieldFilters.map(fieldFilter => {
+                                    return <Chip
                                         key={fieldFilter.value}
                                         className={classes.filterChip}
                                         label={fieldFilter.alias + " = " + fieldFilter.value}
@@ -361,7 +373,7 @@ function CollectionFilterBox({filter, setFilter, setCollections}: CollectionFilt
                                 <Chip
                                     className={classes.filterChip}
                                     color="secondary"
-                                    icon={<AddCircleIcon />}
+                                    icon={<AddCircleIcon/>}
                                     label="Add custom filter"
                                     onClick={handleAddFilterClick}
                                 />

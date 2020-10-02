@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -50,6 +51,7 @@ const pointer_field_name = "current_pointer"
 const no_session_msg = "database client not created"
 const wrong_id_type = "wrong id type"
 const already_connected_msg = "already connected"
+const id_name = "id"
 
 const finish_substream_keyword = "asapo_finish_substream"
 const no_next_substream_keyword = "asapo_no_next"
@@ -293,9 +295,7 @@ func getQueryString(fs FilterAndSort) string {
 		return ""
 	}
 
-	for _,id:=range fs.IdNames {
-		queryStr = strings.Replace(queryStr, id, "_id", -1)
-	}
+	queryStr = strings.Replace(queryStr, id_name, "_id", -1)
 
 	return queryStr
 }
@@ -367,6 +367,9 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 		}
 		opts.SetSort(sort)
 	}
+
+	fmt.Println(q)
+
 	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
 		return nil, err

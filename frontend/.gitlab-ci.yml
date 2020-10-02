@@ -11,7 +11,7 @@ build_frontend_dev:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --target base --destination $FRONTEND_IMAGE_DEV
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --target base --destination $FRONTEND_IMAGE_DEV
   tags:
     - kubernetes-executor
 
@@ -36,7 +36,7 @@ build_frontend:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --destination $FRONTEND_IMAGE
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --destination $FRONTEND_IMAGE
   tags:
     - kubernetes-executor
 

@@ -85,7 +85,7 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 
 	var response = []*model.CollectionEntry{}
 
-	fs := getFilterAndSort([]string{"id"},filter,orderBy)
+	fs := getFilterAndSort(filter,orderBy)
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records",fs,&response)
 	if err != nil {
 		return []*model.CollectionEntry{}, err

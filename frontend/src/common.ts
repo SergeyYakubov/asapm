@@ -16,7 +16,8 @@ export function IsoDateToStr(isoDate: String) {
     if (typeof (isoDate) !== "string") {
         return "undefined";
     }
-    return (isoDate as string).slice(0, 16).replace('T', ' ');
+    var d = new Date(isoDate);
+    return d.toLocaleDateString()+" "+d.toLocaleTimeString()
 }
 
 export interface FieldFilter {
@@ -31,6 +32,8 @@ export interface CollectionFilter {
     showSubcollections: boolean
     textSearch: string
     fieldFilters: FieldFilter[]
+    dateFrom: Date | undefined
+    dateTo: Date | undefined
 }
 
 export function RemoveDuplicates(arr:any[]) {
@@ -50,27 +53,52 @@ export function RemoveElement(elem:any,arr:any[]) {
     return arr.filter(el => elemjs !== JSON.stringify(el));
 }
 
+function AddToFilter(filter:string,add:string,op:string):string {
+    if (filter) {
+        return "("+filter+" "+op+" "+add+")";
+    }
+    else
+        return add
+}
+
 export function GetFilterString(filter: CollectionFilter) {
-    let filterString = ""
+    let filterString = "";
     if (filter.showBeamtime && !filter.showSubcollections) {
-        filterString = "type = 'beamtime'"
+        filterString = AddToFilter(filterString,"type = 'beamtime'","and");
     }
     if (!filter.showBeamtime && filter.showSubcollections) {
-        filterString = "type = 'collection'"
+        filterString =  AddToFilter(filterString,"type = 'collection'","and");
     }
 
     if (!filter.showBeamtime && !filter.showSubcollections) {
-        filterString = "type = 'bla'"
+        filterString = AddToFilter(filterString,"type = 'bla'","and");
     }
+
+    filter.fieldFilters.forEach( fieldFilter => {
+        filterString = AddToFilter(filterString,fieldFilter.key+" = '"+fieldFilter.value+"'","and");
+    })
+
+    if (filter.dateTo && filter.dateFrom) {
+        let endDate = new Date(filter.dateTo.valueOf())
+        endDate.setDate(endDate.getDate() + 1 )
+        let filter1 = AddToFilter("","eventStart >= isodate('" + filter.dateFrom.toISOString()+"')","and");
+        filter1 = AddToFilter(filter1,"eventStart <= isodate('" + endDate.toISOString()+"')","and");
+        let filter2 = AddToFilter("","eventEnd >= isodate('" + filter.dateFrom.toISOString()+"')","and");
+        filter2 = AddToFilter(filter2,"eventEnd <= isodate('" + endDate.toISOString()+"')","and");
+        let filter3 = AddToFilter("","eventEnd >= isodate('" + endDate.toISOString()+"')","and");
+        filter3 = AddToFilter(filter3,"eventStart <= isodate('" + filter.dateFrom.toISOString()+"')","and");
+        let filterRange = AddToFilter(filter1,filter2,"or")
+        filterRange = AddToFilter(filterRange,filter3,"or")
+        filterString =  AddToFilter(filterString,filterRange,"and");
+    }
+
+    console.log(filterString)
 
     if (filter.textSearch === "") {
-        return filterString
+        return filterString;
     }
 
-    if (filterString) {
-        filterString = filterString + "AND jsonString regexp '" + filter.textSearch + "'"
-    } else {
-        filterString = "jsonString regexp '" + filter.textSearch + "'"
-    }
+    filterString = AddToFilter(filterString,"jsonString regexp '" + filter.textSearch + "'","and");
+
     return filterString
 }

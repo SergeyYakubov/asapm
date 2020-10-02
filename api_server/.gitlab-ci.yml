@@ -11,7 +11,7 @@ build_api_server_dev:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE_DEV
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE_DEV
   tags:
     - kubernetes-executor
 
@@ -38,7 +38,7 @@ build_api_server:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --destination $API_SERVER_IMAGE
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --destination $API_SERVER_IMAGE
   tags:
     - kubernetes-executor
 

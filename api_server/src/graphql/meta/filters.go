@@ -25,7 +25,7 @@ func UniqueFields(acl auth.MetaAcl,filter *string,keys []string)  ([]*model.Uniq
 		filter = auth.AddAclToSqlFilter(acl,filter,ff)
 	}
 
-	fl := getFilterAndSort([]string{"id"},filter,nil)
+	fl := getFilterAndSort(filter,nil)
 
 	res := make([]*model.UniqueField,0)
 

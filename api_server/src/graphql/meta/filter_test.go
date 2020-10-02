@@ -31,8 +31,12 @@ func (suite *FilterSuite) TestRequestFields() {
 
 	var keys = []string{"beamline","facility"}
 
+	var fs = database.FilterAndSort{
+	}
+
+
 	for _,key := range keys  {
-		params := []interface{}{key}
+		params := []interface{}{fs,key}
 		if key == "beamline" {
 			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "unique_fields", params).Return([]byte("[\"p00\",\"p01\"]"), nil)
 		} else {
@@ -41,7 +45,7 @@ func (suite *FilterSuite) TestRequestFields() {
 
 	}
 
-	res, err := UniqueFields(keys)
+	res, err := UniqueFields(aclImmediateAccess,nil,keys)
 
 	suite.Nil(err)
 	suite.Equal("beamline", res[0].KeyName)

@@ -9,7 +9,7 @@ import (
 	"errors"
 )
 
-func getFilterAndSort(idNames []string,filter *string,orderBy *string) database.FilterAndSort {
+func getFilterAndSort(filter *string,orderBy *string) database.FilterAndSort {
 	fs := database.FilterAndSort{}
 	if filter !=nil {
 		fs.Filter =*filter
@@ -17,7 +17,6 @@ func getFilterAndSort(idNames []string,filter *string,orderBy *string) database.
 	if orderBy !=nil {
 		fs.Order =*orderBy
 	}
-	fs.IdNames = idNames
 	return fs
 }
 
@@ -38,7 +37,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepField
 
 	var sResponse = []*model.BeamtimeMeta{}
 
-	fs := getFilterAndSort([]string{"id"},filter,orderBy)
+	fs := getFilterAndSort(filter,orderBy)
 
 	if fs.Filter!="" {
 		fs.Filter = "("+fs.Filter+")" + ` AND type='beamtime'`
@@ -90,7 +89,7 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 
 func  DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
 	filter:= "parentBeamtimeMeta.id = '" + id+"'"
-	fs := getFilterAndSort([]string{"id"},&filter,nil)
+	fs := getFilterAndSort(&filter,nil)
 
 	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true);err!=nil {
 		return nil,err

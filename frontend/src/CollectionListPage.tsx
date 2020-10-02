@@ -8,7 +8,7 @@ import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import Divider from "@material-ui/core/Divider";
 import MaterialTable, {Column} from "material-table";
 import {TableIcons} from "./TableIcons";
-import {CollectionFilter, IsoDateToStr} from "./common";
+import {IsoDateToStr} from "./common";
 import {useHistory} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
 import {gql, InMemoryCache, makeVar} from "@apollo/client";
@@ -338,19 +338,11 @@ function CollectionTable({collections}: CollectionProps) {
 
 function CollectionListPage() {
     const classes = useStyles();
-
     const [collections, setCollections] = React.useState<CollectionDetails[]>([])
-    const [filter, setFilter] = React.useState<CollectionFilter>({
-        showBeamtime: true,
-        showSubcollections: true,
-        textSearch: "",
-        fieldFilters: [],
-    });
-
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>
-            <CollectionFilterBox filter={filter} setFilter={setFilter} setCollections={setCollections}/>
+            <CollectionFilterBox setCollections={setCollections}/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
                     <Divider></Divider>

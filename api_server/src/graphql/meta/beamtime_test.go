@@ -32,7 +32,6 @@ func (suite *MetaSuite) TestDeleteMeta() {
 
 	var fs = database.FilterAndSort{
 		Filter: "parentBeamtimeMeta.id = '"+id+"'",
-		IdNames: []string{"id"},
 	}
 
 	params_delete := []interface{}{fs,true}

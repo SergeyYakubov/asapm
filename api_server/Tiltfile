@@ -33,3 +33,5 @@ else:
     ],
     target='',
     )
+
+k8s_resource('asapm-mongodb', port_forwards=27018)

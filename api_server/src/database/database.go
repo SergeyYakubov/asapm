@@ -9,7 +9,6 @@ import (
 type FilterAndSort struct {
 	Filter string
 	Order string
-	IdNames []string
 }
 
 
