@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# Requirements: pip3 install python_graphql_client coolname
+
 from python_graphql_client import GraphqlClient
 from string import Template
 from random import randint,randrange
