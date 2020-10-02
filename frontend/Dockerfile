@@ -6,6 +6,7 @@ WORKDIR /src
 ADD package.json package.json
 ADD package-lock.json package-lock.json
 RUN npm install
+RUN npx cypress verify
 
 ADD . /src
 ENTRYPOINT npm start

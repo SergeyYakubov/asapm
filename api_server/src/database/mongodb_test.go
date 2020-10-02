@@ -4,8 +4,10 @@ package database
 
 import (
 	"asapm/common/utils"
+	"asapm/graphql/graph/model"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 type TestRecord struct {
@@ -80,32 +82,50 @@ func TestMongoDBGetUserPreferences(t *testing.T) {
 
 
 type TestCollectionEntry struct {
-	ID                  string                `json:"id" bson:"id"`
+	ID                  string                `json:"_id" bson:"_id"`
 	Beamline            string                `json:"beamline" bson:"beamline"`
 }
 
 type TestMetaRecord struct {
-	BeamtimeID          string                 `json:"_id" bson:"_id"`
+	ID          string                 `json:"_id" bson:"_id"`
 	ChildCollection     []TestCollectionEntry `json:"childCollection" bson:"childCollection"`
+	EventEnd            time.Time             `json:"eventEnd" bson:"eventEnd"`
 }
 
 func TestMongoDBAddRecord(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
-	rec := TestMetaRecord{"123",[]TestCollectionEntry{}}
+	rec := TestMetaRecord{"123",[]TestCollectionEntry{},time.Now()}
 
 	_, err = mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	assert.Nil(t, err)
 }
 
+func TestMongoDBReadRecord(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	date := time.Date(2020,1,1,0,0,0,0,time.UTC)
+	rec := TestMetaRecord{"123",[]TestCollectionEntry{},date}
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
+
+	str := "((eventEnd < isodate('2020-09-25T08:45:24Z')) and (eventEnd > isodate('2019-09-25T08:45:24Z')))"
+	var fs  = FilterAndSort{
+		Filter: str,
+		Order:  "",
+	}
+	var res []*model.BeamtimeMeta
+	_, err = mongodb.ProcessRequest(dbname, collection, "read_records", fs,&res)
+
+	assert.Nil(t, err)
+	assert.Equal(t,1, len(res))
+}
 
 func TestMongoDBDeleteRecordNotFound(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
 	id := "12345"
 	var fs = FilterAndSort{
-		Filter: "beamtimeId = '"+id+"'",
-		IdNames: []string{"beamtimeId"},
+		Filter: "id = '"+id+"'",
 	}
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_record", fs, true)
 	assert.NotNil(t, err)
@@ -116,11 +136,10 @@ func TestMongoDBDeleteRecord(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
 	id := "12345"
-	rec := TestMetaRecord{id,[]TestCollectionEntry{}}
+	rec := TestMetaRecord{id,[]TestCollectionEntry{},time.Now()}
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	var fs = FilterAndSort{
-		Filter: "beamtimeId = '"+id+"'",
-		IdNames: []string{"beamtimeId"},
+		Filter: "id = '"+id+"'",
 	}
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_records", fs ,true)
 	assert.Nil(t, err)
@@ -130,12 +149,47 @@ func TestMongoDBDeleteRecord(t *testing.T) {
 func TestMongoDBAddArrayElement(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
-	rec1 := TestMetaRecord{"123",[]TestCollectionEntry{}}
+	rec1 := TestMetaRecord{"123",[]TestCollectionEntry{},time.Now()}
 
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
 
 
 	rec := TestCollectionEntry{"123.123","bla"}
-	_, err = mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec)
+	_, err = mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec,rec.ID)
 	assert.Nil(t, err)
+}
+
+
+func TestMongoDBAddArrayElementFailesIfSame(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	rec1 := TestMetaRecord{"123",[]TestCollectionEntry{},time.Now()}
+
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
+
+
+	rec := TestCollectionEntry{"123.123","bla"}
+	_, err = mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec,rec.ID)
+
+	rec.Beamline="bla1"
+	_, err1 := mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec,rec.ID)
+	assert.Nil(t, err)
+	assert.NotNil(t, err1)
+}
+
+
+func TestMongoDBUniqueFields(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	rec1 := TestMetaRecord{"123",[]TestCollectionEntry{},time.Now()}
+	rec2 := TestMetaRecord{"345",[]TestCollectionEntry{},time.Now()}
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec2)
+	var fs = FilterAndSort{
+	}
+
+	res, err := mongodb.ProcessRequest(dbname, collection, "unique_fields", fs,"_id")
+	assert.Nil(t, err)
+	assert.Equal(t, "[\"123\",\"345\"]",string(res))
+
 }

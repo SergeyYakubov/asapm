@@ -32,6 +32,12 @@ type claimFields struct {
 	Roles []string `json:"roles"`
 }
 
+type FilterFields struct {
+	BeamtimeId string
+	Beamline   string
+	Facility   string
+}
+
 func BypassAuth(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims := claimFields{Roles: []string{"admin"},UserName: "admin",AuthorizedParty: "asapm"}
@@ -190,10 +196,10 @@ func addFilterForNameInList(currentFilter, name string, list []string) string {
 	return currentFilter
 }
 
-func AddAclToSqlFilter(acl MetaAcl, curFilter *string) *string {
-	aclFilter := addFilterForNameInList("","beamtimeId",acl.AllowedBeamtimes)
-	aclFilter = addFilterForNameInList(aclFilter,"beamline",acl.AllowedBeamlines)
-	aclFilter = addFilterForNameInList(aclFilter,"facility",acl.AllowedFacilities)
+func AddAclToSqlFilter(acl MetaAcl, curFilter *string, filterFields FilterFields) *string {
+	aclFilter := addFilterForNameInList("",filterFields.BeamtimeId,acl.AllowedBeamtimes)
+	aclFilter = addFilterForNameInList(aclFilter,filterFields.Beamline,acl.AllowedBeamlines)
+	aclFilter = addFilterForNameInList(aclFilter,filterFields.Facility,acl.AllowedFacilities)
 
 	if curFilter != nil {
 		s := "("+ aclFilter +") AND ("+ *curFilter +")"

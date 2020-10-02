@@ -13,10 +13,7 @@ func mutateHook(b *modelgen.ModelBuild) *modelgen.ModelBuild {
 	for _, model := range b.Models {
 		for _, field := range model.Fields {
 			name := field.Name
-			if strings.HasSuffix(model.Name,"BeamtimeMeta") && name == "beamtimeId" {
-				name = "_id"
-			}
-			if strings.HasSuffix(model.Name,"CollectionEntry") && name == "id" {
+			if (strings.HasSuffix(model.Name,"CollectionEntry") || strings.HasSuffix(model.Name,"BeamtimeMeta") ) && name == "id" {
 				name = "_id"
 			}
 			field.Tag = `json:"` + name + `"` + ` bson:"` + name + `"`

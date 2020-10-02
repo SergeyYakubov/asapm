@@ -1,6 +1,5 @@
-config.define_string ( 'mode' , args=False , usage='mode: prod or dev (default)')
-cfg = config.parse()
-mode=cfg.get('mode','dev')
+mode = os.getenv('TILT_MODE')
+
 
 load('ext://restart_process', 'docker_build_with_restart')
 
@@ -34,3 +33,5 @@ else:
     ],
     target='',
     )
+
+k8s_resource('asapm-mongodb', port_forwards=27018)

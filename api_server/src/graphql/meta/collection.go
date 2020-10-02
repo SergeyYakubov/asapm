@@ -18,9 +18,9 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 	if len(ids)<2 {
 		return &model.CollectionEntry{}, errors.New("wrong id format")
 	}
-	beamtimeId := ids[0]
+	id := ids[0]
 
-	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "read_record",beamtimeId)
+	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record",id)
 	if err != nil {
 		return &model.CollectionEntry{}, err
 	}
@@ -31,17 +31,13 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 	}
 
 	var baseEntry model.BaseCollectionEntry
-	entry.Facility = btMeta.Facility
-	entry.Beamline = btMeta.Beamline
-	entry.BeamtimeID = &beamtimeId
 	utils.DeepCopy(entry,&baseEntry)
 
-
 	if len(ids) == 2 {
-		_, err = database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "add_array_element",beamtimeId, KChildCollectionKey,baseEntry)
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",id, KChildCollectionKey,baseEntry,*baseEntry.ID)
 	} else {
 		parentId:=strings.Join(ids[:len(ids)-1],".")
-		_, err = database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "add_array_element",parentId, KChildCollectionKey,baseEntry)
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,*baseEntry.ID)
 	}
 
 	if err != nil {
@@ -55,8 +51,15 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 		col:= KDefaultCollectionName
 		entry.ChildCollectionName=&col
 	}
+	entry.Type = KCollectionTypeName
+	entry.ParentBeamtimeMeta = btMeta.ParentBeamtimeMeta
 
-	_, err = database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "create_record",entry)
+	bentry,_ := json.Marshal(&entry)
+	sentry := string(bentry)
+	entry.JSONString =&sentry
+
+
+	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "create_record",entry)
 	if err != nil {
 		return &model.CollectionEntry{}, err
 	}
@@ -70,30 +73,24 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 		return []*model.CollectionEntry{}, errors.New("access denied, not enough permissions")
 	}
 
+	ff := auth.FilterFields{
+		BeamtimeId: "parentBeamtimeMeta.id",
+		Beamline:   "parentBeamtimeMeta.beamline",
+		Facility:   "parentBeamtimeMeta.facility",
+	}
+
 	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl,filter)
+		filter = auth.AddAclToSqlFilter(acl,filter,ff)
 	}
 
-	var cResponse = []*model.CollectionEntry{}
-	var bResponse = []*model.CollectionEntry{}
+	var response = []*model.CollectionEntry{}
 
-	fs := getFilterAndSort([]string{"id"},filter,orderBy)
-	_, err := database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "read_records",fs,&cResponse)
+	fs := getFilterAndSort(filter,orderBy)
+	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records",fs,&response)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
 	}
 
-	fs = getFilterAndSort([]string{"id","beamtimeId"},filter,orderBy)
-	_, err = database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "read_records",fs,&bResponse)
-	if err != nil {
-		return []*model.CollectionEntry{}, err
-	}
-	for ind,_ := range (bResponse) {
-		bResponse[ind].BeamtimeID = bResponse[ind].ID
-	}
-
-
-	response:= append(bResponse,cResponse...)
 
 	for _, meta := range response {
 		updateFields(keepFields,removeFields, &meta.CustomValues)

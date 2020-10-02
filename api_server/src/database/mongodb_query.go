@@ -5,9 +5,10 @@ package database
 import (
 	"errors"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"github.com/knocknote/vitess-sqlparser/sqlparser"
+	"go.mongodb.org/mongo-driver/bson"
 	"strconv"
+	"time"
 )
 
 func SQLOperatorToMongo(sqlOp string) string {
@@ -41,48 +42,19 @@ func SQLOperatorToMongo(sqlOp string) string {
 	}
 }
 
-func bsonM(key string, val *sqlparser.SQLVal) bson.M {
-	switch val.Type {
-	case sqlparser.IntVal:
-		num, _ := strconv.Atoi(string(val.Val))
-		return bson.M{key: num}
-	case sqlparser.FloatVal:
-		num, _ := strconv.ParseFloat(string(val.Val), 64)
-		return bson.M{key: num}
-	case sqlparser.StrVal:
-		str := string(val.Val)
-		return bson.M{key: str}
-	default:
-		return bson.M{}
-	}
+func bsonM(key string, val *ValueFromSQL) bson.M {
+	return bson.M{key: val.val}
 }
 
-func bsonMArray(key string, vals []*sqlparser.SQLVal) bson.M {
+func bsonMArray(key string, vals []*ValueFromSQL) bson.M {
 	if len(vals) == 0 {
 		return bson.M{}
 	}
-	switch vals[0].Type {
-	case sqlparser.IntVal:
-		nums := make([]int, len(vals))
-		for i, val := range vals {
-			nums[i], _ = strconv.Atoi(string(val.Val))
-		}
-		return bson.M{key: nums}
-	case sqlparser.FloatVal:
-		nums := make([]float64, len(vals))
-		for i, val := range vals {
-			nums[i], _ = strconv.ParseFloat(string(val.Val), 64)
-		}
-		return bson.M{key: nums}
-	case sqlparser.StrVal:
-		strings := make([]string, len(vals))
-		for i, val := range vals {
-			strings[i] = string(val.Val)
-		}
-		return bson.M{key: strings}
-	default:
-		return bson.M{}
+	v := make([]interface{}, len(vals))
+	for i, val := range vals {
+		v[i] = val.val
 	}
+	return bson.M{key: v}
 }
 
 func keyFromColumnName(cn *sqlparser.ColName) string {
@@ -98,22 +70,83 @@ func keyFromColumnName(cn *sqlparser.ColName) string {
 	return key
 }
 
+type ValueFromSQL struct {
+	val interface{}
+}
+
+func getValueFromSQL(val *sqlparser.SQLVal) *ValueFromSQL {
+	switch val.Type {
+	case sqlparser.IntVal:
+		num, _ := strconv.Atoi(string(val.Val))
+		return &ValueFromSQL{num}
+	case sqlparser.FloatVal:
+		num, _ := strconv.ParseFloat(string(val.Val), 64)
+		return &ValueFromSQL{num}
+	case sqlparser.StrVal:
+		str := string(val.Val)
+		return &ValueFromSQL{str}
+	default:
+		return nil
+	}
+}
+
+func processFunctionalExpression(expr *sqlparser.FuncExpr) *ValueFromSQL {
+	if !expr.Name.EqualString("isodate") || len(expr.Exprs) != 1 {
+		return nil
+	}
+	var res *ValueFromSQL
+	visit := func(node sqlparser.SQLNode) (kontinue bool, err error) {
+		val, ok := node.(*sqlparser.SQLVal)
+		if ok {
+			res = getValueFromSQL(val)
+			datetime_str, ok := res.val.(string)
+			if !ok {
+				return false, errors.New("cannot extract date string from value")
+			}
+			t, err := time.Parse(time.RFC3339, datetime_str)
+			if err != nil {
+				return false, err
+			}
+			res.val = t
+		}
+		return false, nil
+	}
+
+	err := expr.Exprs[0].WalkSubtree(visit)
+	if err != nil {
+		return nil
+	}
+	return res
+}
+
+func getSQLValFromExpr(expr sqlparser.Expr) *ValueFromSQL {
+	fe, ok := expr.(*sqlparser.FuncExpr)
+	if ok {
+		return processFunctionalExpression(fe)
+	}
+	val, ok := expr.(*sqlparser.SQLVal)
+	if !ok {
+		return nil
+	}
+	return getValueFromSQL(val)
+}
+
 func processComparisonExpr(expr *sqlparser.ComparisonExpr) (res bson.M, err error) {
 	mongoOp := SQLOperatorToMongo(expr.Operator)
 	key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
-	var vals []*sqlparser.SQLVal
+	var vals []*ValueFromSQL
 	if tuple, ok := expr.Right.(sqlparser.ValTuple); ok { // SQL in
 		for _, elem := range tuple {
-			val, ok := elem.(*sqlparser.SQLVal)
-			if !ok {
+			val := getSQLValFromExpr(elem)
+			if val == nil {
 				return bson.M{}, errors.New("wrong value")
 			}
 			vals = append(vals, val)
 		}
 		return bson.M{key: bsonMArray(mongoOp, vals)}, nil
 	} else { // SQL =,>,<,>=,<=,regexp
-		val, ok := expr.Right.(*sqlparser.SQLVal)
-		if !ok {
+		val := getSQLValFromExpr(expr.Right)
+		if val == nil {
 			return bson.M{}, errors.New("wrong value")
 		}
 		if expr.Operator == sqlparser.NotRegexpStr {
@@ -136,12 +169,12 @@ func processRangeCond(expr *sqlparser.RangeCond) (res bson.M, err error) {
 		mongoOpRight = "$gt"
 		mongoCond = "$or"
 	}
-	from, ok := expr.From.(*sqlparser.SQLVal)
-	if !ok {
+	from := getSQLValFromExpr(expr.From)
+	if from == nil {
 		return bson.M{}, errors.New("wrong value")
 	}
-	to, ok := expr.To.(*sqlparser.SQLVal)
-	if !ok {
+	to := getSQLValFromExpr(expr.To)
+	if to == nil {
 		return bson.M{}, errors.New("wrong value")
 	}
 	return bson.M{mongoCond: []bson.M{{key: bsonM(mongoOpLeft, from)},
@@ -198,16 +231,16 @@ func getSortBSONFromOrderArray(order_array sqlparser.OrderBy) (bson.M, error) {
 }
 
 func (db *Mongodb) BSONFromSQL(query string) (bson.M, bson.M, error) {
-	stmt, err := sqlparser.Parse("select * from dbname "  + query)
+	stmt, err := sqlparser.Parse("select * from dbname " + query)
 	if err != nil {
 		return bson.M{}, bson.M{}, err
 	}
 	sel, _ := stmt.(*sqlparser.Select)
 	query_mongo := bson.M{}
-	sort_mongo :=  bson.M{}
-	if sel.Where!=nil {
+	sort_mongo := bson.M{}
+	if sel.Where != nil {
 		query_mongo, err = getBSONFromExpression(sel.Where.Expr)
-		if err != nil  {
+		if err != nil {
 			return bson.M{}, bson.M{}, err
 		}
 	}

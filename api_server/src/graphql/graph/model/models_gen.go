@@ -9,21 +9,23 @@ import (
 	"time"
 )
 
+type CollectionEntryInterface interface {
+	IsCollectionEntryInterface()
+}
+
 type BaseCollectionEntry struct {
 	ID         *string    `json:"_id" bson:"_id"`
 	EventStart *time.Time `json:"eventStart" bson:"eventStart"`
 	EventEnd   *time.Time `json:"eventEnd" bson:"eventEnd"`
 	Title      *string    `json:"title" bson:"title"`
-	Beamline   *string    `json:"beamline" bson:"beamline"`
-	Facility   *string    `json:"facility" bson:"facility"`
 }
 
 type BeamtimeMeta struct {
+	ID                  string                 `json:"_id" bson:"_id"`
 	Applicant           *BeamtimeUser          `json:"applicant" bson:"applicant"`
 	Beamline            *string                `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamtimeID          string                 `json:"_id" bson:"_id"`
-	Status              Status                 `json:"status" bson:"status"`
+	Status              string                 `json:"status" bson:"status"`
 	Contact             *string                `json:"contact" bson:"contact"`
 	CorePath            *string                `json:"corePath" bson:"corePath"`
 	EventEnd            *time.Time             `json:"eventEnd" bson:"eventEnd"`
@@ -41,7 +43,12 @@ type BeamtimeMeta struct {
 	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
 	ChildCollection     []*BaseCollectionEntry `json:"childCollection" bson:"childCollection"`
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
+	Type                string                 `json:"type" bson:"type"`
+	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta" bson:"parentBeamtimeMeta"`
+	JSONString          *string                `json:"jsonString" bson:"jsonString"`
 }
+
+func (BeamtimeMeta) IsCollectionEntryInterface() {}
 
 type BeamtimeUser struct {
 	Applicant *string `json:"applicant" bson:"applicant"`
@@ -53,17 +60,19 @@ type BeamtimeUser struct {
 }
 
 type CollectionEntry struct {
-	ID                  *string                `json:"_id" bson:"_id"`
-	BeamtimeID          *string                `json:"beamtimeId" bson:"beamtimeId"`
+	ID                  string                 `json:"_id" bson:"_id"`
 	EventStart          *time.Time             `json:"eventStart" bson:"eventStart"`
 	EventEnd            *time.Time             `json:"eventEnd" bson:"eventEnd"`
 	Title               *string                `json:"title" bson:"title"`
-	Beamline            *string                `json:"beamline" bson:"beamline"`
-	Facility            *string                `json:"facility" bson:"facility"`
 	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
 	ChildCollection     []*BaseCollectionEntry `json:"childCollection" bson:"childCollection"`
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
+	Type                string                 `json:"type" bson:"type"`
+	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta" bson:"parentBeamtimeMeta"`
+	JSONString          *string                `json:"jsonString" bson:"jsonString"`
 }
+
+func (CollectionEntry) IsCollectionEntryInterface() {}
 
 type InputBeamtimeUser struct {
 	Applicant *string `json:"applicant" bson:"applicant"`
@@ -98,8 +107,8 @@ type NewBeamtimeMeta struct {
 	Applicant           *InputBeamtimeUser       `json:"applicant" bson:"applicant"`
 	Beamline            *string                  `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                  `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamtimeID          string                   `json:"_id" bson:"_id"`
-	Status              Status                   `json:"status" bson:"status"`
+	ID                  string                   `json:"_id" bson:"_id"`
+	Status              string                   `json:"status" bson:"status"`
 	Contact             *string                  `json:"contact" bson:"contact"`
 	CorePath            *string                  `json:"corePath" bson:"corePath"`
 	EventEnd            *time.Time               `json:"eventEnd" bson:"eventEnd"`
@@ -135,6 +144,33 @@ type OnlineAnylysisMeta struct {
 	SSHPrivateKeyPath      *string   `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
 	SSHPublicKeyPath       *string   `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
 	UserAccount            *string   `json:"userAccount" bson:"userAccount"`
+}
+
+type ParentBeamtimeMeta struct {
+	ID             string              `json:"_id" bson:"_id"`
+	Applicant      *BeamtimeUser       `json:"applicant" bson:"applicant"`
+	Beamline       *string             `json:"beamline" bson:"beamline"`
+	BeamlineAlias  *string             `json:"beamlineAlias" bson:"beamlineAlias"`
+	Status         string              `json:"status" bson:"status"`
+	Contact        *string             `json:"contact" bson:"contact"`
+	CorePath       *string             `json:"corePath" bson:"corePath"`
+	EventEnd       *time.Time          `json:"eventEnd" bson:"eventEnd"`
+	EventStart     *time.Time          `json:"eventStart" bson:"eventStart"`
+	Facility       *string             `json:"facility" bson:"facility"`
+	Generated      *time.Time          `json:"generated" bson:"generated"`
+	Leader         *BeamtimeUser       `json:"leader" bson:"leader"`
+	OnlineAnalysis *OnlineAnylysisMeta `json:"onlineAnalysis" bson:"onlineAnalysis"`
+	Pi             *BeamtimeUser       `json:"pi" bson:"pi"`
+	ProposalID     *string             `json:"proposalId" bson:"proposalId"`
+	ProposalType   *string             `json:"proposalType" bson:"proposalType"`
+	Title          *string             `json:"title" bson:"title"`
+	UnixID         *string             `json:"unixId" bson:"unixId"`
+	Users          *Users              `json:"users" bson:"users"`
+}
+
+type UniqueField struct {
+	KeyName string   `json:"keyName" bson:"keyName"`
+	Values  []string `json:"values" bson:"values"`
 }
 
 type UserAccount struct {
@@ -190,48 +226,5 @@ func (e *Acls) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Acls) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type Status string
-
-const (
-	StatusScheduled Status = "Scheduled"
-	StatusRunning   Status = "Running"
-	StatusCompleted Status = "Completed"
-)
-
-var AllStatus = []Status{
-	StatusScheduled,
-	StatusRunning,
-	StatusCompleted,
-}
-
-func (e Status) IsValid() bool {
-	switch e {
-	case StatusScheduled, StatusRunning, StatusCompleted:
-		return true
-	}
-	return false
-}
-
-func (e Status) String() string {
-	return string(e)
-}
-
-func (e *Status) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = Status(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid Status", str)
-	}
-	return nil
-}
-
-func (e Status) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

@@ -74,8 +74,23 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string
 	return res, err
 }
 
+func (r *queryResolver) UniqueFields(ctx context.Context,filter *string, keys []string) ([]*model.UniqueField, error) {
+	log_str := "processing request UniqueFields"
+
+	acl,err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: "+err.Error())
+		return []*model.UniqueField{}, errors.New("access denied: "+err.Error())
+	}
+
+	logger.Debug(log_str)
+	return meta.UniqueFields(acl,filter,keys)
+}
+
 
 func (r *mutationResolver)  DeleteMeta(ctx context.Context, id string) (*string, error) {
+	log_str := "processing request delete_meta"
+	logger.Debug(log_str)
 	return meta.DeleteBeamtimeMetaAndCollections(id)
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import {useQuery} from '@apollo/react-hooks';
+import {QueryResult, useQuery} from '@apollo/client';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
@@ -8,13 +8,13 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Toolbar from '@material-ui/core/Toolbar';
-import FilterBox from "./filterBox";
+import {BeamtimeFilterBox} from "./FilterBoxes";
 import Divider from "@material-ui/core/Divider";
-import {QueryResult} from "@apollo/react-common";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";
-import {MetaData, Status, METAS } from  "./graphQLTypes"
+import {METAS } from "./graphQLSchemes"
+import {MetaData} from  "./meta"
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -57,13 +57,11 @@ const useStyles = makeStyles((theme: Theme) =>
 
 type MetaColumnProps = {
     queryResult: QueryResult<MetaData>,
-    status: Status,
-    activeBeamtime: string,
-    SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>,
+    status: String,
     title: string,
 }
 
-function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}: MetaColumnProps) {
+function MetaColumn({queryResult, status,title}: MetaColumnProps) {
     const classes = useStyles();
     const history = useHistory();
 
@@ -78,18 +76,9 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
         </Paper>
     }
 
-    const handleDoubleClick = (event: React.MouseEvent<HTMLElement>) => {
-        const path = "/detailed/" + event.currentTarget.id;
-        SetActiveBeamtime(event.currentTarget.id);
-        history.push(path);
-    }
-
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        if (activeBeamtime === event.currentTarget.id) {
-            SetActiveBeamtime("")
-        } else {
-            SetActiveBeamtime(event.currentTarget.id);
-        }
+        const path = "/detailed/" + event.currentTarget.id+"/meta";
+        history.push(path);
     }
 
     return <Grid
@@ -106,9 +95,9 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
         <Grid  item xs={12}>
         <Paper className={classes.paper}>
         <List component="nav">
-            {queryResult.data && queryResult.data!.meta.filter(meta => meta.status == status).map(meta =>
-                    <ListItem button className={classes.listItem} onDoubleClick={handleDoubleClick} onClick={handleClick}
-                              id={meta.beamtimeId as string} key={meta.beamtimeId as string} selected={meta.beamtimeId as string === activeBeamtime}>
+            {queryResult.data && queryResult.data!.meta.filter(meta => meta.status === status).map(meta =>
+                    <ListItem button className={classes.listItem} onClick={handleClick}
+                              id={meta.id as string} key={meta.id as string} >
                         <ListItemText
                             primaryTypographyProps={{noWrap: true}}
                             primary={meta.title}
@@ -116,7 +105,7 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
                                 <Grid container justify="space-between" component="span">
                                     <React.Fragment>
                                         <Typography component="span">
-                                            Beamtime ID: {meta.beamtimeId}
+                                            Beamtime ID: {meta.id}
                                         </Typography>
                                         <Typography component="span" align="right">
                                             Beamline: {meta.beamline || "undefined"}
@@ -126,19 +115,6 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
                             }
                         />
                     </ListItem>
-                /*      Object.entries(meta.customValues).map(([key, value]) => {
-                              switch (typeof value) {
-                                  case "object":
-                                      return <Typography variant="h5" component="h2">
-                                          {key}: {JSON.stringify(value)}
-                                      </Typography>
-                                  default:
-                                      return <Typography variant="h5" component="h2">
-                                          {key}: {value}
-                                      </Typography>
-                              }
-                          }
-                      )*/
             )
             }
         </List>
@@ -147,13 +123,7 @@ function MetaColumn({queryResult, status,SetActiveBeamtime,activeBeamtime,title}
     </Grid>
 }
 
-
-type ListMetaProps = {
-    activeBeamtime: string,
-    SetActiveBeamtime: React.Dispatch<React.SetStateAction<string>>,
-}
-
-function ListMeta({activeBeamtime,SetActiveBeamtime}:ListMetaProps) {
+function MetaListPage() {
     const queryResult = useQuery<MetaData>(METAS, {
         pollInterval: 5000,
     });
@@ -162,16 +132,16 @@ function ListMeta({activeBeamtime,SetActiveBeamtime}:ListMetaProps) {
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>
-            <FilterBox></FilterBox>
+            <BeamtimeFilterBox/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
                     <Divider></Divider>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <MetaColumn  title="Running" activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Running}/>
+                    <MetaColumn  title="Running"  queryResult={queryResult} status={"running"}/>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <MetaColumn  title="Completed" activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime} queryResult={queryResult} status={Status.Completed}/>
+                    <MetaColumn  title="Completed" queryResult={queryResult} status={"completed"}/>
                 </Grid>
             </Grid>
         </div>
@@ -179,4 +149,4 @@ function ListMeta({activeBeamtime,SetActiveBeamtime}:ListMetaProps) {
 }
 
 
-export default ListMeta;
+export default MetaListPage;

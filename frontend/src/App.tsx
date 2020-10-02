@@ -1,16 +1,18 @@
 import React from 'react';
 import './App.css';
-import TopBar from "./topBar";
+import TopBar from "./TopBar";
 import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
 import {PaletteType} from "@material-ui/core";
 import userPreferences from "./userPreferences";
-import ListMeta from "./ListMetaPage";
+import MetaListPage from "./MetaListPage";
+import CollectionListPage from "./CollectionListPage";
 import {grey} from '@material-ui/core/colors';
 import SideBar from "./SideBar";
 import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import {Route, Switch, Redirect, useLocation} from 'react-router-dom';
-import DetailedMeta from "./DetailedMetaPage";
+import {Route, Switch, Redirect} from 'react-router-dom';
+import DetailedPage from "./DetailedPage";
+import Logbooks from "./Logbooks";
 
 declare module "@material-ui/core/styles/createPalette" {
     interface Palette {
@@ -32,9 +34,6 @@ const useStyles = makeStyles((theme: Theme) =>
 
 function App() {
     const classes = useStyles();
-    const {pathname} = useLocation();
-    const [activeBeamtime, SetActiveBeamtime] = React.useState("");
-
 
     const {loading, error, data} = userPreferences.useUserPreferences();
     if (loading) return <p>Loading user preferences...</p>;
@@ -44,7 +43,6 @@ function App() {
     } else {
         themeType = data!.user.preferences.schema;
     }
-    ;
 
     const theme = createMuiTheme({
         overrides: {
@@ -70,16 +68,25 @@ function App() {
             <CssBaseline/>
             <div className={classes.root}>
                 <TopBar/>
-                <SideBar activeBeamtime={activeBeamtime}/>
+                <SideBar/>
                 <Switch>
                     <Route exact path="/">
-                        <Redirect to="/metaboard"/>
+                        <Redirect to="/collections"/>
                     </Route>
                     <Route path="/metaboard" render={(props) => (
-                        <ListMeta {...props} activeBeamtime={activeBeamtime} SetActiveBeamtime={SetActiveBeamtime}/>
+                        <MetaListPage/>
                     )} exact/>
-                    <Route path={"/detailed/:id"} render={(props) => (
-                        <DetailedMeta {...props} SetActiveBeamtime={SetActiveBeamtime}/>
+                    <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
+                        <DetailedPage {...props}  isBeamtime={true}/>
+                    )} exact/>
+                    <Route key="collection" path={"/detailedcollection/:id/:section"} render={(props) => (
+                        <DetailedPage {...props}  isBeamtime={false}/>
+                    )} exact/>
+                    <Route path="/collections" render={(props) => (
+                        <CollectionListPage/>
+                    )} exact/>
+                    <Route path="/logbooks" render={(props) => (
+                        <Logbooks/>
                     )} exact/>
                 </Switch>
             </div>

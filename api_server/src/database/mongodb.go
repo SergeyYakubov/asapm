@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -50,6 +51,7 @@ const pointer_field_name = "current_pointer"
 const no_session_msg = "database client not created"
 const wrong_id_type = "wrong id type"
 const already_connected_msg = "already connected"
+const id_name = "id"
 
 const finish_substream_keyword = "asapo_finish_substream"
 const no_next_substream_keyword = "asapo_no_next"
@@ -193,8 +195,46 @@ func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_
 	return nil, err
 }
 
+func (db *Mongodb) uniqueFields(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 2 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	fs, ok := extra_params[0].(FilterAndSort)
+	if !ok {
+		return nil, errors.New("mongo: filter must be set")
+	}
+
+
+	key, ok := extra_params[1].(string)
+	if !ok {
+		return nil, errors.New("an argument must be string")
+	}
+
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	q := bson.M{}
+	var err error
+	queryStr := getQueryString(fs)
+
+	if queryStr != "" {
+		queryStr = strings.ReplaceAll(queryStr,"\\","\\\\")
+		q, _, err = db.BSONFromSQL(queryStr)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	res,err := c.Distinct(context.TODO(),key,q)
+	if err!=nil {
+		return nil, err
+	}
+	return json.Marshal(&res)
+}
+
+
+
 func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
-	if len(extra_params) != 3 {
+	if len(extra_params) != 4 {
 		return nil, errors.New("wrong number of parameters")
 	}
 
@@ -210,8 +250,13 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 
 	record := extra_params[2]
 
+	uniqueId, ok := extra_params[3].(string)
+	if !ok {
+		return nil, errors.New("an argument must be string")
+	}
+
 	c := db.client.Database(dbName).Collection(dataCollectionName)
-	q := bson.M{"$and": []bson.M{bson.M{"_id": id},bson.M{key: bson.M{"$exists": true}}}}
+	q := bson.M{"$and": []bson.M{bson.M{"_id": id},bson.M{key: bson.M{"$exists": true}},bson.M{key+"._id": bson.M{"$ne":uniqueId}}}}
 
 	update := bson.M{
 		"$addToSet": bson.M{
@@ -223,7 +268,7 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 		return nil,err
 	}
 	if res.MatchedCount == 0 {
-		return nil, errors.New("record not found")
+		return nil, errors.New("record not found or duplicate entry")
 	}
 
 	if res.ModifiedCount + res.UpsertedCount == 0 {
@@ -250,9 +295,7 @@ func getQueryString(fs FilterAndSort) string {
 		return ""
 	}
 
-	for _,id:=range fs.IdNames {
-		queryStr = strings.Replace(queryStr, id, "_id", -1)
-	}
+	queryStr = strings.Replace(queryStr, id_name, "_id", -1)
 
 	return queryStr
 }
@@ -317,12 +360,15 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 	queryStr := getQueryString(fs)
 
 	if queryStr != "" {
+		queryStr = strings.ReplaceAll(queryStr,"\\","\\\\")
 		q, sort, err = db.BSONFromSQL(queryStr)
 		if err != nil {
 			return nil, err
 		}
 		opts.SetSort(sort)
 	}
+
+	fmt.Println(q)
 
 	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
@@ -353,6 +399,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.deleteRecords(db_name, data_collection_name, extra_params...)
 	case "add_array_element":
 		return db.addArrayElement(db_name, data_collection_name, extra_params...)
+	case "unique_fields":
+		return db.uniqueFields(db_name, data_collection_name, extra_params...)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

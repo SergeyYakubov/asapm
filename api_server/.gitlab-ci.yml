@@ -2,7 +2,7 @@ variables:
   API_SERVER_IMAGE: $REGISTRY/mdp/asapm/api_server:$CI_COMMIT_SHORT_SHA
   API_SERVER_IMAGE_DEV: $REGISTRY/mdp/asapm/api_server:dev.$CI_COMMIT_SHORT_SHA
   API_SERVER_IMAGE_STATIC: $REGISTRY/mdp/asapm/api_server
-  API_SERVER_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-api-${CI_COMMIT_SHORT_SHA}/asapm/api
+  API_SERVER_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-api/asapm-${CI_COMMIT_SHORT_SHA}/api
 
 build_api_server_dev:
   stage: build_dev
@@ -11,7 +11,7 @@ build_api_server_dev:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE_DEV
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --target base --destination $API_SERVER_IMAGE_DEV
   tags:
     - kubernetes-executor
 
@@ -38,7 +38,7 @@ build_api_server:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --destination $API_SERVER_IMAGE
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/api_server --dockerfile $CI_PROJECT_DIR/api_server/Dockerfile --destination $API_SERVER_IMAGE
   tags:
     - kubernetes-executor
 

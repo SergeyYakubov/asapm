@@ -51,18 +51,60 @@ input InputUsers {
     unknown: [String]
 }
 
-enum Status {
-    Scheduled
-    Running
-    Completed
+interface CollectionEntryInterface {
+    id: String!
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
 }
 
-type BeamtimeMeta {
+type CollectionEntry implements CollectionEntryInterface {
+    id: String!
+    eventStart: Time
+    eventEnd: Time
+    title: String
+    childCollectionName: String
+    childCollection: [BaseCollectionEntry]
+    customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
+}
+
+type ParentBeamtimeMeta {
+    id: String!
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
-    beamtimeId: String!
-    status: Status!
+    status: String!
+    contact: String
+    corePath: String
+    eventEnd: Time
+    eventStart: Time
+    facility: String
+    generated: Time
+    leader: BeamtimeUser
+    onlineAnalysis: OnlineAnylysisMeta
+    pi: BeamtimeUser
+    proposalId: String
+    proposalType: String
+    title: String
+    unixId: String
+    users: Users
+}
+
+type BeamtimeMeta implements CollectionEntryInterface {
+    id: String!
+    applicant: BeamtimeUser
+    beamline: String
+    beamlineAlias: String
+    status: String!
     contact: String
     corePath: String
     eventEnd: Time
@@ -80,6 +122,9 @@ type BeamtimeMeta {
     childCollectionName: String
     childCollection: [BaseCollectionEntry]
     customValues (selectFields: [String],removeFields: [String]): Map
+    type: String!
+    parentBeamtimeMeta: ParentBeamtimeMeta
+    jsonString: String
 }
 
 type BaseCollectionEntry {
@@ -87,29 +132,24 @@ type BaseCollectionEntry {
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
 }
 
-type CollectionEntry {
-    id: String
-    beamtimeId: String
+
+input NewCollectionEntry {
+    id: String!
     eventStart: Time
     eventEnd: Time
     title: String
-    beamline: String
-    facility: String
     childCollectionName: String
-    childCollection: [BaseCollectionEntry]
-    customValues (selectFields: [String],removeFields: [String]): Map
+    customValues: Map
 }
 
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
     beamlineAlias: String #@inputNeedAcl(acl: WRITE)
-    beamtimeId: String!
-    status: Status!
+    id: String!
+    status: String!
     contact: String
     corePath: String
     eventEnd: Time
@@ -127,41 +167,4 @@ input NewBeamtimeMeta {
     childCollectionName: String
     customValues: Map
 }
-
-input NewCollectionEntry {
-    id: String!
-    eventStart: Time
-    eventEnd: Time
-    title: String
-    childCollectionName: String
-    customValues: Map
-}
-
-directive @needAcl(acl: Acls!) on FIELD_DEFINITION
-#directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
-
-enum Acls {
-    WRITE
-    READ
-}
-
-
-type Mutation {
-    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
-    deleteMeta(id: String!): String @needAcl(acl: WRITE)
-    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: WRITE)
-    setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
-}
-
-type Query {
-    meta (filter: String, orderBy: String): [BeamtimeMeta]
-    collections (filter: String, orderBy: String): [CollectionEntry]
-    user (id: ID!): UserAccount
-}
-
-type UserAccount {
-    id: ID!
-    preferences: UserPreferences
-}
-
 

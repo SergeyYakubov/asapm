@@ -5,10 +5,11 @@ import (
 	"asapm/common/utils"
 	"asapm/database"
 	"asapm/graphql/graph/model"
+	"encoding/json"
 	"errors"
 )
 
-func getFilterAndSort(idNames []string,filter *string,orderBy *string) database.FilterAndSort {
+func getFilterAndSort(filter *string,orderBy *string) database.FilterAndSort {
 	fs := database.FilterAndSort{}
 	if filter !=nil {
 		fs.Filter =*filter
@@ -16,7 +17,6 @@ func getFilterAndSort(idNames []string,filter *string,orderBy *string) database.
 	if orderBy !=nil {
 		fs.Order =*orderBy
 	}
-	fs.IdNames = idNames
 	return fs
 }
 
@@ -25,15 +25,27 @@ func ReadBeamtimeMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepField
 		return []*model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")
 	}
 
+	ff := auth.FilterFields{
+		BeamtimeId: "id",
+		Beamline:   "beamline",
+		Facility:   "facility",
+	}
+
 	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl,filter)
+		filter = auth.AddAclToSqlFilter(acl,filter,ff)
 	}
 
 	var sResponse = []*model.BeamtimeMeta{}
 
-	fs := getFilterAndSort([]string{"beamtimeId"},filter,orderBy)
+	fs := getFilterAndSort(filter,orderBy)
 
-	_, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "read_records",fs,&sResponse)
+	if fs.Filter!="" {
+		fs.Filter = "("+fs.Filter+")" + ` AND type='beamtime'`
+	} else {
+		fs.Filter = `type='beamtime'`
+	}
+
+	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records",fs,&sResponse)
 	if err != nil {
 		return []*model.BeamtimeMeta{}, err
 	}
@@ -57,7 +69,17 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 		col:= KDefaultCollectionName
 		meta.ChildCollectionName=&col
 	}
-	_, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "create_record", meta)
+	meta.Type = KBeamtimeTypeName
+
+	parentMeta:=model.ParentBeamtimeMeta{}
+	utils.DeepCopy(meta, &parentMeta)
+
+	bmeta,_ := json.Marshal(&meta)
+	smeta := string(bmeta)
+	meta.JSONString =&smeta
+	meta.ParentBeamtimeMeta = &parentMeta
+
+	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "create_record", meta)
 	if err != nil {
 		return &model.BeamtimeMeta{}, err
 	}
@@ -66,15 +88,10 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 
 
 func  DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
-	filter:= "beamtimeId = '" + id+"'"
-	fs := getFilterAndSort([]string{"beamtimeId"},&filter,nil)
+	filter:= "parentBeamtimeMeta.id = '" + id+"'"
+	fs := getFilterAndSort(&filter,nil)
 
-	if _, err := database.GetDb().ProcessRequest("beamtime", KBeamtimeMetaNameInDb, "delete_records", fs, true);err!=nil {
-		return nil,err
-	}
-
-	fs.IdNames = []string{"id"}
-	if _, err := database.GetDb().ProcessRequest("beamtime", KCollectionMetaNameIndb, "delete_records", fs, false);err!=nil {
+	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true);err!=nil {
 		return nil,err
 	}
 

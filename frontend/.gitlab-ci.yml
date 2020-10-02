@@ -2,7 +2,7 @@ variables:
   FRONTEND_IMAGE: $REGISTRY/mdp/asapm/frontend:$CI_COMMIT_SHORT_SHA
   FRONTEND_IMAGE_DEV: $REGISTRY/mdp/asapm/frontend:dev.$CI_COMMIT_SHORT_SHA
   FRONTEND_IMAGE_STATIC: $REGISTRY/mdp/asapm/frontend
-  FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-frontend-${CI_COMMIT_SHORT_SHA}/asapm/
+  FRONTEND_URL: http://gitlab-ci-node1.desy.de/${CI_PROJECT_NAME}-${CI_PROJECT_ID}-deploy-frontend/asapm-${CI_COMMIT_SHORT_SHA}/
 
 build_frontend_dev:
   stage: build_dev
@@ -11,7 +11,7 @@ build_frontend_dev:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --target base --destination $FRONTEND_IMAGE_DEV
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --target base --destination $FRONTEND_IMAGE_DEV
   tags:
     - kubernetes-executor
 
@@ -36,7 +36,7 @@ build_frontend:
     entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --cache=true --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --destination $FRONTEND_IMAGE
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR/frontend --dockerfile $CI_PROJECT_DIR/frontend/Dockerfile --destination $FRONTEND_IMAGE
   tags:
     - kubernetes-executor
 

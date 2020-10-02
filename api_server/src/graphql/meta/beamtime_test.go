@@ -31,15 +31,11 @@ func (suite *MetaSuite) TestDeleteMeta() {
 	id := "12345"
 
 	var fs = database.FilterAndSort{
-		Filter: "beamtimeId = '"+id+"'",
-		IdNames: []string{"beamtimeId"},
+		Filter: "parentBeamtimeMeta.id = '"+id+"'",
 	}
 
 	params_delete := []interface{}{fs,true}
-	suite.mock_db.On("ProcessRequest", "beamtime", KBeamtimeMetaNameInDb, "delete_records", params_delete).Return([]byte(""), nil)
-	fs.IdNames=[]string{"id"}
-	params_delete = []interface{}{fs,false}
-	suite.mock_db.On("ProcessRequest", "beamtime", KCollectionMetaNameIndb, "delete_records", params_delete).Return([]byte(""), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_records", params_delete).Return([]byte(""), nil)
 
 	res, err := DeleteBeamtimeMetaAndCollections(id)
 

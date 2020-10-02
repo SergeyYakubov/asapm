@@ -37,10 +37,10 @@ func StartServer() {
 
 	http.Handle(Config.BasePath, playground.Handler("GraphQL playground", Config.BasePath+"/query"))
 	if Config.Authorization.Enabled {
-		http.Handle(Config.BasePath+"/query", utils.ProcessJWTAuth(srv.ServeHTTP,Config.publicKey))
+		http.Handle(Config.BasePath+"/query", utils.ProcessJWTAuth(utils.RemoveQuotes(srv.ServeHTTP),Config.publicKey))
 	} else {
 		log.Warning("authorization disabled")
-		http.Handle(Config.BasePath+"/query", auth.BypassAuth(srv.ServeHTTP))
+		http.Handle(Config.BasePath+"/query", auth.BypassAuth(utils.RemoveQuotes(srv.ServeHTTP)))
 	}
 
 	log.Info(fmt.Sprintf("connect to http://localhost:%s%s for GraphQL playground", Config.Port,Config.BasePath))
