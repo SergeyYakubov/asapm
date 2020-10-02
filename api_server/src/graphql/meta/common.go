@@ -24,7 +24,13 @@ func keepFields(m map[string]interface{}, keep []string, prefix string) map[stri
 		}
 		switch v.(type) {
 		case map[string]interface{}:
-			m[key] = keepFields(v.(map[string]interface{}), keep, full_key)
+//			m[key]			 = keepFields(v.(map[string]interface{}), keep, full_key)
+			val := keepFields(v.(map[string]interface{}), keep, full_key)
+			if len(val)!=0 {
+				m[key] = val
+			} else {
+				delete(m, key)
+			}
 		default:
 			if !shouldKeep {
 				delete(m, key)
@@ -63,6 +69,10 @@ func updateFields(keep []string, remove []string, customValues *map[string]inter
 		*customValues = keepFields(*customValues, keep, "")
 	} else {
 		*customValues = removeFields(*customValues, remove, "")
+	}
+
+	if len(*customValues)==0 {
+		*customValues = nil
 	}
 	return
 }

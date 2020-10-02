@@ -28,6 +28,9 @@ var updateFieldsTests = []struct {
 		[]string{"hello.time","bye"},[]string{},`{"bye":"345","hello":{"time":123}}`,"keep multiple" },
 	{`{"bye":"345","hello":{"date":"111","time":123}}`,
 		[]string{"hello.time","bye"},[]string{"bye"},`{"bye":"345","hello":{"time":123}}`,"keep and remove" },
+	{`{"bla":"345","tra":{"date":"111","time":123}}`,
+		[]string{"hello.time","bye"},[]string{},`null`,"remove all" },
+
 }
 
 func TestProcessUpdateFieldTests(t *testing.T) {

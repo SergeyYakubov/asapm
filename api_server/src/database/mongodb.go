@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -367,8 +366,6 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 		}
 		opts.SetSort(sort)
 	}
-
-	fmt.Println(q)
 
 	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
