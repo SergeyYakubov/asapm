@@ -1,4 +1,5 @@
 import {IsoDateToStr, TableData} from "./common";
+import {CollectionEntry} from "./generated/graphql";
 
 export interface MetaDataDetails {
     meta: MetaDetails[];
@@ -7,12 +8,6 @@ export interface MetaDataDetails {
 export interface UniqueField {
     keyName: String
     values: String[]
-}
-
-
-export interface CollectionEntitiesDetails {
-    collections: CollectionDetails[]
-    uniqueFields: UniqueField[]
 }
 
 interface Meta {
@@ -51,23 +46,11 @@ interface Users {
 }
 
 
-interface BaseCollection {
+export interface BaseCollection {
     id: String
     eventStart: String
     eventEnd: String
     title: String
-}
-
-export interface CollectionDetails {
-    id: String
-    eventStart: String
-    eventEnd: String
-    title: String
-    type: String
-    childCollectionName: String
-    childCollection: BaseCollection[]
-    customValues: Object
-    parentBeamtimeMeta: ParentMetaDetails
 }
 
 export interface ParentMetaDetails  {
@@ -146,18 +129,18 @@ export function TableDataFromMeta(meta: MetaDetails, section: string): TableData
     return [];
 }
 
-export function TableDataFromCollection(meta: CollectionDetails, section: string): TableData {
+export function TableDataFromCollection(meta: CollectionEntry, section: string): TableData {
             return [
                 {name: 'ID', value: meta.id},
-                {name: 'Beamtime ID', value: meta.parentBeamtimeMeta.id},
-                {name: 'Facility', value: meta.parentBeamtimeMeta.facility || "undefined"},
-                {name: 'Beamline', value: meta.parentBeamtimeMeta.beamline || "undefined"},
+                {name: 'Beamtime ID', value: meta.parentBeamtimeMeta!.id},
+                {name: 'Facility', value: meta.parentBeamtimeMeta!.facility || "undefined"},
+                {name: 'Beamline', value: meta.parentBeamtimeMeta!.beamline || "undefined"},
                 {name: 'Start', value: meta.eventStart?meta.eventStart.toString():""},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
             ]
 }
 
-export function GetUniqueNamesForField(fields : UniqueField[] | undefined ,name : string): UniqueField {
+export function GetUniqueNamesForField(fields : UniqueField[] | undefined,name : string): UniqueField {
     if (!fields) {
         return {keyName:name,values:[]};
     }

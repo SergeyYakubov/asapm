@@ -1,5 +1,4 @@
 import {useQuery} from "@apollo/client";
-import {CollectionDetails} from "./meta";
 import Toolbar from "@material-ui/core/Toolbar";
 import {CollectionFilterBox} from "./FilterBoxes";
 import Grid from "@material-ui/core/Grid";
@@ -16,6 +15,7 @@ import SettingsBackupRestoreIcon from '@material-ui/icons/SettingsBackupRestore'
 import {Box, Button, IconButton, Popover} from "@material-ui/core";
 import ViewColumnIcon from '@material-ui/icons/ViewColumn';
 import CloseIcon from '@material-ui/icons/Close';
+import {CollectionEntry} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -52,7 +52,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 type CollectionProps = {
-    collections: CollectionDetails[]
+    collections: CollectionEntry[]
 }
 
 interface BasicCollectionDetails {
@@ -102,7 +102,7 @@ function plainDataFromObject(plainData: BasicCollectionDetails, data: object, ro
     }
 }
 
-function TableDataFromCollections(collections: CollectionDetails[], columns: ColumnList): BasicCollectionDetails[] {
+function TableDataFromCollections(collections: CollectionEntry[], columns: ColumnList): BasicCollectionDetails[] {
     return collections.map(collection => {
             var res: BasicCollectionDetails = {id: collection.id, type: collection.type};
             plainDataFromObject(res, collection, "", columns);
@@ -111,7 +111,7 @@ function TableDataFromCollections(collections: CollectionDetails[], columns: Col
     )
 }
 
-function possibleColumnListfromCustomValues(vals: Object, root: string, columns: ColumnList) {
+function possibleColumnListfromCustomValues(vals: Object | null, root: string, columns: ColumnList) {
     if (!vals) return;
     for (const [column, value] of Object.entries(vals)) {
         const fullColumn = (root !== "" ? root + "." : "") + column
@@ -126,7 +126,7 @@ function possibleColumnListfromCustomValues(vals: Object, root: string, columns:
     }
 }
 
-function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionDetails[]) {
+function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionEntry[]) {
     let columns = currentColumns.map(a => Object.assign({}, a));
     collections.forEach(col => {
         possibleColumnListfromCustomValues(col.customValues, "", columns)
@@ -136,7 +136,7 @@ function PossibleColumnListfromCollections(currentColumns: ColumnList, collectio
 
 type SelectColumnsProps = {
     columns: ColumnList
-    collections: CollectionDetails[]
+    collections: CollectionEntry[]
     close: () => void
 }
 
@@ -338,7 +338,7 @@ function CollectionTable({collections}: CollectionProps) {
 
 function CollectionListPage() {
     const classes = useStyles();
-    const [collections, setCollections] = React.useState<CollectionDetails[]>([])
+    const [collections, setCollections] = React.useState<CollectionEntry[]>([])
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>

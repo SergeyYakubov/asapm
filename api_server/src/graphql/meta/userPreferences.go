@@ -21,8 +21,7 @@ func  SetUserPreferences(id string, input model.InputUserPreferences) (*model.Us
 func  GetUserPreferences(id string) (*model.UserAccount, error) {
 	res, err := database.GetDb().ProcessRequest("users", "preferences", "read_record", id)
 	if err != nil {
-		defaultSchema := "light"
-		props := model.InputUserPreferences{&defaultSchema}
+		props := model.InputUserPreferences{"light"}
 		return SetUserPreferences(id,props)
 	}
 	var ac model.UserAccount

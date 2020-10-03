@@ -12,7 +12,7 @@ export interface TableFromData
     (data: any, section: string): TableData;
 }
 
-export function IsoDateToStr(isoDate: String) {
+export function IsoDateToStr(isoDate: String | null) {
     if (typeof (isoDate) !== "string") {
         return "undefined";
     }

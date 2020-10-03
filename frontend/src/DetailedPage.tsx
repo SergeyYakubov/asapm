@@ -3,7 +3,7 @@ import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import {Link, RouteComponentProps} from "react-router-dom";
 import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes"
-import {MetaDataDetails, CollectionEntitiesDetails, MetaDetails, CollectionDetails} from "./meta"
+import {MetaDataDetails, MetaDetails} from "./meta"
 import {useQuery} from "@apollo/client";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -15,6 +15,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
 import DetailedTabs from "./DetailedTabs";
+import {CollectionEntry, Query} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -67,18 +68,18 @@ const useStyles = makeStyles((theme: Theme) =>
 type TParams = { id: string, section: string };
 
 type DetailedHeaderProps = {
-    meta: MetaDetails | CollectionDetails,
+    meta: MetaDetails | CollectionEntry,
     rawView: boolean,
     setRawView: React.Dispatch<React.SetStateAction<boolean>>
     isBeamtime: boolean
 }
 
 type MetaViewProps = {
-    meta: MetaDetails | CollectionDetails
+    meta: MetaDetails | CollectionEntry
 }
 
 type BreadcrumbsProps = {
-    meta: CollectionDetails
+    meta: CollectionEntry
 }
 
 
@@ -122,10 +123,10 @@ function DetailedHeader({meta, rawView, setRawView, isBeamtime}: DetailedHeaderP
                 <Typography variant="h6" color="textSecondary">
                     Detailed {isBeamtime ? "Beamtime" : "Collection"} View
                 </Typography>
-                {!isBeamtime && <Navmenu meta={meta as CollectionDetails}/>}
+                {!isBeamtime && <Navmenu meta={meta as CollectionEntry}/>}
                 <Grid item xs={12}>
                     <Typography variant="h5" align="center" className={classes.title}>
-                        {isBeamtime ? meta.title : meta.title || (meta as CollectionDetails).id}
+                        {isBeamtime ? meta.title : meta.title || (meta as CollectionEntry).id}
                     </Typography>
                 </Grid>
             </Grid>
@@ -180,7 +181,7 @@ interface DetailedMetaProps extends RouteComponentProps<TParams> {
 }
 
 function useQueryOrErrorString(id: string, isBeamtime: boolean) {
-    const queryResult = useQuery<MetaDataDetails | CollectionEntitiesDetails>(isBeamtime ? METAS_DETAILED : COLLECTION_ENTITY_DETAILED,
+    const queryResult = useQuery<MetaDataDetails | Query>(isBeamtime ? METAS_DETAILED : COLLECTION_ENTITY_DETAILED,
         {
             pollInterval: 5000,
             variables: {filter: "id = '" + id + "'"}
@@ -195,7 +196,7 @@ function useQueryOrErrorString(id: string, isBeamtime: boolean) {
     if (isBeamtime && (queryResult.data! as MetaDataDetails).meta.length !== 1) {
         return "no data found";
     }
-    if (!isBeamtime && (queryResult.data! as CollectionEntitiesDetails).collections.length !== 1) {
+    if (!isBeamtime && (queryResult.data! as Query).collections!.length !== 1) {
         return "no data found";
     }
     return queryResult
@@ -216,8 +217,8 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps) {
             </div>)
     }
 
-    let data: MetaDetails | CollectionDetails = isBeamtime ? (queryResult.data! as MetaDataDetails).meta[0] :
-        (queryResult.data! as CollectionEntitiesDetails).collections[0]
+    let data: MetaDetails | CollectionEntry = isBeamtime ? (queryResult.data! as MetaDataDetails).meta[0] :
+        (queryResult.data! as Query).collections![0]
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>

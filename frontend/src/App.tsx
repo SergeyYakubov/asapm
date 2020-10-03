@@ -41,7 +41,7 @@ function App() {
     if (error) {
         console.log("cannot load user preferences, will use default");
     } else {
-        themeType = data!.user.preferences.schema;
+        themeType = data?.user?.preferences.schema as PaletteType || themeType;
     }
 
     const theme = createMuiTheme({
