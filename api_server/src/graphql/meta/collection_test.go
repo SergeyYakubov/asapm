@@ -117,7 +117,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			continue
 		}
 		baseInput := model.BaseCollectionEntry{
-			ID:         &input.ID,
+			ID:         input.ID,
 			EventStart: input.EventStart,
 			EventEnd:   input.EventEnd,
 			Title:      input.Title,
@@ -126,7 +126,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		params_read := []interface{}{"12345"}
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return([]byte(beamtime_meta), nil)
 
-		params_update := []interface{}{test.parentId, "childCollection", baseInput,*baseInput.ID}
+		params_update := []interface{}{test.parentId, "childCollection", baseInput,baseInput.ID}
 		suite.mock_db.On("ProcessRequest", "beamtime", test.dbCollectionName, "add_array_element", params_update).Return([]byte(""), nil)
 
 

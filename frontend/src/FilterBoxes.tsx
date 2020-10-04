@@ -9,7 +9,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import Paper from "@material-ui/core/Paper";
 import {CollectionFilter, FieldFilter, GetFilterString, RemoveDuplicates, RemoveElement} from "./common";
 import debounce from 'lodash.debounce';
-import {CollectionDetails, CollectionEntitiesDetails, GetUniqueNamesForField, UniqueField} from "./meta";
+import {GetUniqueNamesForField} from "./meta";
 import {useQuery} from "@apollo/client";
 import {COLLECTIONS} from "./graphQLSchemes";
 import {Button, Chip, CircularProgress, IconButton, Menu, MenuItem, Popover} from "@material-ui/core";
@@ -21,6 +21,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import Icon from '@material-ui/core/Icon';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
+import {CollectionEntry, Query, QueryCollectionsArgs, UniqueField} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -100,7 +101,7 @@ function BeamtimeFilterBox() {
 }
 
 type CollectionFilterBoxProps = {
-    setCollections: React.Dispatch<React.SetStateAction<CollectionDetails[]>>
+    setCollections: React.Dispatch<React.SetStateAction<CollectionEntry[]>>
 }
 
 interface SelectFieldsProps {
@@ -209,7 +210,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
         setAnchorEl(event.currentTarget);
     };
 
-    const queryResult = useQuery<CollectionEntitiesDetails>(COLLECTIONS, {
+    const queryResult = useQuery<Query,QueryCollectionsArgs>(COLLECTIONS, {
         pollInterval: 5000,
         variables: {filter: GetFilterString(filter), orderBy: "id"}
     });

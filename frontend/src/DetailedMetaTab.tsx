@@ -13,8 +13,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
 import {TableEntry, TableData, TableFromData} from "./common"
-import {CollectionDetails, MetaDetails} from "./meta";
 import {TableIcons} from "./TableIcons";
+import {BeamtimeMeta, CollectionEntry} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -91,18 +91,18 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 type MetaViewProps = {
-    meta: MetaDetails | CollectionDetails
+    meta: BeamtimeMeta | CollectionEntry
 }
 
 type StaticMetaProps = {
-    meta: MetaDetails | CollectionDetails
+    meta: BeamtimeMeta | CollectionEntry
     isBeamtime: boolean
     tableFromMeta: TableFromData,
 }
 
 
 type StaticSectionProps = {
-    meta: MetaDetails | CollectionDetails
+    meta: BeamtimeMeta | CollectionEntry
     tableFromMeta: TableFromData
     section: string
     isBeamtime:boolean
@@ -319,7 +319,7 @@ function CategorizedMeta({meta}: MetaViewProps) {
     let customCategories: { [k: string]: any } = {};
     let mainCategory: { [k: string]: any } = {};
     let isMainCategory = false;
-    for (const [key, value] of Object.entries(meta.customValues)) {
+    for (const [key, value] of Object.entries(meta.customValues as Object)) {
         if (value.constructor.name === "Object") {
             customCategories[key] = value;
         } else {
@@ -370,7 +370,7 @@ function CategorizedMeta({meta}: MetaViewProps) {
 function PlainMeta({meta}: MetaViewProps) {
     return <Grid container>
         <Grid item xs={12}>
-            <CustomTable data={meta.customValues}/>
+            <CustomTable data={meta.customValues as Object}/>
         </Grid>
     </Grid>
 }

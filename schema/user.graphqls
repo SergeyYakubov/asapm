@@ -1,15 +1,15 @@
 scalar Map
 
 type UserPreferences {
- schema: String
+ schema: String!
 }
 
 input InputUserPreferences {
-  schema: String
+  schema: String!
 }
 
 type UserAccount {
     id: ID!
-    preferences: UserPreferences
+    preferences: UserPreferences!
 }
 

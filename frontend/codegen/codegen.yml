@@ -1,0 +1,17 @@
+overwrite: true
+schema: "../../schema/*.graphqls"
+generates:
+  ../src/generated/graphql.ts:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo"
+    config:
+      avoidOptionals: true
+      maybeValue: "T | null"
+      scalars:
+        Time: string
+        Map: Object
+  ../../schema/generated/graphql.schema.json:
+    plugins:
+      - "introspection"

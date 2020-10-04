@@ -14,7 +14,7 @@ type CollectionEntryInterface interface {
 }
 
 type BaseCollectionEntry struct {
-	ID         *string    `json:"_id" bson:"_id"`
+	ID         string     `json:"_id" bson:"_id"`
 	EventStart *time.Time `json:"eventStart" bson:"eventStart"`
 	EventEnd   *time.Time `json:"eventEnd" bson:"eventEnd"`
 	Title      *string    `json:"title" bson:"title"`
@@ -84,23 +84,23 @@ type InputBeamtimeUser struct {
 }
 
 type InputOnlineAnylysisMeta struct {
-	AsapoBeamtimeTokenPath *string   `json:"asapoBeamtimeTokenPath" bson:"asapoBeamtimeTokenPath"`
-	ReservedNodes          []*string `json:"reservedNodes" bson:"reservedNodes"`
-	SlurmReservation       *string   `json:"slurmReservation" bson:"slurmReservation"`
-	SlurmPartition         *string   `json:"slurmPartition" bson:"slurmPartition"`
-	SSHPrivateKeyPath      *string   `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
-	SSHPublicKeyPath       *string   `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
-	UserAccount            *string   `json:"userAccount" bson:"userAccount"`
+	AsapoBeamtimeTokenPath *string  `json:"asapoBeamtimeTokenPath" bson:"asapoBeamtimeTokenPath"`
+	ReservedNodes          []string `json:"reservedNodes" bson:"reservedNodes"`
+	SlurmReservation       *string  `json:"slurmReservation" bson:"slurmReservation"`
+	SlurmPartition         *string  `json:"slurmPartition" bson:"slurmPartition"`
+	SSHPrivateKeyPath      *string  `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
+	SSHPublicKeyPath       *string  `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
+	UserAccount            *string  `json:"userAccount" bson:"userAccount"`
 }
 
 type InputUserPreferences struct {
-	Schema *string `json:"schema" bson:"schema"`
+	Schema string `json:"schema" bson:"schema"`
 }
 
 type InputUsers struct {
-	DoorDb  []*string `json:"doorDb" bson:"doorDb"`
-	Special []*string `json:"special" bson:"special"`
-	Unknown []*string `json:"unknown" bson:"unknown"`
+	DoorDb  []string `json:"doorDb" bson:"doorDb"`
+	Special []string `json:"special" bson:"special"`
+	Unknown []string `json:"unknown" bson:"unknown"`
 }
 
 type NewBeamtimeMeta struct {
@@ -137,13 +137,13 @@ type NewCollectionEntry struct {
 }
 
 type OnlineAnylysisMeta struct {
-	AsapoBeamtimeTokenPath *string   `json:"asapoBeamtimeTokenPath" bson:"asapoBeamtimeTokenPath"`
-	ReservedNodes          []*string `json:"reservedNodes" bson:"reservedNodes"`
-	SlurmReservation       *string   `json:"slurmReservation" bson:"slurmReservation"`
-	SlurmPartition         *string   `json:"slurmPartition" bson:"slurmPartition"`
-	SSHPrivateKeyPath      *string   `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
-	SSHPublicKeyPath       *string   `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
-	UserAccount            *string   `json:"userAccount" bson:"userAccount"`
+	AsapoBeamtimeTokenPath *string  `json:"asapoBeamtimeTokenPath" bson:"asapoBeamtimeTokenPath"`
+	ReservedNodes          []string `json:"reservedNodes" bson:"reservedNodes"`
+	SlurmReservation       *string  `json:"slurmReservation" bson:"slurmReservation"`
+	SlurmPartition         *string  `json:"slurmPartition" bson:"slurmPartition"`
+	SSHPrivateKeyPath      *string  `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
+	SSHPublicKeyPath       *string  `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
+	UserAccount            *string  `json:"userAccount" bson:"userAccount"`
 }
 
 type ParentBeamtimeMeta struct {
@@ -179,13 +179,13 @@ type UserAccount struct {
 }
 
 type UserPreferences struct {
-	Schema *string `json:"schema" bson:"schema"`
+	Schema string `json:"schema" bson:"schema"`
 }
 
 type Users struct {
-	DoorDb  []*string `json:"doorDb" bson:"doorDb"`
-	Special []*string `json:"special" bson:"special"`
-	Unknown []*string `json:"unknown" bson:"unknown"`
+	DoorDb  []string `json:"doorDb" bson:"doorDb"`
+	Special []string `json:"special" bson:"special"`
+	Unknown []string `json:"unknown" bson:"unknown"`
 }
 
 type Acls string

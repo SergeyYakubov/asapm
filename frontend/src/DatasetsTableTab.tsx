@@ -1,6 +1,5 @@
 import React from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
-import {CollectionDetails, MetaDetails} from "./meta"
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 
@@ -8,6 +7,7 @@ import MaterialTable from "material-table";
 import {useHistory} from "react-router-dom";
 import {TableIcons} from "./TableIcons";
 import {IsoDateToStr} from "./common";
+import {BaseCollectionEntry, BeamtimeMeta, CollectionEntry, Maybe} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -31,8 +31,7 @@ const useStyles = makeStyles((theme: Theme) =>
                 marginTop: theme.spacing(3),
                 marginLeft: theme.spacing(2),
             },
-            chip: {
-            },
+            chip: {},
             chipRunning: {
 //            backgroundColor: '#4caf50',
 //            color: '#4caf50',
@@ -84,24 +83,32 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 type MetaViewProps = {
-    meta: MetaDetails | CollectionDetails
+    meta: BeamtimeMeta | CollectionEntry
 }
 
 interface TableEntry {
-    id: String
-    title: String
-    eventStart:string
-    eventEnd:string
+    id: string
+    title: Maybe<string>
+    eventStart: Maybe<string>
+    eventEnd: Maybe<string>
 }
 
 interface TableData extends Array<TableEntry> {
 }
 
-function TableDataFromDataset(meta: MetaDetails | CollectionDetails): TableData {
-            return meta.childCollection.map(collection => {
-                    return {id: collection.id, title: collection.title,eventStart:IsoDateToStr(collection.eventStart),eventEnd:IsoDateToStr(collection.eventEnd)};
-                }
-            )
+function TableDataFromDataset(meta: BeamtimeMeta | CollectionEntry): TableData {
+    if (!meta.childCollection) {
+        return [];
+    }
+    return (meta.childCollection as BaseCollectionEntry[]).map(collection => {
+            return {
+                id: collection.id,
+                title: collection.title,
+                eventStart: IsoDateToStr(collection.eventStart),
+                eventEnd: IsoDateToStr(collection.eventEnd)
+            };
+        }
+    )
 }
 
 function DatasetTable({meta}: MetaViewProps) {
@@ -111,7 +118,7 @@ function DatasetTable({meta}: MetaViewProps) {
         rowData?: TableEntry,
         toggleDetailPanel?: (panelIndex?: number) => void
     ) => {
-        const path = "/detailedcollection/" + rowData?.id+"/meta";
+        const path = "/detailedcollection/" + rowData?.id + "/meta";
         history.push(path);
     }
 
@@ -146,9 +153,9 @@ function StaticMeta({meta}: MetaViewProps) {
     return <div>
         <Grid container direction="row" alignItems="stretch" spacing={1}>
             <Grid item xs={12}>
-                    <Paper className={classes.paper}>
-                        <DatasetTable meta={meta}/>
-                    </Paper>
+                <Paper className={classes.paper}>
+                    <DatasetTable meta={meta}/>
+                </Paper>
             </Grid>
         </Grid>
     </div>

@@ -48,7 +48,7 @@ export default function UserAccount() {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
     const {data} = userPreferences.useUserPreferences();
-    const themeType = data?.user.preferences.schema || "light";
+    const themeType = data?.user?.preferences.schema || "light";
 
     const [changeTheme] = userPreferences.useUpdateUserTheme("dark");
 
@@ -67,7 +67,7 @@ export default function UserAccount() {
     const otherTheme = themeType === "light" ? "dark" : "light"
 
     const handleChangeTheme = () => {
-        changeTheme({variables: {id: (data?.user.id || ""), schema: otherTheme.toString()}});
+        changeTheme({variables: {id: (data?.user?.id || ""), schema: otherTheme.toString()}});
         handleClose();
     };
 

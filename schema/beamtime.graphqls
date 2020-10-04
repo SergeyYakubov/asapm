@@ -18,7 +18,7 @@ input InputBeamtimeUser {
 
 type OnlineAnylysisMeta {
     asapoBeamtimeTokenPath: String
-    reservedNodes: [String]
+    reservedNodes: [String!]
     slurmReservation: String
     slurmPartition: String
     sshPrivateKeyPath: String
@@ -28,7 +28,7 @@ type OnlineAnylysisMeta {
 
 input InputOnlineAnylysisMeta {
     asapoBeamtimeTokenPath: String
-    reservedNodes: [String]
+    reservedNodes: [String!]
     slurmReservation: String
     slurmPartition: String
     sshPrivateKeyPath: String
@@ -40,15 +40,15 @@ input InputOnlineAnylysisMeta {
 scalar Time
 
 type Users {
-    doorDb: [String]
-    special: [String]
-    unknown: [String]
+    doorDb: [String!]
+    special: [String!]
+    unknown: [String!]
 }
 
 input InputUsers {
-    doorDb: [String]
-    special: [String]
-    unknown: [String]
+    doorDb: [String!]
+    special: [String!]
+    unknown: [String!]
 }
 
 interface CollectionEntryInterface {
@@ -57,10 +57,10 @@ interface CollectionEntryInterface {
     eventEnd: Time
     title: String
     childCollectionName: String
-    childCollection: [BaseCollectionEntry]
-    customValues (selectFields: [String],removeFields: [String]): Map
+    childCollection: [BaseCollectionEntry!]
+    customValues (selectFields: [String!],removeFields: [String!]): Map
     type: String!
-    parentBeamtimeMeta: ParentBeamtimeMeta
+    parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
 }
 
@@ -70,10 +70,10 @@ type CollectionEntry implements CollectionEntryInterface {
     eventEnd: Time
     title: String
     childCollectionName: String
-    childCollection: [BaseCollectionEntry]
-    customValues (selectFields: [String],removeFields: [String]): Map
+    childCollection: [BaseCollectionEntry!]
+    customValues (selectFields: [String!],removeFields: [String!]): Map
     type: String!
-    parentBeamtimeMeta: ParentBeamtimeMeta
+    parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
 }
 
@@ -120,15 +120,15 @@ type BeamtimeMeta implements CollectionEntryInterface {
     unixId: String
     users: Users
     childCollectionName: String
-    childCollection: [BaseCollectionEntry]
-    customValues (selectFields: [String],removeFields: [String]): Map
+    childCollection: [BaseCollectionEntry!]
+    customValues (selectFields: [String!],removeFields: [String!]): Map
     type: String!
-    parentBeamtimeMeta: ParentBeamtimeMeta
+    parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
 }
 
 type BaseCollectionEntry {
-    id: String
+    id: String!
     eventStart: Time
     eventEnd: Time
     title: String
