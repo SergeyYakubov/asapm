@@ -1,5 +1,5 @@
 cd ../frontend/codegen
-npm run generate
+./generate.sh
 cd -
 cd ../api_server/src
 go generate ./...
