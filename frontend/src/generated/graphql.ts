@@ -166,7 +166,7 @@ export type BeamtimeMetaCustomValuesArgs = {
 
 export type BaseCollectionEntry = {
   __typename?: 'BaseCollectionEntry';
-  id: Maybe<Scalars['String']>;
+  id: Scalars['String'];
   eventStart: Maybe<Scalars['Time']>;
   eventEnd: Maybe<Scalars['Time']>;
   title: Maybe<Scalars['String']>;

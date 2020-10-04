@@ -1,6 +1,5 @@
 import React from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
-import {MetaDetails,BaseCollection} from "./meta"
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 
@@ -8,7 +7,7 @@ import MaterialTable from "material-table";
 import {useHistory} from "react-router-dom";
 import {TableIcons} from "./TableIcons";
 import {IsoDateToStr} from "./common";
-import {CollectionEntry} from "./generated/graphql";
+import {BaseCollectionEntry, BeamtimeMeta, CollectionEntry, Maybe} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -84,24 +83,24 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 type MetaViewProps = {
-    meta: MetaDetails | CollectionEntry
+    meta: BeamtimeMeta | CollectionEntry
 }
 
 interface TableEntry {
-    id: String
-    title: String
-    eventStart: string
-    eventEnd: string
+    id: string
+    title: Maybe<string>
+    eventStart: Maybe<string>
+    eventEnd: Maybe<string>
 }
 
 interface TableData extends Array<TableEntry> {
 }
 
-function TableDataFromDataset(meta: MetaDetails | CollectionEntry): TableData {
+function TableDataFromDataset(meta: BeamtimeMeta | CollectionEntry): TableData {
     if (!meta.childCollection) {
         return [];
     }
-    return (meta.childCollection as BaseCollection[]).map(collection => {
+    return (meta.childCollection as BaseCollectionEntry[]).map(collection => {
             return {
                 id: collection.id,
                 title: collection.title,

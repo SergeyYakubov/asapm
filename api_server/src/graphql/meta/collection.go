@@ -34,10 +34,10 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 	utils.DeepCopy(entry,&baseEntry)
 
 	if len(ids) == 2 {
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",id, KChildCollectionKey,baseEntry,*baseEntry.ID)
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",id, KChildCollectionKey,baseEntry,baseEntry.ID)
 	} else {
 		parentId:=strings.Join(ids[:len(ids)-1],".")
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,*baseEntry.ID)
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,baseEntry.ID)
 	}
 
 	if err != nil {

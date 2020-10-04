@@ -1051,7 +1051,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
 }
 
 type BaseCollectionEntry {
-    id: String
+    id: String!
     eventStart: Time
     eventEnd: Time
     title: String
@@ -1419,11 +1419,14 @@ func (ec *executionContext) _BaseCollectionEntry_id(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BaseCollectionEntry_eventStart(ctx context.Context, field graphql.CollectedField, obj *model.BaseCollectionEntry) (ret graphql.Marshaler) {
@@ -5789,6 +5792,9 @@ func (ec *executionContext) _BaseCollectionEntry(ctx context.Context, sel ast.Se
 			out.Values[i] = graphql.MarshalString("BaseCollectionEntry")
 		case "id":
 			out.Values[i] = ec._BaseCollectionEntry_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "eventStart":
 			out.Values[i] = ec._BaseCollectionEntry_eventStart(ctx, field, obj)
 		case "eventEnd":

@@ -4,11 +4,11 @@ import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Box from '@material-ui/core/Box';
-import {MetaDetails, TableDataFromMeta, TableDataFromCollection} from "./meta";
+import {TableDataFromMeta, TableDataFromCollection} from "./meta";
 import DetailedMetaTab from "./DetailedMetaTab"
 import DatasetsTableTab from "./DatasetsTableTab";
 import {useHistory} from "react-router-dom";
-import {CollectionEntry} from "./generated/graphql";
+import {BeamtimeMeta, CollectionEntry} from "./generated/graphql";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -55,7 +55,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 type DetailedTabsProps = {
-    meta: MetaDetails | CollectionEntry
+    meta: BeamtimeMeta | CollectionEntry
     isBeamtime: boolean
     section: string
 }

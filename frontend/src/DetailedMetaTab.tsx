@@ -13,9 +13,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
 import {TableEntry, TableData, TableFromData} from "./common"
-import {MetaDetails} from "./meta";
 import {TableIcons} from "./TableIcons";
-import {CollectionEntry} from "./generated/graphql";
+import {BeamtimeMeta, CollectionEntry} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -92,18 +91,18 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 type MetaViewProps = {
-    meta: MetaDetails | CollectionEntry
+    meta: BeamtimeMeta | CollectionEntry
 }
 
 type StaticMetaProps = {
-    meta: MetaDetails | CollectionEntry
+    meta: BeamtimeMeta | CollectionEntry
     isBeamtime: boolean
     tableFromMeta: TableFromData,
 }
 
 
 type StaticSectionProps = {
-    meta: MetaDetails | CollectionEntry
+    meta: BeamtimeMeta | CollectionEntry
     tableFromMeta: TableFromData
     section: string
     isBeamtime:boolean

@@ -128,7 +128,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
 }
 
 type BaseCollectionEntry {
-    id: String
+    id: String!
     eventStart: Time
     eventEnd: Time
     title: String

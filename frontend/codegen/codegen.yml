@@ -12,7 +12,6 @@ generates:
       scalars:
         Time: string
         Map: Object
-
-  ./graphql.schema.json:
+  ../../schema/generated/graphql.schema.json:
     plugins:
       - "introspection"

@@ -3,7 +3,6 @@ import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import {Link, RouteComponentProps} from "react-router-dom";
 import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes"
-import {MetaDataDetails, MetaDetails} from "./meta"
 import {useQuery} from "@apollo/client";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -15,7 +14,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
 import DetailedTabs from "./DetailedTabs";
-import {CollectionEntry, Query} from "./generated/graphql";
+import {BeamtimeMeta, CollectionEntry, Query} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -68,14 +67,14 @@ const useStyles = makeStyles((theme: Theme) =>
 type TParams = { id: string, section: string };
 
 type DetailedHeaderProps = {
-    meta: MetaDetails | CollectionEntry,
+    meta: BeamtimeMeta | CollectionEntry,
     rawView: boolean,
     setRawView: React.Dispatch<React.SetStateAction<boolean>>
     isBeamtime: boolean
 }
 
 type MetaViewProps = {
-    meta: MetaDetails | CollectionEntry
+    meta: BeamtimeMeta | CollectionEntry
 }
 
 type BreadcrumbsProps = {
@@ -132,10 +131,10 @@ function DetailedHeader({meta, rawView, setRawView, isBeamtime}: DetailedHeaderP
             </Grid>
             <Grid container direction="row" justify={isBeamtime ? "space-between" : "flex-end"} alignItems="flex-end">
                 {isBeamtime &&
-                <Chip label={(meta as MetaDetails).status} variant="outlined" className={clsx(classes.chip, {
-                    [classes.chipRunning]: (meta as MetaDetails).status === 'running',
-                    [classes.chipCompleted]: (meta as MetaDetails).status === 'completed',
-                    [classes.chipScheduled]: (meta as MetaDetails).status === 'scheduled',
+                <Chip label={(meta as BeamtimeMeta).status} variant="outlined" className={clsx(classes.chip, {
+                    [classes.chipRunning]: (meta as BeamtimeMeta).status === 'running',
+                    [classes.chipCompleted]: (meta as BeamtimeMeta).status === 'completed',
+                    [classes.chipScheduled]: (meta as BeamtimeMeta).status === 'scheduled',
                 })}/>
                 }
                 <FormControlLabel
@@ -181,7 +180,7 @@ interface DetailedMetaProps extends RouteComponentProps<TParams> {
 }
 
 function useQueryOrErrorString(id: string, isBeamtime: boolean) {
-    const queryResult = useQuery<MetaDataDetails | Query>(isBeamtime ? METAS_DETAILED : COLLECTION_ENTITY_DETAILED,
+    const queryResult = useQuery<Query>(isBeamtime ? METAS_DETAILED : COLLECTION_ENTITY_DETAILED,
         {
             pollInterval: 5000,
             variables: {filter: "id = '" + id + "'"}
@@ -193,10 +192,10 @@ function useQueryOrErrorString(id: string, isBeamtime: boolean) {
     if (queryResult.loading) {
         return "loading ...";
     }
-    if (isBeamtime && (queryResult.data! as MetaDataDetails).meta.length !== 1) {
+    if (isBeamtime && queryResult.data!.meta.length !== 1) {
         return "no data found";
     }
-    if (!isBeamtime && (queryResult.data! as Query).collections!.length !== 1) {
+    if (!isBeamtime && queryResult.data!.collections.length !== 1) {
         return "no data found";
     }
     return queryResult
@@ -217,8 +216,8 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps) {
             </div>)
     }
 
-    let data: MetaDetails | CollectionEntry = isBeamtime ? (queryResult.data! as MetaDataDetails).meta[0] :
-        (queryResult.data! as Query).collections![0]
+    let data: BeamtimeMeta | CollectionEntry = isBeamtime ? queryResult.data!.meta[0] :
+        queryResult.data!.collections[0]
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>

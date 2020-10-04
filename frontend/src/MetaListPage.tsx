@@ -14,7 +14,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";
 import {METAS } from "./graphQLSchemes"
-import {MetaData} from  "./meta"
+import {Query, QueryMetaArgs} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -56,7 +56,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 type MetaColumnProps = {
-    queryResult: QueryResult<MetaData>,
+    queryResult: QueryResult<Query>,
     status: String,
     title: string,
 }
@@ -124,7 +124,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
 }
 
 function MetaListPage() {
-    const queryResult = useQuery<MetaData>(METAS, {
+    const queryResult = useQuery<Query,QueryMetaArgs>(METAS, {
         pollInterval: 5000,
     });
 

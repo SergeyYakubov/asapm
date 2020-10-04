@@ -14,7 +14,7 @@ type CollectionEntryInterface interface {
 }
 
 type BaseCollectionEntry struct {
-	ID         *string    `json:"_id" bson:"_id"`
+	ID         string     `json:"_id" bson:"_id"`
 	EventStart *time.Time `json:"eventStart" bson:"eventStart"`
 	EventEnd   *time.Time `json:"eventEnd" bson:"eventEnd"`
 	Title      *string    `json:"title" bson:"title"`
