@@ -211,6 +211,51 @@ export type UniqueField = {
   values: Array<Scalars['String']>;
 };
 
+export enum LogEntryType {
+  Message = 'Message'
+}
+
+export type GenericLogEntry = {
+  id: Scalars['ID'];
+  time: Scalars['Time'];
+  entryType: LogEntryType;
+  facility: Scalars['String'];
+  beamtime: Maybe<Scalars['String']>;
+  tags: Maybe<Array<Scalars['String']>>;
+  source: Maybe<Scalars['String']>;
+};
+
+export type LogEntryMessage = GenericLogEntry & {
+  __typename?: 'LogEntryMessage';
+  id: Scalars['ID'];
+  time: Scalars['Time'];
+  entryType: LogEntryType;
+  facility: Scalars['String'];
+  beamtime: Maybe<Scalars['String']>;
+  tags: Maybe<Array<Scalars['String']>>;
+  source: Maybe<Scalars['String']>;
+  message: Scalars['String'];
+  attachments: Scalars['Map'];
+};
+
+export type NewLogEntryMessage = {
+  facility: Scalars['String'];
+  beamtime: Maybe<Scalars['String']>;
+  tags: Maybe<Array<Scalars['String']>>;
+  source: Maybe<Scalars['String']>;
+  message: Scalars['String'];
+  attachments: Scalars['Map'];
+};
+
+export type LogEntry = LogEntryMessage;
+
+export type LogEntryQueryResult = {
+  __typename?: 'LogEntryQueryResult';
+  entries: Array<LogEntry>;
+  start: Scalars['Int'];
+  hasMore: Scalars['Boolean'];
+};
+
 export enum Acls {
   Write = 'WRITE',
   Read = 'READ'
@@ -222,6 +267,8 @@ export type Mutation = {
   deleteMeta: Maybe<Scalars['String']>;
   addCollectionEntry: Maybe<CollectionEntry>;
   setUserPreferences: Maybe<UserAccount>;
+  addMessageLogEntry: Maybe<Scalars['ID']>;
+  removeLogEntry: Maybe<Scalars['ID']>;
 };
 
 
@@ -245,12 +292,24 @@ export type MutationSetUserPreferencesArgs = {
   input: InputUserPreferences;
 };
 
+
+export type MutationAddMessageLogEntryArgs = {
+  input: NewLogEntryMessage;
+};
+
+
+export type MutationRemoveLogEntryArgs = {
+  id: Scalars['ID'];
+};
+
 export type Query = {
   __typename?: 'Query';
   meta: Array<BeamtimeMeta>;
   collections: Array<CollectionEntry>;
   uniqueFields: Array<UniqueField>;
   user: Maybe<UserAccount>;
+  logEntry: Maybe<LogEntry>;
+  logEntries: Maybe<LogEntryQueryResult>;
 };
 
 
@@ -274,6 +333,18 @@ export type QueryUniqueFieldsArgs = {
 
 export type QueryUserArgs = {
   id: Scalars['ID'];
+};
+
+
+export type QueryLogEntryArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type QueryLogEntriesArgs = {
+  filter: Scalars['String'];
+  start: Maybe<Scalars['Int']>;
+  limit: Maybe<Scalars['Int']>;
 };
 
 

@@ -13,6 +13,14 @@ type CollectionEntryInterface interface {
 	IsCollectionEntryInterface()
 }
 
+type GenericLogEntry interface {
+	IsGenericLogEntry()
+}
+
+type LogEntry interface {
+	IsLogEntry()
+}
+
 type BaseCollectionEntry struct {
 	ID         string     `json:"_id" bson:"_id"`
 	EventStart *time.Time `json:"eventStart" bson:"eventStart"`
@@ -103,6 +111,27 @@ type InputUsers struct {
 	Unknown []string `json:"unknown" bson:"unknown"`
 }
 
+type LogEntryMessage struct {
+	ID          string                 `json:"id" bson:"id"`
+	Time        time.Time              `json:"time" bson:"time"`
+	EntryType   LogEntryType           `json:"entryType" bson:"entryType"`
+	Facility    string                 `json:"facility" bson:"facility"`
+	Beamtime    *string                `json:"beamtime" bson:"beamtime"`
+	Tags        []string               `json:"tags" bson:"tags"`
+	Source      *string                `json:"source" bson:"source"`
+	Message     string                 `json:"message" bson:"message"`
+	Attachments map[string]interface{} `json:"attachments" bson:"attachments"`
+}
+
+func (LogEntryMessage) IsGenericLogEntry() {}
+func (LogEntryMessage) IsLogEntry()        {}
+
+type LogEntryQueryResult struct {
+	Entries []LogEntry `json:"entries" bson:"entries"`
+	Start   int        `json:"start" bson:"start"`
+	HasMore bool       `json:"hasMore" bson:"hasMore"`
+}
+
 type NewBeamtimeMeta struct {
 	Applicant           *InputBeamtimeUser       `json:"applicant" bson:"applicant"`
 	Beamline            *string                  `json:"beamline" bson:"beamline"`
@@ -134,6 +163,15 @@ type NewCollectionEntry struct {
 	Title               *string                `json:"title" bson:"title"`
 	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
 	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
+}
+
+type NewLogEntryMessage struct {
+	Facility    string                 `json:"facility" bson:"facility"`
+	Beamtime    *string                `json:"beamtime" bson:"beamtime"`
+	Tags        []string               `json:"tags" bson:"tags"`
+	Source      *string                `json:"source" bson:"source"`
+	Message     string                 `json:"message" bson:"message"`
+	Attachments map[string]interface{} `json:"attachments" bson:"attachments"`
 }
 
 type OnlineAnylysisMeta struct {
@@ -226,5 +264,44 @@ func (e *Acls) UnmarshalGQL(v interface{}) error {
 }
 
 func (e Acls) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type LogEntryType string
+
+const (
+	LogEntryTypeMessage LogEntryType = "Message"
+)
+
+var AllLogEntryType = []LogEntryType{
+	LogEntryTypeMessage,
+}
+
+func (e LogEntryType) IsValid() bool {
+	switch e {
+	case LogEntryTypeMessage:
+		return true
+	}
+	return false
+}
+
+func (e LogEntryType) String() string {
+	return string(e)
+}
+
+func (e *LogEntryType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = LogEntryType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid LogEntryType", str)
+	}
+	return nil
+}
+
+func (e LogEntryType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
