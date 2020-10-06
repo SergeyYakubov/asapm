@@ -35,6 +35,9 @@ module.exports = {
         'no-restricted-syntax': 'off',
         '@typescript-eslint/naming-convention': 'off', // Should be enabled later
         'default-case': 'off',
+        'react/jsx-props-no-spreading': 'off',
+        'no-console': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
         'prettier/prettier': [
             'error',
             {
