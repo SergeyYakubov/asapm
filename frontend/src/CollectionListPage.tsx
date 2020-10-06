@@ -10,7 +10,7 @@ import {TableIcons} from "./TableIcons";
 import {IsoDateToStr} from "./common";
 import {useHistory} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
-import {gql, InMemoryCache, makeVar} from "@apollo/client";
+import {gql, makeVar} from "@apollo/client";
 import SettingsBackupRestoreIcon from '@material-ui/icons/SettingsBackupRestore';
 import {Box, Button, IconButton, Popover} from "@material-ui/core";
 import ViewColumnIcon from '@material-ui/icons/ViewColumn';
@@ -233,12 +233,7 @@ export const columnsVar = makeVar<ColumnList>(
 
 export const GET_COLUMNS = gql`
   query GetColumns {
-    columns @client { 
-      fieldName  
-      alias  
-      active
-      type
-    }
+    columns @client
   }
 `
 

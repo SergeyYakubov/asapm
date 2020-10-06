@@ -51,9 +51,9 @@ export function RemoveDuplicates(arr:any[]) {
 }
 
 export function ReplaceElement(elem:any,arr:any[]) {
-    const elemjs = JSON.stringify(elem)
+    const elemjs = JSON.stringify(elem,["key","value"])
     return arr.map(el =>
-        JSON.stringify(el) === elemjs ? elem : el
+        JSON.stringify(el,["key","value"]) === elemjs ? elem : el
     );
 }
 

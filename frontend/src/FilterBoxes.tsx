@@ -44,7 +44,6 @@ import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityTwoToneIcon from '@material-ui/icons/VisibilityTwoTone';
 import FlipCameraAndroidIcon from '@material-ui/icons/FlipCameraAndroid';
 import DeleteIcon from '@material-ui/icons/Delete';
-import {ColumnData, GET_COLUMNS} from "./CollectionListPage";
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
@@ -137,7 +136,6 @@ interface SelectFieldsProps {
     alias: string
     uniqueFields: UniqueField
     filter: CollectionFilter
-    setFilter: React.Dispatch<React.SetStateAction<CollectionFilter>>
 }
 
 const StyledMenu = withStyles({
@@ -160,7 +158,7 @@ const StyledMenu = withStyles({
     />
 ));
 
-function SelectFields({alias, uniqueFields, filter, setFilter}: SelectFieldsProps) {
+function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -179,7 +177,7 @@ function SelectFields({alias, uniqueFields, filter, setFilter}: SelectFieldsProp
             negate: false,
             enabled: true
         };
-        setFilter({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
+        collectionFilterVar({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
         handleClose();
     };
 
@@ -218,19 +216,17 @@ function DataRangeToString(range: DateRange) {
 
 interface EditFilterProps {
     filter: CollectionFilter
-    setFilter: React.Dispatch<React.SetStateAction<CollectionFilter>>
 }
 
 interface FilterChipProps {
     filter: CollectionFilter
     fieldFilter: FieldFilter,
-    setFilter: React.Dispatch<React.SetStateAction<CollectionFilter>>
 }
 
-function FilterChip({filter,fieldFilter,setFilter}: FilterChipProps) {
+function FilterChip({filter,fieldFilter}: FilterChipProps) {
     const classes = useStyles();
     const handleDelete = () => {
-        setFilter({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
+        collectionFilterVar({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
     }
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -244,14 +240,14 @@ function FilterChip({filter,fieldFilter,setFilter}: FilterChipProps) {
     };
 
     const handleEnable = () => {
-        fieldFilter.enabled = !fieldFilter.enabled;
-        setFilter({...filter, fieldFilters: ReplaceElement(fieldFilter, filter.fieldFilters)});
+        const updatedFilter  = {...fieldFilter,enabled:!fieldFilter.enabled};
+        collectionFilterVar({...filter, fieldFilters: ReplaceElement(updatedFilter, filter.fieldFilters)});
         handleClose();
     };
 
     const handleInvert = () => {
-        fieldFilter.negate = !fieldFilter.negate;
-        setFilter({...filter, fieldFilters: ReplaceElement(fieldFilter, filter.fieldFilters)});
+        const updatedFilter  = {...fieldFilter,negate:!fieldFilter.negate};
+        collectionFilterVar({...filter, fieldFilters: ReplaceElement(updatedFilter, filter.fieldFilters)});
         handleClose();
     };
 
@@ -315,7 +311,7 @@ function FilterChip({filter,fieldFilter,setFilter}: FilterChipProps) {
 
     </div>
 }
-function BulkFilterEdit({filter, setFilter}: EditFilterProps) {
+function BulkFilterEdit({filter}: EditFilterProps) {
     const classes = useStyles();
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -329,32 +325,29 @@ function BulkFilterEdit({filter, setFilter}: EditFilterProps) {
 
     const handleEnable = (enable: boolean) => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            value.enabled = enable;
-            return value;
+            return {...value,enabled:enable};
         })
-        setFilter({...filter, fieldFilters: updatedFilterFields});
+        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
 
     const handleInvert = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            value.enabled = !value.enabled;
-            return value;
+            return {...value,enabled:!value.enabled};
         })
-        setFilter({...filter, fieldFilters: updatedFilterFields});
+        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
 
     const handleInvertSimple = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            value.negate = !value.negate;
-            return value;
+            return {...value,negate:!value.negate};
         })
-        setFilter({...filter, fieldFilters: updatedFilterFields});
+        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
     const handleDelete = () => {
-        setFilter({...filter, fieldFilters: []});
+        collectionFilterVar({...filter, fieldFilters: []});
         handleClose();
     };
 
@@ -440,14 +433,7 @@ export const collectionFilterVar = makeVar<CollectionFilter>(
 
 export const GET_FILTER = gql`
   query GetFilter {
-    collectionFilter @client { 
-      showBeamtime  
-      showSubcollections  
-      textSearch
-      fieldFilters
-      dateFrom
-      dateTo
-    }
+    collectionFilter @client
   }
 `
 
@@ -455,26 +441,14 @@ export interface FilterData {
     collectionFilter: CollectionFilter;
 }
 
-
 function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
-    const [filter, setFilter] = React.useState<CollectionFilter>({
-        showBeamtime: true,
-        showSubcollections: true,
-        textSearch: "",
-        fieldFilters: [],
-        dateFrom: undefined,
-        dateTo: undefined,
-    });
-
     const {data} = useQuery<FilterData>(GET_FILTER);
     const filter = data!.collectionFilter;
-
-
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setFilter({...filter, [event.target.name]: event.target.checked});
+    const handleChangeScope = (event: React.ChangeEvent<HTMLInputElement>) => {
+        collectionFilterVar({...filter, [event.target.name]: event.target.checked});
     };
 
-    const handler = useCallback(debounce(setFilter, 500), []);
+    const handler = useCallback(debounce(collectionFilterVar, 500), []);
 
     const handleTextSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         handler({...filter, textSearch: event.target.value});
@@ -507,13 +481,13 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
     }
 
     const handleDataRangeChange = (range: DateRange) => {
-        setFilter({...filter, dateFrom: range.startDate, dateTo: range.endDate})
+        collectionFilterVar({...filter, dateFrom: range.startDate, dateTo: range.endDate})
         toggle()
     }
 
     const handleRangeTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.value === "") {
-            setFilter({...filter, dateFrom: undefined, dateTo: undefined})
+            collectionFilterVar({...filter, dateFrom: undefined, dateTo: undefined})
         }
     };
 
@@ -547,13 +521,13 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                             </Typography>
                             <FormControlLabel
                                 className={classes.filtersFields}
-                                control={<Checkbox checked={filter.showBeamtime} onChange={handleChange}
+                                control={<Checkbox checked={filter.showBeamtime} onChange={handleChangeScope}
                                                    name="showBeamtime"/>}
                                 label="Beamtimes"
                             />
                             <FormControlLabel
                                 className={classes.filtersFields}
-                                control={<Checkbox checked={filter.showSubcollections} onChange={handleChange}
+                                control={<Checkbox checked={filter.showSubcollections} onChange={handleChangeScope}
                                                    name="showSubcollections"/>}
                                 label="Subcollections"
                             />
@@ -564,11 +538,11 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                             <Typography variant="overline">
                                 Add Filter:
                             </Typography>
-                            <SelectFields alias={"facility"} filter={filter} setFilter={setFilter}
+                            <SelectFields alias={"facility"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.facility")}/>
-                            <SelectFields alias={"beamline"} filter={filter} setFilter={setFilter}
+                            <SelectFields alias={"beamline"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.beamline")}/>
-                            <SelectFields alias={"door user"} filter={filter} setFilter={setFilter}
+                            <SelectFields alias={"door user"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.users.doorDb")}/>
                         </Box>
                     </Grid>
@@ -631,9 +605,9 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                     <Grid item xs={12}>
                         <Paper variant="outlined" className={classes.filterPaper}>
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
-                                <BulkFilterEdit filter={filter} setFilter={setFilter}/>
+                                <BulkFilterEdit filter={filter}/>
                                 {filter.fieldFilters.map(fieldFilter => {
-                                    return <FilterChip filter={filter} fieldFilter={fieldFilter} setFilter={setFilter}/>
+                                    return <FilterChip filter={filter} fieldFilter={fieldFilter}/>
                                 })}
                                 <Chip
                                     className={classes.filterChip}
