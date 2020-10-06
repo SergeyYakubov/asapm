@@ -30,14 +30,26 @@ module.exports = {
     },
     rules: {
         'linebreak-style': 'off',
-        'no-plusplus': 'error',
-        'indent': ['error', 4],
+        'no-continue': 'off',
+        'no-plusplus': 'off',
+        'indent': ['error', 4, { 'SwitchCase': 1 }],
         'no-restricted-syntax': 'off',
-        '@typescript-eslint/naming-convention': 'off', // Should be enabled later
         'default-case': 'off',
-        'react/jsx-props-no-spreading': 'off',
         'no-console': 'off',
+        'max-len': 'off',
+        'import/prefer-default-export': 'off',
+        'no-param-reassign': 'off',
+
+        '@typescript-eslint/naming-convention': 'off', // Should be enabled later
         '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        '@typescript-eslint/no-use-before-define': 'warn',
+
+        "react/jsx-indent": ["error", 4],
+        "react/jsx-indent-props": ["error", 4],
+        'react/jsx-props-no-spreading': 'off',
+        'react/no-render-return-value': 'warn',
+
         'prettier/prettier': [
             'error',
             {
@@ -46,6 +58,7 @@ module.exports = {
                 singleQuote: true,
                 tabWidth: 4,
                 useTabs: false,
+                printWidth: 180,
             },
         ],
     },
