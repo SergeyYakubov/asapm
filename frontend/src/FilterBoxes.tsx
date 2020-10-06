@@ -403,7 +403,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
                     <ListItemIcon className={classes.listItemWithIcon}>
                         <VisibilityTwoToneIcon fontSize={"small"}/>
                     </ListItemIcon>
-                    <ListItemText primary="Invert enableld/disabled"/>
+                    <ListItemText primary="Invert enabled/disabled"/>
                 </ListItem>
                 <ListItem button onClick={handleDelete}>
                     <ListItemIcon className={classes.listItemWithIcon}>
