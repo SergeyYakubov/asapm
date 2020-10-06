@@ -230,19 +230,6 @@ export const columnsVar = makeVar<ColumnList>(
     defaultColumns
 );
 
-export const cache: InMemoryCache = new InMemoryCache({
-    typePolicies: {
-        Query: {
-            fields: {
-                columns: {
-                    read () {
-                        return columnsVar();
-                    },
-                },
-            }
-        }
-    }
-});
 
 export const GET_COLUMNS = gql`
   query GetColumns {

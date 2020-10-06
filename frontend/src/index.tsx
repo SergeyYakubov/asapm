@@ -6,7 +6,7 @@ import * as serviceWorker from './serviceWorker';
 import UserService from "./userService";
 import { BrowserRouter } from 'react-router-dom';
 import userService from "./userService";
-import { cache } from './CollectionListPage';
+import { cache } from './graphQLCache';
 import {ApolloClient, createHttpLink, ApolloProvider} from "@apollo/client";
 import {setContext} from "@apollo/client/link/context";
 

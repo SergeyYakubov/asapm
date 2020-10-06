@@ -25,6 +25,7 @@ export interface FieldFilter {
     key: string
     value: string
     negate: boolean
+    enabled: boolean
 }
 
 export interface CollectionFilter {
@@ -39,13 +40,21 @@ export interface CollectionFilter {
 export function RemoveDuplicates(arr:any[]) {
     const seen = new Set();
     return arr.filter(el => {
-        const duplicate = seen.has(JSON.stringify(el));
+        const uniqueStr = JSON.stringify(el,["key","value"]);
+        const duplicate = seen.has(uniqueStr);
         if (duplicate) {
             return false;
         }
-        seen.add(JSON.stringify(el));
+        seen.add(uniqueStr);
         return true;
     });
+}
+
+export function ReplaceElement(elem:any,arr:any[]) {
+    const elemjs = JSON.stringify(elem)
+    return arr.map(el =>
+        JSON.stringify(el) === elemjs ? elem : el
+    );
 }
 
 export function RemoveElement(elem:any,arr:any[]) {
@@ -75,7 +84,9 @@ export function GetFilterString(filter: CollectionFilter) {
     }
 
     filter.fieldFilters.forEach( fieldFilter => {
-        filterString = AddToFilter(filterString,fieldFilter.key+" = '"+fieldFilter.value+"'","and");
+        if (fieldFilter.enabled) {
+            filterString = AddToFilter(filterString,fieldFilter.key+(fieldFilter.negate?" != '":" = '")+fieldFilter.value+"'","and");
+        }
     })
 
     if (filter.dateTo && filter.dateFrom) {

@@ -7,12 +7,29 @@ import Box from '@material-ui/core/Box';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Paper from "@material-ui/core/Paper";
-import {CollectionFilter, FieldFilter, GetFilterString, RemoveDuplicates, RemoveElement} from "./common";
+import {
+    CollectionFilter,
+    FieldFilter,
+    GetFilterString,
+    RemoveDuplicates,
+    RemoveElement,
+    ReplaceElement
+} from "./common";
 import debounce from 'lodash.debounce';
 import {GetUniqueNamesForField} from "./meta";
-import {useQuery} from "@apollo/client";
+import {gql, makeVar, useQuery} from "@apollo/client";
 import {COLLECTIONS} from "./graphQLSchemes";
-import {Button, Chip, CircularProgress, IconButton, Menu, MenuItem, Popover} from "@material-ui/core";
+import {
+    Button,
+    Chip,
+    CircularProgress,
+    IconButton,
+    List, ListItem, ListItemIcon, ListItemText,
+    ListSubheader,
+    Menu,
+    MenuItem,
+    Popover
+} from "@material-ui/core";
 import {MenuProps} from "@material-ui/core/Menu";
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import {DateRangePicker, DateRange} from "materialui-daterange-picker";
@@ -22,7 +39,12 @@ import Icon from '@material-ui/core/Icon';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import {CollectionEntry, Query, QueryCollectionsArgs, UniqueField} from "./generated/graphql";
-
+import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
+import VisibilityIcon from '@material-ui/icons/Visibility';
+import VisibilityTwoToneIcon from '@material-ui/icons/VisibilityTwoTone';
+import FlipCameraAndroidIcon from '@material-ui/icons/FlipCameraAndroid';
+import DeleteIcon from '@material-ui/icons/Delete';
+import {ColumnData, GET_COLUMNS} from "./CollectionListPage";
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
@@ -35,8 +57,15 @@ const useStyles = makeStyles((theme: Theme) =>
             marginLeft: theme.spacing(1),
 
         },
+        listItemWithIcon: {
+            minWidth: "35px",
+        },
         filterChip: {
             margin: "5px",
+        },
+        filterChipDisabled: {
+            margin: "5px",
+            color: theme.palette.text.disabled,
         },
         filterPaper: {
             marginTop: theme.spacing(2),
@@ -147,7 +176,8 @@ function SelectFields({alias, uniqueFields, filter, setFilter}: SelectFieldsProp
             alias: alias,
             key: uniqueFields.keyName as string,
             value: value as string,
-            negate: false
+            negate: false,
+            enabled: true
         };
         setFilter({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
         handleClose();
@@ -186,6 +216,246 @@ function DataRangeToString(range: DateRange) {
     return range.startDate.toLocaleDateString() + " - " + range.endDate.toLocaleDateString()
 }
 
+interface EditFilterProps {
+    filter: CollectionFilter
+    setFilter: React.Dispatch<React.SetStateAction<CollectionFilter>>
+}
+
+interface FilterChipProps {
+    filter: CollectionFilter
+    fieldFilter: FieldFilter,
+    setFilter: React.Dispatch<React.SetStateAction<CollectionFilter>>
+}
+
+function FilterChip({filter,fieldFilter,setFilter}: FilterChipProps) {
+    const classes = useStyles();
+    const handleDelete = () => {
+        setFilter({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
+    }
+
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+    const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleEnable = () => {
+        fieldFilter.enabled = !fieldFilter.enabled;
+        setFilter({...filter, fieldFilters: ReplaceElement(fieldFilter, filter.fieldFilters)});
+        handleClose();
+    };
+
+    const handleInvert = () => {
+        fieldFilter.negate = !fieldFilter.negate;
+        setFilter({...filter, fieldFilters: ReplaceElement(fieldFilter, filter.fieldFilters)});
+        handleClose();
+    };
+
+    return <div>
+        <Chip
+        key={fieldFilter.value}
+        className={fieldFilter.enabled ? classes.filterChip : classes.filterChipDisabled}
+        label={fieldFilter.alias + (fieldFilter.negate ? " != " : " = ") + fieldFilter.value}
+        onClick={handleClick}
+        onDelete={handleDelete}
+    />
+        <Popover
+            id="simple-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+            }}
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+            }}
+        >
+            <List
+                dense={true}
+                component="nav"
+                aria-labelledby="nested-list-subheader"
+                subheader={
+                    <ListSubheader component="div" id="nested-list-subheader">
+                        Change filter
+                    </ListSubheader>
+                }
+            >
+                <ListItem button onClick={handleEnable}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        {fieldFilter.enabled?
+                            <VisibilityOffIcon fontSize={"small"}/>
+                            :
+                            <VisibilityIcon fontSize={"small"}/>
+                        }
+                    </ListItemIcon>
+                    <ListItemText primary={fieldFilter.enabled?"Disable":"Enable"}/>
+                </ListItem>
+                   <ListItem button onClick={handleInvert}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <FlipCameraAndroidIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Invert filter"/>
+                </ListItem>
+                <ListItem button onClick={handleDelete}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <DeleteIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Delete"/>
+                </ListItem>
+            </List>
+        </Popover>
+
+    </div>
+}
+function BulkFilterEdit({filter, setFilter}: EditFilterProps) {
+    const classes = useStyles();
+
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleEnable = (enable: boolean) => {
+        const updatedFilterFields = filter.fieldFilters.map(value => {
+            value.enabled = enable;
+            return value;
+        })
+        setFilter({...filter, fieldFilters: updatedFilterFields});
+        handleClose();
+    };
+
+    const handleInvert = () => {
+        const updatedFilterFields = filter.fieldFilters.map(value => {
+            value.enabled = !value.enabled;
+            return value;
+        })
+        setFilter({...filter, fieldFilters: updatedFilterFields});
+        handleClose();
+    };
+
+    const handleInvertSimple = () => {
+        const updatedFilterFields = filter.fieldFilters.map(value => {
+            value.negate = !value.negate;
+            return value;
+        })
+        setFilter({...filter, fieldFilters: updatedFilterFields});
+        handleClose();
+    };
+    const handleDelete = () => {
+        setFilter({...filter, fieldFilters: []});
+        handleClose();
+    };
+
+
+    return <div>
+        <IconButton onClick={handleClick}>
+            <MoreVertIcon/>
+        </IconButton>
+        <Popover
+            id="simple-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+            }}
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+            }}
+        >
+            <List
+                dense={true}
+                component="nav"
+                aria-labelledby="nested-list-subheader"
+                subheader={
+                    <ListSubheader component="div" id="nested-list-subheader">
+                        Change all filters
+                    </ListSubheader>
+                }
+            >
+                <ListItem button onClick={() => handleEnable(true)}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <VisibilityIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Enable all"/>
+                </ListItem>
+                <ListItem button onClick={() => handleEnable(false)}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <VisibilityOffIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Disable all"/>
+                </ListItem>
+                <ListItem button onClick={handleInvertSimple}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <FlipCameraAndroidIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Invert simple filters"/>
+                </ListItem>
+                <ListItem button onClick={handleInvert}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <VisibilityTwoToneIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Invert enableld/disabled"/>
+                </ListItem>
+                <ListItem button onClick={handleDelete}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <DeleteIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Delete all"/>
+                </ListItem>
+            </List>
+        </Popover>
+    </div>
+}
+
+
+const defaultFilter: CollectionFilter = {
+    showBeamtime: true,
+    showSubcollections: true,
+    textSearch: "",
+    fieldFilters: [],
+    dateFrom: undefined,
+    dateTo: undefined,
+}
+
+export const collectionFilterVar = makeVar<CollectionFilter>(
+    defaultFilter
+);
+
+
+export const GET_FILTER = gql`
+  query GetFilter {
+    collectionFilter @client { 
+      showBeamtime  
+      showSubcollections  
+      textSearch
+      fieldFilters
+      dateFrom
+      dateTo
+    }
+  }
+`
+
+export interface FilterData {
+    collectionFilter: CollectionFilter;
+}
+
+
 function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
     const [filter, setFilter] = React.useState<CollectionFilter>({
         showBeamtime: true,
@@ -195,6 +465,10 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
         dateFrom: undefined,
         dateTo: undefined,
     });
+
+    const {data} = useQuery<FilterData>(GET_FILTER);
+    const filter = data!.collectionFilter;
+
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setFilter({...filter, [event.target.name]: event.target.checked});
@@ -210,7 +484,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
         setAnchorEl(event.currentTarget);
     };
 
-    const queryResult = useQuery<Query,QueryCollectionsArgs>(COLLECTIONS, {
+    const queryResult = useQuery<Query, QueryCollectionsArgs>(COLLECTIONS, {
         pollInterval: 5000,
         variables: {filter: GetFilterString(filter), orderBy: "id"}
     });
@@ -224,7 +498,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
         if (queryResult.loading === false && queryResult.data) {
             setCollections(queryResult.data!.collections);
         }
-    }, [queryResult.error,queryResult.loading, queryResult.data, setCollections])
+    }, [queryResult.error, queryResult.loading, queryResult.data, setCollections])
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -247,9 +521,6 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
     const handleAddFilterClick = () => {
     };
 
-    const handleFieldFilterDelete = (fieldFilter: FieldFilter) => {
-        setFilter({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
-    }
 
     const classes = useStyles();
     return (
@@ -348,7 +619,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                                 className={classes.rangeLabel}
                                 label="Time Range"
                                 id="range-text"
-                                value={DataRangeToString({startDate:filter.dateFrom,endDate:filter.dateTo})}
+                                value={DataRangeToString({startDate: filter.dateFrom, endDate: filter.dateTo})}
                                 type="search"
                                 margin="dense"
                                 size="small"
@@ -360,16 +631,9 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                     <Grid item xs={12}>
                         <Paper variant="outlined" className={classes.filterPaper}>
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
-                                <IconButton>
-                                    <MoreVertIcon/>
-                                </IconButton>
+                                <BulkFilterEdit filter={filter} setFilter={setFilter}/>
                                 {filter.fieldFilters.map(fieldFilter => {
-                                    return <Chip
-                                        key={fieldFilter.value}
-                                        className={classes.filterChip}
-                                        label={fieldFilter.alias + " = " + fieldFilter.value}
-                                        onDelete={() => handleFieldFilterDelete(fieldFilter)}
-                                    />
+                                    return <FilterChip filter={filter} fieldFilter={fieldFilter} setFilter={setFilter}/>
                                 })}
                                 <Chip
                                     className={classes.filterChip}
