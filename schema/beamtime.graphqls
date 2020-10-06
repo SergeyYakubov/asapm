@@ -37,7 +37,7 @@ input InputOnlineAnylysisMeta {
 }
 
 
-scalar Time
+scalar DateTime
 
 type Users {
     doorDb: [String!]
@@ -53,8 +53,8 @@ input InputUsers {
 
 interface CollectionEntryInterface {
     id: String!
-    eventStart: Time
-    eventEnd: Time
+    eventStart: DateTime
+    eventEnd: DateTime
     title: String
     childCollectionName: String
     childCollection: [BaseCollectionEntry!]
@@ -66,8 +66,8 @@ interface CollectionEntryInterface {
 
 type CollectionEntry implements CollectionEntryInterface {
     id: String!
-    eventStart: Time
-    eventEnd: Time
+    eventStart: DateTime
+    eventEnd: DateTime
     title: String
     childCollectionName: String
     childCollection: [BaseCollectionEntry!]
@@ -85,10 +85,10 @@ type ParentBeamtimeMeta {
     status: String!
     contact: String
     corePath: String
-    eventEnd: Time
-    eventStart: Time
+    eventEnd: DateTime
+    eventStart: DateTime
     facility: String
-    generated: Time
+    generated: DateTime
     leader: BeamtimeUser
     onlineAnalysis: OnlineAnylysisMeta
     pi: BeamtimeUser
@@ -107,10 +107,10 @@ type BeamtimeMeta implements CollectionEntryInterface {
     status: String!
     contact: String
     corePath: String
-    eventEnd: Time
-    eventStart: Time
+    eventEnd: DateTime
+    eventStart: DateTime
     facility: String
-    generated: Time
+    generated: DateTime
     leader: BeamtimeUser
     onlineAnalysis: OnlineAnylysisMeta
     pi: BeamtimeUser
@@ -129,16 +129,16 @@ type BeamtimeMeta implements CollectionEntryInterface {
 
 type BaseCollectionEntry {
     id: String!
-    eventStart: Time
-    eventEnd: Time
+    eventStart: DateTime
+    eventEnd: DateTime
     title: String
 }
 
 
 input NewCollectionEntry {
     id: String!
-    eventStart: Time
-    eventEnd: Time
+    eventStart: DateTime
+    eventEnd: DateTime
     title: String
     childCollectionName: String
     customValues: Map
@@ -152,10 +152,10 @@ input NewBeamtimeMeta {
     status: String!
     contact: String
     corePath: String
-    eventEnd: Time
-    eventStart: Time
+    eventEnd: DateTime
+    eventStart: DateTime
     facility: String
-    generated: Time
+    generated: DateTime
     leader: InputBeamtimeUser
     onlineAnalysis: InputOnlineAnylysisMeta
     pi: InputBeamtimeUser

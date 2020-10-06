@@ -8,7 +8,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
-  Time: string;
+  DateTime: string;
   Map: Object;
 };
 
@@ -69,8 +69,8 @@ export type InputUsers = {
 
 export type CollectionEntryInterface = {
   id: Scalars['String'];
-  eventStart: Maybe<Scalars['Time']>;
-  eventEnd: Maybe<Scalars['Time']>;
+  eventStart: Maybe<Scalars['DateTime']>;
+  eventEnd: Maybe<Scalars['DateTime']>;
   title: Maybe<Scalars['String']>;
   childCollectionName: Maybe<Scalars['String']>;
   childCollection: Maybe<Array<BaseCollectionEntry>>;
@@ -89,8 +89,8 @@ export type CollectionEntryInterfaceCustomValuesArgs = {
 export type CollectionEntry = CollectionEntryInterface & {
   __typename?: 'CollectionEntry';
   id: Scalars['String'];
-  eventStart: Maybe<Scalars['Time']>;
-  eventEnd: Maybe<Scalars['Time']>;
+  eventStart: Maybe<Scalars['DateTime']>;
+  eventEnd: Maybe<Scalars['DateTime']>;
   title: Maybe<Scalars['String']>;
   childCollectionName: Maybe<Scalars['String']>;
   childCollection: Maybe<Array<BaseCollectionEntry>>;
@@ -115,10 +115,10 @@ export type ParentBeamtimeMeta = {
   status: Scalars['String'];
   contact: Maybe<Scalars['String']>;
   corePath: Maybe<Scalars['String']>;
-  eventEnd: Maybe<Scalars['Time']>;
-  eventStart: Maybe<Scalars['Time']>;
+  eventEnd: Maybe<Scalars['DateTime']>;
+  eventStart: Maybe<Scalars['DateTime']>;
   facility: Maybe<Scalars['String']>;
-  generated: Maybe<Scalars['Time']>;
+  generated: Maybe<Scalars['DateTime']>;
   leader: Maybe<BeamtimeUser>;
   onlineAnalysis: Maybe<OnlineAnylysisMeta>;
   pi: Maybe<BeamtimeUser>;
@@ -138,10 +138,10 @@ export type BeamtimeMeta = CollectionEntryInterface & {
   status: Scalars['String'];
   contact: Maybe<Scalars['String']>;
   corePath: Maybe<Scalars['String']>;
-  eventEnd: Maybe<Scalars['Time']>;
-  eventStart: Maybe<Scalars['Time']>;
+  eventEnd: Maybe<Scalars['DateTime']>;
+  eventStart: Maybe<Scalars['DateTime']>;
   facility: Maybe<Scalars['String']>;
-  generated: Maybe<Scalars['Time']>;
+  generated: Maybe<Scalars['DateTime']>;
   leader: Maybe<BeamtimeUser>;
   onlineAnalysis: Maybe<OnlineAnylysisMeta>;
   pi: Maybe<BeamtimeUser>;
@@ -167,15 +167,15 @@ export type BeamtimeMetaCustomValuesArgs = {
 export type BaseCollectionEntry = {
   __typename?: 'BaseCollectionEntry';
   id: Scalars['String'];
-  eventStart: Maybe<Scalars['Time']>;
-  eventEnd: Maybe<Scalars['Time']>;
+  eventStart: Maybe<Scalars['DateTime']>;
+  eventEnd: Maybe<Scalars['DateTime']>;
   title: Maybe<Scalars['String']>;
 };
 
 export type NewCollectionEntry = {
   id: Scalars['String'];
-  eventStart: Maybe<Scalars['Time']>;
-  eventEnd: Maybe<Scalars['Time']>;
+  eventStart: Maybe<Scalars['DateTime']>;
+  eventEnd: Maybe<Scalars['DateTime']>;
   title: Maybe<Scalars['String']>;
   childCollectionName: Maybe<Scalars['String']>;
   customValues: Maybe<Scalars['Map']>;
@@ -189,10 +189,10 @@ export type NewBeamtimeMeta = {
   status: Scalars['String'];
   contact: Maybe<Scalars['String']>;
   corePath: Maybe<Scalars['String']>;
-  eventEnd: Maybe<Scalars['Time']>;
-  eventStart: Maybe<Scalars['Time']>;
+  eventEnd: Maybe<Scalars['DateTime']>;
+  eventStart: Maybe<Scalars['DateTime']>;
   facility: Maybe<Scalars['String']>;
-  generated: Maybe<Scalars['Time']>;
+  generated: Maybe<Scalars['DateTime']>;
   leader: Maybe<InputBeamtimeUser>;
   onlineAnalysis: Maybe<InputOnlineAnylysisMeta>;
   pi: Maybe<InputBeamtimeUser>;
