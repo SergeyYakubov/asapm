@@ -7,22 +7,43 @@ import Box from '@material-ui/core/Box';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Paper from "@material-ui/core/Paper";
-import {CollectionFilter, FieldFilter, GetFilterString, RemoveDuplicates, RemoveElement} from "./common";
+import {
+    CollectionFilter,
+    FieldFilter,
+    GetFilterString,
+    RemoveDuplicates,
+    RemoveElement,
+    ReplaceElement
+} from "./common";
 import debounce from 'lodash.debounce';
 import {GetUniqueNamesForField} from "./meta";
-import {useQuery} from "@apollo/client";
+import {gql, makeVar, useQuery} from "@apollo/client";
 import {COLLECTIONS} from "./graphQLSchemes";
-import {Button, Chip, CircularProgress, IconButton, Menu, MenuItem, Popover} from "@material-ui/core";
+import {
+    Button,
+    Chip,
+    CircularProgress,
+    IconButton,
+    List, ListItem, ListItemIcon, ListItemText,
+    ListSubheader,
+    Menu,
+    MenuItem,
+    Popover
+} from "@material-ui/core";
 import {MenuProps} from "@material-ui/core/Menu";
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import {DateRangePicker, DateRange} from "materialui-daterange-picker";
 import DateRangeIcon from '@material-ui/icons/DateRange';
 import SearchIcon from '@material-ui/icons/Search';
 import Icon from '@material-ui/core/Icon';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import {CollectionEntry, Query, QueryCollectionsArgs, UniqueField} from "./generated/graphql";
-
+import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
+import VisibilityIcon from '@material-ui/icons/Visibility';
+import VisibilityTwoToneIcon from '@material-ui/icons/VisibilityTwoTone';
+import FlipCameraAndroidIcon from '@material-ui/icons/FlipCameraAndroid';
+import DeleteIcon from '@material-ui/icons/Delete';
+import {CustomFilter} from "./CustomFilter";
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
@@ -35,8 +56,15 @@ const useStyles = makeStyles((theme: Theme) =>
             marginLeft: theme.spacing(1),
 
         },
+        listItemWithIcon: {
+            minWidth: "35px",
+        },
         filterChip: {
             margin: "5px",
+        },
+        filterChipDisabled: {
+            margin: "5px",
+            color: theme.palette.text.disabled,
         },
         filterPaper: {
             marginTop: theme.spacing(2),
@@ -108,7 +136,6 @@ interface SelectFieldsProps {
     alias: string
     uniqueFields: UniqueField
     filter: CollectionFilter
-    setFilter: React.Dispatch<React.SetStateAction<CollectionFilter>>
 }
 
 const StyledMenu = withStyles({
@@ -131,7 +158,7 @@ const StyledMenu = withStyles({
     />
 ));
 
-function SelectFields({alias, uniqueFields, filter, setFilter}: SelectFieldsProps) {
+function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -147,9 +174,10 @@ function SelectFields({alias, uniqueFields, filter, setFilter}: SelectFieldsProp
             alias: alias,
             key: uniqueFields.keyName as string,
             value: value as string,
-            negate: false
+            negate: false,
+            enabled: true
         };
-        setFilter({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
+        collectionFilterVar({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
         handleClose();
     };
 
@@ -186,21 +214,241 @@ function DataRangeToString(range: DateRange) {
     return range.startDate.toLocaleDateString() + " - " + range.endDate.toLocaleDateString()
 }
 
-function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
-    const [filter, setFilter] = React.useState<CollectionFilter>({
-        showBeamtime: true,
-        showSubcollections: true,
-        textSearch: "",
-        fieldFilters: [],
-        dateFrom: undefined,
-        dateTo: undefined,
-    });
+interface EditFilterProps {
+    filter: CollectionFilter
+}
 
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setFilter({...filter, [event.target.name]: event.target.checked});
+interface FilterChipProps {
+    filter: CollectionFilter
+    fieldFilter: FieldFilter,
+}
+
+function FilterChip({filter,fieldFilter}: FilterChipProps) {
+    const classes = useStyles();
+    const handleDelete = () => {
+        collectionFilterVar({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
+    }
+
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+    const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        setAnchorEl(event.currentTarget);
     };
 
-    const handler = useCallback(debounce(setFilter, 500), []);
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleEnable = () => {
+        const updatedFilter  = {...fieldFilter,enabled:!fieldFilter.enabled};
+        collectionFilterVar({...filter, fieldFilters: ReplaceElement(updatedFilter, filter.fieldFilters)});
+        handleClose();
+    };
+
+    const handleInvert = () => {
+        const updatedFilter  = {...fieldFilter,negate:!fieldFilter.negate};
+        collectionFilterVar({...filter, fieldFilters: ReplaceElement(updatedFilter, filter.fieldFilters)});
+        handleClose();
+    };
+
+    return <div>
+        <Chip
+        key={fieldFilter.value}
+        className={fieldFilter.enabled ? classes.filterChip : classes.filterChipDisabled}
+        label={fieldFilter.alias + (fieldFilter.negate ? " != " : " = ") + fieldFilter.value}
+        onClick={handleClick}
+        onDelete={handleDelete}
+    />
+        <Popover
+            id="simple-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+            }}
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+            }}
+        >
+            <List
+                dense={true}
+                component="nav"
+                aria-labelledby="nested-list-subheader"
+                subheader={
+                    <ListSubheader component="div" id="nested-list-subheader">
+                        Change filter
+                    </ListSubheader>
+                }
+            >
+                <ListItem button onClick={handleEnable}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        {fieldFilter.enabled?
+                            <VisibilityOffIcon fontSize={"small"}/>
+                            :
+                            <VisibilityIcon fontSize={"small"}/>
+                        }
+                    </ListItemIcon>
+                    <ListItemText primary={fieldFilter.enabled?"Disable":"Enable"}/>
+                </ListItem>
+                   <ListItem button onClick={handleInvert}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <FlipCameraAndroidIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Invert filter"/>
+                </ListItem>
+                <ListItem button onClick={handleDelete}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <DeleteIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Delete"/>
+                </ListItem>
+            </List>
+        </Popover>
+
+    </div>
+}
+function BulkFilterEdit({filter}: EditFilterProps) {
+    const classes = useStyles();
+
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleEnable = (enable: boolean) => {
+        const updatedFilterFields = filter.fieldFilters.map(value => {
+            return {...value,enabled:enable};
+        })
+        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
+        handleClose();
+    };
+
+    const handleInvert = () => {
+        const updatedFilterFields = filter.fieldFilters.map(value => {
+            return {...value,enabled:!value.enabled};
+        })
+        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
+        handleClose();
+    };
+
+    const handleInvertSimple = () => {
+        const updatedFilterFields = filter.fieldFilters.map(value => {
+            return {...value,negate:!value.negate};
+        })
+        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
+        handleClose();
+    };
+    const handleDelete = () => {
+        collectionFilterVar({...filter, fieldFilters: []});
+        handleClose();
+    };
+
+
+    return <div>
+        <IconButton onClick={handleClick}>
+            <MoreVertIcon/>
+        </IconButton>
+        <Popover
+            id="simple-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+            }}
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'left',
+            }}
+        >
+            <List
+                dense={true}
+                component="nav"
+                aria-labelledby="nested-list-subheader"
+                subheader={
+                    <ListSubheader component="div" id="nested-list-subheader">
+                        Change all filters
+                    </ListSubheader>
+                }
+            >
+                <ListItem button onClick={() => handleEnable(true)}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <VisibilityIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Enable all"/>
+                </ListItem>
+                <ListItem button onClick={() => handleEnable(false)}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <VisibilityOffIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Disable all"/>
+                </ListItem>
+                <ListItem button onClick={handleInvertSimple}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <FlipCameraAndroidIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Invert simple filters"/>
+                </ListItem>
+                <ListItem button onClick={handleInvert}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <VisibilityTwoToneIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Invert enabled/disabled"/>
+                </ListItem>
+                <ListItem button onClick={handleDelete}>
+                    <ListItemIcon className={classes.listItemWithIcon}>
+                        <DeleteIcon fontSize={"small"}/>
+                    </ListItemIcon>
+                    <ListItemText primary="Delete all"/>
+                </ListItem>
+            </List>
+        </Popover>
+    </div>
+}
+
+
+const defaultFilter: CollectionFilter = {
+    showBeamtime: true,
+    showSubcollections: true,
+    textSearch: "",
+    fieldFilters: [],
+    dateFrom: undefined,
+    dateTo: undefined,
+}
+
+export const collectionFilterVar = makeVar<CollectionFilter>(
+    defaultFilter
+);
+
+
+export const GET_FILTER = gql`
+  query GetFilter {
+    collectionFilter @client
+  }
+`
+
+export interface FilterData {
+    collectionFilter: CollectionFilter;
+}
+
+function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
+    const {data} = useQuery<FilterData>(GET_FILTER);
+    const filter = data!.collectionFilter;
+    const handleChangeScope = (event: React.ChangeEvent<HTMLInputElement>) => {
+        collectionFilterVar({...filter, [event.target.name]: event.target.checked});
+    };
+
+    const handler = useCallback(debounce(collectionFilterVar, 500), []);
 
     const handleTextSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         handler({...filter, textSearch: event.target.value});
@@ -210,21 +458,20 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
         setAnchorEl(event.currentTarget);
     };
 
-    const queryResult = useQuery<Query,QueryCollectionsArgs>(COLLECTIONS, {
+    const queryResult = useQuery<Query, QueryCollectionsArgs>(COLLECTIONS, {
         pollInterval: 5000,
         variables: {filter: GetFilterString(filter), orderBy: "id"}
     });
 
     useEffect(() => {
-        console.log("set collection");
         if (queryResult.error) {
             setCollections([])
-            console.log(queryResult.error.message)
+            console.log("collection query error" + queryResult.error);
         }
         if (queryResult.loading === false && queryResult.data) {
             setCollections(queryResult.data!.collections);
         }
-    }, [queryResult.error,queryResult.loading, queryResult.data, setCollections])
+    }, [queryResult.error, queryResult.loading, queryResult.data, setCollections])
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -233,23 +480,15 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
     }
 
     const handleDataRangeChange = (range: DateRange) => {
-        setFilter({...filter, dateFrom: range.startDate, dateTo: range.endDate})
+        collectionFilterVar({...filter, dateFrom: range.startDate, dateTo: range.endDate})
         toggle()
     }
 
     const handleRangeTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.value === "") {
-            setFilter({...filter, dateFrom: undefined, dateTo: undefined})
+            collectionFilterVar({...filter, dateFrom: undefined, dateTo: undefined})
         }
     };
-
-
-    const handleAddFilterClick = () => {
-    };
-
-    const handleFieldFilterDelete = (fieldFilter: FieldFilter) => {
-        setFilter({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
-    }
 
     const classes = useStyles();
     return (
@@ -276,13 +515,13 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                             </Typography>
                             <FormControlLabel
                                 className={classes.filtersFields}
-                                control={<Checkbox checked={filter.showBeamtime} onChange={handleChange}
+                                control={<Checkbox checked={filter.showBeamtime} onChange={handleChangeScope}
                                                    name="showBeamtime"/>}
                                 label="Beamtimes"
                             />
                             <FormControlLabel
                                 className={classes.filtersFields}
-                                control={<Checkbox checked={filter.showSubcollections} onChange={handleChange}
+                                control={<Checkbox checked={filter.showSubcollections} onChange={handleChangeScope}
                                                    name="showSubcollections"/>}
                                 label="Subcollections"
                             />
@@ -293,11 +532,11 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                             <Typography variant="overline">
                                 Add Filter:
                             </Typography>
-                            <SelectFields alias={"facility"} filter={filter} setFilter={setFilter}
+                            <SelectFields alias={"facility"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.facility")}/>
-                            <SelectFields alias={"beamline"} filter={filter} setFilter={setFilter}
+                            <SelectFields alias={"beamline"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.beamline")}/>
-                            <SelectFields alias={"door user"} filter={filter} setFilter={setFilter}
+                            <SelectFields alias={"door user"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.users.doorDb")}/>
                         </Box>
                     </Grid>
@@ -348,7 +587,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                                 className={classes.rangeLabel}
                                 label="Time Range"
                                 id="range-text"
-                                value={DataRangeToString({startDate:filter.dateFrom,endDate:filter.dateTo})}
+                                value={DataRangeToString({startDate: filter.dateFrom, endDate: filter.dateTo})}
                                 type="search"
                                 margin="dense"
                                 size="small"
@@ -360,24 +599,11 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                     <Grid item xs={12}>
                         <Paper variant="outlined" className={classes.filterPaper}>
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
-                                <IconButton>
-                                    <MoreVertIcon/>
-                                </IconButton>
+                                <BulkFilterEdit filter={filter}/>
                                 {filter.fieldFilters.map(fieldFilter => {
-                                    return <Chip
-                                        key={fieldFilter.value}
-                                        className={classes.filterChip}
-                                        label={fieldFilter.alias + " = " + fieldFilter.value}
-                                        onDelete={() => handleFieldFilterDelete(fieldFilter)}
-                                    />
+                                    return <FilterChip filter={filter} fieldFilter={fieldFilter}/>
                                 })}
-                                <Chip
-                                    className={classes.filterChip}
-                                    color="secondary"
-                                    icon={<AddCircleIcon/>}
-                                    label="Add custom filter"
-                                    onClick={handleAddFilterClick}
-                                />
+                                <CustomFilter currentFilter={filter} collections={queryResult.data?.collections} />
                             </Box>
                         </Paper>
                     </Grid>

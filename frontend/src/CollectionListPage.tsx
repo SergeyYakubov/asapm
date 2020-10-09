@@ -10,7 +10,7 @@ import {TableIcons} from "./TableIcons";
 import {IsoDateToStr} from "./common";
 import {useHistory} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
-import {gql, InMemoryCache, makeVar} from "@apollo/client";
+import {gql, makeVar} from "@apollo/client";
 import SettingsBackupRestoreIcon from '@material-ui/icons/SettingsBackupRestore';
 import {Box, Button, IconButton, Popover} from "@material-ui/core";
 import ViewColumnIcon from '@material-ui/icons/ViewColumn';
@@ -60,14 +60,14 @@ interface BasicCollectionDetails {
     type: String
 }
 
-type ColumnItem = {
+export type ColumnItem = {
     fieldName: string
     alias: string | null
     type: string | null
     active: boolean
 }
 
-type ColumnList = ColumnItem[];
+export type ColumnList = ColumnItem[];
 
 function ValueToString(value: any, columnType: string | undefined) {
     if (!value) {
@@ -126,7 +126,7 @@ function possibleColumnListfromCustomValues(vals: Object | null, root: string, c
     }
 }
 
-function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionEntry[]) {
+export function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionEntry[]) {
     let columns = currentColumns.map(a => Object.assign({}, a));
     collections.forEach(col => {
         possibleColumnListfromCustomValues(col.customValues, "", columns)
@@ -230,28 +230,10 @@ export const columnsVar = makeVar<ColumnList>(
     defaultColumns
 );
 
-export const cache: InMemoryCache = new InMemoryCache({
-    typePolicies: {
-        Query: {
-            fields: {
-                columns: {
-                    read () {
-                        return columnsVar();
-                    },
-                },
-            }
-        }
-    }
-});
 
 export const GET_COLUMNS = gql`
   query GetColumns {
-    columns @client { 
-      fieldName  
-      alias  
-      active
-      type
-    }
+    columns @client
   }
 `
 

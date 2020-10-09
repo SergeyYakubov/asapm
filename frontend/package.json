@@ -22,7 +22,7 @@
     "graphql": "^15.3.0",
     "keycloak-js": "^10.0.2",
     "lodash.debounce": "^4.0.8",
-    "material-table": "^1.69.0",
+    "material-table": "^1.69.1",
     "materialui-daterange-picker": "^1.1.92",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
