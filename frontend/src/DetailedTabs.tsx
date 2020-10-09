@@ -1,14 +1,14 @@
 import React from 'react';
-import { makeStyles, Theme } from '@material-ui/core/styles';
+import {makeStyles, Theme} from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Box from '@material-ui/core/Box';
-import { useHistory } from 'react-router-dom';
-import { TableDataFromMeta, TableDataFromCollection } from './meta';
-import DetailedMetaTab from './DetailedMetaTab';
-import DatasetsTableTab from './DatasetsTableTab';
-import { BeamtimeMeta, CollectionEntry } from './generated/graphql';
+import {TableDataFromMeta, TableDataFromCollection} from "./meta";
+import DetailedMetaTab from "./DetailedMetaTab"
+import DatasetsTableTab from "./DatasetsTableTab";
+import {useHistory} from "react-router-dom";
+import {BeamtimeMeta, CollectionEntry} from "./generated/graphql";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -17,10 +17,20 @@ interface TabPanelProps {
 }
 
 function TabPanel(props: TabPanelProps) {
-    const { children, value, index, ...other } = props;
+    const {children, value, index, ...other} = props;
     return (
-        <div role="tabpanel" hidden={value !== index} id={`simple-tabpanel-${index}`} aria-labelledby={`simple-tab-${index}`} {...other}>
-            {value === index && <Box paddingTop={3}>{children}</Box>}
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            aria-labelledby={`simple-tab-${index}`}
+            {...other}
+        >
+            {value === index && (
+                <Box paddingTop={3}>
+                    {children}
+                </Box>
+            )}
         </div>
     );
 }
@@ -45,26 +55,26 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 type DetailedTabsProps = {
-    meta: BeamtimeMeta | CollectionEntry;
-    isBeamtime: boolean;
-    section: string;
-};
+    meta: BeamtimeMeta | CollectionEntry
+    isBeamtime: boolean
+    section: string
+}
 
-function DetailedTabs({ meta, isBeamtime, section }: DetailedTabsProps) {
+function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps) {
     const classes = useStyles();
-    let value = 0;
-    const showDataset = meta.childCollection && meta.childCollection.length > 0;
-    switch (section) {
-        case 'meta': {
+    let value=0;
+    const showDataset = meta.childCollection && (meta.childCollection.length > 0);
+    switch(section) {
+        case "meta": {
             value = 0;
             break;
         }
-        case 'collections': {
+        case "collections": {
             value = 1;
             break;
         }
-        case 'logbook': {
-            value = showDataset ? 2 : 1;
+        case "logbook": {
+            value = showDataset?2:1;
             break;
         }
         default: {
@@ -73,19 +83,19 @@ function DetailedTabs({ meta, isBeamtime, section }: DetailedTabsProps) {
         }
     }
     const history = useHistory();
-    const handleChange = (event: React.ChangeEvent<any>, newValue: number) => {
-        let subpath = '/meta';
-        switch (newValue) {
+    const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+        let subpath="/meta";
+        switch(newValue) {
             case 1: {
-                subpath = showDataset ? '/collections' : '/logbook';
+                subpath = showDataset?"/collections":"/logbook";
                 break;
             }
             case 2: {
-                subpath = '/logbook';
+                subpath = "/logbook";
                 break;
             }
         }
-        const path = isBeamtime ? `/detailed/${meta.id}${subpath}` : `/detailedcollection/${(meta as CollectionEntry).id}${subpath}`;
+        const path = isBeamtime? "/detailed/" + meta.id+subpath:"/detailedcollection/" + (meta as CollectionEntry).id+subpath;
         history.replace(path);
     };
 
@@ -100,13 +110,13 @@ function DetailedTabs({ meta, isBeamtime, section }: DetailedTabsProps) {
             </AppBar>
             <div className={classes.marginLeftRight}>
                 <TabPanel value={value} index={0}>
-                    <DetailedMetaTab meta={meta} isBeamtime={isBeamtime} tableFromMeta={isBeamtime ? TableDataFromMeta : TableDataFromCollection} />
+                    <DetailedMetaTab meta={meta} isBeamtime={isBeamtime} tableFromMeta={isBeamtime?TableDataFromMeta:TableDataFromCollection}/>
                 </TabPanel>
-                {showDataset && (
-                    <TabPanel value={value} index={1}>
-                        <DatasetsTableTab meta={meta} />
-                    </TabPanel>
-                )}
+                {showDataset &&
+                <TabPanel value={value} index={1}>
+                    <DatasetsTableTab meta={meta}/>
+                </TabPanel>
+                }
                 <TabPanel value={value} index={showDataset ? 2 : 1}>
                     very cool logbook
                 </TabPanel>
@@ -114,5 +124,6 @@ function DetailedTabs({ meta, isBeamtime, section }: DetailedTabsProps) {
         </div>
     );
 }
+
 
 export default DetailedTabs;

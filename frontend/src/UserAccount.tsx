@@ -1,19 +1,19 @@
 import React from 'react';
-import { makeStyles, withStyles } from '@material-ui/core/styles';
+import {makeStyles, withStyles} from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
-import Menu, { MenuProps } from '@material-ui/core/Menu';
+import Menu, {MenuProps} from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import UserService from "./userService";
 
 import Typography from '@material-ui/core/Typography';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
 import Divider from '@material-ui/core/Divider';
 import Container from '@material-ui/core/Container';
-import UserService from './userService';
-import userPreferences from './userPreferences';
+import userPreferences from "./userPreferences";
 
 const useStyles = makeStyles((theme) => ({
     userAccountButton: {
@@ -47,10 +47,10 @@ const StyledMenu = withStyles({
 export default function UserAccount() {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
-    const { data } = userPreferences.useUserPreferences();
-    const themeType = data?.user?.preferences.schema || 'light';
+    const {data} = userPreferences.useUserPreferences();
+    const themeType = data?.user?.preferences.schema || "light";
 
-    const [changeTheme] = userPreferences.useUpdateUserTheme('dark');
+    const [changeTheme] = userPreferences.useUpdateUserTheme("dark");
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -61,28 +61,30 @@ export default function UserAccount() {
     };
 
     const handleLogout = () => {
-        UserService.doLogout();
+        UserService.doLogout()
     };
 
-    const otherTheme = themeType === 'light' ? 'dark' : 'light';
+    const otherTheme = themeType === "light" ? "dark" : "light"
 
     const handleChangeTheme = () => {
-        changeTheme({
-            variables: {
-                id: data?.user?.id || '',
-                schema: otherTheme.toString(),
-            },
-        });
+        changeTheme({variables: {id: (data?.user?.id || ""), schema: otherTheme.toString()}});
         handleClose();
     };
+
 
     const classes = useStyles();
     return (
         <div>
             <IconButton edge="end" className={classes.userAccountButton} color="inherit" onClick={handleClick}>
-                <AccountCircle />
+                <AccountCircle/>
             </IconButton>
-            <StyledMenu id="menu-appbar" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={handleClose}>
+            <StyledMenu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                keepMounted
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+            >
                 <MenuItem>
                     <Container className={classes.root}>
                         <Typography gutterBottom variant="h5" component="h2">
@@ -93,18 +95,18 @@ export default function UserAccount() {
                         </Typography>
                     </Container>
                 </MenuItem>
-                <Divider />
+                <Divider/>
                 <MenuItem onClick={handleChangeTheme}>
                     <ListItemIcon>
-                        <Brightness4Icon fontSize="small" />
+                        <Brightness4Icon fontSize="small"/>
                     </ListItemIcon>
-                    <ListItemText primary={`Use ${otherTheme.toString()} theme`} />
+                    <ListItemText primary={"Use " + otherTheme.toString() + " theme"}/>
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
-                        <ExitToAppIcon fontSize="small" />
+                        <ExitToAppIcon fontSize="small"/>
                     </ListItemIcon>
-                    <ListItemText primary="Logout" />
+                    <ListItemText primary="Logout"/>
                 </MenuItem>
             </StyledMenu>
         </div>

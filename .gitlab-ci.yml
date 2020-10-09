@@ -1,6 +1,5 @@
 stages:
   - build_dev
-  - lint
   - unit_tests
   - build
   - deploy

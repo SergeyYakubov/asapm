@@ -15,20 +15,6 @@ build_frontend_dev:
   tags:
     - kubernetes-executor
 
-linting_frontend:
-  variables:
-    GIT_CHECKOUT: "false"
-  stage: lint
-  image:
-    name: $FRONTEND_IMAGE_DEV
-    entrypoint: [""]
-  before_script:
-    - cd /src
-  script:
-    - npm run lint
-  tags:
-    - kubernetes-executor
-
 unit_tests_frontend:
   variables:
     GIT_CHECKOUT: "false"

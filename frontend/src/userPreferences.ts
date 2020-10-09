@@ -1,45 +1,40 @@
-import { PaletteType } from '@material-ui/core';
-import { gql, useQuery, useMutation } from '@apollo/client';
-import { MutationTuple, QueryResult } from '@apollo/client/react/types/types';
-import userService from './userService';
-import { Mutation, MutationSetUserPreferencesArgs, Query, QueryUserArgs } from './generated/graphql';
+import {PaletteType} from "@material-ui/core";
+import {gql, useQuery,useMutation} from "@apollo/client";
+import userService from "./userService";
+import {Mutation, MutationSetUserPreferencesArgs, Query, QueryUserArgs} from "./generated/graphql";
 
 const USER_PREFERENCES = gql`
-    query getUserPreferences($id: ID!) {
-        user(id: $id) {
-            id
-            preferences {
-                schema
-            }
-        }
+  query getUserPreferences($id: ID!) {
+  user(id: $id) {
+    id
+    preferences {
+      schema
     }
+  }
+}
 `;
 
 const SAVE_USER_PREFERENCES = gql`
-    mutation addUser($id: ID!, $schema: String) {
-        setUserPreferences(id: $id, input: { schema: $schema }) {
-            id
-            preferences {
-                schema
-            }
-        }
+    mutation addUser($id: ID!,$schema: String)  {
+    setUserPreferences(id:$id,input:{
+        schema:$schema,
+    }){
+        id
+        preferences{schema}
     }
+}
 `;
 
-function useUserPreferences(): QueryResult<Query, QueryUserArgs> {
-    const id = userService.getUserId() || '';
-    return useQuery<Query, QueryUserArgs>(USER_PREFERENCES, {
-        variables: { id },
-    });
+const useUserPreferences = () => {
+    const id = userService.getUserId() || "";
+    return useQuery<Query,QueryUserArgs>(USER_PREFERENCES,{ variables: { id: id }});
 }
 
-type UserPreferencesMutationData = { response: Mutation; variables: MutationSetUserPreferencesArgs };
-type UserPreferencesMutationType = MutationTuple<UserPreferencesMutationData, any>;
-function useUpdateUserTheme(theme: PaletteType): UserPreferencesMutationType {
-    return useMutation<UserPreferencesMutationData>(SAVE_USER_PREFERENCES);
+const useUpdateUserTheme = (theme: PaletteType) => {
+    return useMutation<{response: Mutation, variables:MutationSetUserPreferencesArgs}>(SAVE_USER_PREFERENCES);
 }
 
 export default {
     useUserPreferences,
-    useUpdateUserTheme,
+    useUpdateUserTheme
 };
