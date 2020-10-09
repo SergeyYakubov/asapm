@@ -1,12 +1,11 @@
 import React from 'react';
-import {makeStyles} from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
-import UserAccount from "./UserAccount";
 import Typography from '@material-ui/core/Typography';
 import SvgIcon from '@material-ui/core/SvgIcon';
-import { ReactComponent as DesyIcon } from "./desy_logo.svg";
-
+import UserAccount from './UserAccount';
+import { ReactComponent as DesyIcon } from './desy_logo.svg';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -27,18 +26,18 @@ const useStyles = makeStyles((theme) => ({
 export default function TopBar() {
     const classes = useStyles();
     return (
-            <AppBar position="fixed" className={classes.root}>
-                <Toolbar variant="dense">
-                    <SvgIcon className={classes.logo}>
-                        <DesyIcon/>
-                    </SvgIcon>
-                    <Typography variant="h6" noWrap>
-                        ASAP Metadata Service
-                    </Typography>
-                    <div className={classes.userAccountButton}>
-                        <UserAccount/>
-                    </div>
-                </Toolbar>
-            </AppBar>
+        <AppBar position="fixed" className={classes.root}>
+            <Toolbar variant="dense">
+                <SvgIcon className={classes.logo}>
+                    <DesyIcon />
+                </SvgIcon>
+                <Typography variant="h6" noWrap>
+                    ASAP Metadata Service
+                </Typography>
+                <div className={classes.userAccountButton}>
+                    <UserAccount />
+                </div>
+            </Toolbar>
+        </AppBar>
     );
 }
