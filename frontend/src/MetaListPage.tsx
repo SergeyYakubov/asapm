@@ -66,7 +66,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
     const history = useHistory();
 
     if (queryResult.error) {
-        console.log(queryResult.error.message)
+        console.log("column query error" + queryResult.error);
     }
     if (queryResult.loading || queryResult.error) {
         return <Paper className={clsx(classes.paper, classes.paperNoReducedPadding)}>

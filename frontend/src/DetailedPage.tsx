@@ -186,7 +186,7 @@ function useQueryOrErrorString(id: string, isBeamtime: boolean) {
             variables: {filter: "id = '" + id + "'"}
         });
     if (queryResult.error) {
-        console.log(queryResult.error);
+        console.log("meta query error " + queryResult.error);
         return queryResult.error.message;
     }
     if (queryResult.loading) {

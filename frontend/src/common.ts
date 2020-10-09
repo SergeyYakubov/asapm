@@ -103,8 +103,6 @@ export function GetFilterString(filter: CollectionFilter) {
         filterString =  AddToFilter(filterString,filterRange,"and");
     }
 
-    console.log(filterString)
-
     if (filter.textSearch === "") {
         return filterString;
     }

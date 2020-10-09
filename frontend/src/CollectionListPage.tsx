@@ -60,14 +60,14 @@ interface BasicCollectionDetails {
     type: String
 }
 
-type ColumnItem = {
+export type ColumnItem = {
     fieldName: string
     alias: string | null
     type: string | null
     active: boolean
 }
 
-type ColumnList = ColumnItem[];
+export type ColumnList = ColumnItem[];
 
 function ValueToString(value: any, columnType: string | undefined) {
     if (!value) {
@@ -126,7 +126,7 @@ function possibleColumnListfromCustomValues(vals: Object | null, root: string, c
     }
 }
 
-function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionEntry[]) {
+export function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionEntry[]) {
     let columns = currentColumns.map(a => Object.assign({}, a));
     collections.forEach(col => {
         possibleColumnListfromCustomValues(col.customValues, "", columns)

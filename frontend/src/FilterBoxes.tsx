@@ -36,7 +36,6 @@ import {DateRangePicker, DateRange} from "materialui-daterange-picker";
 import DateRangeIcon from '@material-ui/icons/DateRange';
 import SearchIcon from '@material-ui/icons/Search';
 import Icon from '@material-ui/core/Icon';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import {CollectionEntry, Query, QueryCollectionsArgs, UniqueField} from "./generated/graphql";
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
@@ -44,6 +43,7 @@ import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityTwoToneIcon from '@material-ui/icons/VisibilityTwoTone';
 import FlipCameraAndroidIcon from '@material-ui/icons/FlipCameraAndroid';
 import DeleteIcon from '@material-ui/icons/Delete';
+import {CustomFilter} from "./CustomFilter";
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
@@ -464,10 +464,9 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
     });
 
     useEffect(() => {
-        console.log("set collection");
         if (queryResult.error) {
             setCollections([])
-            console.log(queryResult.error.message)
+            console.log("collection query error" + queryResult.error);
         }
         if (queryResult.loading === false && queryResult.data) {
             setCollections(queryResult.data!.collections);
@@ -490,11 +489,6 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
             collectionFilterVar({...filter, dateFrom: undefined, dateTo: undefined})
         }
     };
-
-
-    const handleAddFilterClick = () => {
-    };
-
 
     const classes = useStyles();
     return (
@@ -609,13 +603,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                                 {filter.fieldFilters.map(fieldFilter => {
                                     return <FilterChip filter={filter} fieldFilter={fieldFilter}/>
                                 })}
-                                <Chip
-                                    className={classes.filterChip}
-                                    color="secondary"
-                                    icon={<AddCircleIcon/>}
-                                    label="Add custom filter"
-                                    onClick={handleAddFilterClick}
-                                />
+                                <CustomFilter currentFilter={filter} collections={queryResult.data?.collections} />
                             </Box>
                         </Paper>
                     </Grid>
