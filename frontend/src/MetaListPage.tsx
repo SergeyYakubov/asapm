@@ -13,7 +13,7 @@ import Divider from "@material-ui/core/Divider";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";
-import {METAS } from "./graphQLSchemes"
+import {METAS } from "./graphQLSchemes";
 import {Query, QueryMetaArgs} from "./generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -73,13 +73,13 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
             <div>
                 {queryResult.loading ? <CircularProgress/> : <p>{queryResult.error!.message}...</p>}
             </div>
-        </Paper>
+        </Paper>;
     }
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         const path = "/detailed/" + event.currentTarget.id+"/meta";
         history.push(path);
-    }
+    };
 
     return <Grid
         container
@@ -120,10 +120,10 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
         </List>
     </Paper>
         </Grid>
-    </Grid>
+    </Grid>;
 }
 
-function MetaListPage() {
+function MetaListPage(): JSX.Element {
     const queryResult = useQuery<Query,QueryMetaArgs>(METAS, {
         pollInterval: 5000,
     });

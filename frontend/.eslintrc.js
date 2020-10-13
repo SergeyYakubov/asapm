@@ -19,8 +19,10 @@ module.exports = {
         project: './tsconfig.json',
     },
     rules: {
+        '@typescript-eslint/no-unused-vars': 'off', // Maybe we should change this later
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/no-non-null-assertion': 'off',
         '@typescript-eslint/explicit-module-boundary-types': 'error',
+        'semi': ['warn', 'always']
     }
 }

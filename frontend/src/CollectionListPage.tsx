@@ -74,27 +74,27 @@ function ValueToString(value: any, columnType: string | undefined) {
         return "";
     }
     if (value.constructor.name === "Array") {
-        return value.join(", ")
+        return value.join(", ");
     }
 
     let strval = value.toString();
     if (columnType === "string") {
-        strval = IsoDateToStr(strval)
+        strval = IsoDateToStr(strval);
     }
-    return strval
+    return strval;
 }
 
-function plainDataFromObject(plainData: BasicCollectionDetails, data: object, root: string, columns: ColumnList) {
+function plainDataFromObject(plainData: BasicCollectionDetails, data: KvObj, root: string, columns: ColumnList) {
     for (const [column, value] of Object.entries(data)) {
-        const fullColumn = (root !== "" ? root + "." : "") + column
+        const fullColumn = (root !== "" ? root + "." : "") + column;
         if (!value) continue;
         if (value.constructor.name === "Object") {
-            plainDataFromObject(plainData, value, fullColumn, columns)
+            plainDataFromObject(plainData, value, fullColumn, columns);
         } else {
             for (let i = 0; i < columns.length; i++) {
                 if (fullColumn === columns[i].fieldName) {
-                    // @ts-ignore
-                    plainData[fullColumn] = ValueToString(value, columns[i].type)
+                    const fieldName = fullColumn as keyof BasicCollectionDetails;
+                    plainData[fieldName] = ValueToString(value, columns[i].type as string);
                     break;
                 }
             }
@@ -106,18 +106,18 @@ function TableDataFromCollections(collections: CollectionEntry[], columns: Colum
     return collections.map(collection => {
             const res: BasicCollectionDetails = {id: collection.id, type: collection.type};
             plainDataFromObject(res, collection, "", columns);
-            return res
+            return res;
         }
-    )
+    );
 }
 
-function possibleColumnListfromCustomValues(vals: Object | null, root: string, columns: ColumnList) {
+function possibleColumnListfromCustomValues(vals: KvObj | null, root: string, columns: ColumnList) {
     if (!vals) return;
     for (const [column, value] of Object.entries(vals)) {
-        const fullColumn = (root !== "" ? root + "." : "") + column
+        const fullColumn = (root !== "" ? root + "." : "") + column;
         if (!value) continue;
         if (value.constructor.name === "Object") {
-            possibleColumnListfromCustomValues(value, fullColumn, columns)
+            possibleColumnListfromCustomValues(value, fullColumn, columns);
         } else {
             if (!columns.find(column => column.fieldName === "customValues." + fullColumn)) {
                 columns.push({fieldName: "customValues." + fullColumn, alias: fullColumn, active: false,type:null});
@@ -126,12 +126,12 @@ function possibleColumnListfromCustomValues(vals: Object | null, root: string, c
     }
 }
 
-export function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionEntry[]) {
+export function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionEntry[]): ColumnItem[] {
     const columns = currentColumns.map(a => Object.assign({}, a));
     collections.forEach(col => {
-        possibleColumnListfromCustomValues(col.customValues, "", columns)
-    })
-    return columns
+        possibleColumnListfromCustomValues(col.customValues, "", columns);
+    });
+    return columns;
 }
 
 type SelectColumnsProps = {
@@ -159,7 +159,7 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
             possibleColumns[ind].alias = newValue;
             columnsVar(possibleColumns);
         });
-    }
+    };
 
     const handleSelectionChange = (
         data: ColumnList
@@ -167,13 +167,13 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
         possibleColumns.forEach(row => {
             const ind = data.findIndex(selectedCol => selectedCol.fieldName === row.fieldName);
             if (ind>-1) {
-                row.active = true
+                row.active = true;
             } else {
-                row.active = false
+                row.active = false;
             }
-        })
+        });
         columnsVar(possibleColumns);
-    }
+    };
 
     return <Box className={classes.root}>
         <Grid container justify={'space-between'} className={classes.columnsHeader} >
@@ -211,9 +211,9 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
                 { title: 'Alias', field: 'alias' },
             ]}
             data={possibleColumns.map(column => { return {fieldName:column.fieldName,alias:column.alias || column.fieldName,type:null, active:column.active,
-                tableData: { checked: column.active } }})}
+                tableData: { checked: column.active } };})}
         />
-   </Box>
+   </Box>;
 }
 
 const defaultColumns: ColumnList = [
@@ -224,7 +224,7 @@ const defaultColumns: ColumnList = [
     {fieldName: "parentBeamtimeMeta.facility", alias: "Facility", active: true,type:null},
     {fieldName: "parentBeamtimeMeta.users.doorDb", alias: "Door users", active: true,type:null},
     {fieldName: "eventStart", alias: "Started At", type: "string", active: true},
-]
+];
 
 export const columnsVar = makeVar<ColumnList>(
     defaultColumns
@@ -235,7 +235,7 @@ export const GET_COLUMNS = gql`
   query GetColumns {
     columns @client
   }
-`
+`;
 
 export interface ColumnData {
     columns: ColumnList;
@@ -255,7 +255,7 @@ function CollectionTable({collections}: CollectionProps) {
     ) => {
         const path = (rowData!.type === "collection" ? "/detailedcollection/" : "/detailed/") + rowData!.id + "/meta";
         history.push(path);
-    }
+    };
 
     const handleColumnButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -311,16 +311,16 @@ function CollectionTable({collections}: CollectionProps) {
                 }
             }}
             columns={columns.filter(column => column.active).map(column => {
-                return {title: column.alias || column.fieldName, field: column.fieldName}
+                return {title: column.alias || column.fieldName, field: column.fieldName};
             })}
             data={TableDataFromCollections(collections, columns)}
         />
-    </div>
+    </div>;
 }
 
-function CollectionListPage() {
+function CollectionListPage(): JSX.Element {
     const classes = useStyles();
-    const [collections, setCollections] = React.useState<CollectionEntry[]>([])
+    const [collections, setCollections] = React.useState<CollectionEntry[]>([]);
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>

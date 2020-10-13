@@ -24,7 +24,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function TopBar() {
+export default function TopBar(): JSX.Element {
     const classes = useStyles();
     return (
             <AppBar position="fixed" className={classes.root}>
