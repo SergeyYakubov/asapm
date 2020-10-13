@@ -55,21 +55,21 @@ type CurrentCustomFilter = {
     filterString: string
 }
 
-const emptyCustomFilter: CurrentCustomFilter = {value: "", op: "", name: "", filterString: ""}
+const emptyCustomFilter: CurrentCustomFilter = {value: "", op: "", name: "", filterString: ""};
 
 function FilterForm({currentFilter, possibleColumns, currentCustomFilter, setCurrentCustomFilter}: FilterFormProps) {
     const classes = useStyles();
 
     const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setCurrentCustomFilter({...currentCustomFilter, name: event.target.value as string, op: "", value: ""})
+        setCurrentCustomFilter({...currentCustomFilter, name: event.target.value as string, op: "", value: ""});
     };
 
     const handleChangeOp = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setCurrentCustomFilter({...currentCustomFilter, op: event.target.value as string, value: ""})
+        setCurrentCustomFilter({...currentCustomFilter, op: event.target.value as string, value: ""});
     };
 
     const handleChangeVal = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setCurrentCustomFilter({...currentCustomFilter, value: event.target.value as string})
+        setCurrentCustomFilter({...currentCustomFilter, value: event.target.value as string});
     };
 
     const addEnabled = currentCustomFilter.filterString !== "" || (currentCustomFilter.value !== ""
@@ -140,10 +140,10 @@ function FilterForm({currentFilter, possibleColumns, currentCustomFilter, setCur
             <Button size={"small"} color="secondary"
                     disabled={!addEnabled} variant="contained" className={classes.addButton}>Add</Button>
         </Grid>
-    </Grid>
+    </Grid>;
 }
 
-export function CustomFilter({currentFilter, collections}: CustomFilterProps) {
+export function CustomFilter({currentFilter, collections}: CustomFilterProps): JSX.Element {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [possibleColumns, SetPossibleColumns] = React.useState<ColumnList>([]);
@@ -189,6 +189,6 @@ export function CustomFilter({currentFilter, collections}: CustomFilterProps) {
             <FilterForm setCurrentCustomFilter={setCurrentCustomFilter} currentFilter={currentFilter}
                         currentCustomFilter={currentCustomFilter} possibleColumns={possibleColumns}/>
         </Popover>
-    </div>
+    </div>;
 }
 

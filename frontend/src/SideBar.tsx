@@ -62,14 +62,14 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 function usePersistedState<S>(key:string, defaultValue:S) {
-    let setDefaultState = () => {
+    const setDefaultState = () => {
         const getVariable = localStorage.getItem(key);
         if (getVariable === null) {
             return defaultValue;
         } else {
             return JSON.parse(localStorage.getItem(key) as string);
         }
-    }
+    };
     const [state, setState] = React.useState(setDefaultState);
     useEffect(() => {
         localStorage.setItem(key, JSON.stringify(state));
@@ -78,13 +78,13 @@ function usePersistedState<S>(key:string, defaultValue:S) {
 }
 
 
-export default function SideBar() {
+export default function SideBar(): JSX.Element {
     const classes = useStyles();
     const [open, setOpen] = usePersistedState("sidebarState",true);
 
     const handleButtonClick = () => {
         setOpen(!open);
-    }
+    };
 
     return (
         <Drawer

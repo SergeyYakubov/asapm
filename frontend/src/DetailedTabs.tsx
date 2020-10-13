@@ -5,7 +5,7 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Box from '@material-ui/core/Box';
 import {TableDataFromMeta, TableDataFromCollection} from "./meta";
-import DetailedMetaTab from "./DetailedMetaTab"
+import DetailedMetaTab from "./DetailedMetaTab";
 import DatasetsTableTab from "./DatasetsTableTab";
 import {useHistory} from "react-router-dom";
 import {BeamtimeMeta, CollectionEntry} from "./generated/graphql";
@@ -60,7 +60,7 @@ type DetailedTabsProps = {
     section: string
 }
 
-function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps) {
+function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps): JSX.Element {
     const classes = useStyles();
     let value=0;
     const showDataset = meta.childCollection && (meta.childCollection.length > 0);
@@ -83,7 +83,7 @@ function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps) {
         }
     }
     const history = useHistory();
-    const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    const handleChange = (event: React.ChangeEvent<any>, newValue: number) => {
         let subpath="/meta";
         switch(newValue) {
             case 1: {

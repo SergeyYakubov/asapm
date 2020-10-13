@@ -96,7 +96,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 
-function BeamtimeFilterBox() {
+function BeamtimeFilterBox(): JSX.Element {
     const classes = useStyles();
     return (
         <div className={classes.root}>
@@ -169,7 +169,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
         setAnchorEl(null);
     };
 
-    const handleMenuClick = (value: String) => {
+    const handleMenuClick = (value: string) => {
         const fieldFilter: FieldFilter = {
             alias: alias,
             key: uniqueFields.keyName as string,
@@ -211,7 +211,7 @@ function DataRangeToString(range: DateRange) {
     if (!range || !range.startDate || !range.endDate) {
         return "";
     }
-    return range.startDate.toLocaleDateString() + " - " + range.endDate.toLocaleDateString()
+    return range.startDate.toLocaleDateString() + " - " + range.endDate.toLocaleDateString();
 }
 
 interface EditFilterProps {
@@ -227,7 +227,7 @@ function FilterChip({filter,fieldFilter}: FilterChipProps) {
     const classes = useStyles();
     const handleDelete = () => {
         collectionFilterVar({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
-    }
+    };
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -309,7 +309,7 @@ function FilterChip({filter,fieldFilter}: FilterChipProps) {
             </List>
         </Popover>
 
-    </div>
+    </div>;
 }
 function BulkFilterEdit({filter}: EditFilterProps) {
     const classes = useStyles();
@@ -326,7 +326,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
     const handleEnable = (enable: boolean) => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
             return {...value,enabled:enable};
-        })
+        });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
@@ -334,7 +334,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
     const handleInvert = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
             return {...value,enabled:!value.enabled};
-        })
+        });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
@@ -342,7 +342,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
     const handleInvertSimple = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
             return {...value,negate:!value.negate};
-        })
+        });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
@@ -413,7 +413,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
                 </ListItem>
             </List>
         </Popover>
-    </div>
+    </div>;
 }
 
 
@@ -424,7 +424,7 @@ const defaultFilter: CollectionFilter = {
     fieldFilters: [],
     dateFrom: undefined,
     dateTo: undefined,
-}
+};
 
 export const collectionFilterVar = makeVar<CollectionFilter>(
     defaultFilter
@@ -435,13 +435,13 @@ export const GET_FILTER = gql`
   query GetFilter {
     collectionFilter @client
   }
-`
+`;
 
 export interface FilterData {
     collectionFilter: CollectionFilter;
 }
 
-function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
+function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.Element {
     const {data} = useQuery<FilterData>(GET_FILTER);
     const filter = data!.collectionFilter;
     const handleChangeScope = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -452,7 +452,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
 
     const handleTextSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         handler({...filter, textSearch: event.target.value});
-    }
+    };
 
     const handleDataRangeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -465,28 +465,28 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
 
     useEffect(() => {
         if (queryResult.error) {
-            setCollections([])
+            setCollections([]);
             console.log("collection query error" + queryResult.error);
         }
         if (queryResult.loading === false && queryResult.data) {
             setCollections(queryResult.data!.collections);
         }
-    }, [queryResult.error, queryResult.loading, queryResult.data, setCollections])
+    }, [queryResult.error, queryResult.loading, queryResult.data, setCollections]);
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
     const toggle = () => {
         setAnchorEl(null);
-    }
+    };
 
     const handleDataRangeChange = (range: DateRange) => {
-        collectionFilterVar({...filter, dateFrom: range.startDate, dateTo: range.endDate})
-        toggle()
-    }
+        collectionFilterVar({...filter, dateFrom: range.startDate, dateTo: range.endDate});
+        toggle();
+    };
 
     const handleRangeTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.value === "") {
-            collectionFilterVar({...filter, dateFrom: undefined, dateTo: undefined})
+            collectionFilterVar({...filter, dateFrom: undefined, dateTo: undefined});
         }
     };
 
@@ -601,7 +601,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
                                 <BulkFilterEdit filter={filter}/>
                                 {filter.fieldFilters.map(fieldFilter => {
-                                    return <FilterChip filter={filter} fieldFilter={fieldFilter}/>
+                                    return <FilterChip filter={filter} fieldFilter={fieldFilter}/>;
                                 })}
                                 <CustomFilter currentFilter={filter} collections={queryResult.data?.collections} />
                             </Box>
@@ -616,5 +616,5 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps) {
 export {
     BeamtimeFilterBox,
     CollectionFilterBox
-}
+};
 

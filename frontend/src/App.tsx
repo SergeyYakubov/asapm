@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
-function App() {
+function App(): JSX.Element {
     const classes = useStyles();
 
     const {loading, error, data} = userPreferences.useUserPreferences();

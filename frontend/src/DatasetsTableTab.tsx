@@ -93,8 +93,7 @@ interface TableEntry {
     eventEnd: Maybe<string>
 }
 
-interface TableData extends Array<TableEntry> {
-}
+type TableData = Array<TableEntry>
 
 function TableDataFromDataset(meta: BeamtimeMeta | CollectionEntry): TableData {
     if (!meta.childCollection) {
@@ -108,7 +107,7 @@ function TableDataFromDataset(meta: BeamtimeMeta | CollectionEntry): TableData {
                 eventEnd: IsoDateToStr(collection.eventEnd)
             };
         }
-    )
+    );
 }
 
 function DatasetTable({meta}: MetaViewProps) {
@@ -120,7 +119,7 @@ function DatasetTable({meta}: MetaViewProps) {
     ) => {
         const path = "/detailedcollection/" + rowData?.id + "/meta";
         history.push(path);
-    }
+    };
 
     return <MaterialTable
         icons={TableIcons}
@@ -145,7 +144,7 @@ function DatasetTable({meta}: MetaViewProps) {
             {title: 'End time', field: 'eventEnd'},
         ]}
         data={TableDataFromDataset(meta)}
-    />
+    />;
 }
 
 function StaticMeta({meta}: MetaViewProps) {
@@ -158,11 +157,11 @@ function StaticMeta({meta}: MetaViewProps) {
                 </Paper>
             </Grid>
         </Grid>
-    </div>
+    </div>;
 }
 
 
-function DatasetsTableTab({meta}: MetaViewProps) {
+function DatasetsTableTab({meta}: MetaViewProps): JSX.Element {
     return (
         <div>
             <StaticMeta meta={meta}/>

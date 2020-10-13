@@ -2,7 +2,7 @@ import React from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import {Link, RouteComponentProps} from "react-router-dom";
-import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes"
+import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes";
 import {useQuery} from "@apollo/client";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -83,9 +83,9 @@ type BreadcrumbsProps = {
 
 
 function Navmenu({meta}: BreadcrumbsProps) {
-    let cols = meta.id.split(".")
-    const first = cols.shift()
-    const last = cols.pop()
+    const cols = meta.id.split(".");
+    const first = cols.shift();
+    const last = cols.pop();
     const btPath = "/detailed/" + meta.parentBeamtimeMeta.id + "/meta";
     const path = "/detailedcollection/" + meta.id + "/meta";
     let curPath = "/detailedcollection/"+meta.id;
@@ -98,7 +98,7 @@ function Navmenu({meta}: BreadcrumbsProps) {
             curPath+="."+value;
             return <Link color="inherit" to={curPath+"/meta"}>
                 {value}
-                </Link>
+                </Link>;
         })}
         <Link
             color="textPrimary"
@@ -107,7 +107,7 @@ function Navmenu({meta}: BreadcrumbsProps) {
         >
             {last}
         </Link>
-    </Breadcrumbs>
+    </Breadcrumbs>;
 }
 
 function DetailedHeader({meta, rawView, setRawView, isBeamtime}: DetailedHeaderProps) {
@@ -172,7 +172,7 @@ function RawMeta({meta}: MetaViewProps) {
             }
         </pre>
         </div>
-    </div>
+    </div>;
 }
 
 interface DetailedMetaProps extends RouteComponentProps<TParams> {
@@ -198,13 +198,13 @@ function useQueryOrErrorString(id: string, isBeamtime: boolean) {
     if (!isBeamtime && queryResult.data!.collections.length !== 1) {
         return "no data found";
     }
-    return queryResult
+    return queryResult;
 }
 
-function DetailedPage({match, isBeamtime}: DetailedMetaProps) {
+function DetailedPage({match, isBeamtime}: DetailedMetaProps): JSX.Element {
     const classes = useStyles();
     const [rawView, setRawView] = React.useState(false);
-    const section = match.params.section
+    const section = match.params.section;
     const queryResult = useQueryOrErrorString(match.params.id, isBeamtime);
     if (typeof queryResult == "string") {
         return (
@@ -213,11 +213,11 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps) {
                 <Typography variant="h3">
                     {queryResult as string}
                 </Typography>
-            </div>)
+            </div>);
     }
 
-    let data: BeamtimeMeta | CollectionEntry = isBeamtime ? queryResult.data!.meta[0] :
-        queryResult.data!.collections[0]
+    const data: BeamtimeMeta | CollectionEntry = isBeamtime ? queryResult.data!.meta[0] :
+        queryResult.data!.collections[0];
     return (
         <div className={classes.root}>
             <Toolbar variant="dense"/>

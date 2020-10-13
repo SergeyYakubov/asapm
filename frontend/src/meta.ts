@@ -12,7 +12,7 @@ export function TableDataFromMeta(meta: BeamtimeMeta, section: string): TableDat
                 {name: 'Generated', value: IsoDateToStr(meta.generated)},
                 {name: 'Start', value: IsoDateToStr(meta.eventStart)},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
-            ]
+            ];
         case "Proposal":
             return [
                 {name: 'Proposal ID', value: meta.proposalId || "undefined"},
@@ -20,12 +20,12 @@ export function TableDataFromMeta(meta: BeamtimeMeta, section: string): TableDat
                 {name: 'Principal Investigator', value: meta.pi?.lastname || "undefined", data: meta.pi},
                 {name: 'Leader', value: meta.leader?.lastname || "undefined", data: meta.leader},
                 {name: 'Applicant', value: meta.applicant?.lastname || "undefined", data: meta.applicant},
-            ]
+            ];
         case "Analysis":
             return [
                 {name: 'Core path', value: meta.corePath || "undefined"},
                 {name: 'Online', value: meta.onlineAnalysis ? "Requested" : "Not requested", data: meta.onlineAnalysis},
-            ]
+            ];
     }
     return [];
 }
@@ -38,7 +38,7 @@ export function TableDataFromCollection(meta: CollectionEntry, section: string):
                 {name: 'Beamline', value: meta.parentBeamtimeMeta!.beamline || "undefined"},
                 {name: 'Start', value: meta.eventStart?meta.eventStart.toString():""},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
-            ]
+            ];
 }
 
 export function GetUniqueNamesForField(fields : UniqueField[] | undefined,name : string): UniqueField {
