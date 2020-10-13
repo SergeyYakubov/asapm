@@ -1,22 +1,21 @@
 export interface TableEntry {
     name: string
-    value: String
+    value: string
     data?: any
 }
 
-export interface TableData extends Array<TableEntry> {
-}
+export type TableData = Array<TableEntry>
 
 export interface TableFromData
 {
     (data: any, section: string): TableData;
 }
 
-export function IsoDateToStr(isoDate: String | null) {
+export function IsoDateToStr(isoDate: string | null) {
     if (typeof (isoDate) !== "string") {
         return "undefined";
     }
-    var d = new Date(isoDate);
+    const d = new Date(isoDate);
     return d.toLocaleDateString()+" "+d.toLocaleTimeString()
 }
 
@@ -90,7 +89,7 @@ export function GetFilterString(filter: CollectionFilter) {
     })
 
     if (filter.dateTo && filter.dateFrom) {
-        let endDate = new Date(filter.dateTo.valueOf())
+        const endDate = new Date(filter.dateTo.valueOf())
         endDate.setDate(endDate.getDate() + 1 )
         let filter1 = AddToFilter("","eventStart >= isodate('" + filter.dateFrom.toISOString()+"')","and");
         filter1 = AddToFilter(filter1,"eventStart <= isodate('" + endDate.toISOString()+"')","and");

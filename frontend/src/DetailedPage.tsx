@@ -83,7 +83,7 @@ type BreadcrumbsProps = {
 
 
 function Navmenu({meta}: BreadcrumbsProps) {
-    let cols = meta.id.split(".")
+    const cols = meta.id.split(".")
     const first = cols.shift()
     const last = cols.pop()
     const btPath = "/detailed/" + meta.parentBeamtimeMeta.id + "/meta";
@@ -216,7 +216,7 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps) {
             </div>)
     }
 
-    let data: BeamtimeMeta | CollectionEntry = isBeamtime ? queryResult.data!.meta[0] :
+    const data: BeamtimeMeta | CollectionEntry = isBeamtime ? queryResult.data!.meta[0] :
         queryResult.data!.collections[0]
     return (
         <div className={classes.root}>

@@ -206,7 +206,7 @@ function plainDataFromObject(plainData: TableData, data:object,root:string) {
 }
 
 function CustomTable({data}: CustomTableProps) {
-    let plainData: TableData=[]
+    const plainData: TableData=[]
     plainDataFromObject(plainData,data,"")
     return <MaterialTable
         icons={TableIcons}
@@ -316,8 +316,8 @@ function CategorizedMeta({meta}: MetaViewProps) {
         setTabValue(newTabValue);
     };
 
-    let customCategories: { [k: string]: any } = {};
-    let mainCategory: { [k: string]: any } = {};
+    const customCategories: { [k: string]: any } = {};
+    const mainCategory: { [k: string]: any } = {};
     let isMainCategory = false;
     for (const [key, value] of Object.entries(meta.customValues as Object)) {
         if (value.constructor.name === "Object") {

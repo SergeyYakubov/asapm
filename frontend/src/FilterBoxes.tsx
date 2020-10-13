@@ -169,7 +169,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
         setAnchorEl(null);
     };
 
-    const handleMenuClick = (value: String) => {
+    const handleMenuClick = (value: string) => {
         const fieldFilter: FieldFilter = {
             alias: alias,
             key: uniqueFields.keyName as string,

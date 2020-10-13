@@ -62,7 +62,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 function usePersistedState<S>(key:string, defaultValue:S) {
-    let setDefaultState = () => {
+    const setDefaultState = () => {
         const getVariable = localStorage.getItem(key);
         if (getVariable === null) {
             return defaultValue;

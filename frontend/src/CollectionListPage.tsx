@@ -56,8 +56,8 @@ type CollectionProps = {
 }
 
 interface BasicCollectionDetails {
-    id: String
-    type: String
+    id: string
+    type: string
 }
 
 export type ColumnItem = {
@@ -104,7 +104,7 @@ function plainDataFromObject(plainData: BasicCollectionDetails, data: object, ro
 
 function TableDataFromCollections(collections: CollectionEntry[], columns: ColumnList): BasicCollectionDetails[] {
     return collections.map(collection => {
-            var res: BasicCollectionDetails = {id: collection.id, type: collection.type};
+            const res: BasicCollectionDetails = {id: collection.id, type: collection.type};
             plainDataFromObject(res, collection, "", columns);
             return res
         }
@@ -127,7 +127,7 @@ function possibleColumnListfromCustomValues(vals: Object | null, root: string, c
 }
 
 export function PossibleColumnListfromCollections(currentColumns: ColumnList, collections: CollectionEntry[]) {
-    let columns = currentColumns.map(a => Object.assign({}, a));
+    const columns = currentColumns.map(a => Object.assign({}, a));
     collections.forEach(col => {
         possibleColumnListfromCustomValues(col.customValues, "", columns)
     })
@@ -155,7 +155,7 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
         columnDef: Column<any>
         ) :Promise<void>  => {
         return new Promise((resolve, reject) => {
-            let ind = possibleColumns.findIndex(col => col.fieldName === rowData.fieldName);
+            const ind = possibleColumns.findIndex(col => col.fieldName === rowData.fieldName);
             possibleColumns[ind].alias = newValue;
             columnsVar(possibleColumns);
         });
@@ -165,7 +165,7 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
         data: ColumnList
     ) => {
         possibleColumns.forEach(row => {
-            let ind = data.findIndex(selectedCol => selectedCol.fieldName === row.fieldName);
+            const ind = data.findIndex(selectedCol => selectedCol.fieldName === row.fieldName);
             if (ind>-1) {
                 row.active = true
             } else {

@@ -57,7 +57,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 type MetaColumnProps = {
     queryResult: QueryResult<Query>,
-    status: String,
+    status: string,
     title: string,
 }
 

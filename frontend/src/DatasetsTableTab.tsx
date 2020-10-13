@@ -93,8 +93,7 @@ interface TableEntry {
     eventEnd: Maybe<string>
 }
 
-interface TableData extends Array<TableEntry> {
-}
+type TableData = Array<TableEntry>
 
 function TableDataFromDataset(meta: BeamtimeMeta | CollectionEntry): TableData {
     if (!meta.childCollection) {
