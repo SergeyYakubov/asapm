@@ -1283,7 +1283,7 @@ type LogEntryMessage implements GenericLogEntry {
 
     # Payload
     message: String!
-    attachments: Map!
+    attachments: Map! # Map<Filename, Base64>
 }
 
 input NewLogEntryMessage {
@@ -1294,7 +1294,7 @@ input NewLogEntryMessage {
 
     # Payload
     message: String!
-    attachments: Map!
+    attachments: Map! # Map<Filename, Base64>
 }
 
 union LogEntry = LogEntryMessage
