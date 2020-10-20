@@ -12,7 +12,7 @@ import MaterialTable from "material-table";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
-import {TableEntry, TableData, TableFromData} from "./common"
+import {TableEntry, TableData, TableFromData} from "./common";
 import {TableIcons} from "./TableIcons";
 import {BeamtimeMeta, CollectionEntry} from "./generated/graphql";
 
@@ -109,24 +109,24 @@ type StaticSectionProps = {
 }
 
 type CustomTableProps = {
-    data: object,
+    data: KvObj,
 }
 
 
 function StringFromValue(value: any): string {
     if (!value) {
-        return ""
+        return "";
     }
 
     if (value.constructor.name === "Object") {
-        return JSON.stringify(value)
+        return JSON.stringify(value);
     }
 
     if (value.constructor.name === "Array") {
-        return value.join(", ")
+        return value.join(", ");
     }
 
-    return value.toString()
+    return value.toString();
 
 }
 
@@ -158,9 +158,9 @@ function TableFromObject(rowData: TableEntry) {
                     name: key,
                     value: StringFromValue(value),
                 }))}
-            />
+            />;
         }
-    }
+    };
 }
 
 function OnRowClick(event?: React.MouseEvent, rowData?: TableEntry, toggleDetailPanel?: (panelIndex?: number) => void) {
@@ -190,24 +190,24 @@ function Table({meta, section,tableFromMeta}: StaticSectionProps) {
         data={tableFromMeta(meta, section)}
         detailPanel={[TableFromObject]}
         onRowClick={OnRowClick}
-    />
+    />;
 }
 
 
-function plainDataFromObject(plainData: TableData, data:object,root:string) {
+function plainDataFromObject(plainData: TableData, data: KvObj, root: string) {
     for (const [key, value] of Object.entries(data)) {
-        const fullKey = (root !== "" ? root+"." : "")+key
+        const fullKey = (root !== "" ? root+"." : "")+key;
         if (value.constructor.name === "Object") {
-            plainDataFromObject(plainData,value,fullKey)
+            plainDataFromObject(plainData, value, fullKey);
         } else {
-            plainData.push({name:fullKey,value:StringFromValue(value)})
+            plainData.push({name: fullKey, value: StringFromValue(value)});
         }
     }
 }
 
 function CustomTable({data}: CustomTableProps) {
-    let plainData: TableData=[]
-    plainDataFromObject(plainData,data,"")
+    const plainData: TableData=[];
+    plainDataFromObject(plainData,data,"");
     return <MaterialTable
         icons={TableIcons}
         options={{
@@ -226,7 +226,7 @@ function CustomTable({data}: CustomTableProps) {
         ]}
         data={plainData}
         onRowClick={OnRowClick}
-    />
+    />;
 }
 
 function StaticSection({meta, section,tableFromMeta, isBeamtime}: StaticSectionProps) {
@@ -247,7 +247,7 @@ function StaticSection({meta, section,tableFromMeta, isBeamtime}: StaticSectionP
         <Table meta={meta} tableFromMeta={tableFromMeta} section={section} isBeamtime={isBeamtime}/>
         </Paper>
         </Grid>
-    </Grid>
+    </Grid>;
 }
 
 function StaticMeta({meta,tableFromMeta,isBeamtime}: StaticMetaProps) {
@@ -271,7 +271,7 @@ function StaticMeta({meta,tableFromMeta,isBeamtime}: StaticMetaProps) {
                 </Grid>
             </Grid>
         }
-    </div>
+    </div>;
 }
 
 
@@ -307,19 +307,19 @@ function TabPanel(props: TabPanelProps) {
     );
 }
 
-function CategorizedMeta({meta}: MetaViewProps) {
+function CategorizedMeta({meta}: MetaViewProps): JSX.Element {
     const classes = useStyles();
 
     const [tabValue, setTabValue] = React.useState(0);
 
-    const handleTabChange = (event: React.ChangeEvent<{}>, newTabValue: number) => {
+    const handleTabChange = (event: React.ChangeEvent<any>, newTabValue: number) => {
         setTabValue(newTabValue);
     };
 
-    let customCategories: { [k: string]: any } = {};
-    let mainCategory: { [k: string]: any } = {};
+    const customCategories: { [k: string]: any } = {};
+    const mainCategory: { [k: string]: any } = {};
     let isMainCategory = false;
-    for (const [key, value] of Object.entries(meta.customValues as Object)) {
+    for (const [key, value] of Object.entries(meta.customValues as KvObj)) {
         if (value.constructor.name === "Object") {
             customCategories[key] = value;
         } else {
@@ -364,15 +364,15 @@ function CategorizedMeta({meta}: MetaViewProps) {
             )
         }
     </Grid>
-    </Grid>
+    </Grid>;
 }
 
 function PlainMeta({meta}: MetaViewProps) {
     return <Grid container>
         <Grid item xs={12}>
-            <CustomTable data={meta.customValues as Object}/>
+            <CustomTable data={meta.customValues as KvObj}/>
         </Grid>
-    </Grid>
+    </Grid>;
 }
 
 function CustomMeta({meta}: MetaViewProps) {
@@ -409,10 +409,10 @@ function CustomMeta({meta}: MetaViewProps) {
             : <CategorizedMeta meta={meta}/>
             }
         </Paper>
-    </div>
+    </div>;
 }
 
-function DetailedMetaTab({meta,tableFromMeta,isBeamtime}: StaticMetaProps) {
+function DetailedMetaTab({meta,tableFromMeta,isBeamtime}: StaticMetaProps): JSX.Element {
     return (
                 <div>
                     <StaticMeta meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}/>

@@ -1,4 +1,4 @@
-import Keycloak from "keycloak-js";
+import Keycloak, {KeycloakPromise} from "keycloak-js";
 
 const _kc = Keycloak({
     url: process.env.REACT_APP_KEYCLOAK_ENDPOINT as string,
@@ -7,8 +7,11 @@ const _kc = Keycloak({
 
 });
 
+const doLogin = _kc.login;
 
-const initKeycloak = (onAuthenticatedCallback: Function) => {
+const doLogout = _kc.logout;
+
+function initKeycloak(onAuthenticatedCallback: () => void): void {
     _kc.init({
         onLoad: 'check-sso',
         pkceMethod: 'S256',
@@ -21,53 +24,51 @@ const initKeycloak = (onAuthenticatedCallback: Function) => {
                 console.warn("not authenticated!");
                 doLogin();
             }
-        })
-};
-
-const doLogin = _kc.login;
-
-const doLogout = _kc.logout;
-
-const getToken = function() {
-    return _kc.token;
-};
-
-const updateToken = function (minValidity: number) {
-    return _kc.updateToken(minValidity)
+        });
 }
 
-const getUserId = () => _kc.tokenParsed?.sub;
+function getToken(): string | undefined {
+    return _kc.token;
+}
+
+function updateToken(minValidity: number): KeycloakPromise<boolean, boolean> {
+    return _kc.updateToken(minValidity);
+}
+
+function getUserId(): string | undefined {
+    return _kc.tokenParsed?.sub;
+}
 
 
-function getUserName() {
+function getUserName(): string {
     if (!_kc.tokenParsed) {
-        return ""
+        return "";
     }
 
-    let preferred_username=""
-    let givenName = ""
-    let familyName = ""
+    let preferred_username="";
+    let givenName = "";
+    let familyName = "";
 
     for (const [key, value] of Object.entries(_kc!.tokenParsed)) {
         if (key === "name") {
-            return value.toString()
+            return value.toString();
         }
         if (key === "preferred_username") {
-            preferred_username = value.toString()
+            preferred_username = value.toString();
         }
         if (key === "given_name") {
-            givenName = value.toString()
+            givenName = value.toString();
         }
         if (key === "family_name") {
-            familyName = value.toString()
+            familyName = value.toString();
         }
     }
 
     if (givenName && familyName) {
-        return givenName+" "+familyName
+        return givenName+" "+familyName;
     }
 
-    return  preferred_username
+    return preferred_username;
 }
 
 export default {
@@ -78,4 +79,4 @@ export default {
     getUserName,
     getUserId,
     updateToken,
-}
+};

@@ -1118,7 +1118,7 @@ input InputOnlineAnylysisMeta {
 }
 
 
-scalar Time
+scalar DateTime
 
 type Users {
     doorDb: [String!]
@@ -1134,8 +1134,8 @@ input InputUsers {
 
 interface CollectionEntryInterface {
     id: String!
-    eventStart: Time
-    eventEnd: Time
+    eventStart: DateTime
+    eventEnd: DateTime
     title: String
     childCollectionName: String
     childCollection: [BaseCollectionEntry!]
@@ -1147,8 +1147,8 @@ interface CollectionEntryInterface {
 
 type CollectionEntry implements CollectionEntryInterface {
     id: String!
-    eventStart: Time
-    eventEnd: Time
+    eventStart: DateTime
+    eventEnd: DateTime
     title: String
     childCollectionName: String
     childCollection: [BaseCollectionEntry!]
@@ -1166,10 +1166,10 @@ type ParentBeamtimeMeta {
     status: String!
     contact: String
     corePath: String
-    eventEnd: Time
-    eventStart: Time
+    eventEnd: DateTime
+    eventStart: DateTime
     facility: String
-    generated: Time
+    generated: DateTime
     leader: BeamtimeUser
     onlineAnalysis: OnlineAnylysisMeta
     pi: BeamtimeUser
@@ -1188,10 +1188,10 @@ type BeamtimeMeta implements CollectionEntryInterface {
     status: String!
     contact: String
     corePath: String
-    eventEnd: Time
-    eventStart: Time
+    eventEnd: DateTime
+    eventStart: DateTime
     facility: String
-    generated: Time
+    generated: DateTime
     leader: BeamtimeUser
     onlineAnalysis: OnlineAnylysisMeta
     pi: BeamtimeUser
@@ -1210,16 +1210,16 @@ type BeamtimeMeta implements CollectionEntryInterface {
 
 type BaseCollectionEntry {
     id: String!
-    eventStart: Time
-    eventEnd: Time
+    eventStart: DateTime
+    eventEnd: DateTime
     title: String
 }
 
 
 input NewCollectionEntry {
     id: String!
-    eventStart: Time
-    eventEnd: Time
+    eventStart: DateTime
+    eventEnd: DateTime
     title: String
     childCollectionName: String
     customValues: Map
@@ -1233,10 +1233,10 @@ input NewBeamtimeMeta {
     status: String!
     contact: String
     corePath: String
-    eventEnd: Time
-    eventStart: Time
+    eventEnd: DateTime
+    eventStart: DateTime
     facility: String
-    generated: Time
+    generated: DateTime
     leader: InputBeamtimeUser
     onlineAnalysis: InputOnlineAnylysisMeta
     pi: InputBeamtimeUser
@@ -1262,7 +1262,7 @@ input NewBeamtimeMeta {
 
 interface GenericLogEntry {
     id: ID!
-    time: Time!
+    time: DateTime!
     entryType: LogEntryType!
 
     facility: String!
@@ -1273,7 +1273,7 @@ interface GenericLogEntry {
 
 type LogEntryMessage implements GenericLogEntry {
     id: ID!
-    time: Time!
+    time: DateTime!
     entryType: LogEntryType! # Always LogEntryType.Message
 
     facility: String!
@@ -1744,7 +1744,7 @@ func (ec *executionContext) _BaseCollectionEntry_eventStart(ctx context.Context,
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BaseCollectionEntry_eventEnd(ctx context.Context, field graphql.CollectedField, obj *model.BaseCollectionEntry) (ret graphql.Marshaler) {
@@ -1775,7 +1775,7 @@ func (ec *executionContext) _BaseCollectionEntry_eventEnd(ctx context.Context, f
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BaseCollectionEntry_title(ctx context.Context, field graphql.CollectedField, obj *model.BaseCollectionEntry) (ret graphql.Marshaler) {
@@ -2060,7 +2060,7 @@ func (ec *executionContext) _BeamtimeMeta_eventEnd(ctx context.Context, field gr
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_eventStart(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -2091,7 +2091,7 @@ func (ec *executionContext) _BeamtimeMeta_eventStart(ctx context.Context, field 
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_facility(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -2153,7 +2153,7 @@ func (ec *executionContext) _BeamtimeMeta_generated(ctx context.Context, field g
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_leader(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -2851,7 +2851,7 @@ func (ec *executionContext) _CollectionEntry_eventStart(ctx context.Context, fie
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CollectionEntry_eventEnd(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
@@ -2882,7 +2882,7 @@ func (ec *executionContext) _CollectionEntry_eventEnd(ctx context.Context, field
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CollectionEntry_title(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
@@ -3180,7 +3180,7 @@ func (ec *executionContext) _LogEntryMessage_time(ctx context.Context, field gra
 	}
 	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNDateTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LogEntryMessage_entryType(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
@@ -4330,7 +4330,7 @@ func (ec *executionContext) _ParentBeamtimeMeta_eventEnd(ctx context.Context, fi
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ParentBeamtimeMeta_eventStart(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
@@ -4361,7 +4361,7 @@ func (ec *executionContext) _ParentBeamtimeMeta_eventStart(ctx context.Context, 
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ParentBeamtimeMeta_facility(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
@@ -4423,7 +4423,7 @@ func (ec *executionContext) _ParentBeamtimeMeta_generated(ctx context.Context, f
 	}
 	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalODateTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ParentBeamtimeMeta_leader(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
@@ -6498,13 +6498,13 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			}
 		case "eventEnd":
 			var err error
-			it.EventEnd, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			it.EventEnd, err = ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "eventStart":
 			var err error
-			it.EventStart, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			it.EventStart, err = ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6516,7 +6516,7 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			}
 		case "generated":
 			var err error
-			it.Generated, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			it.Generated, err = ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6600,13 +6600,13 @@ func (ec *executionContext) unmarshalInputNewCollectionEntry(ctx context.Context
 			}
 		case "eventStart":
 			var err error
-			it.EventStart, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			it.EventStart, err = ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "eventEnd":
 			var err error
-			it.EventEnd, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			it.EventEnd, err = ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7790,6 +7790,20 @@ func (ec *executionContext) marshalNCollectionEntry2ᚖasapmᚋgraphqlᚋgraph�
 	return ec._CollectionEntry(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNDateTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return graphql.UnmarshalTime(v)
+}
+
+func (ec *executionContext) marshalNDateTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalID(v)
 }
@@ -7968,20 +7982,6 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
-	return graphql.UnmarshalTime(v)
-}
-
-func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
-	res := graphql.MarshalTime(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) marshalNUniqueField2asapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx context.Context, sel ast.SelectionSet, v model.UniqueField) graphql.Marshaler {
@@ -8371,6 +8371,29 @@ func (ec *executionContext) marshalOCollectionEntry2ᚖasapmᚋgraphqlᚋgraph�
 	return ec._CollectionEntry(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalODateTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return graphql.UnmarshalTime(v)
+}
+
+func (ec *executionContext) marshalODateTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	return graphql.MarshalTime(v)
+}
+
+func (ec *executionContext) unmarshalODateTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalODateTime2timeᚐTime(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalODateTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalODateTime2timeᚐTime(ctx, sel, *v)
+}
+
 func (ec *executionContext) unmarshalOID2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalID(v)
 }
@@ -8549,29 +8572,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
-}
-
-func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
-	return graphql.UnmarshalTime(v)
-}
-
-func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
-	return graphql.MarshalTime(v)
-}
-
-func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOTime2timeᚐTime(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec.marshalOTime2timeᚐTime(ctx, sel, *v)
 }
 
 func (ec *executionContext) marshalOUserAccount2asapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx context.Context, sel ast.SelectionSet, v model.UserAccount) graphql.Marshaler {

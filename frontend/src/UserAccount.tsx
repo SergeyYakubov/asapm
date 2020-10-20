@@ -44,7 +44,7 @@ const StyledMenu = withStyles({
     />
 ));
 
-export default function UserAccount() {
+export default function UserAccount(): JSX.Element {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
     const {data} = userPreferences.useUserPreferences();
@@ -61,10 +61,10 @@ export default function UserAccount() {
     };
 
     const handleLogout = () => {
-        UserService.doLogout()
+        UserService.doLogout();
     };
 
-    const otherTheme = themeType === "light" ? "dark" : "light"
+    const otherTheme = themeType === "light" ? "dark" : "light";
 
     const handleChangeTheme = () => {
         changeTheme({variables: {id: (data?.user?.id || ""), schema: otherTheme.toString()}});

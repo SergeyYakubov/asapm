@@ -1,23 +1,22 @@
 export interface TableEntry {
     name: string
-    value: String
+    value: string
     data?: any
 }
 
-export interface TableData extends Array<TableEntry> {
-}
+export type TableData = Array<TableEntry>
 
 export interface TableFromData
 {
     (data: any, section: string): TableData;
 }
 
-export function IsoDateToStr(isoDate: String | null) {
+export function IsoDateToStr(isoDate: string | null): string {
     if (typeof (isoDate) !== "string") {
         return "undefined";
     }
-    var d = new Date(isoDate);
-    return d.toLocaleDateString()+" "+d.toLocaleTimeString()
+    const d = new Date(isoDate);
+    return d.toLocaleDateString()+" "+d.toLocaleTimeString();
 }
 
 export interface FieldFilter {
@@ -25,6 +24,7 @@ export interface FieldFilter {
     key: string
     value: string
     negate: boolean
+    enabled: boolean
 }
 
 export interface CollectionFilter {
@@ -36,20 +36,28 @@ export interface CollectionFilter {
     dateTo: Date | undefined
 }
 
-export function RemoveDuplicates(arr:any[]) {
+export function RemoveDuplicates<T>(arr: T[]): T[] {
     const seen = new Set();
     return arr.filter(el => {
-        const duplicate = seen.has(JSON.stringify(el));
+        const uniqueStr = JSON.stringify(el,["key","value"]);
+        const duplicate = seen.has(uniqueStr);
         if (duplicate) {
             return false;
         }
-        seen.add(JSON.stringify(el));
+        seen.add(uniqueStr);
         return true;
     });
 }
 
-export function RemoveElement(elem:any,arr:any[]) {
-    const elemjs = JSON.stringify(elem)
+export function ReplaceElement<T>(elem: T, arr: T[]): T[] {
+    const elemjs = JSON.stringify(elem,["key","value"]);
+    return arr.map(el =>
+        JSON.stringify(el,["key","value"]) === elemjs ? elem : el
+    );
+}
+
+export function RemoveElement<T>(elem: T, arr: T[]): T[] {
+    const elemjs = JSON.stringify(elem);
     return arr.filter(el => elemjs !== JSON.stringify(el));
 }
 
@@ -58,10 +66,10 @@ function AddToFilter(filter:string,add:string,op:string):string {
         return "("+filter+" "+op+" "+add+")";
     }
     else
-        return add
+        return add;
 }
 
-export function GetFilterString(filter: CollectionFilter) {
+export function GetFilterString(filter: CollectionFilter): string {
     let filterString = "";
     if (filter.showBeamtime && !filter.showSubcollections) {
         filterString = AddToFilter(filterString,"type = 'beamtime'","and");
@@ -75,24 +83,24 @@ export function GetFilterString(filter: CollectionFilter) {
     }
 
     filter.fieldFilters.forEach( fieldFilter => {
-        filterString = AddToFilter(filterString,fieldFilter.key+" = '"+fieldFilter.value+"'","and");
-    })
+        if (fieldFilter.enabled) {
+            filterString = AddToFilter(filterString,fieldFilter.key+(fieldFilter.negate?" != '":" = '")+fieldFilter.value+"'","and");
+        }
+    });
 
     if (filter.dateTo && filter.dateFrom) {
-        let endDate = new Date(filter.dateTo.valueOf())
-        endDate.setDate(endDate.getDate() + 1 )
+        const endDate = new Date(filter.dateTo.valueOf());
+        endDate.setDate(endDate.getDate() + 1 );
         let filter1 = AddToFilter("","eventStart >= isodate('" + filter.dateFrom.toISOString()+"')","and");
         filter1 = AddToFilter(filter1,"eventStart <= isodate('" + endDate.toISOString()+"')","and");
         let filter2 = AddToFilter("","eventEnd >= isodate('" + filter.dateFrom.toISOString()+"')","and");
         filter2 = AddToFilter(filter2,"eventEnd <= isodate('" + endDate.toISOString()+"')","and");
         let filter3 = AddToFilter("","eventEnd >= isodate('" + endDate.toISOString()+"')","and");
         filter3 = AddToFilter(filter3,"eventStart <= isodate('" + filter.dateFrom.toISOString()+"')","and");
-        let filterRange = AddToFilter(filter1,filter2,"or")
-        filterRange = AddToFilter(filterRange,filter3,"or")
+        let filterRange = AddToFilter(filter1,filter2,"or");
+        filterRange = AddToFilter(filterRange,filter3,"or");
         filterString =  AddToFilter(filterString,filterRange,"and");
     }
-
-    console.log(filterString)
 
     if (filter.textSearch === "") {
         return filterString;
@@ -100,5 +108,5 @@ export function GetFilterString(filter: CollectionFilter) {
 
     filterString = AddToFilter(filterString,"jsonString regexp '" + filter.textSearch + "'","and");
 
-    return filterString
+    return filterString;
 }

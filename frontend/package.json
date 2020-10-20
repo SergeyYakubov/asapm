@@ -22,7 +22,7 @@
     "graphql": "^15.3.0",
     "keycloak-js": "^10.0.2",
     "lodash.debounce": "^4.0.8",
-    "material-table": "^1.69.0",
+    "material-table": "^1.69.1",
     "materialui-daterange-picker": "^1.1.92",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -41,7 +41,9 @@
     "eject": "react-scripts eject",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "itest": "start-server-and-test start http://localhost:3000 cypress:run"
+    "itest": "start-server-and-test start http://localhost:3000 cypress:run",
+    "lint": "eslint src/**/*.ts{,x}",
+    "lint:fix": "eslint --fix src/**/*.ts{,x}"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -59,8 +61,11 @@
     ]
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.4.1",
+    "@typescript-eslint/parser": "^4.4.1",
     "cypress": "^5.2.0",
     "cypress-keycloak-commands": "^1.2.0",
+    "eslint-plugin-jest": "^24.1.0",
     "start-server-and-test": "^1.11.4"
   }
 }

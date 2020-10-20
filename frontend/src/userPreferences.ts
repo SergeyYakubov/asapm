@@ -1,5 +1,5 @@
 import {PaletteType} from "@material-ui/core";
-import {gql, useQuery,useMutation} from "@apollo/client";
+import {gql, useQuery, useMutation, QueryResult, MutationTuple} from "@apollo/client";
 import userService from "./userService";
 import {Mutation, MutationSetUserPreferencesArgs, Query, QueryUserArgs} from "./generated/graphql";
 
@@ -15,7 +15,7 @@ const USER_PREFERENCES = gql`
 `;
 
 const SAVE_USER_PREFERENCES = gql`
-    mutation addUser($id: ID!,$schema: String)  {
+    mutation addUser($id: ID!,$schema: String!)  {
     setUserPreferences(id:$id,input:{
         schema:$schema,
     }){
@@ -25,14 +25,19 @@ const SAVE_USER_PREFERENCES = gql`
 }
 `;
 
-const useUserPreferences = () => {
-    const id = userService.getUserId() || "";
-    return useQuery<Query,QueryUserArgs>(USER_PREFERENCES,{ variables: { id: id }});
+function useUserPreferences(): QueryResult<Query, QueryUserArgs> {
+    const id = userService.getUserId() || '';
+    return useQuery<Query, QueryUserArgs>(USER_PREFERENCES, {
+        variables: { id },
+    });
 }
 
-const useUpdateUserTheme = (theme: PaletteType) => {
-    return useMutation<{response: Mutation, variables:MutationSetUserPreferencesArgs}>(SAVE_USER_PREFERENCES);
+type UserPreferencesMutationData = { response: Mutation; variables: MutationSetUserPreferencesArgs };
+type UserPreferencesMutationType = MutationTuple<UserPreferencesMutationData, any>;
+function useUpdateUserTheme(theme: PaletteType): UserPreferencesMutationType {
+    return useMutation<UserPreferencesMutationData>(SAVE_USER_PREFERENCES);
 }
+
 
 export default {
     useUserPreferences,

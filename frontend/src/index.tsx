@@ -6,10 +6,9 @@ import * as serviceWorker from './serviceWorker';
 import UserService from "./userService";
 import { BrowserRouter } from 'react-router-dom';
 import userService from "./userService";
-import { cache } from './CollectionListPage';
+import { cache } from './graphQLCache';
 import {ApolloClient, createHttpLink, ApolloProvider} from "@apollo/client";
 import {setContext} from "@apollo/client/link/context";
-
 
 const httpLink = createHttpLink({
     uri: window.location.origin+process.env.PUBLIC_URL+process.env.REACT_APP_API_SUFFIX+"/query",
@@ -23,7 +22,7 @@ const authLink = setContext((_, { headers }) => {
                 ...headers,
                 authorization: token ? `Bearer ${token}` : "",
             }
-        }
+        };
     });
 });
 

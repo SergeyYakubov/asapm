@@ -15,7 +15,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 
-function Logbooks() {
+function Logbooks(): JSX.Element {
     const classes = useStyles();
     return (
         <div className={classes.root}>

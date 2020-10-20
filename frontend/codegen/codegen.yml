@@ -10,7 +10,7 @@ generates:
       avoidOptionals: true
       maybeValue: "T | null"
       scalars:
-        Time: string
+        DateTime: string
         Map: Object
   ../../schema/generated/graphql.schema.json:
     plugins:

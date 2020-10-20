@@ -4,7 +4,7 @@ enum LogEntryType {
 
 interface GenericLogEntry {
     id: ID!
-    time: Time!
+    time: DateTime!
     entryType: LogEntryType!
 
     facility: String!
@@ -15,7 +15,7 @@ interface GenericLogEntry {
 
 type LogEntryMessage implements GenericLogEntry {
     id: ID!
-    time: Time!
+    time: DateTime!
     entryType: LogEntryType! # Always LogEntryType.Message
 
     facility: String!
