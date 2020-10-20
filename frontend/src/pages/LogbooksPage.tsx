@@ -15,7 +15,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 
-function Logbooks(): JSX.Element {
+function LogbooksPage(): JSX.Element {
     const classes = useStyles();
     return (
         <div className={classes.root}>
@@ -30,4 +30,4 @@ function Logbooks(): JSX.Element {
 }
 
 
-export default Logbooks;
+export default LogbooksPage;

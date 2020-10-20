@@ -1,18 +1,18 @@
 import React from 'react';
 import './App.css';
-import TopBar from "./TopBar";
+import TopBar from "./components/Header/TopBar";
 import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
 import {PaletteType} from "@material-ui/core";
 import userPreferences from "./userPreferences";
-import MetaListPage from "./MetaListPage";
-import CollectionListPage from "./CollectionListPage";
+import MetaListPage from "./pages/MetaListPage";
+import CollectionListPage from "./pages/CollectionListPage";
 import {grey} from '@material-ui/core/colors';
-import SideBar from "./SideBar";
+import SideBar from "./components/Sidebar/SideBar";
 import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {Route, Switch, Redirect} from 'react-router-dom';
-import DetailedPage from "./DetailedPage";
-import Logbooks from "./Logbooks";
+import DetailedPage from "./pages/DetailedPage";
+import LogbooksPage from "./pages/LogbooksPage";
 
 declare module "@material-ui/core/styles/createPalette" {
     interface Palette {

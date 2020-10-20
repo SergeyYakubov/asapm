@@ -5,7 +5,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import UserAccount from "./UserAccount";
 import Typography from '@material-ui/core/Typography';
 import SvgIcon from '@material-ui/core/SvgIcon';
-import { ReactComponent as DesyIcon } from "./desy_logo.svg";
+import { ReactComponent as DesyIcon } from "../../assets/desy_logo.svg";
 
 
 const useStyles = makeStyles((theme) => ({

@@ -5,9 +5,9 @@ import Paper from "@material-ui/core/Paper";
 
 import MaterialTable from "material-table";
 import {useHistory} from "react-router-dom";
-import {TableIcons} from "./TableIcons";
-import {IsoDateToStr} from "./common";
-import {BaseCollectionEntry, BeamtimeMeta, CollectionEntry, Maybe} from "./generated/graphql";
+import {TableIcons} from "../TableIcons";
+import {IsoDateToStr} from "../common";
+import {BaseCollectionEntry, BeamtimeMeta, CollectionEntry, Maybe} from "../generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({

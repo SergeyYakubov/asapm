@@ -1,13 +1,13 @@
 import {useQuery} from "@apollo/client";
 import Toolbar from "@material-ui/core/Toolbar";
-import {CollectionFilterBox} from "./FilterBoxes";
+import {CollectionFilterBox} from "../components/FilterBoxes";
 import Grid from "@material-ui/core/Grid";
 import React from "react";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import Divider from "@material-ui/core/Divider";
 import MaterialTable, {Column} from "material-table";
-import {TableIcons} from "./TableIcons";
-import {IsoDateToStr} from "./common";
+import {TableIcons} from "../TableIcons";
+import {IsoDateToStr} from "../common";
 import {useHistory} from "react-router-dom";
 import Paper from "@material-ui/core/Paper";
 import {gql, makeVar} from "@apollo/client";
@@ -15,7 +15,7 @@ import SettingsBackupRestoreIcon from '@material-ui/icons/SettingsBackupRestore'
 import {Box, Button, IconButton, Popover} from "@material-ui/core";
 import ViewColumnIcon from '@material-ui/icons/ViewColumn';
 import CloseIcon from '@material-ui/icons/Close';
-import {CollectionEntry} from "./generated/graphql";
+import {CollectionEntry} from "../generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({

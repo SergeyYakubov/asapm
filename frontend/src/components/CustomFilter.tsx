@@ -1,10 +1,10 @@
 import React from "react";
-import {CollectionFilter} from "./common";
-import {ColumnList, columnsVar, PossibleColumnListfromCollections} from "./CollectionListPage";
+import {CollectionFilter} from "../common";
+import {ColumnList, columnsVar, PossibleColumnListfromCollections} from "../pages/CollectionListPage";
 import {Box, Button, Chip, FormControl, InputLabel, MenuItem, Popover, Select, Typography} from "@material-ui/core";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
-import {CollectionEntry} from "./generated/graphql";
+import {CollectionEntry} from "../generated/graphql";
 import Grid from "@material-ui/core/Grid";
 import Divider from "@material-ui/core/Divider";
 
