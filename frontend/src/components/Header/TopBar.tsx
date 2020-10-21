@@ -5,7 +5,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import UserAccount from "./UserAccount";
 import Typography from '@material-ui/core/Typography';
 import SvgIcon from '@material-ui/core/SvgIcon';
-import { ReactComponent as DesyIcon } from "./desy_logo.svg";
+import { ReactComponent as DesyIcon } from "../../assets/desy_logo.svg";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -24,10 +24,15 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
+const headerStyle = {
+    flex: '0',
+    position: 'static' as const
+};
+
 export default function TopBar(): JSX.Element {
     const classes = useStyles();
     return (
-            <AppBar position="fixed" className={classes.root}>
+            <AppBar style={headerStyle} className={classes.root}>
                 <Toolbar variant="dense">
                     <SvgIcon className={classes.logo}>
                         <DesyIcon/>

@@ -1,6 +1,6 @@
 import {InMemoryCache} from "@apollo/client";
-import {columnsVar} from "./CollectionListPage";
-import {collectionFilterVar} from "./FilterBoxes";
+import {columnsVar} from "./pages/CollectionListPage";
+import {collectionFilterVar} from "./components/FilterBoxes";
 
 export const cache: InMemoryCache = new InMemoryCache({
     typePolicies: {
