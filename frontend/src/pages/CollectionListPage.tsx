@@ -323,7 +323,6 @@ function CollectionListPage(): JSX.Element {
     const [collections, setCollections] = React.useState<CollectionEntry[]>([]);
     return (
         <div className={classes.root}>
-            <Toolbar variant="dense"/>
             <CollectionFilterBox setCollections={setCollections}/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>

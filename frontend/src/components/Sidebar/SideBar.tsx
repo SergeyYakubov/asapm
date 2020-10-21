@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme: Theme) =>
             whiteSpace: 'nowrap',
         },
         drawerOpen: {
-            width: drawerWidth,
+            width: drawerWidth + 1 /* 1px for border right */,
             transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,

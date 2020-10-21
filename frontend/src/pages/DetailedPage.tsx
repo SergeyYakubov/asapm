@@ -219,7 +219,6 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps): JSX.Element {
         queryResult.data!.collections[0];
     return (
         <div className={classes.root}>
-            <Toolbar variant="dense"/>
             <DetailedHeader meta={data} rawView={rawView} setRawView={setRawView} isBeamtime={isBeamtime}/>
             {rawView ? (
                 <RawMeta meta={data}/>

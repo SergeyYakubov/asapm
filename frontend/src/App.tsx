@@ -63,32 +63,55 @@ function App(): JSX.Element {
         }
     });
 
+    const rootStyle = {
+        display: 'flex',
+        height: '100vh',
+        flexDirection: 'column' as const,
+    };
+
+    const rootContentStyle = {
+        overflowY: 'hidden' as const,
+        display: 'flex',
+        flex: 1,
+    };
+
+    const mainStyle = {
+        overflow: 'auto' as const,
+        flex: 1,
+    };
+
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline/>
-            <div className={classes.root}>
+            <div className={classes.root} style={rootStyle}>
                 <TopBar/>
-                <SideBar/>
-                <Switch>
-                    <Route exact path="/">
-                        <Redirect to="/collections"/>
-                    </Route>
-                    <Route path="/metaboard" render={(props) => (
-                        <MetaListPage/>
-                    )} exact/>
-                    <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
-                        <DetailedPage {...props}  isBeamtime={true}/>
-                    )} exact/>
-                    <Route key="collection" path={"/detailedcollection/:id/:section"} render={(props) => (
-                        <DetailedPage {...props}  isBeamtime={false}/>
-                    )} exact/>
-                    <Route path="/collections" render={(props) => (
-                        <CollectionListPage/>
-                    )} exact/>
-                    <Route path="/logbooks" render={(props) => (
-                        <Logbooks/>
-                    )} exact/>
-                </Switch>
+                <div style={rootContentStyle}>
+                    <aside>
+                        <SideBar/>
+                    </aside>
+                    <main style={mainStyle}>
+                        <Switch>
+                            <Route exact path="/">
+                                <Redirect to="/collections"/>
+                            </Route>
+                            <Route path="/metaboard" render={(props) => (
+                                <MetaListPage/>
+                            )} exact/>
+                            <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
+                                <DetailedPage {...props}  isBeamtime={true}/>
+                            )} exact/>
+                            <Route key="collection" path={"/detailedcollection/:id/:section"} render={(props) => (
+                                <DetailedPage {...props}  isBeamtime={false}/>
+                            )} exact/>
+                            <Route path="/collections" render={(props) => (
+                                <CollectionListPage/>
+                            )} exact/>
+                            <Route path="/logbooks" render={(props) => (
+                                <LogbooksPage/>
+                            )} exact/>
+                        </Switch>
+                    </main>
+                </div>
             </div>
         </ThemeProvider>
     );

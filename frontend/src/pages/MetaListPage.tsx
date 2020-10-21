@@ -131,7 +131,6 @@ function MetaListPage(): JSX.Element {
     const classes = useStyles();
     return (
         <div className={classes.root}>
-            <Toolbar variant="dense"/>
             <BeamtimeFilterBox/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
