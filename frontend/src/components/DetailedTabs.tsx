@@ -62,7 +62,7 @@ type DetailedTabsProps = {
 
 function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps): JSX.Element {
     const classes = useStyles();
-    let value=0;
+    let value: number;
     const showDataset = meta.childCollection && (meta.childCollection.length > 0);
     switch(section) {
         case "meta": {

@@ -1,4 +1,3 @@
-import Toolbar from "@material-ui/core/Toolbar";
 import Grid from "@material-ui/core/Grid";
 import React from "react";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";

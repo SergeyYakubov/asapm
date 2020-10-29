@@ -1,11 +1,10 @@
 import {useQuery} from "@apollo/client";
-import Toolbar from "@material-ui/core/Toolbar";
 import {CollectionFilterBox} from "../components/FilterBoxes";
 import Grid from "@material-ui/core/Grid";
 import React from "react";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import Divider from "@material-ui/core/Divider";
-import MaterialTable, {Column} from "material-table";
+import MaterialTable from "material-table";
 import {TableIcons} from "../TableIcons";
 import {IsoDateToStr} from "../common";
 import {useHistory} from "react-router-dom";
@@ -142,7 +141,7 @@ type SelectColumnsProps = {
 
 function SelectColumns({collections, columns, close}: SelectColumnsProps) {
     const possibleColumns: ColumnList = PossibleColumnListfromCollections(columns, collections);
-    const handleColumnButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const handleColumnButtonClick = () => {
         columnsVar(defaultColumns);
     };
 
@@ -151,10 +150,9 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
     const UpdateAlias = (
         newValue: any,
         oldValue: any,
-        rowData: ColumnItem,
-        columnDef: Column<any>
+        rowData: ColumnItem
         ) :Promise<void>  => {
-        return new Promise((resolve, reject) => {
+        return new Promise(() => {
             const ind = possibleColumns.findIndex(col => col.fieldName === rowData.fieldName);
             possibleColumns[ind].alias = newValue;
             columnsVar(possibleColumns);
@@ -166,11 +164,7 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
     ) => {
         possibleColumns.forEach(row => {
             const ind = data.findIndex(selectedCol => selectedCol.fieldName === row.fieldName);
-            if (ind>-1) {
-                row.active = true;
-            } else {
-                row.active = false;
-            }
+            row.active = ind > -1;
         });
         columnsVar(possibleColumns);
     };
@@ -251,7 +245,6 @@ function CollectionTable({collections}: CollectionProps) {
     const handleClick = (
         event?: React.MouseEvent,
         rowData?: BasicCollectionDetails,
-        toggleDetailPanel?: (panelIndex?: number) => void
     ) => {
         const path = (rowData!.type === "collection" ? "/detailedcollection/" : "/detailed/") + rowData!.id + "/meta";
         history.push(path);
@@ -326,7 +319,7 @@ function CollectionListPage(): JSX.Element {
             <CollectionFilterBox setCollections={setCollections}/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
-                    <Divider></Divider>
+                    <Divider/>
                 </Grid>
                 <Grid item xs={12}>
                     <Paper className={classes.paper}>

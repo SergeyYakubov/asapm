@@ -154,7 +154,7 @@ function TableFromObject(rowData: TableEntry) {
                     {title: 'Name', field: 'name'},
                     {title: 'Value', field: 'value'},
                 ]}
-                data={Object.entries(rowData.data!).filter(([key, value]) => (key !== "__typename")).map(([key, value]) => ({
+                data={Object.entries(rowData.data!).filter(([key]) => (key !== "__typename")).map(([key, value]) => ({
                     name: key,
                     value: StringFromValue(value),
                 }))}
@@ -344,7 +344,7 @@ function CategorizedMeta({meta}: MetaViewProps): JSX.Element {
             <Tab classes={{wrapper: classes.tabLabel}} label="general" {...a11yProps(0)}/>
             }
             {
-                Object.entries(customCategories).map(([key, value]) =>
+                Object.entries(customCategories).map(([key]) =>
                     <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} key={key}/>
                 )
             }
@@ -357,7 +357,7 @@ function CategorizedMeta({meta}: MetaViewProps): JSX.Element {
         </TabPanel>
         }
         {
-            Object.entries(customCategories).map(([key, value]) =>
+            Object.entries(customCategories).map(([,value]) =>
                 <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={n}>
                     <CustomTable data={value}/>
                 </TabPanel>
