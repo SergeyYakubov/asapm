@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/knocknote/vitess-sqlparser/sqlparser"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
 	"time"
 )
@@ -43,6 +44,13 @@ func SQLOperatorToMongo(sqlOp string) string {
 }
 
 func bsonM(key string, val *ValueFromSQL) bson.M {
+	if key=="$regex" {
+		str_val,ok:= val.val.(string)
+		if !ok {
+			str_val=""
+		}
+		return bson.M{key: primitive.Regex{Pattern:str_val, Options:"i"}}
+	}
 	return bson.M{key: val.val}
 }
 
@@ -149,6 +157,12 @@ func processComparisonExpr(expr *sqlparser.ComparisonExpr) (res bson.M, err erro
 		if val == nil {
 			return bson.M{}, errors.New("wrong value")
 		}
+		if expr.Operator == sqlparser.NotRegexpStr || expr.Operator == sqlparser.RegexpStr {
+			_,ok:= val.val.(string)
+			if !ok {
+				return bson.M{}, errors.New("wrong regexp value")
+			}
+		}
 		if expr.Operator == sqlparser.NotRegexpStr {
 			return bson.M{key: bson.M{"$not": bsonM(mongoOp, val)}}, nil
 		} else {
@@ -245,6 +259,7 @@ func (db *Mongodb) BSONFromSQL(query string) (bson.M, bson.M, error) {
 		}
 	}
 
+	fmt.Println(query_mongo)
 	if len(sel.OrderBy) > 0 {
 		sort_mongo, err = getSortBSONFromOrderArray(sel.OrderBy)
 		if err != nil {
