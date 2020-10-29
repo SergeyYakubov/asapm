@@ -57,7 +57,7 @@ type CurrentCustomFilter = {
 
 const emptyCustomFilter: CurrentCustomFilter = {value: "", op: "", name: "", filterString: ""};
 
-function FilterForm({currentFilter, possibleColumns, currentCustomFilter, setCurrentCustomFilter}: FilterFormProps) {
+function FilterForm({possibleColumns, currentCustomFilter, setCurrentCustomFilter}: FilterFormProps) {
     const classes = useStyles();
 
     const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {

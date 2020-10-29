@@ -1,4 +1,3 @@
-import {PaletteType} from "@material-ui/core";
 import {gql, useQuery, useMutation, QueryResult, MutationTuple} from "@apollo/client";
 import userService from "./userService";
 import {Mutation, MutationSetUserPreferencesArgs, Query, QueryUserArgs} from "./generated/graphql";
@@ -34,7 +33,7 @@ function useUserPreferences(): QueryResult<Query, QueryUserArgs> {
 
 type UserPreferencesMutationData = { response: Mutation; variables: MutationSetUserPreferencesArgs };
 type UserPreferencesMutationType = MutationTuple<UserPreferencesMutationData, any>;
-function useUpdateUserTheme(theme: PaletteType): UserPreferencesMutationType {
+function useUpdateUserTheme(): UserPreferencesMutationType {
     return useMutation<UserPreferencesMutationData>(SAVE_USER_PREFERENCES);
 }
 

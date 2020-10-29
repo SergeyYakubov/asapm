@@ -8,7 +8,7 @@ export type TableData = Array<TableEntry>
 
 export interface TableFromData
 {
-    (data: any, section: string): TableData;
+    (data: any, section?: string): TableData;
 }
 
 export function IsoDateToStr(isoDate: string | null): string {

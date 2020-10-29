@@ -15,7 +15,7 @@ import Divider from '@material-ui/core/Divider';
 import Container from '@material-ui/core/Container';
 import userPreferences from "../../userPreferences";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
     userAccountButton: {
         marginLeft: 'auto',
     },
@@ -50,7 +50,7 @@ export default function UserAccount(): JSX.Element {
     const {data} = userPreferences.useUserPreferences();
     const themeType = data?.user?.preferences.schema || "light";
 
-    const [changeTheme] = userPreferences.useUpdateUserTheme("dark");
+    const [changeTheme] = userPreferences.useUpdateUserTheme();
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
