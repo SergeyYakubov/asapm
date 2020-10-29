@@ -15,11 +15,10 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 
-function Logbooks(): JSX.Element {
+function LogbooksPage(): JSX.Element {
     const classes = useStyles();
     return (
         <div className={classes.root}>
-            <Toolbar variant="dense"/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
                     very cool logbooks
@@ -30,4 +29,4 @@ function Logbooks(): JSX.Element {
 }
 
 
-export default Logbooks;
+export default LogbooksPage;

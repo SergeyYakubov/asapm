@@ -2,7 +2,7 @@ import React from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import {Link, RouteComponentProps} from "react-router-dom";
-import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "./graphQLSchemes";
+import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "../graphQLSchemes";
 import {useQuery} from "@apollo/client";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -13,8 +13,8 @@ import clsx from "clsx";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
-import DetailedTabs from "./DetailedTabs";
-import {BeamtimeMeta, CollectionEntry, Query} from "./generated/graphql";
+import DetailedTabs from "../components/DetailedTabs";
+import {BeamtimeMeta, CollectionEntry, Query} from "../generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -209,7 +209,6 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps): JSX.Element {
     if (typeof queryResult == "string") {
         return (
             <div className={classes.root}>
-                <Toolbar variant="dense"/>
                 <Typography variant="h3">
                     {queryResult as string}
                 </Typography>
@@ -220,7 +219,6 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps): JSX.Element {
         queryResult.data!.collections[0];
     return (
         <div className={classes.root}>
-            <Toolbar variant="dense"/>
             <DetailedHeader meta={data} rawView={rawView} setRawView={setRawView} isBeamtime={isBeamtime}/>
             {rawView ? (
                 <RawMeta meta={data}/>

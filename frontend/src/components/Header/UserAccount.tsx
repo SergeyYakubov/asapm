@@ -7,13 +7,13 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
-import UserService from "./userService";
+import UserService from "../../userService";
 
 import Typography from '@material-ui/core/Typography';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
 import Divider from '@material-ui/core/Divider';
 import Container from '@material-ui/core/Container';
-import userPreferences from "./userPreferences";
+import userPreferences from "../../userPreferences";
 
 const useStyles = makeStyles((theme) => ({
     userAccountButton: {

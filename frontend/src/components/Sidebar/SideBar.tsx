@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme: Theme) =>
             whiteSpace: 'nowrap',
         },
         drawerOpen: {
-            width: drawerWidth,
+            width: drawerWidth + 1 /* 1px for border right */,
             transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
@@ -112,9 +112,9 @@ export default function SideBar(): JSX.Element {
                         <ListItemIcon className={classes.listItem}><DashboardIcon/></ListItemIcon>
                         <ListItemText primary="Beamtime Board"/>
                     </ListItem>
-                    <ListItem button key="Logbooks" component={RouterLink} to={"/logbooks"} exact activeClassName="Mui-selected">
+                    <ListItem button key="LogbooksPage" component={RouterLink} to={"/logbooks"} exact activeClassName="Mui-selected">
                         <ListItemIcon className={classes.listItem}><CollectionsBookmarkIcon/></ListItemIcon>
-                        <ListItemText primary="Logbooks"/>
+                        <ListItemText primary="LogbooksPage"/>
                     </ListItem>
                 </List>
             </div>

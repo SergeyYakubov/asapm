@@ -12,9 +12,9 @@ import MaterialTable from "material-table";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
-import {TableEntry, TableData, TableFromData} from "./common";
-import {TableIcons} from "./TableIcons";
-import {BeamtimeMeta, CollectionEntry} from "./generated/graphql";
+import {TableEntry, TableData, TableFromData} from "../common";
+import {TableIcons} from "../TableIcons";
+import {BeamtimeMeta, CollectionEntry} from "../generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({

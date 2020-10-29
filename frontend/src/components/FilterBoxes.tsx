@@ -14,11 +14,11 @@ import {
     RemoveDuplicates,
     RemoveElement,
     ReplaceElement
-} from "./common";
+} from "../common";
 import debounce from 'lodash.debounce';
-import {GetUniqueNamesForField} from "./meta";
+import {GetUniqueNamesForField} from "../meta";
 import {gql, makeVar, useQuery} from "@apollo/client";
-import {COLLECTIONS} from "./graphQLSchemes";
+import {COLLECTIONS} from "../graphQLSchemes";
 import {
     Button,
     Chip,
@@ -37,7 +37,7 @@ import DateRangeIcon from '@material-ui/icons/DateRange';
 import SearchIcon from '@material-ui/icons/Search';
 import Icon from '@material-ui/core/Icon';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import {CollectionEntry, Query, QueryCollectionsArgs, UniqueField} from "./generated/graphql";
+import {CollectionEntry, Query, QueryCollectionsArgs, UniqueField} from "../generated/graphql";
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityTwoToneIcon from '@material-ui/icons/VisibilityTwoTone';

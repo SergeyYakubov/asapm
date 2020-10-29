@@ -8,13 +8,13 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Toolbar from '@material-ui/core/Toolbar';
-import {BeamtimeFilterBox} from "./FilterBoxes";
+import {BeamtimeFilterBox} from "../components/FilterBoxes";
 import Divider from "@material-ui/core/Divider";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";
-import {METAS } from "./graphQLSchemes";
-import {Query, QueryMetaArgs} from "./generated/graphql";
+import {METAS } from "../graphQLSchemes";
+import {Query, QueryMetaArgs} from "../generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -131,7 +131,6 @@ function MetaListPage(): JSX.Element {
     const classes = useStyles();
     return (
         <div className={classes.root}>
-            <Toolbar variant="dense"/>
             <BeamtimeFilterBox/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
