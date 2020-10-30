@@ -1,0 +1,10 @@
+{
+  "dbEndpoint" : "localhost:27017",
+  "logLevel" : "debug",
+  "port" : "8080",
+  "basePath" : "/api",
+  "publicKeyPath" : "./config.json",
+  "authorization" : {
+    "enabled": false
+  }
+}
