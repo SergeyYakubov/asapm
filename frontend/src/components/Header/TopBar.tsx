@@ -25,8 +25,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const headerStyle = {
-    flex: '0',
-    position: 'static' as const
+    flex: '0 0 auto',
+    position: 'static' as const,
 };
 
 export default function TopBar(): JSX.Element {
