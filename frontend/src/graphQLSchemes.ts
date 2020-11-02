@@ -2,7 +2,7 @@ import {gql} from "@apollo/client";
 
 export const METAS_DETAILED = gql`
    query ($filter:String) {
-    meta (filter: $filter){
+    meta (filter: $filter) {
     applicant {
      email
      institute
@@ -164,6 +164,30 @@ export const COLLECTIONS = gql`
     eventEnd
     type
     customValues
+  }
+}
+`;
+
+
+export const LOG_MESSAGES = gql`
+query {
+  logEntries(filter: "") {
+    entries {
+      __typename,
+      ... on LogEntryMessage {
+        id,
+        entryType,
+        time,
+        facility,
+        beamtime,
+        tags,
+        source,
+        message,
+        attachments,
+      }
+    }
+    start
+    hasMore
   }
 }
 `;

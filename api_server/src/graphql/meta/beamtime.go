@@ -4,21 +4,11 @@ import (
 	"asapm/auth"
 	"asapm/common/utils"
 	"asapm/database"
+	"asapm/graphql/common"
 	"asapm/graphql/graph/model"
 	"encoding/json"
 	"errors"
 )
-
-func getFilterAndSort(filter *string,orderBy *string) database.FilterAndSort {
-	fs := database.FilterAndSort{}
-	if filter !=nil {
-		fs.Filter =*filter
-	}
-	if orderBy !=nil {
-		fs.Order =*orderBy
-	}
-	return fs
-}
 
 func ReadBeamtimeMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFields []string,removeFields []string) ([]*model.BeamtimeMeta, error) {
 	if acl.ImmediateDeny {
@@ -37,7 +27,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepField
 
 	var sResponse = []*model.BeamtimeMeta{}
 
-	fs := getFilterAndSort(filter,orderBy)
+	fs := common.GetFilterAndSort(filter,orderBy)
 
 	if fs.Filter!="" {
 		fs.Filter = "("+fs.Filter+")" + ` AND type='beamtime'`
@@ -51,7 +41,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepField
 	}
 
 	for _, meta := range sResponse {
-		updateFields(keepFields,removeFields, &meta.CustomValues)
+		common.UpdateFields(keepFields,removeFields, &meta.CustomValues)
 	}
 
 	return sResponse, nil
@@ -66,10 +56,10 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 		meta.ChildCollection = []*model.BaseCollectionEntry{}
 	}
 	if meta.ChildCollectionName==nil {
-		col:= KDefaultCollectionName
+		col:= kDefaultCollectionName
 		meta.ChildCollectionName=&col
 	}
-	meta.Type = KBeamtimeTypeName
+	meta.Type = kBeamtimeTypeName
 
 	parentMeta:=model.ParentBeamtimeMeta{}
 	utils.DeepCopy(meta, &parentMeta)
@@ -89,7 +79,7 @@ func CreateBeamtimeMeta( input model.NewBeamtimeMeta) (*model.BeamtimeMeta, erro
 
 func  DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
 	filter:= "parentBeamtimeMeta.id = '" + id+"'"
-	fs := getFilterAndSort(&filter,nil)
+	fs := common.GetFilterAndSort(&filter,nil)
 
 	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true);err!=nil {
 		return nil,err

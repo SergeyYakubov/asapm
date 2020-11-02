@@ -235,16 +235,17 @@ export type LogEntryMessage = GenericLogEntry & {
   tags: Maybe<Array<Scalars['String']>>;
   source: Maybe<Scalars['String']>;
   message: Scalars['String'];
-  attachments: Scalars['Map'];
+  attachments: Maybe<Scalars['Map']>;
 };
 
 export type NewLogEntryMessage = {
+  time: Maybe<Scalars['DateTime']>;
   facility: Scalars['String'];
   beamtime: Maybe<Scalars['String']>;
   tags: Maybe<Array<Scalars['String']>>;
   source: Maybe<Scalars['String']>;
   message: Scalars['String'];
-  attachments: Scalars['Map'];
+  attachments: Maybe<Scalars['Map']>;
 };
 
 export type LogEntry = LogEntryMessage;

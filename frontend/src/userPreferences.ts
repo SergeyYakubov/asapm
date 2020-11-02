@@ -15,7 +15,7 @@ const USER_PREFERENCES = gql`
 `;
 
 const SAVE_USER_PREFERENCES = gql`
-    mutation addUser($id: ID!,$schema: String!)  {
+mutation addUser($id: ID!,$schema: String!) {
     setUserPreferences(id:$id,input:{
         schema:$schema,
     }){

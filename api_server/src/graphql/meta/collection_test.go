@@ -97,7 +97,7 @@ var AddCollectionEntryTests = []struct {
 	message    string
 }{
 	{aclImmediateAccess, true,"12345.scan1","12345", KMetaNameInDb,"first layer"},
-	{aclImmediateAccess, true,"12345.scan1.subscan1","12345.scan1",KMetaNameInDb,"second layer"},
+	{aclImmediateAccess, true,"12345.scan1.subscan1","12345.scan1", KMetaNameInDb,"second layer"},
 //	{aclImmediateDeny, false,"12345.scan1","12345",KMetaNameInDb,"access denied"},
 }
 
@@ -135,9 +135,9 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 
 		var input_entry model.CollectionEntry
 		utils.DeepCopy(input, &input_entry)
-		input_entry.Type = KCollectionTypeName
+		input_entry.Type = kCollectionTypeName
 		input_entry.ChildCollection = []*model.BaseCollectionEntry{}
-		col := KDefaultCollectionName
+		col := kDefaultCollectionName
 		input_entry.ChildCollectionName = &col
 		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
 

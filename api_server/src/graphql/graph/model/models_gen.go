@@ -112,7 +112,7 @@ type InputUsers struct {
 }
 
 type LogEntryMessage struct {
-	ID          string                 `json:"id" bson:"id"`
+	ID          string                 `json:"_id" bson:"_id"`
 	Time        time.Time              `json:"time" bson:"time"`
 	EntryType   LogEntryType           `json:"entryType" bson:"entryType"`
 	Facility    string                 `json:"facility" bson:"facility"`
@@ -166,6 +166,7 @@ type NewCollectionEntry struct {
 }
 
 type NewLogEntryMessage struct {
+	Time        *time.Time             `json:"time" bson:"time"`
 	Facility    string                 `json:"facility" bson:"facility"`
 	Beamtime    *string                `json:"beamtime" bson:"beamtime"`
 	Tags        []string               `json:"tags" bson:"tags"`

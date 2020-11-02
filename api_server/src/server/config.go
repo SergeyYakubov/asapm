@@ -24,11 +24,13 @@ func ReadConfig(fname string) (log.Level, error) {
 		return log.FatalLevel, err
 	}
 
-	publicKey, err := utils.ReadFileAsString(Config.PublicKeyPath)
-	if err != nil {
-		return log.FatalLevel, err
-	} else {
-		Config.publicKey = publicKey
+	if Config.Authorization.Enabled {
+		publicKey, err := utils.ReadFileAsString(Config.PublicKeyPath)
+		if err != nil {
+			return log.FatalLevel, err
+		} else {
+			Config.publicKey = publicKey
+		}
 	}
 
 	level, err := log.LevelFromString(Config.LogLevel)

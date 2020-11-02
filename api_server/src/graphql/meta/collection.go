@@ -4,6 +4,7 @@ import (
 	"asapm/auth"
 	"asapm/common/utils"
 	"asapm/database"
+	"asapm/graphql/common"
 	"asapm/graphql/graph/model"
 	"encoding/json"
 	"errors"
@@ -34,10 +35,10 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 	utils.DeepCopy(entry,&baseEntry)
 
 	if len(ids) == 2 {
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",id, KChildCollectionKey,baseEntry,baseEntry.ID)
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",id, kChildCollectionKey,baseEntry,baseEntry.ID)
 	} else {
 		parentId:=strings.Join(ids[:len(ids)-1],".")
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,baseEntry.ID)
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, kChildCollectionKey,baseEntry,baseEntry.ID)
 	}
 
 	if err != nil {
@@ -48,10 +49,10 @@ func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mod
 		entry.ChildCollection = []*model.BaseCollectionEntry{}
 	}
 	if entry.ChildCollectionName==nil {
-		col:= KDefaultCollectionName
+		col:= kDefaultCollectionName
 		entry.ChildCollectionName=&col
 	}
-	entry.Type = KCollectionTypeName
+	entry.Type = kCollectionTypeName
 	entry.ParentBeamtimeMeta = btMeta.ParentBeamtimeMeta
 
 	bentry,_ := json.Marshal(&entry)
@@ -85,15 +86,14 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 
 	var response = []*model.CollectionEntry{}
 
-	fs := getFilterAndSort(filter,orderBy)
+	fs := common.GetFilterAndSort(filter,orderBy)
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records",fs,&response)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
 	}
 
-
 	for _, meta := range response {
-		updateFields(keepFields,removeFields, &meta.CustomValues)
+		common.UpdateFields(keepFields,removeFields, &meta.CustomValues)
 	}
 
 	return response, nil

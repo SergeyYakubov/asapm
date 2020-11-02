@@ -2232,13 +2232,9 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Map",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Map",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -2261,6 +2257,16 @@
         "description": null,
         "fields": null,
         "inputFields": [
+          {
+            "name": "time",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTime",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
           {
             "name": "facility",
             "description": null,
@@ -2331,13 +2337,9 @@
             "name": "attachments",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Map",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Map",
+              "ofType": null
             },
             "defaultValue": null
           }

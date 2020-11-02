@@ -1283,10 +1283,12 @@ type LogEntryMessage implements GenericLogEntry {
 
     # Payload
     message: String!
-    attachments: Map! # Map<Filename, Base64>
+    attachments: Map # Map<Filename, Base64>
 }
 
 input NewLogEntryMessage {
+    time: DateTime # If not set, its Now()
+
     facility: String!
     beamtime: String
     tags: [String!]
@@ -1294,7 +1296,7 @@ input NewLogEntryMessage {
 
     # Payload
     message: String!
-    attachments: Map! # Map<Filename, Base64>
+    attachments: Map # Map<Filename, Base64>
 }
 
 union LogEntry = LogEntryMessage
@@ -1334,7 +1336,8 @@ type Query {
     # Logbook API
     logEntry (id: ID!): LogEntry
     logEntries (filter: String!, start: Int, limit: Int): LogEntryQueryResult
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	&ast.Source{Name: "../../../schema/user.graphqls", Input: `scalar Map
 
 type UserPreferences {
@@ -3402,14 +3405,11 @@ func (ec *executionContext) _LogEntryMessage_attachments(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(map[string]interface{})
 	fc.Result = res
-	return ec.marshalNMap2map(ctx, field.Selections, res)
+	return ec.marshalOMap2map(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LogEntryQueryResult_entries(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryQueryResult) (ret graphql.Marshaler) {
@@ -6640,6 +6640,12 @@ func (ec *executionContext) unmarshalInputNewLogEntryMessage(ctx context.Context
 
 	for k, v := range asMap {
 		switch k {
+		case "time":
+			var err error
+			it.Time, err = ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "facility":
 			var err error
 			it.Facility, err = ec.unmarshalNString2string(ctx, v)
@@ -6672,7 +6678,7 @@ func (ec *executionContext) unmarshalInputNewLogEntryMessage(ctx context.Context
 			}
 		case "attachments":
 			var err error
-			it.Attachments, err = ec.unmarshalNMap2map(ctx, v)
+			it.Attachments, err = ec.unmarshalOMap2map(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6991,9 +6997,6 @@ func (ec *executionContext) _LogEntryMessage(ctx context.Context, sel ast.Select
 			}
 		case "attachments":
 			out.Values[i] = ec._LogEntryMessage_attachments(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7890,29 +7893,6 @@ func (ec *executionContext) unmarshalNLogEntryType2asapmᚋgraphqlᚋgraphᚋmod
 
 func (ec *executionContext) marshalNLogEntryType2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryType(ctx context.Context, sel ast.SelectionSet, v model.LogEntryType) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) unmarshalNMap2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
-	if v == nil {
-		return nil, nil
-	}
-	return graphql.UnmarshalMap(v)
-}
-
-func (ec *executionContext) marshalNMap2map(ctx context.Context, sel ast.SelectionSet, v map[string]interface{}) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := graphql.MarshalMap(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx context.Context, v interface{}) (model.NewBeamtimeMeta, error) {

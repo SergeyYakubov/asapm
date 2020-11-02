@@ -8,6 +8,7 @@ import (
 	"asapm/common/logger"
 	"asapm/graphql/graph/generated"
 	"asapm/graphql/graph/model"
+	"asapm/graphql/logbook"
 	"asapm/graphql/meta"
 	"context"
 	"errors"
@@ -99,8 +100,8 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.UserAccount
 }
 
 // Logbook API
-func (r *mutationResolver) AddMessageLogEntry(ctx context.Context, input model.NewLogEntryMessage) (*string, error) {
-	panic("TODO mutation AddMessageLogEntry")
+func (r *mutationResolver) AddMessageLogEntry(ctx context.Context, newMessage model.NewLogEntryMessage) (*string, error) {
+	return logbook.WriteNewMessage(newMessage)
 }
 
 func (r *mutationResolver) RemoveLogEntry(ctx context.Context, id string) (*string, error) {
@@ -112,7 +113,22 @@ func (r *queryResolver) LogEntry(ctx context.Context, id string) (model.LogEntry
 }
 
 func (r *queryResolver) LogEntries(ctx context.Context, filter string, start *int, limit *int) (*model.LogEntryQueryResult, error) {
-	panic("TODO query LogEntries")
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return &model.LogEntryQueryResult{}, errors.New("access denied: " + err.Error())
+	}
+
+	//keep, remove := extractModificationFields(ctx)
+
+	res, err := logbook.ReadEntries(acl, filter, nil)
+	/*
+	res, err := meta.ReadCollectionsMeta(acl, filter, )
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	 */
+	return res, err
 }
 
 // Mutation returns generated.MutationResolver implementation.

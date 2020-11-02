@@ -25,10 +25,12 @@ type LogEntryMessage implements GenericLogEntry {
 
     # Payload
     message: String!
-    attachments: Map! # Map<Filename, Base64>
+    attachments: Map # Map<Filename, Base64>
 }
 
 input NewLogEntryMessage {
+    time: DateTime # If not set, its Now()
+
     facility: String!
     beamtime: String
     tags: [String!]
@@ -36,7 +38,7 @@ input NewLogEntryMessage {
 
     # Payload
     message: String!
-    attachments: Map! # Map<Filename, Base64>
+    attachments: Map # Map<Filename, Base64>
 }
 
 union LogEntry = LogEntryMessage

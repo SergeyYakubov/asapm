@@ -113,13 +113,14 @@ class NewCollectionEntry(sgqlc.types.Input):
 
 class NewLogEntryMessage(sgqlc.types.Input):
     __schema__ = schema
-    __field_names__ = ('facility', 'beamtime', 'tags', 'source', 'message', 'attachments')
+    __field_names__ = ('time', 'facility', 'beamtime', 'tags', 'source', 'message', 'attachments')
+    time = sgqlc.types.Field(DateTime, graphql_name='time')
     facility = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='facility')
     beamtime = sgqlc.types.Field(String, graphql_name='beamtime')
     tags = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(String)), graphql_name='tags')
     source = sgqlc.types.Field(String, graphql_name='source')
     message = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='message')
-    attachments = sgqlc.types.Field(sgqlc.types.non_null(Map), graphql_name='attachments')
+    attachments = sgqlc.types.Field(Map, graphql_name='attachments')
 
 
 
@@ -342,7 +343,7 @@ class LogEntryMessage(sgqlc.types.Type, GenericLogEntry):
     __schema__ = schema
     __field_names__ = ('message', 'attachments')
     message = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='message')
-    attachments = sgqlc.types.Field(sgqlc.types.non_null(Map), graphql_name='attachments')
+    attachments = sgqlc.types.Field(Map, graphql_name='attachments')
 
 
 
