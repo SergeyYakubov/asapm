@@ -204,7 +204,6 @@ func (db *Mongodb) uniqueFields(dbName string, dataCollectionName string, extra_
 		return nil, errors.New("mongo: filter must be set")
 	}
 
-
 	key, ok := extra_params[1].(string)
 	if !ok {
 		return nil, errors.New("an argument must be string")
@@ -216,21 +215,19 @@ func (db *Mongodb) uniqueFields(dbName string, dataCollectionName string, extra_
 	queryStr := getQueryString(fs)
 
 	if queryStr != "" {
-		queryStr = strings.ReplaceAll(queryStr,"\\","\\\\")
+		queryStr = strings.ReplaceAll(queryStr, "\\", "\\\\")
 		q, _, err = db.BSONFromSQL(queryStr)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	res,err := c.Distinct(context.TODO(),key,q)
-	if err!=nil {
+	res, err := c.Distinct(context.TODO(), key, q)
+	if err != nil {
 		return nil, err
 	}
 	return json.Marshal(&res)
 }
-
-
 
 func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 4 {
@@ -255,7 +252,7 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 	}
 
 	c := db.client.Database(dbName).Collection(dataCollectionName)
-	q := bson.M{"$and": []bson.M{bson.M{"_id": id},bson.M{key: bson.M{"$exists": true}},bson.M{key+"._id": bson.M{"$ne":uniqueId}}}}
+	q := bson.M{"$and": []bson.M{bson.M{"_id": id}, bson.M{key: bson.M{"$exists": true}}, bson.M{key + "._id": bson.M{"$ne": uniqueId}}}}
 
 	update := bson.M{
 		"$addToSet": bson.M{
@@ -263,21 +260,18 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 		},
 	}
 	res, err := c.UpdateOne(context.TODO(), q, update)
-	if err!=nil {
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
 	if res.MatchedCount == 0 {
 		return nil, errors.New("record not found or duplicate entry")
 	}
 
-	if res.ModifiedCount + res.UpsertedCount == 0 {
+	if res.ModifiedCount+res.UpsertedCount == 0 {
 		return nil, errors.New("record not inserted")
 	}
 	return nil, err
 }
-
-
-
 
 func getQueryString(fs FilterAndSort) string {
 	queryStr := ""
@@ -293,8 +287,6 @@ func getQueryString(fs FilterAndSort) string {
 	if queryStr == "" {
 		return ""
 	}
-
-	queryStr = strings.Replace(queryStr, id_name, "_id", -1)
 
 	return queryStr
 }
@@ -332,11 +324,10 @@ func (db *Mongodb) deleteRecords(dbName string, dataCollectionName string, extra
 	}
 
 	if deleted.DeletedCount == 0 && errorOnNoDocuments {
-		return nil,errors.New("did not find any documents")
+		return nil, errors.New("did not find any documents")
 	}
-	return nil,nil
+	return nil, nil
 }
-
 
 func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	c := db.client.Database(dbName).Collection(dataCollectionName)
@@ -359,7 +350,7 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 	queryStr := getQueryString(fs)
 
 	if queryStr != "" {
-		queryStr = strings.ReplaceAll(queryStr,"\\","\\\\")
+		queryStr = strings.ReplaceAll(queryStr, "\\", "\\\\")
 		q, sort, err = db.BSONFromSQL(queryStr)
 		if err != nil {
 			return nil, err
