@@ -67,6 +67,8 @@ spec:
             - containerPort: {{ .Values.frontend.internalPort }}
           stdin: true
           env:
+            - name: REACT_APP_API_URL
+              value: ""
             - name: PUBLIC_URL
               value: "{{ tpl .Values.frontend.basePathTemplate . }}"
             - name: SERVICE_PORT

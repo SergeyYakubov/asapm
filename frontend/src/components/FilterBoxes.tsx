@@ -13,7 +13,7 @@ import {
     GetFilterString,
     RemoveDuplicates,
     RemoveElement,
-    ReplaceElement
+    ReplaceElement, TextOpToSQLOp
 } from "../common";
 import debounce from 'lodash.debounce';
 import {GetUniqueNamesForField} from "../meta";
@@ -173,6 +173,8 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
         const fieldFilter: FieldFilter = {
             alias: alias,
             key: uniqueFields.keyName as string,
+            op: "equals",
+            type: "string",
             value: value as string,
             negate: false,
             enabled: true
@@ -187,7 +189,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
                     endIcon={<ArrowDropDownIcon/>}
                     onClick={handleClick}
                     className={classes.filtersFields}
-                    disabled={uniqueFields.values.length === 0}
+                    disabled={uniqueFields.values.filter(value => value).length === 0}
             >
                 {alias}
             </Button>
@@ -198,7 +200,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
             >
-                {uniqueFields.values.map(value => {
+                {uniqueFields.values.filter(value => value).map(value => {
                     return <MenuItem key={value as string} onClick={() => handleMenuClick(value)}>{value}</MenuItem>;
                 })}
             </StyledMenu>
@@ -251,11 +253,18 @@ function FilterChip({filter,fieldFilter}: FilterChipProps) {
         handleClose();
     };
 
+    let label:string;
+    if (fieldFilter.filterString) {
+        label = fieldFilter.filterString;
+    } else {
+        label = (fieldFilter.alias?fieldFilter.alias:fieldFilter.key) + " " +  TextOpToSQLOp(fieldFilter.op!,fieldFilter.negate) + " " + fieldFilter.value;
+    }
+
     return <div>
         <Chip
         key={fieldFilter.value}
         className={fieldFilter.enabled ? classes.filterChip : classes.filterChipDisabled}
-        label={fieldFilter.alias + (fieldFilter.negate ? " != " : " = ") + fieldFilter.value}
+        label={label}
         onClick={handleClick}
         onDelete={handleDelete}
     />
@@ -294,7 +303,7 @@ function FilterChip({filter,fieldFilter}: FilterChipProps) {
                     </ListItemIcon>
                     <ListItemText primary={fieldFilter.enabled?"Disable":"Enable"}/>
                 </ListItem>
-                   <ListItem button onClick={handleInvert}>
+                   <ListItem button onClick={handleInvert} disabled={!!fieldFilter.filterString} >
                     <ListItemIcon className={classes.listItemWithIcon}>
                         <FlipCameraAndroidIcon fontSize={"small"}/>
                     </ListItemIcon>
@@ -468,7 +477,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
             setCollections([]);
             console.log("collection query error" + queryResult.error);
         }
-        if (queryResult.loading === false && queryResult.data) {
+        if (!queryResult.loading && queryResult.data) {
             setCollections(queryResult.data!.collections);
         }
     }, [queryResult.error, queryResult.loading, queryResult.data, setCollections]);
@@ -490,6 +499,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
         }
     };
 
+    let n = 0;
     const classes = useStyles();
     return (
         <div className={classes.root}>
@@ -550,6 +560,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                             </Icon>
                             <TextField className={classes.textField} id="standard-search" margin="dense"
                                        fullWidth={true}
+                                       defaultValue={filter.textSearch}
                                        label="Search field" type="search" onChange={handleTextSearchChange}/>
                         </Box>
                     </Grid>
@@ -601,7 +612,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
                                 <BulkFilterEdit filter={filter}/>
                                 {filter.fieldFilters.map(fieldFilter => {
-                                    return <FilterChip filter={filter} fieldFilter={fieldFilter}/>;
+                                    return <FilterChip key={n++} filter={filter} fieldFilter={fieldFilter}/>;
                                 })}
                                 <CustomFilter currentFilter={filter} collections={queryResult.data?.collections} />
                             </Box>

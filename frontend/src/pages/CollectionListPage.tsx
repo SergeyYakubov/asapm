@@ -61,8 +61,8 @@ interface BasicCollectionDetails {
 
 export type ColumnItem = {
     fieldName: string
-    alias: string | null
-    type: string | null
+    alias: string | undefined
+    type: string | undefined
     active: boolean
 }
 
@@ -77,7 +77,7 @@ function ValueToString(value: any, columnType: string | undefined) {
     }
 
     let strval = value.toString();
-    if (columnType === "string") {
+    if (columnType === "Date") {
         strval = IsoDateToStr(strval);
     }
     return strval;
@@ -119,7 +119,7 @@ function possibleColumnListfromCustomValues(vals: KvObj | null, root: string, co
             possibleColumnListfromCustomValues(value, fullColumn, columns);
         } else {
             if (!columns.find(column => column.fieldName === "customValues." + fullColumn)) {
-                columns.push({fieldName: "customValues." + fullColumn, alias: fullColumn, active: false,type:null});
+                columns.push({fieldName: "customValues." + fullColumn, alias: fullColumn, active: false,type:value.constructor.name});
             }
         }
     }
@@ -204,20 +204,20 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
                 { title: 'Key Name', field: 'fieldName',editable:'never'},
                 { title: 'Alias', field: 'alias' },
             ]}
-            data={possibleColumns.map(column => { return {fieldName:column.fieldName,alias:column.alias || column.fieldName,type:null, active:column.active,
+            data={possibleColumns.map(column => { return {fieldName:column.fieldName,alias:column.alias || column.fieldName,type:undefined, active:column.active,
                 tableData: { checked: column.active } };})}
         />
    </Box>;
 }
 
 const defaultColumns: ColumnList = [
-    {fieldName: "id", alias: "ID", active: true,type:null},
-    {fieldName: "title", alias: "Title", active: true,type:null},
-    {fieldName: "parentBeamtimeMeta.id", alias: "Beamtime ID", active: true,type:null},
-    {fieldName: "parentBeamtimeMeta.beamline", alias: "Beamline", active: true,type:null},
-    {fieldName: "parentBeamtimeMeta.facility", alias: "Facility", active: true,type:null},
-    {fieldName: "parentBeamtimeMeta.users.doorDb", alias: "Door users", active: true,type:null},
-    {fieldName: "eventStart", alias: "Started At", type: "string", active: true},
+    {fieldName: "id", alias: "ID", active: true,type:"string"},
+    {fieldName: "title", alias: "Title", active: true,type:"string"},
+    {fieldName: "parentBeamtimeMeta.id", alias: "Beamtime ID", active: true,type:"string"},
+    {fieldName: "parentBeamtimeMeta.beamline", alias: "Beamline", active: true,type:"string"},
+    {fieldName: "parentBeamtimeMeta.facility", alias: "Facility", active: true,type:"string"},
+    {fieldName: "parentBeamtimeMeta.users.doorDb", alias: "Door users", active: true,type:"Array"},
+    {fieldName: "eventStart", alias: "Started At", active: true,type: "Date"},
 ];
 
 export const columnsVar = makeVar<ColumnList>(

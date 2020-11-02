@@ -44,12 +44,12 @@ func SQLOperatorToMongo(sqlOp string) string {
 }
 
 func bsonM(key string, val *ValueFromSQL) bson.M {
-	if key=="$regex" {
-		str_val,ok:= val.val.(string)
+	if key == "$regex" {
+		str_val, ok := val.val.(string)
 		if !ok {
-			str_val=""
+			str_val = ""
 		}
-		return bson.M{key: primitive.Regex{Pattern:str_val, Options:"i"}}
+		return bson.M{key: primitive.Regex{Pattern: str_val, Options: "i"}}
 	}
 	return bson.M{key: val.val}
 }
@@ -75,6 +75,12 @@ func keyFromColumnName(cn *sqlparser.ColName) string {
 	if len(par_par_key) > 0 {
 		key = par_par_key + "." + key
 	}
+	if key == "id" {
+		key = "_id"
+	} else if key == "parentBeamtimeMeta.id" {
+		key = "parentBeamtimeMeta._id"
+	}
+
 	return key
 }
 
@@ -158,7 +164,7 @@ func processComparisonExpr(expr *sqlparser.ComparisonExpr) (res bson.M, err erro
 			return bson.M{}, errors.New("wrong value")
 		}
 		if expr.Operator == sqlparser.NotRegexpStr || expr.Operator == sqlparser.RegexpStr {
-			_,ok:= val.val.(string)
+			_, ok := val.val.(string)
 			if !ok {
 				return bson.M{}, errors.New("wrong regexp value")
 			}

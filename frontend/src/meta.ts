@@ -36,7 +36,7 @@ export function TableDataFromCollection(meta: CollectionEntry): TableData {
                 {name: 'Beamtime ID', value: meta.parentBeamtimeMeta!.id},
                 {name: 'Facility', value: meta.parentBeamtimeMeta!.facility || "undefined"},
                 {name: 'Beamline', value: meta.parentBeamtimeMeta!.beamline || "undefined"},
-                {name: 'Start', value: meta.eventStart?meta.eventStart.toString():""},
+                {name: 'Start', value: IsoDateToStr(meta.eventStart)},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
             ];
 }
