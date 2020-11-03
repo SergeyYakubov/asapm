@@ -115,7 +115,6 @@ function DatasetTable({meta}: MetaViewProps) {
     const handleClick = (
         event?: React.MouseEvent,
         rowData?: TableEntry,
-        toggleDetailPanel?: (panelIndex?: number) => void
     ) => {
         const path = "/detailedcollection/" + rowData?.id + "/meta";
         history.push(path);

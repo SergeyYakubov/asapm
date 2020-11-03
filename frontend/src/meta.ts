@@ -2,7 +2,7 @@ import {IsoDateToStr, TableData} from "./common";
 import {BeamtimeMeta, CollectionEntry, UniqueField} from "./generated/graphql";
 
 
-export function TableDataFromMeta(meta: BeamtimeMeta, section: string): TableData {
+export function TableDataFromMeta(meta: BeamtimeMeta, section?: string): TableData {
     switch (section) {
         case "Beamtime":
             return [
@@ -30,13 +30,13 @@ export function TableDataFromMeta(meta: BeamtimeMeta, section: string): TableDat
     return [];
 }
 
-export function TableDataFromCollection(meta: CollectionEntry, section: string): TableData {
+export function TableDataFromCollection(meta: CollectionEntry): TableData {
             return [
                 {name: 'ID', value: meta.id},
                 {name: 'Beamtime ID', value: meta.parentBeamtimeMeta!.id},
                 {name: 'Facility', value: meta.parentBeamtimeMeta!.facility || "undefined"},
                 {name: 'Beamline', value: meta.parentBeamtimeMeta!.beamline || "undefined"},
-                {name: 'Start', value: meta.eventStart?meta.eventStart.toString():""},
+                {name: 'Start', value: IsoDateToStr(meta.eventStart)},
                 {name: 'End', value: IsoDateToStr(meta.eventEnd)},
             ];
 }

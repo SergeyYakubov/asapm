@@ -287,8 +287,6 @@ func getQueryString(fs FilterAndSort) string {
 		return ""
 	}
 
-	queryStr = strings.Replace(queryStr, id_name, "_id", -1)
-
 	return queryStr
 }
 

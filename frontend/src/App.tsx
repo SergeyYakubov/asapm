@@ -8,23 +8,24 @@ import MetaListPage from "./pages/MetaListPage";
 import CollectionListPage from "./pages/CollectionListPage";
 import {grey} from '@material-ui/core/colors';
 import SideBar from "./components/Sidebar/SideBar";
-import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
+import {createStyles, makeStyles} from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {Route, Switch, Redirect} from 'react-router-dom';
 import DetailedPage from "./pages/DetailedPage";
 import LogbooksPage from "./pages/LogbooksPage";
 
 declare module "@material-ui/core/styles/createPalette" {
+// eslint-disable-next-line
     interface Palette {
         lightBackground: Palette['primary'];
     }
-
+// eslint-disable-next-line
     interface PaletteOptions {
         lightBackground: PaletteOptions['primary'];
     }
 }
 
-const useStyles = makeStyles((theme: Theme) =>
+const useStyles = makeStyles(() =>
     createStyles({
         root: {
             display: "flex",
@@ -94,7 +95,7 @@ function App(): JSX.Element {
                             <Route exact path="/">
                                 <Redirect to="/collections"/>
                             </Route>
-                            <Route path="/metaboard" render={(props) => (
+                            <Route path="/metaboard" render={() => (
                                 <MetaListPage/>
                             )} exact/>
                             <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
@@ -103,10 +104,10 @@ function App(): JSX.Element {
                             <Route key="collection" path={"/detailedcollection/:id/:section"} render={(props) => (
                                 <DetailedPage {...props}  isBeamtime={false}/>
                             )} exact/>
-                            <Route path="/collections" render={(props) => (
+                            <Route path="/collections" render={() => (
                                 <CollectionListPage/>
                             )} exact/>
-                            <Route path="/logbooks" render={(props) => (
+                            <Route path="/logbooks" render={() => (
                                 <LogbooksPage/>
                             )} exact/>
                         </Switch>

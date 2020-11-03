@@ -1,6 +1,5 @@
 import React from 'react';
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
-import Toolbar from '@material-ui/core/Toolbar';
 import {Link, RouteComponentProps} from "react-router-dom";
 import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "../graphQLSchemes";
 import {useQuery} from "@apollo/client";

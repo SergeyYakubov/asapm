@@ -15,6 +15,7 @@ FROM node:14.4 AS builder
 WORKDIR /src
 COPY --from=base /src .
 ENV PUBLIC_URL=__PLACEHOLDER_PUBLIC_URL__
+ENV REACT_APP_API_URL=""
 RUN npm run build
 
 FROM nginx:1.19.0

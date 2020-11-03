@@ -4,17 +4,20 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import UserService from "./userService";
-import { BrowserRouter } from 'react-router-dom';
 import userService from "./userService";
-import { cache } from './graphQLCache';
-import {ApolloClient, createHttpLink, ApolloProvider} from "@apollo/client";
+import {BrowserRouter} from 'react-router-dom';
+import {cache} from './graphQLCache';
+import {ApolloClient, ApolloProvider, createHttpLink} from "@apollo/client";
 import {setContext} from "@apollo/client/link/context";
 
+const api_uri = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : (window.location.origin + process.env.PUBLIC_URL))
+    + process.env.REACT_APP_API_SUFFIX + "/query";
+
 const httpLink = createHttpLink({
-    uri: window.location.origin+process.env.PUBLIC_URL+process.env.REACT_APP_API_SUFFIX+"/query",
+    uri: api_uri,
 });
 
-const authLink = setContext((_, { headers }) => {
+const authLink = setContext((_, {headers}) => {
     return userService.updateToken(10).then(() => {
         const token = userService.getToken();
         return {
@@ -27,14 +30,14 @@ const authLink = setContext((_, { headers }) => {
 });
 
 export const client = new ApolloClient({
-    cache:cache,
-    link:authLink.concat(httpLink)
+    cache: cache,
+    link: authLink.concat(httpLink)
 });
 
 const renderApp = () => ReactDOM.render(
     <ApolloProvider client={client}>
         <BrowserRouter basename={process.env.PUBLIC_URL}>
-        <App />
+            <App/>
         </BrowserRouter>
     </ApolloProvider>,
     document.getElementById("root"));

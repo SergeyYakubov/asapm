@@ -29,6 +29,15 @@ func generateGqlConfig() generated.Config {
 	return c
 }
 
+func cors(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		h(w, r)
+	}
+}
+
 func StartServer() {
 
 	gqlConfig := generateGqlConfig()
@@ -39,8 +48,8 @@ func StartServer() {
 	if Config.Authorization.Enabled {
 		http.Handle(Config.BasePath+"/query", utils.ProcessJWTAuth(utils.RemoveQuotes(srv.ServeHTTP),Config.publicKey))
 	} else {
-		log.Warning("authorization disabled")
-		http.Handle(Config.BasePath+"/query", auth.BypassAuth(utils.RemoveQuotes(srv.ServeHTTP)))
+		log.Warning("authorization and cors access control disabled")
+		http.Handle(Config.BasePath+"/query", cors(auth.BypassAuth(utils.RemoveQuotes(srv.ServeHTTP))))
 	}
 
 	log.Info(fmt.Sprintf("connect to http://localhost:%s%s for GraphQL playground", Config.Port,Config.BasePath))

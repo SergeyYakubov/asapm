@@ -1,12 +1,24 @@
 import React from "react";
-import {CollectionFilter} from "../common";
-import {ColumnList, columnsVar, PossibleColumnListfromCollections} from "../pages/CollectionListPage";
-import {Box, Button, Chip, FormControl, InputLabel, MenuItem, Popover, Select, Typography} from "@material-ui/core";
+import {CollectionFilter, FieldFilter, RemoveDuplicates} from "../common";
+import {ColumnItem, ColumnList, columnsVar, PossibleColumnListfromCollections} from "../pages/CollectionListPage";
+import {
+    Box,
+    Button,
+    Chip,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Popover,
+    Select,
+    TextField,
+    Typography
+} from "@material-ui/core";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import {CollectionEntry} from "../generated/graphql";
 import Grid from "@material-ui/core/Grid";
 import Divider from "@material-ui/core/Divider";
+import {collectionFilterVar} from "./FilterBoxes";
 
 interface CustomFilterProps {
     currentFilter: CollectionFilter
@@ -44,36 +56,99 @@ const useStyles = makeStyles((theme: Theme) =>
 interface FilterFormProps {
     currentCustomFilter: CurrentCustomFilter
     currentFilter: CollectionFilter
-    possibleColumns: ColumnList
+    availableKeys: ColumnList
     setCurrentCustomFilter: React.Dispatch<React.SetStateAction<CurrentCustomFilter>>
+    close: ()=>void
 }
 
 type CurrentCustomFilter = {
     value: string
     op: string
-    name: string
+    field: ColumnItem | undefined
     filterString: string
 }
 
-const emptyCustomFilter: CurrentCustomFilter = {value: "", op: "", name: "", filterString: ""};
+const emptyCustomFilter: CurrentCustomFilter = {value: "", op: "", field: undefined, filterString: ""};
 
-function FilterForm({currentFilter, possibleColumns, currentCustomFilter, setCurrentCustomFilter}: FilterFormProps) {
-    const classes = useStyles();
+interface OpsChoiceProps {
+    currentCustomFilter: CurrentCustomFilter
+    availableKeys: ColumnList
+    setCurrentCustomFilter: React.Dispatch<React.SetStateAction<CurrentCustomFilter>>
+}
 
-    const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-        setCurrentCustomFilter({...currentCustomFilter, name: event.target.value as string, op: "", value: ""});
-    };
 
+function OperatorList(currentKey: string | undefined, availableKeys: ColumnList) {
+    const item = availableKeys.find((value) => value.fieldName === currentKey);
+    if (!item) {
+        return [];
+    }
+    switch (item.type) {
+        case "string":
+        case "String":
+            return ["equals", "not equals", "regexp", "not regexp"];
+        case "number":
+        case "Number":
+            return ["equals", "not equals", "less than", "greater than"];
+        default:
+            return [];
+    }
+}
+
+function OpsChoice({currentCustomFilter, setCurrentCustomFilter, availableKeys}: OpsChoiceProps) {
     const handleChangeOp = (event: React.ChangeEvent<{ value: unknown }>) => {
         setCurrentCustomFilter({...currentCustomFilter, op: event.target.value as string, value: ""});
     };
 
-    const handleChangeVal = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const opList = OperatorList(currentCustomFilter.field?.fieldName, availableKeys);
+
+    return <FormControl fullWidth={true}>
+        <InputLabel id="op-label">Operator</InputLabel>
+        <Select
+            labelId="op-label"
+            id="op"
+            value={currentCustomFilter.op}
+            onChange={handleChangeOp}
+            disabled={!currentCustomFilter.field || opList.length === 0}
+        >
+            {
+                opList.map(value =>
+                    <MenuItem key={value} value={value}>{value} </MenuItem>
+                )
+            }
+        </Select>
+    </FormControl>;
+}
+
+function FilterForm({close,availableKeys, currentFilter, currentCustomFilter, setCurrentCustomFilter}: FilterFormProps) {
+    const classes = useStyles();
+
+    const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+        const val = event.target.value as string;
+        const field = availableKeys.find(key => key.fieldName === val);
+        setCurrentCustomFilter({...currentCustomFilter, field: field, op: "", value: ""});
+    };
+
+    const handleFilterValChange = (event: React.ChangeEvent<{ value: unknown }>) => {
         setCurrentCustomFilter({...currentCustomFilter, value: event.target.value as string});
     };
 
-    const addEnabled = currentCustomFilter.filterString !== "" || (currentCustomFilter.value !== ""
-        && currentCustomFilter.op !== "" && currentCustomFilter.name !== "");
+
+    const addEnabled = currentCustomFilter.filterString !== "" || currentCustomFilter.value !== "";
+
+    const handleClick = () => {
+        const fieldFilter: FieldFilter = {
+            alias: currentCustomFilter.field?.alias || "",
+            key: currentCustomFilter.field!.fieldName,
+            value: currentCustomFilter.value,
+            op : currentCustomFilter.op,
+            negate: false,
+            enabled: true,
+            type: currentCustomFilter.field?.type
+        };
+
+        collectionFilterVar({...currentFilter, fieldFilters: RemoveDuplicates([...(currentFilter.fieldFilters), fieldFilter])});
+        close();
+    };
 
     return <Grid container spacing={0} className={classes.formContainer}>
         <Grid item xs={12}>
@@ -94,11 +169,12 @@ function FilterForm({currentFilter, possibleColumns, currentCustomFilter, setCur
                     <Select
                         labelId="field-label"
                         id="field"
-                        value={currentCustomFilter.name}
+                        value={currentCustomFilter.field?.fieldName || ""}
                         onChange={handleChange}
                     >
-                        {possibleColumns.map(value =>
-                            <MenuItem value={value.fieldName}>{value.alias || value.fieldName}</MenuItem>
+                        {availableKeys.map(value =>
+                            <MenuItem key={value.fieldName}
+                                      value={value.fieldName}>{value.alias || value.fieldName}</MenuItem>
                         )}
                     </Select>
                 </FormControl>
@@ -106,39 +182,24 @@ function FilterForm({currentFilter, possibleColumns, currentCustomFilter, setCur
         </Grid>
         <Grid item xs={12} sm={12} md={4}>
             <Box className={classes.formControl}>
-                <FormControl fullWidth={true}>
-                    <InputLabel id="op-label">Operator</InputLabel>
-                    <Select
-                        labelId="op-label"
-                        id="op"
-                        value={currentCustomFilter.op}
-                        onChange={handleChangeOp}
-                        disabled={currentCustomFilter.name === ""}
-                    >
-                        <MenuItem value={'eq'}>Equals</MenuItem>
-                    </Select>
-                </FormControl>
+                <OpsChoice currentCustomFilter={currentCustomFilter} setCurrentCustomFilter={setCurrentCustomFilter}
+                           availableKeys={availableKeys}/>
             </Box>
         </Grid>
         <Grid item xs={12} sm={12} md={4}>
             <Box className={classes.formControl}>
-                <FormControl fullWidth={true}>
-                    <InputLabel id="val-label">Value</InputLabel>
-                    <Select
-                        labelId="val-label"
-                        id="val"
-                        value={currentCustomFilter.value}
-                        onChange={handleChangeVal}
-                        disabled={currentCustomFilter.name === "" || currentCustomFilter.op === ""}
-                    >
-                        <MenuItem value={'eq'}>Equals</MenuItem>
-                    </Select>
-                </FormControl>
+                <TextField id="standard-basic"
+                           label="Value"
+                           fullWidth={true}
+                           type={(currentCustomFilter.field?.type==="Number" || currentCustomFilter.field?.type==="number") ?"number":"text"}
+                           value={currentCustomFilter.value}
+                           disabled={!currentCustomFilter.op}
+                           onChange={handleFilterValChange}/>
             </Box>
         </Grid>
         <Grid item xs={12} style={{textAlign: 'end'}}>
             <Button size={"small"} color="secondary"
-                    disabled={!addEnabled} variant="contained" className={classes.addButton}>Add</Button>
+                    disabled={!addEnabled} variant="contained" onClick={handleClick} className={classes.addButton}>Add</Button>
         </Grid>
     </Grid>;
 }
@@ -146,13 +207,13 @@ function FilterForm({currentFilter, possibleColumns, currentCustomFilter, setCur
 export function CustomFilter({currentFilter, collections}: CustomFilterProps): JSX.Element {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [possibleColumns, SetPossibleColumns] = React.useState<ColumnList>([]);
+    const [availableKeys, SetAvailableKeys] = React.useState<ColumnList>([]);
 
     const [currentCustomFilter, setCurrentCustomFilter] = React.useState<CurrentCustomFilter>(emptyCustomFilter);
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
         if (collections) {
-            SetPossibleColumns(PossibleColumnListfromCollections(columnsVar(), collections));
+            SetAvailableKeys(PossibleColumnListfromCollections(columnsVar(), collections).filter(value => value.type !== "Array" && value.type !== "Date"));
         }
         setCurrentCustomFilter(emptyCustomFilter);
         setAnchorEl(event.currentTarget);
@@ -186,8 +247,8 @@ export function CustomFilter({currentFilter, collections}: CustomFilterProps): J
             }}
             className={classes.popover}
         >
-            <FilterForm setCurrentCustomFilter={setCurrentCustomFilter} currentFilter={currentFilter}
-                        currentCustomFilter={currentCustomFilter} possibleColumns={possibleColumns}/>
+            <FilterForm close={handleClose} setCurrentCustomFilter={setCurrentCustomFilter} currentFilter={currentFilter}
+                        currentCustomFilter={currentCustomFilter} availableKeys={availableKeys}/>
         </Popover>
     </div>;
 }
