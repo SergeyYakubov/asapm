@@ -10,10 +10,8 @@ import Paper from "@material-ui/core/Paper";
 import {
     CollectionFilter,
     FieldFilter,
-    GetFilterString,
+    GetFilterString, InvertFilterOp,
     RemoveDuplicates,
-    RemoveElement,
-    ReplaceElement, TextOpToSQLOp
 } from "../common";
 import debounce from 'lodash.debounce';
 import {GetUniqueNamesForField} from "../meta";
@@ -21,7 +19,6 @@ import {gql, makeVar, useQuery} from "@apollo/client";
 import {COLLECTIONS} from "../graphQLSchemes";
 import {
     Button,
-    Chip,
     CircularProgress,
     IconButton,
     List, ListItem, ListItemIcon, ListItemText,
@@ -44,6 +41,8 @@ import VisibilityTwoToneIcon from '@material-ui/icons/VisibilityTwoTone';
 import FlipCameraAndroidIcon from '@material-ui/icons/FlipCameraAndroid';
 import DeleteIcon from '@material-ui/icons/Delete';
 import {CustomFilter} from "./CustomFilter";
+import {FilterChip} from "./FilterChip";
+
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         root: {
@@ -58,13 +57,6 @@ const useStyles = makeStyles((theme: Theme) =>
         },
         listItemWithIcon: {
             minWidth: "35px",
-        },
-        filterChip: {
-            margin: "5px",
-        },
-        filterChipDisabled: {
-            margin: "5px",
-            color: theme.palette.text.disabled,
         },
         filterPaper: {
             marginTop: theme.spacing(2),
@@ -176,7 +168,6 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
             op: "equals",
             type: "string",
             value: value as string,
-            negate: false,
             enabled: true
         };
         collectionFilterVar({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
@@ -220,106 +211,6 @@ interface EditFilterProps {
     filter: CollectionFilter
 }
 
-interface FilterChipProps {
-    filter: CollectionFilter
-    fieldFilter: FieldFilter,
-}
-
-function FilterChip({filter,fieldFilter}: FilterChipProps) {
-    const classes = useStyles();
-    const handleDelete = () => {
-        collectionFilterVar({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
-    };
-
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
-    const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleEnable = () => {
-        const updatedFilter  = {...fieldFilter,enabled:!fieldFilter.enabled};
-        collectionFilterVar({...filter, fieldFilters: ReplaceElement(updatedFilter, filter.fieldFilters)});
-        handleClose();
-    };
-
-    const handleInvert = () => {
-        const updatedFilter  = {...fieldFilter,negate:!fieldFilter.negate};
-        collectionFilterVar({...filter, fieldFilters: ReplaceElement(updatedFilter, filter.fieldFilters)});
-        handleClose();
-    };
-
-    let label:string;
-    if (fieldFilter.filterString) {
-        label = fieldFilter.filterString;
-    } else {
-        label = (fieldFilter.alias?fieldFilter.alias:fieldFilter.key) + " " +  TextOpToSQLOp(fieldFilter.op!,fieldFilter.negate) + " " + fieldFilter.value;
-    }
-
-    return <div>
-        <Chip
-        key={fieldFilter.value}
-        className={fieldFilter.enabled ? classes.filterChip : classes.filterChipDisabled}
-        label={label}
-        onClick={handleClick}
-        onDelete={handleDelete}
-    />
-        <Popover
-            id="simple-menu"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-            }}
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-            }}
-        >
-            <List
-                dense={true}
-                component="nav"
-                aria-labelledby="nested-list-subheader"
-                subheader={
-                    <ListSubheader component="div" id="nested-list-subheader">
-                        Change filter
-                    </ListSubheader>
-                }
-            >
-                <ListItem button onClick={handleEnable}>
-                    <ListItemIcon className={classes.listItemWithIcon}>
-                        {fieldFilter.enabled?
-                            <VisibilityOffIcon fontSize={"small"}/>
-                            :
-                            <VisibilityIcon fontSize={"small"}/>
-                        }
-                    </ListItemIcon>
-                    <ListItemText primary={fieldFilter.enabled?"Disable":"Enable"}/>
-                </ListItem>
-                   <ListItem button onClick={handleInvert} disabled={!!fieldFilter.filterString} >
-                    <ListItemIcon className={classes.listItemWithIcon}>
-                        <FlipCameraAndroidIcon fontSize={"small"}/>
-                    </ListItemIcon>
-                    <ListItemText primary="Invert filter"/>
-                </ListItem>
-                <ListItem button onClick={handleDelete}>
-                    <ListItemIcon className={classes.listItemWithIcon}>
-                        <DeleteIcon fontSize={"small"}/>
-                    </ListItemIcon>
-                    <ListItemText primary="Delete"/>
-                </ListItem>
-            </List>
-        </Popover>
-
-    </div>;
-}
 function BulkFilterEdit({filter}: EditFilterProps) {
     const classes = useStyles();
 
@@ -350,7 +241,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
 
     const handleInvertSimple = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            return {...value,negate:!value.negate};
+            return {...value,op:InvertFilterOp(value.op)};
         });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
@@ -542,11 +433,11 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                             <Typography variant="overline">
                                 Add Filter:
                             </Typography>
-                            <SelectFields alias={"facility"} filter={filter}
+                            <SelectFields alias={"Facility"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.facility")}/>
-                            <SelectFields alias={"beamline"} filter={filter}
+                            <SelectFields alias={"Beamline"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.beamline")}/>
-                            <SelectFields alias={"door user"} filter={filter}
+                            <SelectFields alias={"Door user"} filter={filter}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.users.doorDb")}/>
                         </Box>
                     </Grid>
@@ -612,7 +503,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
                                 <BulkFilterEdit filter={filter}/>
                                 {filter.fieldFilters.map(fieldFilter => {
-                                    return <FilterChip key={n++} filter={filter} fieldFilter={fieldFilter}/>;
+                                    return <FilterChip key={n++} collections={queryResult.data?.collections} filter={filter} fieldFilter={fieldFilter}/>;
                                 })}
                                 <CustomFilter currentFilter={filter} collections={queryResult.data?.collections} />
                             </Box>

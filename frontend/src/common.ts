@@ -22,14 +22,13 @@ export interface FieldFilter {
     alias: string
     key: string
     value: string
-    op?: string
-    negate: boolean
+    op: string
     enabled: boolean
+    type: string
     filterString?: string
-    type?: string
 }
 
-function NegateFilterOp(textOp: string): string {
+export function InvertFilterOp(textOp: string): string {
     switch (textOp) {
         case "equals":
             return "not equals";
@@ -45,17 +44,14 @@ function NegateFilterOp(textOp: string): string {
             return "less than";
         case "regexp":
             return "not regexp";
-        case "regexp":
+        case "not regexp":
             return "regexp";
         default:
             return "not " + textOp;
     }
 }
 
-export function TextOpToSQLOp(textOp: string, negate: boolean): string {
-    if (negate) {
-        textOp = NegateFilterOp(textOp);
-    }
+export function TextOpToSQLOp(textOp: string): string {
     switch (textOp) {
         case "equals":
             return "=";
@@ -78,10 +74,11 @@ export function TextOpToSQLOp(textOp: string, negate: boolean): string {
     }
 }
 
-function IsString(filterType: string) {
+function NeedsQuotes(filterType: string) {
     switch (filterType) {
         case "string":
         case "String":
+        case "Array":
             return true;
         default:
             return false;
@@ -92,7 +89,11 @@ export function StringFromFieldFilter(filter: FieldFilter): string {
     if (filter.filterString) {
         return filter.filterString;
     } else {
-        return filter.key + " " + TextOpToSQLOp(filter.op!, filter.negate) + " " + (IsString(filter.type!) ? "'" : "") + filter.value + (IsString(filter.type!) ? "'" : "");
+        if (filter.key && filter.op && filter.value) {
+            return filter.key + " " + TextOpToSQLOp(filter.op!) + " " + (NeedsQuotes(filter.type!) ? "'" : "") + filter.value + (NeedsQuotes(filter.type!) ? "'" : "");
+        } else {
+            return "";
+        }
     }
 }
 
@@ -108,7 +109,7 @@ export interface CollectionFilter {
 export function RemoveDuplicates<T>(arr: T[]): T[] {
     const seen = new Set();
     return arr.filter(el => {
-        const uniqueStr = JSON.stringify(el, ["key", "value"]);
+        const uniqueStr = JSON.stringify(el, ["key","op","value"]);
         const duplicate = seen.has(uniqueStr);
         if (duplicate) {
             return false;
@@ -118,10 +119,10 @@ export function RemoveDuplicates<T>(arr: T[]): T[] {
     });
 }
 
-export function ReplaceElement<T>(elem: T, arr: T[]): T[] {
-    const elemjs = JSON.stringify(elem, ["key", "value"]);
+export function ReplaceElement<T>(oldElem: T,elem: T, arr: T[]): T[] {
+    const elemjs = JSON.stringify(oldElem);
     return arr.map(el =>
-        JSON.stringify(el, ["key", "value"]) === elemjs ? elem : el
+        JSON.stringify(el) === elemjs ? elem : el
     );
 }
 
@@ -169,8 +170,6 @@ export function GetFilterString(filter: CollectionFilter): string {
         filterRange = AddToFilter(filterRange, filter3, "or");
         filterString = AddToFilter(filterString, filterRange, "and");
     }
-
-    console.log(filterString)
 
     if (filter.textSearch === "") {
         return filterString;
