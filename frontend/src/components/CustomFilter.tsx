@@ -1,5 +1,5 @@
 import React from "react";
-import {CollectionFilter, FieldFilter, RemoveDuplicates, ReplaceElement} from "../common";
+import {CollectionFilter, FieldFilter, RemoveDuplicates, ReplaceElement, StringFromFieldFilter} from "../common";
 import {ColumnList, columnsVar, PossibleColumnListfromCollections} from "../pages/CollectionListPage";
 import {
     Box,
@@ -32,9 +32,12 @@ const useStyles = makeStyles((theme: Theme) =>
         bold: {
             fontWeight: 'bold',
         },
+        widthSetter: {
+            width: "800px",
+        },
         formContainer: {
-            Width: "600px",
             minWidth: "200px",
+            maxWidth: "800px",
         },
         formHeader: {
             margin: theme.spacing(1),
@@ -54,12 +57,10 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 interface FilterFormProps {
-    currentFieldFilter: FieldFilter
-    currentFilter: CollectionFilter
-    availableKeys: ColumnList
-    setCurrentFieldFilter: React.Dispatch<React.SetStateAction<FieldFilter>>
-    close: () => void
+    collections: CollectionEntry[] | undefined
     fieldFilterToEdit?: FieldFilter
+    currentFilter: CollectionFilter
+    close: () => void
 }
 
 const emptyFieldFilter: FieldFilter = {
@@ -122,10 +123,16 @@ function OpsChoice({currentFieldFilter, setCurrentFieldFilter, availableKeys}: O
     </FormControl>;
 }
 
-export function FilterForm({fieldFilterToEdit, close, availableKeys, currentFilter, currentFieldFilter, setCurrentFieldFilter}: FilterFormProps): JSX.Element {
+export function FilterForm({fieldFilterToEdit, close, collections, currentFilter}: FilterFormProps): JSX.Element {
     const classes = useStyles();
 
-    const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const [availableKeys] = React.useState<ColumnList>(collections?
+        PossibleColumnListfromCollections(columnsVar(), collections!).filter(value => value.type !== "Date"):[]);
+    const [currentFieldFilter, setCurrentFieldFilter] = React.useState<FieldFilter>(fieldFilterToEdit || emptyFieldFilter);
+
+    const [sqlMode, SetSqlMode] = React.useState(!!(fieldFilterToEdit?.filterString));
+
+    const handleFilterFieldChange = (event: React.ChangeEvent<{ value: unknown }>) => {
         const val = event.target.value as string;
         const field = availableKeys.find(key => key.fieldName === val);
         setCurrentFieldFilter({
@@ -142,6 +149,9 @@ export function FilterForm({fieldFilterToEdit, close, availableKeys, currentFilt
         setCurrentFieldFilter({...currentFieldFilter, value: event.target.value as string});
     };
 
+    const handleFilterStringChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+        setCurrentFieldFilter({...currentFieldFilter, filterString: event.target.value as string});
+    };
 
     const addEnabled = currentFieldFilter.filterString !== "" || currentFieldFilter.value !== "";
 
@@ -156,19 +166,45 @@ export function FilterForm({fieldFilterToEdit, close, availableKeys, currentFilt
         close();
     };
 
+    const handleModeSwitch = () => {
+        if (sqlMode) {
+            setCurrentFieldFilter(emptyFieldFilter);
+        } else {
+            setCurrentFieldFilter({
+                ...currentFieldFilter,
+                key: "",
+                op: "",
+                value: "",
+                filterString: StringFromFieldFilter(currentFieldFilter)
+            });
+        }
+        SetSqlMode(!sqlMode);
+    };
+
     return <Grid container spacing={0} className={classes.formContainer}>
         <Grid item xs={12}>
             <Box display={'flex'} alignItems={'center'} justifyContent={'space-between'} className={classes.formHeader}>
                 <Typography variant={'subtitle2'} className={classes.bold}>
                     Edit filter
                 </Typography>
-                <Button size={"small"} color="primary">Edit as SQL</Button>
+                <Button size={"small"} color="primary"
+                        onClick={handleModeSwitch}>{sqlMode ? "Switch to Form" : "Edit as SQL"}</Button>
             </Box>
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} className={classes.widthSetter}>
             <Divider/>
         </Grid>
-        <Grid item xs={12} sm={12} md={4}>
+        <Grid item xs={12} hidden={!sqlMode}>
+            <Box className={classes.formControl}>
+                <TextField id="standard-basic"
+                           label="Query expresion"
+                           fullWidth={true}
+                           value={currentFieldFilter.filterString || ""}
+                           multiline={true}
+                           onChange={handleFilterStringChange}/>
+            </Box>
+        </Grid>
+        <Grid item xs={12} sm={12} md={4} hidden={sqlMode}>
             <Box className={classes.formControl}>
                 <FormControl fullWidth={true}>
                     <InputLabel id="field-label">Field</InputLabel>
@@ -176,7 +212,7 @@ export function FilterForm({fieldFilterToEdit, close, availableKeys, currentFilt
                         labelId="field-label"
                         id="field"
                         value={availableKeys.length ? currentFieldFilter.key : ""}
-                        onChange={handleChange}
+                        onChange={handleFilterFieldChange}
                     >
                         {availableKeys.map(value =>
                             <MenuItem key={value.fieldName}
@@ -186,13 +222,13 @@ export function FilterForm({fieldFilterToEdit, close, availableKeys, currentFilt
                 </FormControl>
             </Box>
         </Grid>
-        <Grid item xs={12} sm={12} md={4}>
+        <Grid item xs={12} sm={12} md={4} hidden={sqlMode}>
             <Box className={classes.formControl}>
                 <OpsChoice currentFieldFilter={currentFieldFilter} setCurrentFieldFilter={setCurrentFieldFilter}
                            availableKeys={availableKeys}/>
             </Box>
         </Grid>
-        <Grid item xs={12} sm={12} md={4}>
+        <Grid item xs={12} sm={12} md={4} hidden={sqlMode}>
             <Box className={classes.formControl}>
                 <TextField id="standard-basic"
                            label="Value"
@@ -214,15 +250,8 @@ export function FilterForm({fieldFilterToEdit, close, availableKeys, currentFilt
 export function CustomFilter({currentFilter, collections}: CustomFilterProps): JSX.Element {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [availableKeys, SetAvailableKeys] = React.useState<ColumnList>([]);
-
-    const [currentFieldFilter, setCurrentFieldFilter] = React.useState<FieldFilter>(emptyFieldFilter);
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-        if (collections) {
-            SetAvailableKeys(PossibleColumnListfromCollections(columnsVar(), collections).filter(value => value.type !== "Date"));
-        }
-        setCurrentFieldFilter(emptyFieldFilter);
         setAnchorEl(event.currentTarget);
     };
 
@@ -238,6 +267,7 @@ export function CustomFilter({currentFilter, collections}: CustomFilterProps): J
             label="Add custom filter"
             onClick={handleClick}
         />
+        {anchorEl &&
         <Popover
             id="simple-menu"
             anchorEl={anchorEl}
@@ -254,9 +284,9 @@ export function CustomFilter({currentFilter, collections}: CustomFilterProps): J
             }}
             className={classes.popover}
         >
-            <FilterForm close={handleClose} setCurrentFieldFilter={setCurrentFieldFilter} currentFilter={currentFilter}
-                        currentFieldFilter={currentFieldFilter} availableKeys={availableKeys}/>
+            <FilterForm close={handleClose} currentFilter={currentFilter} collections={collections}/>
         </Popover>
+        }
     </div>;
 }
 

@@ -89,7 +89,11 @@ export function StringFromFieldFilter(filter: FieldFilter): string {
     if (filter.filterString) {
         return filter.filterString;
     } else {
-        return filter.key + " " + TextOpToSQLOp(filter.op!) + " " + (NeedsQuotes(filter.type!) ? "'" : "") + filter.value + (NeedsQuotes(filter.type!) ? "'" : "");
+        if (filter.key && filter.op && filter.value) {
+            return filter.key + " " + TextOpToSQLOp(filter.op!) + " " + (NeedsQuotes(filter.type!) ? "'" : "") + filter.value + (NeedsQuotes(filter.type!) ? "'" : "");
+        } else {
+            return "";
+        }
     }
 }
 
@@ -117,9 +121,6 @@ export function RemoveDuplicates<T>(arr: T[]): T[] {
 
 export function ReplaceElement<T>(oldElem: T,elem: T, arr: T[]): T[] {
     const elemjs = JSON.stringify(oldElem);
-    console.log(oldElem);
-    console.log(elem);
-    console.log(arr);
     return arr.map(el =>
         JSON.stringify(el) === elemjs ? elem : el
     );

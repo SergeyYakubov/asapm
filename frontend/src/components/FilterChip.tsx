@@ -9,7 +9,6 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import {collectionFilterVar} from "./FilterBoxes";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import {FilterForm} from "./CustomFilter";
-import {ColumnList, columnsVar, PossibleColumnListfromCollections} from "../pages/CollectionListPage";
 import {CollectionEntry} from "../generated/graphql";
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -42,18 +41,12 @@ export function FilterChip({filter,fieldFilter,collections}: FilterChipProps): J
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [anchorEl2, setAnchorEl2] = React.useState<null | HTMLElement>(null);
-    const [availableKeys, SetAvailableKeys] = React.useState<ColumnList>([]);
-    const [currentFieldFilter, setCurrentFieldFilter] = React.useState<FieldFilter>(fieldFilter);
 
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
         setAnchorEl(event.currentTarget);
     };
 
     const handleEdit = () => {
-        if (collections) {
-            SetAvailableKeys(PossibleColumnListfromCollections(columnsVar(), collections).filter(value => value.type !== "Date"));
-        }
-        setCurrentFieldFilter(fieldFilter);
         setAnchorEl2(anchorEl);
         setAnchorEl(null);
     };
@@ -90,6 +83,7 @@ export function FilterChip({filter,fieldFilter,collections}: FilterChipProps): J
             onClick={handleClick}
             onDelete={handleDelete}
         />
+        {anchorEl2 &&
         <Popover
             id="simple-menu"
             anchorEl={anchorEl2}
@@ -105,9 +99,10 @@ export function FilterChip({filter,fieldFilter,collections}: FilterChipProps): J
                 horizontal: 'left',
             }}
         >
-            <FilterForm fieldFilterToEdit={fieldFilter} close={handleClose} setCurrentFieldFilter={setCurrentFieldFilter} currentFilter={filter}
-                        currentFieldFilter={currentFieldFilter} availableKeys={availableKeys}/>
+            <FilterForm fieldFilterToEdit={fieldFilter} close={handleClose} currentFilter={filter}
+                        collections={collections}/>
         </Popover>
+        }
 
         <Popover
             id="simple-menu"
