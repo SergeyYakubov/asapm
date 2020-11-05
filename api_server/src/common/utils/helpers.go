@@ -116,7 +116,7 @@ func DeepCopy(a, b interface{}) {
 func RemoveQuotes(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b,_ := ioutil.ReadAll(r.Body)
-		b = regexp.MustCompile(`\\\"([\w-\.]*?)\\\":`).ReplaceAll(b,[]byte(`$1:`))
+		b = regexp.MustCompile(`\\"([\w-.]*?)\\":`).ReplaceAll(b,[]byte(`$1:`))
 		r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
 		fn(w, r)
 	}

@@ -57,6 +57,7 @@ type ComplexityRoot struct {
 		Applicant           func(childComplexity int) int
 		Beamline            func(childComplexity int) int
 		BeamlineAlias       func(childComplexity int) int
+		BeamlineSetup       func(childComplexity int) int
 		ChildCollection     func(childComplexity int) int
 		ChildCollectionName func(childComplexity int) int
 		Contact             func(childComplexity int) int
@@ -246,6 +247,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeMeta.BeamlineAlias(childComplexity), true
+
+	case "BeamtimeMeta.beamlineSetup":
+		if e.complexity.BeamtimeMeta.BeamlineSetup == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.BeamlineSetup(childComplexity), true
 
 	case "BeamtimeMeta.childCollection":
 		if e.complexity.BeamtimeMeta.ChildCollection == nil {
@@ -1027,6 +1035,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
+    beamlineSetup: String
     status: String!
     contact: String
     corePath: String
@@ -1071,6 +1080,7 @@ input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
     beamlineAlias: String #@inputNeedAcl(acl: WRITE)
+    beamlineSetup: String
     id: String!
     status: String!
     contact: String
@@ -1636,6 +1646,37 @@ func (ec *executionContext) _BeamtimeMeta_beamlineAlias(ctx context.Context, fie
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.BeamlineAlias, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BeamtimeMeta_beamlineSetup(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BeamlineSetup, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5586,6 +5627,12 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
+		case "beamlineSetup":
+			var err error
+			it.BeamlineSetup, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "id":
 			var err error
 			it.ID, err = ec.unmarshalNString2string(ctx, v)
@@ -5834,6 +5881,8 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._BeamtimeMeta_beamline(ctx, field, obj)
 		case "beamlineAlias":
 			out.Values[i] = ec._BeamtimeMeta_beamlineAlias(ctx, field, obj)
+		case "beamlineSetup":
+			out.Values[i] = ec._BeamtimeMeta_beamlineSetup(ctx, field, obj)
 		case "status":
 			out.Values[i] = ec._BeamtimeMeta_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

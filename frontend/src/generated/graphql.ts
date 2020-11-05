@@ -135,6 +135,7 @@ export type BeamtimeMeta = CollectionEntryInterface & {
   applicant: Maybe<BeamtimeUser>;
   beamline: Maybe<Scalars['String']>;
   beamlineAlias: Maybe<Scalars['String']>;
+  beamlineSetup: Maybe<Scalars['String']>;
   status: Scalars['String'];
   contact: Maybe<Scalars['String']>;
   corePath: Maybe<Scalars['String']>;
@@ -185,6 +186,7 @@ export type NewBeamtimeMeta = {
   applicant: Maybe<InputBeamtimeUser>;
   beamline: Maybe<Scalars['String']>;
   beamlineAlias: Maybe<Scalars['String']>;
+  beamlineSetup: Maybe<Scalars['String']>;
   id: Scalars['String'];
   status: Scalars['String'];
   contact: Maybe<Scalars['String']>;

@@ -1208,6 +1208,18 @@
             "deprecationReason": null
           },
           {
+            "name": "beamlineSetup",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "status",
             "description": null,
             "args": [],
@@ -1694,6 +1706,16 @@
           },
           {
             "name": "beamlineAlias",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "beamlineSetup",
             "description": null,
             "type": {
               "kind": "SCALAR",
