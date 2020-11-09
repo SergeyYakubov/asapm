@@ -169,6 +169,16 @@ export const COLLECTIONS = gql`
 `;
 
 
+export const ADD_LOG_MESSAGE = gql`
+mutation addMessageLogEntryLocal($facility: String!, $beamtime: String, $message: String!) {
+    addMessageLogEntry(input: {
+        facility: $facility,
+        beamtime: $beamtime,
+        message: $message
+    })
+}
+`;
+
 export const LOG_MESSAGES = gql`
 query {
   logEntries(filter: "") {

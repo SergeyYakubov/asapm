@@ -80,6 +80,9 @@ const useStyles = makeStyles((theme: Theme) =>
             colorError: {
                 color: '#f54e42',
             },
+            buttonWithoutPadding: {
+                padding: 0,
+            }
         }),
 );
 
@@ -107,7 +110,7 @@ function LogbookItemPopover({idRef}: {idRef: string}): JSX.Element {
 
     return <div>
         <IconButton onClick={handleClick}>
-            <MoreVertIcon/>
+            <MoreVertIcon  className={classes.buttonWithoutPadding}/>
         </IconButton>
         <Popover
             id="simple-menu"

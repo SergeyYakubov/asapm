@@ -1,13 +1,9 @@
 import React from "react";
-import {Paper, Typography} from "@material-ui/core";
+import {Box, Paper, Typography} from "@material-ui/core";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import LogbookItemPopover from "./LogbookItemPopover";
 import {LogEntryMessage} from "../../generated/graphql";
-
-export interface ItemDefinition {
-    time: Date;
-    message: string;
-}
+import LogbookMarkdownViewer from "./LogbookMarkdownViewer";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -19,7 +15,6 @@ const useStyles = makeStyles((theme: Theme) =>
         paper: {
             padding: theme.spacing(0.5),
             margin: theme.spacing(1),
-            textAlign: 'center',
             color: theme.palette.text.primary,
             background: theme.palette.lightBackground.main,
             borderRadius: 0,
@@ -44,7 +39,22 @@ const useStyles = makeStyles((theme: Theme) =>
             flex: 1,
             display: 'inline',
         },
-
+        messageHeader: {
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottom: '1px dashed #BBBBBB', // TODO: Theme border color
+            '& > *:first-child': {
+                display: 'flex',
+                justifyContent: 'flex-start',
+                width: '100%',
+            },
+            '& > *:last-child': {
+                display: 'flex',
+                justifyContent: 'flex-end',
+                width: '100%',
+            },
+        }
     }),
 );
 
@@ -54,16 +64,19 @@ function toHumanTimestamp(dateString: string): string {
 }
 
 function LogbookItem({message}: {message: LogEntryMessage}): JSX.Element {
-    console.log('LogbookItem', message);
+    //console.log('LogbookItem', message);
     const classes = useStyles();
 
     return <Paper elevation={3} className={classes.paper}>
-        <span style={{position: 'absolute' as const, left: 21}}>{toHumanTimestamp(message.time)}</span>
-        <div style={{position: 'absolute' as const, right: 21}}><LogbookItemPopover idRef={message.id} /></div>
-        <Typography>{message.message}</Typography>
+        <div className={classes.messageHeader}>
+            <div><span style={{paddingLeft: '12px'}}>{toHumanTimestamp(message.time)}</span></div>
+            <div><span style={{whiteSpace: 'nowrap'}}>{message.facility} | {message.beamtime}</span></div>
+            <div><LogbookItemPopover idRef={message.id} /></div>
+        </div>
+        <LogbookMarkdownViewer rawMarkdown={message.message} />
     </Paper>;
 }
 
-const LogbookItemMemoed = React.memo(LogbookItem);
+//const LogbookItemMemoed = React.memo(LogbookItem);
 
-export default LogbookItemMemoed;
+export default LogbookItem;
