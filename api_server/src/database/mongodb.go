@@ -273,6 +273,39 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 	return nil, err
 }
 
+func (db *Mongodb) deleteArrayElement(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 3 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	parentId, ok := extra_params[0].(string)
+	if !ok {
+		return nil, errors.New("parentId argument must be string")
+	}
+
+	id, ok := extra_params[1].(string)
+	if !ok {
+		return nil, errors.New("id argument must be string")
+	}
+
+	key, ok := extra_params[2].(string)
+	if !ok {
+		return nil, errors.New("an argument must be string")
+	}
+
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	q := bson.M{"_id": parentId}
+
+	update := bson.M{
+		"$pull": bson.M{key:bson.M{"_id":id}},
+	}
+
+	_, err := c.UpdateOne(context.TODO(), q, update)
+	return nil, err
+}
+
+
+
 func getQueryString(fs FilterAndSort) string {
 	queryStr := ""
 
@@ -389,6 +422,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.addArrayElement(db_name, data_collection_name, extra_params...)
 	case "unique_fields":
 		return db.uniqueFields(db_name, data_collection_name, extra_params...)
+	case"delete_array_element":
+		return db.deleteArrayElement(db_name, data_collection_name, extra_params...)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

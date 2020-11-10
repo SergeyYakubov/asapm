@@ -191,5 +191,19 @@ func TestMongoDBUniqueFields(t *testing.T) {
 	res, err := mongodb.ProcessRequest(dbname, collection, "unique_fields", fs,"_id")
 	assert.Nil(t, err)
 	assert.Equal(t, "[\"123\",\"345\"]",string(res))
+}
 
+
+func TestMongoDBDeleteArrayElement(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	rec1 := TestMetaRecord{"123",[]TestCollectionEntry{},time.Now()}
+
+	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
+	rec := TestCollectionEntry{"123.123","bla"}
+	mongodb.ProcessRequest(dbname, collection, "add_array_element", "123","childCollection",rec,rec.ID)
+
+
+	_, err = mongodb.ProcessRequest(dbname, collection, "delete_array_element", "123","123.123","childCollection")
+	assert.Nil(t, err)
 }

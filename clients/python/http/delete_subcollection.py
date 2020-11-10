@@ -5,7 +5,7 @@ url = 'http://guest-k8s-node3.desy.de/yakser/asapm-flash/api/query'
 
 id=sys.argv[1]
 
-query = '{"query": "mutation { deleteMeta( id: \\\"' + id + '\\\") } "}'
+query = '{"query": "mutation { deleteSubcollection( id: \\\"' + id + '\\\") } "}'
 
 # make request and print result
 headers = {'content-type': 'application/json', 'Accept-Charset': 'UTF-8'}

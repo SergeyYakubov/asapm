@@ -6,7 +6,6 @@ import (
 	"asapm/common/utils"
 	"asapm/database"
 	"asapm/graphql/graph/model"
-	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -163,7 +162,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 }
 
 
-func BenchmarkFib10(b *testing.B) {
+/*func BenchmarkFib10(b *testing.B) {
 	mb:=[]byte(beamtime_meta)
 	subb:=[]byte("Eiger")
 	for n := 0; n < b.N; n++ {
@@ -172,4 +171,27 @@ func BenchmarkFib10(b *testing.B) {
 			json.Unmarshal([]byte(beamtime_meta),&meta)
 		}
 	}
+}*/
+
+func (suite *CollectionTestSuite) TestDeleteSubcollection() {
+	id := "12345.123"
+	parentId:="12345"
+
+	var fs = database.FilterAndSort{
+		Filter: "id = '12345.123' OR id regexp '^12345.123.'",
+	}
+
+	params_delete := []interface{}{fs,true}
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_records", params_delete).Return([]byte(""), nil)
+
+
+	params_delete_element := []interface{}{parentId,id, "childCollection"}
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_array_element", params_delete_element).Return([]byte(""), nil)
+//	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,baseEntry.ID)
+
+
+	res, err := DeleteCollectionsAndSubcollectionMeta(id)
+
+	suite.Nil(err)
+	suite.Equal(id, *res)
 }
