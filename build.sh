@@ -1,6 +1,6 @@
 set -e
 
-TAG=0.38
+TAG=0.39
 
 docker build -t yakser/asapm-api-server:$TAG api_server
 docker build -t yakser/asapm-frontend:$TAG frontend
