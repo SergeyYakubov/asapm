@@ -150,12 +150,16 @@ class CollectionEntryInterface(sgqlc.types.Interface):
 
 class Mutation(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('create_meta', 'delete_meta', 'add_collection_entry', 'set_user_preferences')
+    __field_names__ = ('create_meta', 'delete_meta', 'delete_subcollection', 'add_collection_entry', 'set_user_preferences')
     create_meta = sgqlc.types.Field('BeamtimeMeta', graphql_name='createMeta', args=sgqlc.types.ArgDict((
         ('input', sgqlc.types.Arg(sgqlc.types.non_null(NewBeamtimeMeta), graphql_name='input', default=None)),
 ))
     )
     delete_meta = sgqlc.types.Field(String, graphql_name='deleteMeta', args=sgqlc.types.ArgDict((
+        ('id', sgqlc.types.Arg(sgqlc.types.non_null(String), graphql_name='id', default=None)),
+))
+    )
+    delete_subcollection = sgqlc.types.Field(String, graphql_name='deleteSubcollection', args=sgqlc.types.ArgDict((
         ('id', sgqlc.types.Arg(sgqlc.types.non_null(String), graphql_name='id', default=None)),
 ))
     )

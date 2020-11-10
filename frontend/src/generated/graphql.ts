@@ -222,6 +222,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createMeta: Maybe<BeamtimeMeta>;
   deleteMeta: Maybe<Scalars['String']>;
+  deleteSubcollection: Maybe<Scalars['String']>;
   addCollectionEntry: Maybe<CollectionEntry>;
   setUserPreferences: Maybe<UserAccount>;
 };
@@ -233,6 +234,11 @@ export type MutationCreateMetaArgs = {
 
 
 export type MutationDeleteMetaArgs = {
+  id: Scalars['String'];
+};
+
+
+export type MutationDeleteSubcollectionArgs = {
   id: Scalars['String'];
 };
 

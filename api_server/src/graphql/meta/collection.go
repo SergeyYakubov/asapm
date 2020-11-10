@@ -99,3 +99,26 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 	return response, nil
 
 }
+
+func  DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
+	filter:= "id = '" + id+"' OR id regexp '^"+id+".'"
+	fs := getFilterAndSort(&filter,nil)
+
+	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true);err!=nil {
+		return nil,err
+	}
+
+	ind := strings.LastIndex(id,".")
+	if ind==-1 {
+		return nil,errors.New("wrong id format: "+id)
+	}
+
+	parentId:=id[:ind]
+	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_array_element", parentId, id,KChildCollectionKey);err!=nil {
+		return nil,err
+	}
+
+
+	return &id,nil
+}
+

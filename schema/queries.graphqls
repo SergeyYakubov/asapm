@@ -10,6 +10,7 @@ enum Acls {
 type Mutation {
     createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
     deleteMeta(id: String!): String @needAcl(acl: WRITE)
+    deleteSubcollection(id: String!): String @needAcl(acl: WRITE)
     addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: WRITE)
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }

@@ -94,6 +94,13 @@ func (r *mutationResolver)  DeleteMeta(ctx context.Context, id string) (*string,
 	return meta.DeleteBeamtimeMetaAndCollections(id)
 }
 
+func (r *mutationResolver)  DeleteSubcollection(ctx context.Context, id string) (*string, error) {
+	log_str := "processing request delete_collection"
+	logger.Debug(log_str)
+	return meta.DeleteCollectionsAndSubcollectionMeta(id)
+}
+
+
 
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
 	return meta.SetUserPreferences(id,input)
