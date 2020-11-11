@@ -15,6 +15,8 @@ import {Box, Button, IconButton, Popover} from "@material-ui/core";
 import ViewColumnIcon from '@material-ui/icons/ViewColumn';
 import CloseIcon from '@material-ui/icons/Close';
 import {CollectionEntry} from "../generated/graphql";
+import {VirtualizedCollectionTable} from "../components/VirtualizedTable";
+
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -320,6 +322,11 @@ function CollectionListPage(): JSX.Element {
             <Grid container spacing={1}>
                 <Grid item xs={12}>
                     <Divider/>
+                </Grid>
+                <Grid item xs={12}>
+                    <Paper className={classes.paper}>
+                        <VirtualizedCollectionTable/>
+                    </Paper>
                 </Grid>
                 <Grid item xs={12}>
                     <Paper className={classes.paper}>

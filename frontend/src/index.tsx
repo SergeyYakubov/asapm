@@ -18,6 +18,7 @@ const httpLink = createHttpLink({
 });
 
 const authLink = setContext((_, {headers}) => {
+    console.log(api_uri)
     return userService.updateToken(10).then(() => {
         const token = userService.getToken();
         return {
