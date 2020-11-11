@@ -5,7 +5,7 @@ import {EditorState} from "prosemirror-state";
 const schema = (ProseMirrorMarkdown as any).schema;
 
 
-function LogbookMarkdownViewer({rawMarkdown}: {rawMarkdown: string}): JSX.Element {
+function LogbookMarkdownViewer({className, rawMarkdown}: {className?: string, rawMarkdown: string}): JSX.Element {
     const viewHost = useRef() as any;
     const view = useRef<EditorView>(null) as any;
 
@@ -18,7 +18,7 @@ function LogbookMarkdownViewer({rawMarkdown}: {rawMarkdown: string}): JSX.Elemen
         return () => view.current.destroy();
     }, []);
 
-    return <div ref={viewHost} />;
+    return <div className={className} ref={viewHost} />;
 }
 
 export default LogbookMarkdownViewer;

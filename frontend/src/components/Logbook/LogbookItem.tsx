@@ -7,53 +7,28 @@ import LogbookMarkdownViewer from "./LogbookMarkdownViewer";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
-        root: {
-            flexGrow: 1,
-            margin: theme.spacing(1),
-            minWidth:0,
-        },
-        paper: {
-            padding: theme.spacing(0.5),
-            margin: theme.spacing(1),
-            color: theme.palette.text.primary,
-            background: theme.palette.lightBackground.main,
-            borderRadius: 0,
-            minHeight: 150
-        },
-        paperNoReducedPadding: {
-            paddingTop: theme.spacing(2),
-            padding: theme.spacing(2),
-            margin: theme.spacing(0),
-            textAlign: 'center',
-            color: theme.palette.text.primary,
-            background: theme.palette.lightBackground.main,
-            borderRadius: 0,
-        },
-        listItem: {
-            background: theme.palette.background.paper,
-            marginTop: theme.spacing(1),
-            borderRadius: 4,
-            textOverflow: "ellipsis",
-        },
-        inline: {
-            flex: 1,
-            display: 'inline',
-        },
-        messageHeader: {
+        logItemRoot: {
             display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderBottom: '1px dashed #BBBBBB', // TODO: Theme border color
-            '& > *:first-child': {
-                display: 'flex',
-                justifyContent: 'flex-start',
-                width: '100%',
+            paddingTop: theme.spacing(1),
+            paddingBottom: theme.spacing(1),
+            '&:not(:hover) .visibleWhenHover': {
+                display: 'none',
             },
-            '& > *:last-child': {
-                display: 'flex',
-                justifyContent: 'flex-end',
-                width: '100%',
-            },
+            '&:hover': {
+                background: theme.palette.lightBackground.main,
+            }
+        },
+        messageInfo: {
+            display: 'flex',
+            borderRight: '1px solid black',
+            flexDirection: 'column',
+        },
+        messageContent: {
+            flex: '1',
+        },
+        visibleWhenHover: {
+            position: 'absolute',
+            right: 0,
         }
     }),
 );
@@ -63,18 +38,24 @@ function toHumanTimestamp(dateString: string): string {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
 }
 
+function LogbookItemInfo({message}: {message: LogEntryMessage}) {
+    const classes = useStyles();
+    return <div className={classes.messageInfo}>
+        <div><span>{toHumanTimestamp(message.time)}</span></div>
+        <div><span>Beamline User 1</span></div>
+        <div><span>{message.facility}</span></div>
+        <div><span>{message.beamtime}</span></div>
+    </div>;
+}
+
 function LogbookItem({message}: {message: LogEntryMessage}): JSX.Element {
-    //console.log('LogbookItem', message);
     const classes = useStyles();
 
-    return <Paper elevation={3} className={classes.paper}>
-        <div className={classes.messageHeader}>
-            <div><span style={{paddingLeft: '12px'}}>{toHumanTimestamp(message.time)}</span></div>
-            <div><span style={{whiteSpace: 'nowrap'}}>{message.facility} | {message.beamtime}</span></div>
-            <div><LogbookItemPopover idRef={message.id} /></div>
-        </div>
-        <LogbookMarkdownViewer rawMarkdown={message.message} />
-    </Paper>;
+    return <div className={classes.logItemRoot}>
+        <LogbookItemInfo message={message} />
+        <LogbookMarkdownViewer className={classes.messageContent} rawMarkdown={message.message} />
+        <div className={`${classes.visibleWhenHover} visibleWhenHover`}><LogbookItemPopover idRef={message.id} /></div>
+    </div>;
 }
 
 //const LogbookItemMemoed = React.memo(LogbookItem);

@@ -68,11 +68,22 @@ function LogbookNewEntryCreator(): JSX.Element {
         const message = markdownEditor.current.getRawContent();
 
         console.log('Would post new message', facility, beamtime, message);
-        sendToApi({variables: {
-            facility,
-            beamtime,
-            message,
-        }});
+        /*
+        try {
+            disabled = true;
+            await sendToApi({variables: {
+                facility,
+                beamtime,
+                message,
+            }});
+        }
+        catch(e) {
+            errorPopup(e.message)
+        }
+        finally {
+            disabled = false;
+        }
+         */
     }
 
     const MyAccordionSummary = withStyles({

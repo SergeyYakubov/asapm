@@ -3,6 +3,7 @@ import {GroupedVirtuoso, GroupedVirtuosoMethods} from "react-virtuoso";
 import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
 import {LogEntryMessage} from "../../generated/graphql";
 import {getSplitedDate} from "./LogbookUtils";
+import LogbookGroupHeader from "./LogbookGroupHeader";
 
 
 const LogbookMessageLog = forwardRef(({ messages, onVisibleGroupChanged }: { messages: LogEntryMessage[], onVisibleGroupChanged: (groupValue: string) => void }, ref) => {
@@ -54,7 +55,7 @@ const LogbookMessageLog = forwardRef(({ messages, onVisibleGroupChanged }: { mes
         style={{flex: '1', marginTop: 8}}
         groupCounts={groupSizes}
         group={(index) => {
-            return <p>{groups[index]} ({groupSizes[index]} entries)</p>;
+            return <LogbookGroupHeader label={`${groups[index]} (${groupSizes[index]} entries)`} />;
         }}
         item={(index) => {
             return <LogbookItem key={`message,${messages[index].time}`} message={messages[index]}/>;
