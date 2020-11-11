@@ -40,5 +40,5 @@ function useUpdateUserTheme(): UserPreferencesMutationType {
 
 export default {
     useUserPreferences,
-    useUpdateUserTheme
+    useUpdateUserTheme,
 };
