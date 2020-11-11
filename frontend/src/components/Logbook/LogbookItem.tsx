@@ -19,9 +19,12 @@ const useStyles = makeStyles((theme: Theme) =>
             }
         },
         messageInfo: {
+            width: '100px',
             display: 'flex',
-            borderRight: '1px solid black',
+            borderRight: '2px solid',
+            borderRightColor: theme.palette.text.secondary,
             flexDirection: 'column',
+            fontSize: '0.75em',
         },
         messageContent: {
             flex: '1',
