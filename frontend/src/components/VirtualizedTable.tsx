@@ -1,5 +1,5 @@
 import React from 'react';
-import {useTable, useFlexLayout, useResizeColumns, useSortBy} from 'react-table';
+import {useTable, useFlexLayout, useSortBy} from 'react-table';
 import {List, AutoSizer, CellMeasurer, CellMeasurerCache} from "react-virtualized";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import TableSortLabel from '@material-ui/core/TableSortLabel';
@@ -66,8 +66,10 @@ const useStyles = makeStyles((theme: Theme) =>
             marginTop: theme.spacing(2),
             marginBottom: theme.spacing(2),
             marginRight: theme.spacing(2),
-        }
-
+        },
+        list: {
+            outline:'none',
+        },
     }),
 );
 
@@ -139,10 +141,9 @@ function Table({columns, data}: any) {
     );
 
     const orderByFn = React.useMemo(() => {
-        console.log()
+        console.log();
     }, []);
 
-    const scrollBarSize = React.useMemo(() => scrollbarWidth(), []);
     const {
         getTableProps,
         getTableBodyProps,
@@ -201,7 +202,7 @@ function Table({columns, data}: any) {
                 </CellMeasurer>
             );
         },
-        [prepareRow, rows]
+        [prepareRow, rows, classes]
     );
 
     const clearCache = () => {
@@ -238,7 +239,7 @@ function Table({columns, data}: any) {
                 <AutoSizer disableHeight
                            onResize={clearCache}
                 >
-                    {({height, width}) => (
+                    {({width}) => (
                         <List
                             height={400}
                             rowCount={rows.length}
@@ -246,6 +247,7 @@ function Table({columns, data}: any) {
                             deferredMeasurementCache={cache}
                             rowHeight={cache.rowHeight}
                             rowRenderer={RenderRow}
+                            className={classes.list}
                         >
                         </List>
                     )}
