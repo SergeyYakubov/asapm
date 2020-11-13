@@ -325,14 +325,16 @@ function CollectionListPage(): JSX.Element {
                 </Grid>
                 <Grid item xs={12}>
                     <Paper className={classes.paper}>
-                        <VirtualizedCollectionTable/>
+                        <VirtualizedCollectionTable collections={collections}/>
                     </Paper>
                 </Grid>
+{/*
                 <Grid item xs={12}>
                     <Paper className={classes.paper}>
                         <CollectionTable collections={collections}/>
                     </Paper>
                 </Grid>
+*/}
             </Grid>
         </div>
     );

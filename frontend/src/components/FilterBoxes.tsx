@@ -184,6 +184,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
             >
                 {alias}
             </Button>
+            {anchorEl &&
             <StyledMenu
                 id="simple-menu"
                 anchorEl={anchorEl}
@@ -195,6 +196,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
                     return <MenuItem key={value as string} onClick={() => handleMenuClick(value)}>{value}</MenuItem>;
                 })}
             </StyledMenu>
+            }
         </div>
     );
 
@@ -225,7 +227,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
 
     const handleEnable = (enable: boolean) => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            return {...value,enabled:enable};
+            return {...value, enabled: enable};
         });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
@@ -233,7 +235,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
 
     const handleInvert = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            return {...value,enabled:!value.enabled};
+            return {...value, enabled: !value.enabled};
         });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
@@ -241,7 +243,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
 
     const handleInvertSimple = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            return {...value,op:InvertFilterOp(value.op)};
+            return {...value, op: InvertFilterOp(value.op)};
         });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
@@ -463,6 +465,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                             <IconButton onClick={handleDataRangeClick} size={"small"}>
                                 <DateRangeIcon/>
                             </IconButton>
+                            {anchorEl &&
                             <Popover
                                 id="simple-menu"
                                 anchorEl={anchorEl}
@@ -485,6 +488,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                                     onChange={handleDataRangeChange}
                                 />
                             </Popover>
+                            }
                             <TextField
                                 className={classes.rangeLabel}
                                 label="Time Range"
@@ -503,9 +507,10 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
                                 <BulkFilterEdit filter={filter}/>
                                 {filter.fieldFilters.map(fieldFilter => {
-                                    return <FilterChip key={n++} collections={queryResult.data?.collections} filter={filter} fieldFilter={fieldFilter}/>;
+                                    return <FilterChip key={n++} collections={queryResult.data?.collections}
+                                                       filter={filter} fieldFilter={fieldFilter}/>;
                                 })}
-                                <CustomFilter currentFilter={filter} collections={queryResult.data?.collections} />
+                                <CustomFilter currentFilter={filter} collections={queryResult.data?.collections}/>
                             </Box>
                         </Paper>
                     </Grid>

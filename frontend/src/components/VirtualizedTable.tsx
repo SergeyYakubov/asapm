@@ -3,6 +3,10 @@ import {useTable, useFlexLayout, useSortBy} from 'react-table';
 import {List, AutoSizer, CellMeasurer, CellMeasurerCache} from "react-virtualized";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import TableSortLabel from '@material-ui/core/TableSortLabel';
+import {CollectionEntry} from "../generated/graphql";
+import {useQuery} from "@apollo/client";
+import {ColumnData, ColumnList, GET_COLUMNS} from "../pages/CollectionListPage";
+import {IsoDateToStr} from "../common";
 
 
 const kMinWidth = 600;
@@ -128,6 +132,22 @@ const cache = new CellMeasurerCache({
     defaultHeight: 50
 });
 
+function ValueToString(value: any, columnType: string | undefined) : string {
+    if (!value) {
+        return "";
+    }
+    if (columnType === "Array") {
+        return value.join(", ");
+    }
+
+    let strval = value.toString();
+    if (columnType === "Date") {
+        strval = IsoDateToStr(strval);
+    }
+    return strval;
+}
+
+
 function Table({columns, data}: any) {
     const classes = useStyles();
 
@@ -194,7 +214,10 @@ function Table({columns, data}: any) {
                         {row.cells.map((cell: any) => {
                             return (
                                 <div {...cell.getCellProps()} className={classes.rowContent}>
-                                    {cell.render('Cell')}
+                                    {cell.render((cell:any)=>{
+                                        console.log(cell);
+                                        return ValueToString(cell.value, cell.column.type);
+                                    })}
                                 </div>
                             );
                         })}
@@ -257,47 +280,25 @@ function Table({columns, data}: any) {
     );
 }
 
-export function VirtualizedCollectionTable(): JSX.Element {
-    const columns = React.useMemo(
-        () => [
-            {
-                Header: 'Row Index',
-                accessor: (row: any, i: any) => i,
-            },
-            {
-                Header: 'First Name',
-                accessor: 'firstName',
-            },
-            {
-                Header: 'Last Name',
-                accessor: 'lastName',
-            },
-            {
-                Header: 'Age',
-                accessor: 'age',
-            },
-            {
-                Header: 'Visits',
-                accessor: 'visits',
-            },
-            {
-                Header: 'Status',
-                accessor: 'status',
-            },
-            {
-                Header: 'Profile Progress',
-                accessor: 'progress',
-            },
-        ],
-        []
-    );
+type CollectionProps = {
+    collections: CollectionEntry[]
+}
 
-    const data = React.useMemo(() => makeData(10000), []);
+export function VirtualizedCollectionTable({collections}:CollectionProps): JSX.Element {
+
+    const {data} = useQuery<ColumnData>(GET_COLUMNS);
+
+    const columns = React.useMemo(
+        () => data!.columns.map(col => {
+            return {Header: col.alias || col.fieldName, accessor: col.fieldName,type:col.type};
+            }
+        ),[]
+    );
 
     return (
         <Table
             columns={columns}
-            data={data}/>
+            data={collections}/>
     );
 }
 
