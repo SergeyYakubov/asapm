@@ -340,5 +340,4 @@ function CollectionListPage(): JSX.Element {
     );
 }
 
-
 export default CollectionListPage;

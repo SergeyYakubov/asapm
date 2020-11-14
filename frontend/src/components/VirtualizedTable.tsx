@@ -1,12 +1,13 @@
 import React from 'react';
 import {useTable, useFlexLayout, useSortBy} from 'react-table';
 import {List, AutoSizer, CellMeasurer, CellMeasurerCache} from "react-virtualized";
-import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
+import {createStyles, withStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import {CollectionEntry} from "../generated/graphql";
 import {useQuery} from "@apollo/client";
 import {ColumnData, ColumnList, GET_COLUMNS} from "../pages/CollectionListPage";
 import {IsoDateToStr} from "../common";
+import {useHistory} from "react-router-dom";
 
 
 const kMinWidth = 600;
@@ -18,6 +19,11 @@ const useStyles = makeStyles((theme: Theme) =>
             color: theme.palette.text.primary,
             background: theme.palette.background.paper,
             overflowX: 'scroll',
+//            borderStyle: 'solid',
+//            borderWidth: ' 1px',
+//            borderColor: theme.palette.text.secondary,
+//            boxShadow: '0 0 4px -1px '+ theme.palette.grey["200"],
+            boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12)',
         },
         visuallyHidden: {
             border: 0,
@@ -35,7 +41,7 @@ const useStyles = makeStyles((theme: Theme) =>
             borderBottomStyle: 'solid',
             borderTopWidth: ' 1px',
             borderBottomWidth: ' 1px',
-            borderColor: theme.palette.grey["100"],
+            borderColor: theme.palette.divider,
             paddingLeft: theme.spacing(2),
             minWidth: kMinWidth,
         },
@@ -55,11 +61,9 @@ const useStyles = makeStyles((theme: Theme) =>
             marginRight: theme.spacing(2),
         },
         row: {
-            borderTopStyle: 'solid',
             borderBottomStyle: 'solid',
-            borderTopWidth: ' 1px',
             borderBottomWidth: ' 1px',
-            borderColor: theme.palette.grey["200"],
+            borderColor: theme.palette.divider,
             paddingLeft: theme.spacing(2),
             "&:hover": {
                 background:theme.palette.action.hover,
@@ -86,47 +90,6 @@ const range = (len: any) => {
     return arr;
 };
 
-const newPerson = () => {
-    const statusChance = Math.random();
-    return {
-        firstName: "Hello kuazgd aksuzgd asuzgd asuzgd oauzdg oauzdg aoudgz aosudgz aosdgz aoudgz aopfgz pgzdfpaszf psazgf pasuzfg apsfg apsiuf apf",
-        lastName: "Me isfg lasigzf asuzfg aosuzfg oufgoaszfg aopsufaosuzfg as",
-        age: Math.floor(Math.random() * 30),
-        visits: Math.floor(Math.random() * 100),
-        progress: Math.floor(Math.random() * 100),
-        status:
-            statusChance > 0.66
-                ? 'relationship'
-                : statusChance > 0.33
-                ? 'complicated'
-                : 'single',
-    };
-};
-
-function makeData(...lens: any) {
-    const makeDataLevel = (depth = 0): any => {
-        const len = lens[depth];
-        return range(len).map(d => {
-            return {
-                ...newPerson(),
-                subRows: lens[depth + 1] ? makeDataLevel(depth + 1) : undefined,
-            };
-        });
-    };
-    return makeDataLevel();
-}
-
-
-const scrollbarWidth = () => {
-    // thanks too https://davidwalsh.name/detect-scrollbar-width
-    const scrollDiv = document.createElement('div');
-    scrollDiv.setAttribute('style', 'width: 100px; height: 100px; overflow: scroll; position:absolute; top:-9999px;');
-    document.body.appendChild(scrollDiv);
-    const scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
-    document.body.removeChild(scrollDiv);
-    return scrollbarWidth;
-};
-
 const cache = new CellMeasurerCache({
     fixedWidth: true,
     defaultHeight: 50
@@ -150,6 +113,7 @@ function ValueToString(value: any, columnType: string | undefined) : string {
 
 function Table({columns, data}: any) {
     const classes = useStyles();
+    const history = useHistory();
 
     const defaultColumn = React.useMemo(
         () => ({
@@ -179,18 +143,20 @@ function Table({columns, data}: any) {
             defaultColumn,
 // @ts-ignore
             manualSortBy: true,
+            disableMultiSort: true,
         },
         useFlexLayout,
         useSortBy,
     );
 
-// @ts-ignore
     const handleClick = (
         event?: React.MouseEvent,
+        row?: any,
     ) => {
-        console.log("click");
+        console.log(row);
+        const path = (row.original.type === "collection" ? "/detailedcollection/" : "/detailed/") + row.original.id + "/meta";
+        history.push(path);
     };
-
 
     const RenderRow = React.useCallback(
         ({key, parent, index, style}) => {
@@ -209,13 +175,12 @@ function Table({columns, data}: any) {
                             style,
                         })}
                         className={classes.row}
-                        onClick={handleClick}
+                        onClick={(event)=>handleClick(event,row)}
                     >
                         {row.cells.map((cell: any) => {
                             return (
                                 <div {...cell.getCellProps()} className={classes.rowContent}>
                                     {cell.render((cell:any)=>{
-                                        console.log(cell);
                                         return ValueToString(cell.value, cell.column.type);
                                     })}
                                 </div>
@@ -232,6 +197,25 @@ function Table({columns, data}: any) {
         cache.clearAll();
     };
 
+    const StyledTableSortLabel = withStyles((theme: Theme) =>
+        createStyles({
+            root: {
+                color: theme.palette.text.primary,
+                "&:hover": {
+                    color: theme.palette.text.primary,
+                },
+                '&$active': {
+                    color: theme.palette.text.primary,
+                },
+            },
+            active: {},
+            icon: {
+                color: 'inherit !important'
+            },
+        })
+    )(TableSortLabel);
+
+
     // Render the UI for your table
     return (
         <div {...getTableProps()} className={classes.table}>
@@ -241,7 +225,7 @@ function Table({columns, data}: any) {
                         {headerGroup.headers.map((column: any) => (
                             <div {...column.getHeaderProps(column.getSortByToggleProps())}
                                  className={classes.headerContent}>
-                                <TableSortLabel
+                                <StyledTableSortLabel
                                     active={column.isSorted}
                                     direction={column.isSortedDesc ? 'desc' : 'asc'}
                                     className={classes.sortLabel}
@@ -252,7 +236,7 @@ function Table({columns, data}: any) {
                                         {column.isSortedDesc ? 'sorted descending' : 'sorted ascending'}
                                     </span>
                                     }
-                                </TableSortLabel>
+                                </StyledTableSortLabel>
                             </div>
                         ))}
                     </div>
