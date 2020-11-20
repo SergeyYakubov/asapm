@@ -125,7 +125,7 @@ function Table({columns, data}: any) {
     );
 
     const orderByFn = React.useMemo(() => {
-        console.log();
+        console.log("click sort");
     }, []);
 
     const {
@@ -153,7 +153,6 @@ function Table({columns, data}: any) {
         event?: React.MouseEvent,
         row?: any,
     ) => {
-        console.log(row);
         const path = (row.original.type === "collection" ? "/detailedcollection/" : "/detailed/") + row.original.id + "/meta";
         history.push(path);
     };
@@ -276,7 +275,7 @@ export function VirtualizedCollectionTable({collections}:CollectionProps): JSX.E
         () => data!.columns.map(col => {
             return {Header: col.alias || col.fieldName, accessor: col.fieldName,type:col.type};
             }
-        ),[]
+        ),[data]
     );
 
     return (
