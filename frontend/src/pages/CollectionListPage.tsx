@@ -121,7 +121,7 @@ function possibleColumnListfromCustomValues(vals: KvObj | null, root: string, co
             possibleColumnListfromCustomValues(value, fullColumn, columns);
         } else {
             if (!columns.find(column => column.fieldName === "customValues." + fullColumn)) {
-                columns.push({fieldName: "customValues." + fullColumn, alias: fullColumn, active: false,type:value.constructor.name});
+                columns.push({fieldName: "customValues." + fullColumn, alias: fullColumn.replaceAll(".","-"), active: false,type:value.constructor.name});
             }
         }
     }
@@ -168,6 +168,7 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
             const ind = data.findIndex(selectedCol => selectedCol.fieldName === row.fieldName);
             row.active = ind > -1;
         });
+        console.log(possibleColumns);
         columnsVar(possibleColumns);
     };
 
@@ -212,7 +213,7 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
    </Box>;
 }
 
-const defaultColumns: ColumnList = [
+export const defaultColumns: ColumnList = [
     {fieldName: "id", alias: "ID", active: true,type:"string"},
     {fieldName: "title", alias: "Title", active: true,type:"string"},
     {fieldName: "parentBeamtimeMeta.id", alias: "Beamtime ID", active: true,type:"string"},

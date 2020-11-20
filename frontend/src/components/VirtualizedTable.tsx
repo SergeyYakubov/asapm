@@ -1,101 +1,137 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useTable, useFlexLayout, useSortBy} from 'react-table';
-import {List, AutoSizer, CellMeasurer, CellMeasurerCache} from "react-virtualized";
 import {createStyles, withStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import {CollectionEntry} from "../generated/graphql";
 import {useQuery} from "@apollo/client";
-import {ColumnData, ColumnList, GET_COLUMNS} from "../pages/CollectionListPage";
+import {
+    ColumnData, ColumnItem,
+    ColumnList,
+    columnsVar, defaultColumns,
+    GET_COLUMNS,
+    PossibleColumnListfromCollections
+} from "../pages/CollectionListPage";
 import {IsoDateToStr} from "../common";
 import {useHistory} from "react-router-dom";
+import {Virtuoso} from "react-virtuoso";
+import {Box, Button, IconButton, Popover} from "@material-ui/core";
+import ViewColumnIcon from "@material-ui/icons/ViewColumn";
+import Grid from "@material-ui/core/Grid";
+import SettingsBackupRestoreIcon from "@material-ui/icons/SettingsBackupRestore";
+import CloseIcon from "@material-ui/icons/Close";
+import MaterialTable from "material-table";
+import {TableIcons} from "../TableIcons";
 
 
-const kMinWidth = 600;
+const kcolumnWidth = 100;
 
 const useStyles = makeStyles((theme: Theme) =>
-    createStyles({
-        table: {
-            textAlign: 'left',
-            color: theme.palette.text.primary,
-            background: theme.palette.background.paper,
-            overflowX: 'scroll',
+        createStyles({
+            root: {
+                flexGrow: 1,
+                margin: theme.spacing(1),
+                minWidth: 0,
+            },
+            columnsHeader: {
+                margin: theme.spacing(1),
+                marginBottom: theme.spacing(2),
+            },
+            table: {
+                textAlign: 'left',
+                color: theme.palette.text.primary,
+                background: theme.palette.background.paper,
+                overflowX: 'scroll',
 //            borderStyle: 'solid',
 //            borderWidth: ' 1px',
 //            borderColor: theme.palette.text.secondary,
 //            boxShadow: '0 0 4px -1px '+ theme.palette.grey["200"],
-            boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12)',
-        },
-        visuallyHidden: {
-            border: 0,
-            clip: 'rect(0 0 0 0)',
-            height: 1,
-            margin: -1,
-            overflow: 'hidden',
-            padding: 0,
-            position: 'absolute',
-            top: 20,
-            width: 1,
-        },
-        header: {
-            borderTopStyle: 'solid',
-            borderBottomStyle: 'solid',
-            borderTopWidth: ' 1px',
-            borderBottomWidth: ' 1px',
-            borderColor: theme.palette.divider,
-            paddingLeft: theme.spacing(2),
-            minWidth: kMinWidth,
-        },
-        sortLabel: {
-            "&:hover": {
-                textColor:theme.palette.text.primary,
+                boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12)',
             },
-            "&$selected": {
-                textColor:theme.palette.text.primary,
+            visuallyHidden: {
+                border: 0,
+                clip: 'rect(0 0 0 0)',
+                height: 1,
+                margin: -1,
+                overflow: 'hidden',
+                padding: 0,
+                position: 'absolute',
+                top: 20,
+                width: 1,
             },
-
-        },
-        headerContent: {
-            fontWeight: 'bold',
-            marginTop: theme.spacing(2),
-            marginBottom: theme.spacing(2),
-            marginRight: theme.spacing(2),
-        },
-        row: {
-            borderBottomStyle: 'solid',
-            borderBottomWidth: ' 1px',
-            borderColor: theme.palette.divider,
-            paddingLeft: theme.spacing(2),
-            "&:hover": {
-                background:theme.palette.action.hover,
-                cursor: 'pointer',
+            header: {
+                borderTopStyle: 'solid',
+                borderBottomStyle: 'solid',
+                borderTopWidth: ' 1px',
+                borderBottomWidth: ' 1px',
+                borderColor: theme.palette.divider,
+                paddingLeft: theme.spacing(2),
             },
-        },
-        rowContent: {
-            marginTop: theme.spacing(2),
-            marginBottom: theme.spacing(2),
-            marginRight: theme.spacing(2),
-        },
-        list: {
-            outline:'none',
-        },
-    }),
+            toolBox: {
+                margin: theme.spacing(0),
+                background: theme.palette.background.paper,
+            },
+            sortLabel: {
+                "&:hover": {
+                    textColor: theme.palette.text.primary,
+                },
+                "&$selected": {
+                    textColor: theme.palette.text.primary,
+                },
+                textOverflow: 'ellipsis',
+            },
+            headerContent: {
+                fontWeight: 'bold',
+                marginTop: theme.spacing(2),
+                marginBottom: theme.spacing(2),
+                marginRight: theme.spacing(2),
+                overflow: 'hidden',
+            },
+            row: {
+                borderBottomStyle: 'solid',
+                borderBottomWidth: ' 1px',
+                borderColor: theme.palette.divider,
+                paddingLeft: theme.spacing(2),
+                "&:hover": {
+                    background: theme.palette.action.hover,
+                    cursor: 'pointer',
+                },
+            },
+            rowContent: {
+                marginTop: theme.spacing(2),
+                marginBottom: theme.spacing(2),
+                marginRight: theme.spacing(2),
+            },
+            list: {
+                outline: 'none',
+                overflow: 'hidden',
+            },
+        }),
 );
 
+const useElementWidth = (myRef: any) => {
+    const [width, setWidth] = useState(0);
 
-const range = (len: any) => {
-    const arr = [];
-    for (let i = 0; i < len; i++) {
-        arr.push(i);
-    }
-    return arr;
+    useEffect(() => {
+        const handleResize = () => {
+            setWidth(myRef.current.scrollWidth);
+        };
+
+        if (myRef.current) {
+            setWidth(myRef.current.scrollWidth);
+        }
+
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [myRef]);
+
+    return width;
 };
 
-const cache = new CellMeasurerCache({
-    fixedWidth: true,
-    defaultHeight: 50
-});
 
-function ValueToString(value: any, columnType: string | undefined) : string {
+function ValueToString(value: any, columnType: string | undefined): string {
     if (!value) {
         return "";
     }
@@ -117,9 +153,9 @@ function Table({columns, data}: any) {
 
     const defaultColumn = React.useMemo(
         () => ({
-            minWidth: 50, // minWidth is only used as a limit for resizing
-            width: 50, // width is used for both the flex-basis and flex-grow
-            maxWidth: 250, // maxWidth is only used as a limit for resizing
+            minWidth: 0,
+            width: kcolumnWidth,
+            maxWidth: 1000,
         }),
         []
     );
@@ -158,43 +194,29 @@ function Table({columns, data}: any) {
     };
 
     const RenderRow = React.useCallback(
-        ({key, parent, index, style}) => {
+        index => {
             const row = rows[index];
             prepareRow(row);
             return (
-                <CellMeasurer
-                    key={key}
-                    cache={cache}
-                    parent={parent}
-                    columnIndex={0}
-                    rowIndex={index}
+                <div
+                    {...row.getRowProps()}
+                    className={classes.row}
+                    onClick={(event) => handleClick(event, row)}
                 >
-                    <div
-                        {...row.getRowProps({
-                            style,
-                        })}
-                        className={classes.row}
-                        onClick={(event)=>handleClick(event,row)}
-                    >
-                        {row.cells.map((cell: any) => {
-                            return (
-                                <div {...cell.getCellProps()} className={classes.rowContent}>
-                                    {cell.render((cell:any)=>{
-                                        return ValueToString(cell.value, cell.column.type);
-                                    })}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </CellMeasurer>
+                    {row.cells.map((cell: any) => {
+                        return (
+                            <div {...cell.getCellProps()} className={classes.rowContent}>
+                                {cell.render((cell: any) => {
+                                    return ValueToString(cell.value, cell.column.type);
+                                })}
+                            </div>
+                        );
+                    })}
+                </div>
             );
         },
         [prepareRow, rows, classes]
     );
-
-    const clearCache = () => {
-        cache.clearAll();
-    };
 
     const StyledTableSortLabel = withStyles((theme: Theme) =>
         createStyles({
@@ -214,11 +236,13 @@ function Table({columns, data}: any) {
         })
     )(TableSortLabel);
 
+    const componentRef = useRef<HTMLDivElement>(null);
+    const width = useElementWidth(componentRef);
 
     // Render the UI for your table
     return (
         <div {...getTableProps()} className={classes.table}>
-            <div className={classes.header}>
+            <div className={classes.header} ref={componentRef}>
                 {headerGroups.map((headerGroup: any) => (
                     <div {...headerGroup.getHeaderGroupProps()}>
                         {headerGroup.headers.map((column: any) => (
@@ -242,46 +266,165 @@ function Table({columns, data}: any) {
                 ))}
             </div>
             <div {...getTableBodyProps()}>
-                <AutoSizer disableHeight
-                           onResize={clearCache}
-                >
-                    {({width}) => (
-                        <List
-                            height={400}
-                            rowCount={rows.length}
-                            width={width < kMinWidth ? kMinWidth : width}
-                            deferredMeasurementCache={cache}
-                            rowHeight={cache.rowHeight}
-                            rowRenderer={RenderRow}
-                            className={classes.list}
-                        >
-                        </List>
-                    )}
-                </AutoSizer>
+                <Virtuoso
+                    totalCount={rows.length}
+                    overscan={200}
+                    item={RenderRow}
+                    style={{height: '400px', width: width}}
+                    className={classes.list}
+                />
             </div>
         </div>
     );
 }
 
+type SelectColumnsProps = {
+    columns: ColumnList
+    collections: CollectionEntry[]
+    close: () => void
+}
+
+function SelectColumns({collections, columns, close}: SelectColumnsProps) {
+    const possibleColumns: ColumnList = PossibleColumnListfromCollections(columns, collections);
+    const handleColumnButtonClick = () => {
+        columnsVar(defaultColumns);
+    };
+
+    const classes = useStyles();
+
+    const UpdateAlias = (
+        newValue: any,
+        oldValue: any,
+        rowData: ColumnItem
+    ): Promise<void> => {
+        return new Promise(() => {
+            const ind = possibleColumns.findIndex(col => col.fieldName === rowData.fieldName);
+            possibleColumns[ind].alias = newValue;
+            columnsVar(possibleColumns);
+        });
+    };
+
+    const handleSelectionChange = (
+        data: ColumnList
+    ) => {
+        possibleColumns.forEach(row => {
+            const ind = data.findIndex(selectedCol => selectedCol.fieldName === row.fieldName);
+            row.active = ind > -1;
+        });
+        columnsVar(possibleColumns);
+    };
+
+    return <Box className={classes.root}>
+        <Grid container justify={'space-between'} className={classes.columnsHeader}>
+            <Button variant="contained" color="secondary" onClick={handleColumnButtonClick}
+                    startIcon={<SettingsBackupRestoreIcon/>}>
+                Restore defaults
+            </Button>
+            <IconButton onClick={close} size="small">
+                <CloseIcon/>
+            </IconButton>
+        </Grid>
+        <MaterialTable
+            icons={TableIcons}
+            options={{
+                filtering: false,
+                header: true,
+                showTitle: false,
+                search: true,
+                paging: false,
+                toolbar: true,
+                draggable: false,
+                sorting: true,
+                minBodyHeight: "50vh",
+                selection: true,
+                showTextRowsSelected: false,
+                headerStyle: {
+                    fontWeight: 'bold',
+                },
+            }}
+            cellEditable={{
+                onCellEditApproved: UpdateAlias,
+            }}
+            onSelectionChange={handleSelectionChange}
+            columns={[
+                {title: 'Key Name', field: 'fieldName', editable: 'never'},
+                {title: 'Alias', field: 'alias'},
+            ]}
+            data={possibleColumns.map(column => {
+                return {
+                    fieldName: column.fieldName,
+                    alias: column.alias || column.fieldName,
+                    type: undefined,
+                    active: column.active,
+                    tableData: {checked: column.active}
+                };
+            })}
+        />
+    </Box>;
+}
+
+
 type CollectionProps = {
     collections: CollectionEntry[]
 }
 
-export function VirtualizedCollectionTable({collections}:CollectionProps): JSX.Element {
+export function VirtualizedCollectionTable({collections}: CollectionProps): JSX.Element {
+    const classes = useStyles();
 
     const {data} = useQuery<ColumnData>(GET_COLUMNS);
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
-    const columns = React.useMemo(
-        () => data!.columns.map(col => {
-            return {Header: col.alias || col.fieldName, accessor: col.fieldName,type:col.type};
+    const handleColumnButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleColumnsSelect = () => {
+        setAnchorEl(null);
+    };
+
+    const columns: ColumnList = data!.columns;
+
+    const tableColumns = React.useMemo(
+        () => columns.filter(col => col.active).map(col => {
+                return {
+                    Header: col.alias || col.fieldName,
+                    accessor: col.fieldName,
+                    type: col.type,
+                    style: {'white-space': 'unset', overflowWrap: "break-word"}
+                };
             }
-        ),[data]
+        ), [data!.columns]
     );
 
     return (
-        <Table
-            columns={columns}
-            data={collections}/>
+        <Box display="inline">
+            <Box display="flex" justifyContent={"flex-end"} className={classes.toolBox}>
+                <IconButton color="secondary" aria-label="select columns" aria-haspopup="true"
+                            onClick={handleColumnButtonClick}>
+                    <ViewColumnIcon/>
+                </IconButton>
+                <Popover
+                    id="simple-menu"
+                    anchorEl={anchorEl}
+                    keepMounted
+                    open={Boolean(anchorEl)}
+                    onClose={handleColumnsSelect}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                    }}
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'left',
+                    }}
+                >
+                    <SelectColumns close={handleColumnsSelect} columns={columns} collections={collections}/>
+                </Popover>
+            </Box>
+            <Table
+                columns={tableColumns}
+                data={collections}/>
+        </Box>
     );
 }
 
