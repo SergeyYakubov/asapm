@@ -108,7 +108,7 @@ const useStyles = makeStyles((theme: Theme) =>
         }),
 );
 
-const useElementWidth = (myRef: any) => {
+const useElementWidth = (myRef: any,deps: any) => {
     const [width, setWidth] = useState(0);
 
     useEffect(() => {
@@ -125,7 +125,7 @@ const useElementWidth = (myRef: any) => {
         return () => {
             window.removeEventListener("resize", handleResize);
         };
-    }, [myRef]);
+    }, [myRef,...deps]);
 
     return width;
 };
@@ -215,7 +215,7 @@ function Table({columns, data}: any) {
                 </div>
             );
         },
-        [prepareRow, rows, classes]
+        [prepareRow, rows]
     );
 
     const StyledTableSortLabel = withStyles((theme: Theme) =>
@@ -237,7 +237,7 @@ function Table({columns, data}: any) {
     )(TableSortLabel);
 
     const componentRef = useRef<HTMLDivElement>(null);
-    const width = useElementWidth(componentRef);
+    const width = useElementWidth(componentRef,[columns,data]);
 
     // Render the UI for your table
     return (
