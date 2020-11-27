@@ -101,6 +101,8 @@ export interface CollectionFilter {
     showBeamtime: boolean
     showSubcollections: boolean
     textSearch: string
+    sortBy: string
+    sortDir: string
     fieldFilters: FieldFilter[]
     dateFrom: Date | undefined
     dateTo: Date | undefined
@@ -138,6 +140,18 @@ function AddToFilter(filter: string, add: string, op: string): string {
         return add;
 }
 
+
+export function GetOrderBy(filter: CollectionFilter): string {
+    let filterString = "";
+    if (filter.sortBy !=="") {
+        filterString = filter.sortBy;
+        if (filter.sortDir === "desc") {
+            filterString = filterString + " DESC";
+        }
+    }
+    return filterString;
+}
+
 export function GetFilterString(filter: CollectionFilter): string {
     let filterString = "";
     if (filter.showBeamtime && !filter.showSubcollections) {
@@ -171,11 +185,9 @@ export function GetFilterString(filter: CollectionFilter): string {
         filterString = AddToFilter(filterString, filterRange, "and");
     }
 
-    if (filter.textSearch === "") {
-        return filterString;
+    if (filter.textSearch !== "") {
+        filterString = AddToFilter(filterString, "jsonString regexp '" + filter.textSearch + "'", "and");
     }
-
-    filterString = AddToFilter(filterString, "jsonString regexp '" + filter.textSearch + "'", "and");
 
     return filterString;
 }

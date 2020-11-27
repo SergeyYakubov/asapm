@@ -2,8 +2,8 @@ import React, {useEffect, useRef, useState} from 'react';
 import {useTable, useFlexLayout, useSortBy} from 'react-table';
 import {createStyles, withStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import TableSortLabel from '@material-ui/core/TableSortLabel';
-import {CollectionEntry} from "../generated/graphql";
-import {useQuery} from "@apollo/client";
+import {CollectionEntry, Query, QueryCollectionsArgs} from "../generated/graphql";
+import {QueryResult, useQuery} from "@apollo/client";
 import {
     ColumnData, ColumnItem,
     ColumnList,
@@ -11,7 +11,7 @@ import {
     GET_COLUMNS,
     PossibleColumnListfromCollections
 } from "../pages/CollectionListPage";
-import {IsoDateToStr} from "../common";
+import {CollectionFilter, IsoDateToStr} from "../common";
 import {useHistory} from "react-router-dom";
 import {Virtuoso} from "react-virtuoso";
 import {Box, Button, IconButton, Popover} from "@material-ui/core";
@@ -21,6 +21,7 @@ import SettingsBackupRestoreIcon from "@material-ui/icons/SettingsBackupRestore"
 import CloseIcon from "@material-ui/icons/Close";
 import MaterialTable from "material-table";
 import {TableIcons} from "../TableIcons";
+import {collectionFilterVar} from "./FilterBoxes";
 
 
 const kcolumnWidth = 100;
@@ -74,9 +75,6 @@ const useStyles = makeStyles((theme: Theme) =>
                 "&:hover": {
                     textColor: theme.palette.text.primary,
                 },
-                "&$selected": {
-                    textColor: theme.palette.text.primary,
-                },
                 textOverflow: 'ellipsis',
             },
             headerContent: {
@@ -108,7 +106,7 @@ const useStyles = makeStyles((theme: Theme) =>
         }),
 );
 
-const useElementWidth = (myRef: any,deps: any) => {
+const useElementWidth = (myRef: any, deps: any) => {
     const [width, setWidth] = useState(0);
 
     useEffect(() => {
@@ -125,7 +123,7 @@ const useElementWidth = (myRef: any,deps: any) => {
         return () => {
             window.removeEventListener("resize", handleResize);
         };
-    }, [myRef,...deps]);
+    }, [myRef, ...deps]);
 
     return width;
 };
@@ -146,8 +144,13 @@ function ValueToString(value: any, columnType: string | undefined): string {
     return strval;
 }
 
+type TableProps = {
+    filter: CollectionFilter
+    columns: any
+    data: CollectionEntry[] | undefined
+}
 
-function Table({columns, data}: any) {
+function Table({filter, columns, data}: TableProps) {
     const classes = useStyles();
     const history = useHistory();
 
@@ -160,26 +163,25 @@ function Table({columns, data}: any) {
         []
     );
 
-    const orderByFn = React.useMemo(() => {
-        console.log("click sort");
-    }, []);
-
     const {
         getTableProps,
         getTableBodyProps,
         headerGroups,
         rows,
         prepareRow,
-// @ts-ignore
-        state: {sortBy}
     } = useTable(
         {
             columns,
-            data,
+            data: data ? data : [],
             defaultColumn,
 // @ts-ignore
             manualSortBy: true,
             disableMultiSort: true,
+            autoResetSortBy: false,
+            initialState: {
+// @ts-ignore
+                sortBy: [{id: filter.sortBy, desc: filter.sortDir === "desc"}]
+            },
         },
         useFlexLayout,
         useSortBy,
@@ -191,6 +193,16 @@ function Table({columns, data}: any) {
     ) => {
         const path = (row.original.type === "collection" ? "/detailedcollection/" : "/detailed/") + row.original.id + "/meta";
         history.push(path);
+    };
+
+    const handleClickSort = (
+        event: React.MouseEvent,
+        column:any
+    ) => {
+        const willBeSorted = column.isSortedDesc !== true;
+        const willBeDesc = column.isSortedDesc === false;
+        column.getSortByToggleProps().onClick(event);
+        collectionFilterVar({...filter, sortBy:willBeSorted?column.id:"", sortDir:willBeDesc ?"desc":"asc"});
     };
 
     const RenderRow = React.useCallback(
@@ -215,7 +227,7 @@ function Table({columns, data}: any) {
                 </div>
             );
         },
-        [prepareRow, rows]
+        [prepareRow, rows, filter]
     );
 
     const StyledTableSortLabel = withStyles((theme: Theme) =>
@@ -237,7 +249,7 @@ function Table({columns, data}: any) {
     )(TableSortLabel);
 
     const componentRef = useRef<HTMLDivElement>(null);
-    const width = useElementWidth(componentRef,[columns,data]);
+    const width = useElementWidth(componentRef, [columns, data]);
 
     // Render the UI for your table
     return (
@@ -247,7 +259,9 @@ function Table({columns, data}: any) {
                     <div {...headerGroup.getHeaderGroupProps()}>
                         {headerGroup.headers.map((column: any) => (
                             <div {...column.getHeaderProps(column.getSortByToggleProps())}
-                                 className={classes.headerContent}>
+                                 className={classes.headerContent}
+                                 onClick={(event)=>handleClickSort(event, column)}
+                            >
                                 <StyledTableSortLabel
                                     active={column.isSorted}
                                     direction={column.isSortedDesc ? 'desc' : 'asc'}
@@ -280,7 +294,7 @@ function Table({columns, data}: any) {
 
 type SelectColumnsProps = {
     columns: ColumnList
-    collections: CollectionEntry[]
+    collections: CollectionEntry[] | undefined
     close: () => void
 }
 
@@ -365,10 +379,12 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
 
 
 type CollectionProps = {
-    collections: CollectionEntry[]
+    queryResult: QueryResult<Query, QueryCollectionsArgs>
+    oldCollections: CollectionEntry[] | undefined
+    filter: CollectionFilter
 }
 
-export function VirtualizedCollectionTable({collections}: CollectionProps): JSX.Element {
+export function VirtualizedCollectionTable({filter, oldCollections, queryResult}: CollectionProps): JSX.Element {
     const classes = useStyles();
 
     const {data} = useQuery<ColumnData>(GET_COLUMNS);
@@ -418,12 +434,14 @@ export function VirtualizedCollectionTable({collections}: CollectionProps): JSX.
                         horizontal: 'left',
                     }}
                 >
-                    <SelectColumns close={handleColumnsSelect} columns={columns} collections={collections}/>
+                    <SelectColumns close={handleColumnsSelect} columns={columns}
+                                   collections={queryResult.data?.collections}/>
                 </Popover>
             </Box>
             <Table
+                filter={filter}
                 columns={tableColumns}
-                data={collections}/>
+                data={queryResult.data?.collections || oldCollections}/>
         </Box>
     );
 }
