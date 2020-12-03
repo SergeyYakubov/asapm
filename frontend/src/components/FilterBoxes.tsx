@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback} from 'react';
 import Typography from '@material-ui/core/Typography';
 import {makeStyles, createStyles, Theme, withStyles} from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
@@ -10,13 +10,12 @@ import Paper from "@material-ui/core/Paper";
 import {
     CollectionFilter,
     FieldFilter,
-    GetFilterString, InvertFilterOp,
+    InvertFilterOp,
     RemoveDuplicates,
 } from "../common";
 import debounce from 'lodash.debounce';
 import {GetUniqueNamesForField} from "../meta";
-import {gql, makeVar, useQuery} from "@apollo/client";
-import {COLLECTIONS} from "../graphQLSchemes";
+import {gql, makeVar, QueryResult} from "@apollo/client";
 import {
     Button,
     CircularProgress,
@@ -34,7 +33,7 @@ import DateRangeIcon from '@material-ui/icons/DateRange';
 import SearchIcon from '@material-ui/icons/Search';
 import Icon from '@material-ui/core/Icon';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import {CollectionEntry, Query, QueryCollectionsArgs, UniqueField} from "../generated/graphql";
+import {Query, QueryCollectionsArgs, UniqueField} from "../generated/graphql";
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import VisibilityTwoToneIcon from '@material-ui/icons/VisibilityTwoTone';
@@ -121,7 +120,8 @@ function BeamtimeFilterBox(): JSX.Element {
 }
 
 type CollectionFilterBoxProps = {
-    setCollections: React.Dispatch<React.SetStateAction<CollectionEntry[]>>
+    queryResult: QueryResult<Query, QueryCollectionsArgs>
+    filter: CollectionFilter
 }
 
 interface SelectFieldsProps {
@@ -184,6 +184,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
             >
                 {alias}
             </Button>
+            {anchorEl &&
             <StyledMenu
                 id="simple-menu"
                 anchorEl={anchorEl}
@@ -195,6 +196,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
                     return <MenuItem key={value as string} onClick={() => handleMenuClick(value)}>{value}</MenuItem>;
                 })}
             </StyledMenu>
+            }
         </div>
     );
 
@@ -225,7 +227,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
 
     const handleEnable = (enable: boolean) => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            return {...value,enabled:enable};
+            return {...value, enabled: enable};
         });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
@@ -233,7 +235,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
 
     const handleInvert = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            return {...value,enabled:!value.enabled};
+            return {...value, enabled: !value.enabled};
         });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
@@ -241,7 +243,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
 
     const handleInvertSimple = () => {
         const updatedFilterFields = filter.fieldFilters.map(value => {
-            return {...value,op:InvertFilterOp(value.op)};
+            return {...value, op: InvertFilterOp(value.op)};
         });
         collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
@@ -321,6 +323,8 @@ const defaultFilter: CollectionFilter = {
     showBeamtime: true,
     showSubcollections: true,
     textSearch: "",
+    sortBy: "",
+    sortDir: "asc",
     fieldFilters: [],
     dateFrom: undefined,
     dateTo: undefined,
@@ -341,9 +345,7 @@ export interface FilterData {
     collectionFilter: CollectionFilter;
 }
 
-function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.Element {
-    const {data} = useQuery<FilterData>(GET_FILTER);
-    const filter = data!.collectionFilter;
+function CollectionFilterBox({queryResult, filter}: CollectionFilterBoxProps): JSX.Element {
     const handleChangeScope = (event: React.ChangeEvent<HTMLInputElement>) => {
         collectionFilterVar({...filter, [event.target.name]: event.target.checked});
     };
@@ -357,21 +359,6 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
     const handleDataRangeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
-
-    const queryResult = useQuery<Query, QueryCollectionsArgs>(COLLECTIONS, {
-        pollInterval: 5000,
-        variables: {filter: GetFilterString(filter), orderBy: "id"}
-    });
-
-    useEffect(() => {
-        if (queryResult.error) {
-            setCollections([]);
-            console.log("collection query error" + queryResult.error);
-        }
-        if (!queryResult.loading && queryResult.data) {
-            setCollections(queryResult.data!.collections);
-        }
-    }, [queryResult.error, queryResult.loading, queryResult.data, setCollections]);
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -463,6 +450,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                             <IconButton onClick={handleDataRangeClick} size={"small"}>
                                 <DateRangeIcon/>
                             </IconButton>
+                            {anchorEl &&
                             <Popover
                                 id="simple-menu"
                                 anchorEl={anchorEl}
@@ -485,6 +473,7 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                                     onChange={handleDataRangeChange}
                                 />
                             </Popover>
+                            }
                             <TextField
                                 className={classes.rangeLabel}
                                 label="Time Range"
@@ -503,9 +492,10 @@ function CollectionFilterBox({setCollections}: CollectionFilterBoxProps): JSX.El
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
                                 <BulkFilterEdit filter={filter}/>
                                 {filter.fieldFilters.map(fieldFilter => {
-                                    return <FilterChip key={n++} collections={queryResult.data?.collections} filter={filter} fieldFilter={fieldFilter}/>;
+                                    return <FilterChip key={n++} collections={queryResult.data?.collections}
+                                                       filter={filter} fieldFilter={fieldFilter}/>;
                                 })}
-                                <CustomFilter currentFilter={filter} collections={queryResult.data?.collections} />
+                                <CustomFilter currentFilter={filter} collections={queryResult.data?.collections}/>
                             </Box>
                         </Paper>
                     </Grid>

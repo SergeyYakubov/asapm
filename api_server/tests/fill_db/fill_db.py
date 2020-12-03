@@ -16,12 +16,12 @@ def randId():
     return randint(10000000,99999999)
 # Instantiate the client with a websocket endpoint.
 #client = GraphqlClient(endpoint="http://guest-k8s-node3.desy.de/yakser/asapm-dev/api/query")
-client = GraphqlClient(endpoint="http://localhost:8080/api/query")
+#client = GraphqlClient(endpoint="http://localhost:8080/api/query")
 
 #token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkMW9wOG9yZFBSVndnTUNrQnQzazdVZXM0WXBLeHA0Wkt0YTFmUXU1VktNIn0.eyJleHAiOjE1OTc5NTc1OTUsImlhdCI6MTU5Nzg3MTE5NSwianRpIjoiNTYyOTRhYjItZjYwOS00MDcyLTlkYzgtMjMwNzRkODE3NmUwIiwiaXNzIjoiaHR0cHM6Ly9rdWJlLWtleWNsb2FrLmRlc3kuZGUvYXV0aC9yZWFsbXMvYXNhcCIsInN1YiI6ImVjNzkzNjRmLWRjOGEtNDVlZS04YWZlLTQxN2NjMTM0ODUyYSIsInR5cCI6IkJlYXJlciIsImF6cCI6ImFzYXBtLXNlcnZpY2UiLCJzZXNzaW9uX3N0YXRlIjoiZjdlY2IzOTctMWZlNC00MDM4LWIxZmQtMjVmNTg0Mzg0YjhkIiwiYWNyIjoiMSIsInNjb3BlIjoicHJvZmlsZSIsImNsaWVudElkIjoiYXNhcG0tc2VydmljZSIsImNsaWVudEhvc3QiOiI5MS4yNDguMjUxLjE5OCIsInJvbGVzIjpbImluZ2VzdG9yIl0sInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1hc2FwbS1zZXJ2aWNlIiwiY2xpZW50QWRkcmVzcyI6IjkxLjI0OC4yNTEuMTk4In0.ULRn2ixvJwWZ-dYbFfqE2VXY-x52wTcYtajIR0T1kSxnRRdDVfsbDlYhYepVNhVuBKE8wJoWj_hjbo4WxyBldQYygMe564U51hjdDMUg-zp6wRHGt-GSeFcu0oi5VYmg_y3BAwFB2PLTcg312HdN5EboskCw_VbH6iPw7BSAksG4cZtEAzeE_hCjwk_3h0wz-wI4i4ykHrqBKjzvzTDiJNKGfXyFnH-9eLdoo1JEUQwYMIlay4lzhALLs4KDAZyRJ4yVYD8xVL1UhSS-bnBWPMLTgg6Qlbn2Qosk0t1A4XWaH4KMf21WMOCW5KqVhxkf9gx3XZDfcs0_msA4bzkCEw"
-#token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkMW9wOG9yZFBSVndnTUNrQnQzazdVZXM0WXBLeHA0Wkt0YTFmUXU1VktNIn0.eyJleHAiOjE1OTg1MzE0MzYsImlhdCI6MTU5ODQ0NTAzNiwianRpIjoiYjU4YjdjMTAtNzVkYi00OGM4LWI1NzEtZWQ3OGE3MjUzNDg0IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay5kZXN5LmRlL2F1dGgvcmVhbG1zL2FzYXAiLCJzdWIiOiJlYzc5MzY0Zi1kYzhhLTQ1ZWUtOGFmZS00MTdjYzEzNDg1MmEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJhc2FwbS1zZXJ2aWNlIiwic2Vzc2lvbl9zdGF0ZSI6IjVhZGRlYTRjLWE4ZGItNDY1NS1iNjRlLTcxOThmMWYxYTA5MCIsImFjciI6IjEiLCJzY29wZSI6InByb2ZpbGUiLCJjbGllbnRJZCI6ImFzYXBtLXNlcnZpY2UiLCJjbGllbnRIb3N0IjoiMTMxLjE2OS4yNTQuMjAyIiwicm9sZXMiOlsiaW5nZXN0b3IiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWFzYXBtLXNlcnZpY2UiLCJjbGllbnRBZGRyZXNzIjoiMTMxLjE2OS4yNTQuMjAyIn0.QdziumLhmNUfI-u8s8yMmaIwpaLcWjfE9wAvFttBUFxk8wd1ifX0G_YEAgn6-jIVYo9Nx6AiIpbuwScLR_712WRYVFt1Uy9sfWhPte1A-HYaaNJjBxwEBzx7UVgLbRzNnPVCs4bmQZhaxt5ZCraBQxZESN0nt5S9G_c_WRa5XSM1VTe7TFCgfZNqvSzJ4vamF2KiHXV5_KJM_cZ1lbtKKpgu-T03J6qNW3Aw8AZqCDps5wHEuSfKwjy97frhiqGzJ_j8tGR5pga-U9JTLL2ngX9TlZmDElh7nNQtoXkBWj-3CvBJQ9bbZbH30FHFoC1JOKW8gzc20H0muxkMBJ_LjQ"
-#client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query",
-#                      headers= {"Authorization": "Bearer "+ token})
+token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkMW9wOG9yZFBSVndnTUNrQnQzazdVZXM0WXBLeHA0Wkt0YTFmUXU1VktNIn0.eyJleHAiOjE1OTg1MzE0MzYsImlhdCI6MTU5ODQ0NTAzNiwianRpIjoiYjU4YjdjMTAtNzVkYi00OGM4LWI1NzEtZWQ3OGE3MjUzNDg0IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay5kZXN5LmRlL2F1dGgvcmVhbG1zL2FzYXAiLCJzdWIiOiJlYzc5MzY0Zi1kYzhhLTQ1ZWUtOGFmZS00MTdjYzEzNDg1MmEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJhc2FwbS1zZXJ2aWNlIiwic2Vzc2lvbl9zdGF0ZSI6IjVhZGRlYTRjLWE4ZGItNDY1NS1iNjRlLTcxOThmMWYxYTA5MCIsImFjciI6IjEiLCJzY29wZSI6InByb2ZpbGUiLCJjbGllbnRJZCI6ImFzYXBtLXNlcnZpY2UiLCJjbGllbnRIb3N0IjoiMTMxLjE2OS4yNTQuMjAyIiwicm9sZXMiOlsiaW5nZXN0b3IiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWFzYXBtLXNlcnZpY2UiLCJjbGllbnRBZGRyZXNzIjoiMTMxLjE2OS4yNTQuMjAyIn0.QdziumLhmNUfI-u8s8yMmaIwpaLcWjfE9wAvFttBUFxk8wd1ifX0G_YEAgn6-jIVYo9Nx6AiIpbuwScLR_712WRYVFt1Uy9sfWhPte1A-HYaaNJjBxwEBzx7UVgLbRzNnPVCs4bmQZhaxt5ZCraBQxZESN0nt5S9G_c_WRa5XSM1VTe7TFCgfZNqvSzJ4vamF2KiHXV5_KJM_cZ1lbtKKpgu-T03J6qNW3Aw8AZqCDps5wHEuSfKwjy97frhiqGzJ_j8tGR5pga-U9JTLL2ngX9TlZmDElh7nNQtoXkBWj-3CvBJQ9bbZbH30FHFoC1JOKW8gzc20H0muxkMBJ_LjQ"
+client = GraphqlClient(endpoint="http://localhost/default/asapm/api/query",
+                      headers= {"Authorization": "Bearer "+ token})
 #client = GraphqlClient(endpoint="https://asapm.desy.de/api/query",
 #                       headers= {"Authorization": "Bearer "+ token})
 
@@ -141,8 +141,8 @@ def addMeta():
     s = Template(query)
     query = s.substitute(d)
 
-    print (query)
+#    print (query)
     res = client.execute(query=query)
-    print (res)
-for i in range(0, 1):
+#    print (res)
+for i in range(0, 1000):
     addMeta()

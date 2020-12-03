@@ -265,7 +265,6 @@ func (db *Mongodb) BSONFromSQL(query string) (bson.M, bson.M, error) {
 		}
 	}
 
-	fmt.Println(query_mongo)
 	if len(sel.OrderBy) > 0 {
 		sort_mongo, err = getSortBSONFromOrderArray(sel.OrderBy)
 		if err != nil {

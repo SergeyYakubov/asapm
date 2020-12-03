@@ -13,6 +13,8 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import {Route, Switch, Redirect} from 'react-router-dom';
 import DetailedPage from "./pages/DetailedPage";
 import LogbooksPage from "./pages/LogbooksPage";
+import useMediaQuery from '@material-ui/core/useMediaQuery';
+
 
 declare module "@material-ui/core/styles/createPalette" {
 // eslint-disable-next-line
@@ -35,14 +37,18 @@ const useStyles = makeStyles(() =>
 
 function App(): JSX.Element {
     const classes = useStyles();
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
     const {loading, error, data} = userPreferences.useUserPreferences();
     if (loading) return <p>Loading user preferences...</p>;
-    let themeType: PaletteType = "light";
+    let themeType: PaletteType = prefersDarkMode?"dark":"light";
     if (error) {
         console.log("cannot load user preferences, will use default");
     } else {
-        themeType = data?.user?.preferences.schema as PaletteType || themeType;
+        const saved_thema = data?.user?.preferences.schema;
+        if (saved_thema !=="auto") {
+            themeType = saved_thema as PaletteType || themeType;
+        }
     }
 
     const theme = createMuiTheme({
