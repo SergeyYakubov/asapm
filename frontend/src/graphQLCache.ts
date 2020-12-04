@@ -1,6 +1,6 @@
 import {InMemoryCache} from "@apollo/client";
 import {columnsVar} from "./pages/CollectionListPage";
-import {collectionFilterVar} from "./components/FilterBoxes";
+import {collectionFilterVar,beamtimeFilterVar} from "./components/FilterBoxes";
 
 export const cache: InMemoryCache = new InMemoryCache({
     typePolicies: {
@@ -14,6 +14,11 @@ export const cache: InMemoryCache = new InMemoryCache({
                 collectionFilter: {
                     read () {
                         return collectionFilterVar();
+                    },
+                },
+                beamtimeFilter: {
+                    read () {
+                        return beamtimeFilterVar();
                     },
                 },
             }

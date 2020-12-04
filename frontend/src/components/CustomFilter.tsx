@@ -18,10 +18,11 @@ import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import {CollectionEntry} from "../generated/graphql";
 import Grid from "@material-ui/core/Grid";
 import Divider from "@material-ui/core/Divider";
-import {collectionFilterVar} from "./FilterBoxes";
+import {ReactiveVar} from "@apollo/client";
 
 interface CustomFilterProps {
     currentFilter: CollectionFilter
+    filterVar: ReactiveVar<CollectionFilter>
     collections: CollectionEntry[] | undefined
 }
 
@@ -60,6 +61,7 @@ interface FilterFormProps {
     collections: CollectionEntry[] | undefined
     fieldFilterToEdit?: FieldFilter
     currentFilter: CollectionFilter
+    filterVar: ReactiveVar<CollectionFilter>
     close: () => void
 }
 
@@ -123,7 +125,7 @@ function OpsChoice({currentFieldFilter, setCurrentFieldFilter, availableKeys}: O
     </FormControl>;
 }
 
-export function FilterForm({fieldFilterToEdit, close, collections, currentFilter}: FilterFormProps): JSX.Element {
+export function FilterForm({fieldFilterToEdit, close, collections, currentFilter, filterVar}: FilterFormProps): JSX.Element {
     const classes = useStyles();
 
     const [availableKeys] = React.useState<ColumnList>(collections?
@@ -162,7 +164,7 @@ export function FilterForm({fieldFilterToEdit, close, collections, currentFilter
         } else {
             newFilters = [...(currentFilter.fieldFilters), currentFieldFilter];
         }
-        collectionFilterVar({...currentFilter, fieldFilters: RemoveDuplicates(newFilters)});
+        filterVar({...currentFilter, fieldFilters: RemoveDuplicates(newFilters)});
         close();
     };
 
@@ -247,7 +249,7 @@ export function FilterForm({fieldFilterToEdit, close, collections, currentFilter
     </Grid>;
 }
 
-export function CustomFilter({currentFilter, collections}: CustomFilterProps): JSX.Element {
+export function CustomFilter({currentFilter, collections, filterVar}: CustomFilterProps): JSX.Element {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -284,7 +286,7 @@ export function CustomFilter({currentFilter, collections}: CustomFilterProps): J
             }}
             className={classes.popover}
         >
-            <FilterForm close={handleClose} currentFilter={currentFilter} collections={collections}/>
+            <FilterForm close={handleClose} currentFilter={currentFilter} filterVar={filterVar} collections={collections}/>
         </Popover>
         }
     </div>;

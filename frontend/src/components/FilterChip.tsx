@@ -6,10 +6,10 @@ import VisibilityOffIcon from "@material-ui/icons/VisibilityOff";
 import VisibilityIcon from "@material-ui/icons/Visibility";
 import FlipCameraAndroidIcon from "@material-ui/icons/FlipCameraAndroid";
 import DeleteIcon from "@material-ui/icons/Delete";
-import {collectionFilterVar} from "./FilterBoxes";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import {FilterForm} from "./CustomFilter";
 import {CollectionEntry} from "../generated/graphql";
+import {ReactiveVar} from "@apollo/client";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -30,13 +30,14 @@ const useStyles = makeStyles((theme: Theme) =>
 interface FilterChipProps {
     filter: CollectionFilter
     fieldFilter: FieldFilter,
+    filterVar: ReactiveVar<CollectionFilter>
     collections: CollectionEntry[] | undefined
 }
 
-export function FilterChip({filter,fieldFilter,collections}: FilterChipProps): JSX.Element {
+export function FilterChip({filter,filterVar, fieldFilter,collections}: FilterChipProps): JSX.Element {
     const classes = useStyles();
     const handleDelete = () => {
-        collectionFilterVar({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
+        filterVar({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
     };
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -58,13 +59,13 @@ export function FilterChip({filter,fieldFilter,collections}: FilterChipProps): J
 
     const handleEnable = () => {
         const updatedFilter  = {...fieldFilter,enabled:!fieldFilter.enabled};
-        collectionFilterVar({...filter, fieldFilters: ReplaceElement(fieldFilter,updatedFilter, filter.fieldFilters)});
+        filterVar({...filter, fieldFilters: ReplaceElement(fieldFilter,updatedFilter, filter.fieldFilters)});
         handleClose();
     };
 
     const handleInvert = () => {
         const updatedFilter  = {...fieldFilter,op:InvertFilterOp(fieldFilter.op)};
-        collectionFilterVar({...filter, fieldFilters: ReplaceElement(fieldFilter,updatedFilter, filter.fieldFilters)});
+        filterVar({...filter, fieldFilters: ReplaceElement(fieldFilter,updatedFilter, filter.fieldFilters)});
         handleClose();
     };
 
@@ -99,7 +100,7 @@ export function FilterChip({filter,fieldFilter,collections}: FilterChipProps): J
                 horizontal: 'left',
             }}
         >
-            <FilterForm fieldFilterToEdit={fieldFilter} close={handleClose} currentFilter={filter}
+            <FilterForm fieldFilterToEdit={fieldFilter} close={handleClose} currentFilter={filter} filterVar={filterVar}
                         collections={collections}/>
         </Popover>
         }
