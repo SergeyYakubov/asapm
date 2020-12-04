@@ -4,7 +4,7 @@ import TopBar from "./components/Header/TopBar";
 import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
 import {PaletteType} from "@material-ui/core";
 import userPreferences from "./userPreferences";
-import MetaListPage from "./pages/MetaListPage";
+import BeamtimeMetaListPage from "./pages/BeamtimeMetaListPage";
 import CollectionListPage from "./pages/CollectionListPage";
 import {grey} from '@material-ui/core/colors';
 import SideBar from "./components/Sidebar/SideBar";
@@ -102,7 +102,7 @@ function App(): JSX.Element {
                                 <Redirect to="/collections"/>
                             </Route>
                             <Route path="/metaboard" render={() => (
-                                <MetaListPage/>
+                                <BeamtimeMetaListPage/>
                             )} exact/>
                             <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
                                 <DetailedPage {...props}  isBeamtime={true}/>

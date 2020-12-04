@@ -15,7 +15,7 @@ import {
 } from "../common";
 import debounce from 'lodash.debounce';
 import {GetUniqueNamesForField} from "../meta";
-import {gql, makeVar, QueryResult} from "@apollo/client";
+import {gql, makeVar, QueryResult, ReactiveVar} from "@apollo/client";
 import {
     Button,
     CircularProgress,
@@ -119,15 +119,23 @@ function BeamtimeFilterBox(): JSX.Element {
     );
 }
 
+export enum Mode {
+    Beamtimes,
+    Collections,
+}
+
 type CollectionFilterBoxProps = {
     queryResult: QueryResult<Query, QueryCollectionsArgs>
     filter: CollectionFilter
+    filterVar: ReactiveVar<CollectionFilter>
+    mode: Mode
 }
 
 interface SelectFieldsProps {
     alias: string
     uniqueFields: UniqueField
     filter: CollectionFilter
+    filterVar: ReactiveVar<CollectionFilter>
 }
 
 const StyledMenu = withStyles({
@@ -150,7 +158,7 @@ const StyledMenu = withStyles({
     />
 ));
 
-function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
+function SelectFields({alias, uniqueFields, filter,filterVar}: SelectFieldsProps) {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -170,7 +178,7 @@ function SelectFields({alias, uniqueFields, filter}: SelectFieldsProps) {
             value: value as string,
             enabled: true
         };
-        collectionFilterVar({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
+        filterVar({...filter, fieldFilters: RemoveDuplicates([...(filter.fieldFilters), fieldFilter])});
         handleClose();
     };
 
@@ -211,9 +219,10 @@ function DataRangeToString(range: DateRange) {
 
 interface EditFilterProps {
     filter: CollectionFilter
+    filterVar: ReactiveVar<CollectionFilter>
 }
 
-function BulkFilterEdit({filter}: EditFilterProps) {
+function BulkFilterEdit({filter,filterVar}: EditFilterProps) {
     const classes = useStyles();
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -229,7 +238,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
         const updatedFilterFields = filter.fieldFilters.map(value => {
             return {...value, enabled: enable};
         });
-        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
+        filterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
 
@@ -237,7 +246,7 @@ function BulkFilterEdit({filter}: EditFilterProps) {
         const updatedFilterFields = filter.fieldFilters.map(value => {
             return {...value, enabled: !value.enabled};
         });
-        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
+        filterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
 
@@ -245,11 +254,11 @@ function BulkFilterEdit({filter}: EditFilterProps) {
         const updatedFilterFields = filter.fieldFilters.map(value => {
             return {...value, op: InvertFilterOp(value.op)};
         });
-        collectionFilterVar({...filter, fieldFilters: updatedFilterFields});
+        filterVar({...filter, fieldFilters: updatedFilterFields});
         handleClose();
     };
     const handleDelete = () => {
-        collectionFilterVar({...filter, fieldFilters: []});
+        filterVar({...filter, fieldFilters: []});
         handleClose();
     };
 
@@ -334,23 +343,37 @@ export const collectionFilterVar = makeVar<CollectionFilter>(
     defaultFilter
 );
 
+export const beamtimeFilterVar = makeVar<CollectionFilter>(
+    {...defaultFilter,showSubcollections: false}
+);
 
-export const GET_FILTER = gql`
+export const GET_COLLECTION_FILTER = gql`
   query GetFilter {
     collectionFilter @client
   }
 `;
 
-export interface FilterData {
+export const GET_BEAMTIME_FILTER = gql`
+  query GetFilter {
+    beamtimeFilter @client
+  }
+`;
+
+export interface CollectionFilterData {
     collectionFilter: CollectionFilter;
 }
 
-function CollectionFilterBox({queryResult, filter}: CollectionFilterBoxProps): JSX.Element {
+export interface BeamtimeFilterData {
+    beamtimeFilter: CollectionFilter;
+}
+
+
+function CollectionFilterBox({queryResult, filter, filterVar, mode}: CollectionFilterBoxProps): JSX.Element {
     const handleChangeScope = (event: React.ChangeEvent<HTMLInputElement>) => {
-        collectionFilterVar({...filter, [event.target.name]: event.target.checked});
+        filterVar({...filter, [event.target.name]: event.target.checked});
     };
 
-    const handler = useCallback(debounce(collectionFilterVar, 500), []);
+    const handler = useCallback(debounce(filterVar, 500), []);
 
     const handleTextSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         handler({...filter, textSearch: event.target.value});
@@ -367,13 +390,13 @@ function CollectionFilterBox({queryResult, filter}: CollectionFilterBoxProps): J
     };
 
     const handleDataRangeChange = (range: DateRange) => {
-        collectionFilterVar({...filter, dateFrom: range.startDate, dateTo: range.endDate});
+        filterVar({...filter, dateFrom: range.startDate, dateTo: range.endDate});
         toggle();
     };
 
     const handleRangeTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.value === "") {
-            collectionFilterVar({...filter, dateFrom: undefined, dateTo: undefined});
+            filterVar({...filter, dateFrom: undefined, dateTo: undefined});
         }
     };
 
@@ -385,7 +408,7 @@ function CollectionFilterBox({queryResult, filter}: CollectionFilterBoxProps): J
                 <Grid item xs={12}>
                     <Box display="flex" alignItems="center">
                         <Typography variant="h6" color="textSecondary">
-                            Collections
+                            {mode == Mode.Beamtimes?"Beamtimes":"Collections"}
                         </Typography>
                         {
                             queryResult.loading &&
@@ -396,6 +419,7 @@ function CollectionFilterBox({queryResult, filter}: CollectionFilterBoxProps): J
             </Grid>
             <Paper className={classes.paper}>
                 <Grid container spacing={1} alignItems="flex-end">
+                    {mode == Mode.Collections &&
                     <Grid item xs={12}>
                         <Box display="flex" alignItems="center">
                             <Typography variant="overline">
@@ -415,16 +439,17 @@ function CollectionFilterBox({queryResult, filter}: CollectionFilterBoxProps): J
                             />
                         </Box>
                     </Grid>
+                    }
                     <Grid item md={6} sm={12} xs={12}>
                         <Box display="flex">
                             <Typography variant="overline">
                                 Add Filter:
                             </Typography>
-                            <SelectFields alias={"Facility"} filter={filter}
+                            <SelectFields alias={"Facility"} filter={filter} filterVar={filterVar}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.facility")}/>
-                            <SelectFields alias={"Beamline"} filter={filter}
+                            <SelectFields alias={"Beamline"} filter={filter} filterVar={filterVar}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.beamline")}/>
-                            <SelectFields alias={"Door user"} filter={filter}
+                            <SelectFields alias={"Door user"} filter={filter} filterVar={filterVar}
                                           uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.users.doorDb")}/>
                         </Box>
                     </Grid>
@@ -490,12 +515,12 @@ function CollectionFilterBox({queryResult, filter}: CollectionFilterBoxProps): J
                     <Grid item xs={12}>
                         <Paper variant="outlined" className={classes.filterPaper}>
                             <Box flexWrap="wrap" display={'flex'} className={classes.filterBox}>
-                                <BulkFilterEdit filter={filter}/>
+                                <BulkFilterEdit filter={filter}  filterVar={filterVar}/>
                                 {filter.fieldFilters.map(fieldFilter => {
                                     return <FilterChip key={n++} collections={queryResult.data?.collections}
-                                                       filter={filter} fieldFilter={fieldFilter}/>;
+                                                       filter={filter} filterVar={filterVar} fieldFilter={fieldFilter}/>;
                                 })}
-                                <CustomFilter currentFilter={filter} collections={queryResult.data?.collections}/>
+                                <CustomFilter currentFilter={filter}  filterVar={filterVar} collections={queryResult.data?.collections}/>
                             </Box>
                         </Paper>
                     </Grid>

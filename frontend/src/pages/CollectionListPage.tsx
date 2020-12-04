@@ -1,5 +1,11 @@
 import {useQuery} from "@apollo/client";
-import {CollectionFilterBox, FilterData, GET_FILTER} from "../components/FilterBoxes";
+import {
+    CollectionFilterBox,
+    collectionFilterVar,
+    CollectionFilterData,
+    GET_COLLECTION_FILTER,
+    Mode
+} from "../components/FilterBoxes";
 import Grid from "@material-ui/core/Grid";
 import React from "react";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
@@ -116,7 +122,7 @@ let oldCollections : CollectionEntry[] | undefined;
 
 function CollectionListPage(): JSX.Element {
     const classes = useStyles();
-    const {data} = useQuery<FilterData>(GET_FILTER);
+    const {data} = useQuery<CollectionFilterData>(GET_COLLECTION_FILTER);
     const filter = data!.collectionFilter;
 
     const queryResult = useQuery<Query, QueryCollectionsArgs>(COLLECTIONS, {
@@ -134,7 +140,7 @@ function CollectionListPage(): JSX.Element {
 
     return (
         <div className={classes.root}>
-            <CollectionFilterBox queryResult={queryResult} filter={filter}/>
+            <CollectionFilterBox queryResult={queryResult} filter={filter} mode={Mode.Collections} filterVar={collectionFilterVar}/>
             <Grid container spacing={1}>
                 <Grid item xs={12}>
                     <Divider/>
