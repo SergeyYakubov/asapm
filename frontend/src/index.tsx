@@ -9,12 +9,10 @@ import {BrowserRouter} from 'react-router-dom';
 import {cache} from './graphQLCache';
 import {ApolloClient, ApolloProvider, createHttpLink} from "@apollo/client";
 import {setContext} from "@apollo/client/link/context";
-
-const api_uri = (process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL : (window.location.origin + process.env.PUBLIC_URL))
-    + process.env.REACT_APP_API_SUFFIX + "/query";
+import {ApplicationApiBaseUrl} from "./common";
 
 const httpLink = createHttpLink({
-    uri: api_uri,
+    uri: `${ApplicationApiBaseUrl}/query`,
 });
 
 const authLink = setContext((_, {headers}) => {

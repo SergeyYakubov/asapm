@@ -140,7 +140,7 @@ def addMeta():
     s = Template(query)
     query = s.substitute(d)
     #print (query)
-    res = client.execute(query=query)
+    #res = client.execute(query=query)
     #print (res)
 
     return (startDate, d["facility"], d["beamtimeId"])
@@ -175,6 +175,6 @@ def addLogEntries(startDate, facility, beamline):
         #print('{0}, {1}, {2}'.format(facility, beamline, lastDateRef))
         addLogEntry(lastDateRef, facility, beamline)
 
-for i in range(0, 50):
+for i in range(0, 3):
     (startDate, facility, beamtime) = addMeta()
     addLogEntries(startDate, facility, beamtime)

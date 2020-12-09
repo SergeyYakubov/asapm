@@ -123,12 +123,18 @@ func (r *queryResolver) LogEntries(ctx context.Context, filter string, start *in
 
 	res, err := logbook.ReadEntries(acl, filter, nil)
 	/*
-	res, err := meta.ReadCollectionsMeta(acl, filter, )
-	if err != nil {
-		logger.Error(err.Error())
-	}
-	 */
+		res, err := meta.ReadCollectionsMeta(acl, filter, )
+		if err != nil {
+			logger.Error(err.Error())
+		}
+	*/
 	return res, err
+}
+
+func (r *queryResolver) LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error) {
+	var result []*model.UniqueField
+
+	return result, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

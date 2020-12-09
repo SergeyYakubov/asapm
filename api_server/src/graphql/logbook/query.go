@@ -35,6 +35,7 @@ func ReadEntries(acl auth.MetaAcl, filter string, orderBy *string) (*model.LogEn
 }
 
 type logEntryMessageCreate struct {
+	CreatedBy   string                 `json:"createdBy" bson:"createdBy"`
 	Time        time.Time              `json:"time" bson:"time"`
 	EntryType   model.LogEntryType     `json:"entryType" bson:"entryType"`
 	Facility    string                 `json:"facility" bson:"facility"`
@@ -56,13 +57,14 @@ func WriteNewMessage(newInput model.NewLogEntryMessage) (*string, error) {
 
 	newMessage := logEntryMessageCreate{
 		Time:        messageTime,
+		CreatedBy:   "AuthUsername", // TODO get username
 		EntryType:   model.LogEntryTypeMessage,
 		Facility:    newInput.Facility,
 		Beamtime:    newInput.Beamtime,
 		Tags:        newInput.Tags,
 		Source:      newInput.Source,
 		Message:     newInput.Message,
-		Attachments: newInput.Attachments,
+		Attachments: newInput.Attachments, // TODO Check if attachments actually exists
 	}
 	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "create_record", newMessage)
 

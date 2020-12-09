@@ -27,4 +27,5 @@ type Query {
     # Logbook API
     logEntry (id: ID!): LogEntry
     logEntries (filter: String!, start: Int, limit: Int): LogEntryQueryResult
+    logEntriesUniqueFields (filter: String, keys: [String!]!): [UniqueField!]!
 }

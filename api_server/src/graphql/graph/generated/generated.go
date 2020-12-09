@@ -106,6 +106,7 @@ type ComplexityRoot struct {
 	LogEntryMessage struct {
 		Attachments func(childComplexity int) int
 		Beamtime    func(childComplexity int) int
+		CreatedBy   func(childComplexity int) int
 		EntryType   func(childComplexity int) int
 		Facility    func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -163,12 +164,13 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Collections  func(childComplexity int, filter *string, orderBy *string) int
-		LogEntries   func(childComplexity int, filter string, start *int, limit *int) int
-		LogEntry     func(childComplexity int, id string) int
-		Meta         func(childComplexity int, filter *string, orderBy *string) int
-		UniqueFields func(childComplexity int, filter *string, keys []string) int
-		User         func(childComplexity int, id string) int
+		Collections            func(childComplexity int, filter *string, orderBy *string) int
+		LogEntries             func(childComplexity int, filter string, start *int, limit *int) int
+		LogEntriesUniqueFields func(childComplexity int, filter *string, keys []string) int
+		LogEntry               func(childComplexity int, id string) int
+		Meta                   func(childComplexity int, filter *string, orderBy *string) int
+		UniqueFields           func(childComplexity int, filter *string, keys []string) int
+		User                   func(childComplexity int, id string) int
 	}
 
 	UniqueField struct {
@@ -207,6 +209,7 @@ type QueryResolver interface {
 	User(ctx context.Context, id string) (*model.UserAccount, error)
 	LogEntry(ctx context.Context, id string) (model.LogEntry, error)
 	LogEntries(ctx context.Context, filter string, start *int, limit *int) (*model.LogEntryQueryResult, error)
+	LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error)
 }
 
 type executableSchema struct {
@@ -563,6 +566,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LogEntryMessage.Beamtime(childComplexity), true
 
+	case "LogEntryMessage.createdBy":
+		if e.complexity.LogEntryMessage.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.CreatedBy(childComplexity), true
+
 	case "LogEntryMessage.entryType":
 		if e.complexity.LogEntryMessage.EntryType == nil {
 			break
@@ -910,6 +920,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.LogEntries(childComplexity, args["filter"].(string), args["start"].(*int), args["limit"].(*int)), true
+
+	case "Query.logEntriesUniqueFields":
+		if e.complexity.Query.LogEntriesUniqueFields == nil {
+			break
+		}
+
+		args, err := ec.field_Query_logEntriesUniqueFields_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LogEntriesUniqueFields(childComplexity, args["filter"].(*string), args["keys"].([]string)), true
 
 	case "Query.logEntry":
 		if e.complexity.Query.LogEntry == nil {
@@ -1263,6 +1285,7 @@ input NewBeamtimeMeta {
 interface GenericLogEntry {
     id: ID!
     time: DateTime!
+    createdBy: String!
     entryType: LogEntryType!
 
     facility: String!
@@ -1274,6 +1297,7 @@ interface GenericLogEntry {
 type LogEntryMessage implements GenericLogEntry {
     id: ID!
     time: DateTime!
+    createdBy: String!
     entryType: LogEntryType! # Always LogEntryType.Message
 
     facility: String!
@@ -1336,6 +1360,7 @@ type Query {
     # Logbook API
     logEntry (id: ID!): LogEntry
     logEntries (filter: String!, start: Int, limit: Int): LogEntryQueryResult
+    logEntriesUniqueFields (filter: String, keys: [String!]!): [UniqueField!]!
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "../../../schema/user.graphqls", Input: `scalar Map
@@ -1544,6 +1569,28 @@ func (ec *executionContext) field_Query_collections_args(ctx context.Context, ra
 		}
 	}
 	args["orderBy"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_logEntriesUniqueFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["keys"]; ok {
+		arg1, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["keys"] = arg1
 	return args, nil
 }
 
@@ -3184,6 +3231,40 @@ func (ec *executionContext) _LogEntryMessage_time(ctx context.Context, field gra
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalNDateTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LogEntryMessage_entryType(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
@@ -4909,6 +4990,47 @@ func (ec *executionContext) _Query_logEntries(ctx context.Context, field graphql
 	res := resTmp.(*model.LogEntryQueryResult)
 	fc.Result = res
 	return ec.marshalOLogEntryQueryResult2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryQueryResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_logEntriesUniqueFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_logEntriesUniqueFields_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().LogEntriesUniqueFields(rctx, args["filter"].(*string), args["keys"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.UniqueField)
+	fc.Result = res
+	return ec.marshalNUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6974,6 +7096,11 @@ func (ec *executionContext) _LogEntryMessage(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createdBy":
+			out.Values[i] = ec._LogEntryMessage_createdBy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "entryType":
 			out.Values[i] = ec._LogEntryMessage_entryType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7273,6 +7400,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_logEntries(ctx, field)
+				return res
+			})
+		case "logEntriesUniqueFields":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_logEntriesUniqueFields(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "__type":

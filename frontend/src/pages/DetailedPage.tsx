@@ -14,11 +14,12 @@ import Switch from '@material-ui/core/Switch';
 
 import DetailedTabs from "../components/DetailedTabs";
 import {BeamtimeMeta, CollectionEntry, Query} from "../generated/graphql";
+import {flexableContentStyle} from "../styleHelper";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
-            root: {
-                flexGrow: 1,
+            detailedPageRoot: {
+                ...flexableContentStyle,
                 margin: theme.spacing(0),
                 minWidth: 0,
             },
@@ -66,10 +67,11 @@ const useStyles = makeStyles((theme: Theme) =>
 type TParams = { id: string, section: string };
 
 type DetailedHeaderProps = {
-    meta: BeamtimeMeta | CollectionEntry,
-    rawView: boolean,
-    setRawView: React.Dispatch<React.SetStateAction<boolean>>
-    isBeamtime: boolean
+    meta: BeamtimeMeta | CollectionEntry;
+    rawView: boolean;
+    setRawView: React.Dispatch<React.SetStateAction<boolean>>;
+    isBeamtime: boolean;
+    canRawView: boolean;
 }
 
 type MetaViewProps = {
@@ -109,7 +111,7 @@ function Navmenu({meta}: BreadcrumbsProps) {
     </Breadcrumbs>;
 }
 
-function DetailedHeader({meta, rawView, setRawView, isBeamtime}: DetailedHeaderProps) {
+function DetailedHeader({meta, rawView, setRawView, isBeamtime, canRawView}: DetailedHeaderProps) {
     const classes = useStyles();
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,18 +138,21 @@ function DetailedHeader({meta, rawView, setRawView, isBeamtime}: DetailedHeaderP
                     [classes.chipScheduled]: (meta as BeamtimeMeta).status === 'scheduled',
                 })}/>
                 }
-                <FormControlLabel
-                    control={
-                        <Switch
-                            checked={rawView}
-                            onChange={handleChange}
-                            name="checked"
-                            color="primary"
-                            size="small"
-                        />
-                    }
-                    label="Raw JSON"
-                />
+                {
+                    !canRawView ? null :
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={rawView}
+                                onChange={handleChange}
+                                name="checked"
+                                color="primary"
+                                size="small"
+                            />
+                        }
+                        label="Raw JSON"
+                    />
+                }
             </Grid>
         </div>
     );
@@ -207,7 +212,7 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps): JSX.Element {
     const queryResult = useQueryOrErrorString(match.params.id, isBeamtime);
     if (typeof queryResult == "string") {
         return (
-            <div className={classes.root}>
+            <div className={classes.detailedPageRoot}>
                 <Typography variant="h3">
                     {queryResult as string}
                 </Typography>
@@ -217,8 +222,8 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps): JSX.Element {
     const data: BeamtimeMeta | CollectionEntry = isBeamtime ? queryResult.data!.meta[0] :
         queryResult.data!.collections[0];
     return (
-        <div className={classes.root}>
-            <DetailedHeader meta={data} rawView={rawView} setRawView={setRawView} isBeamtime={isBeamtime}/>
+        <div className={classes.detailedPageRoot}>
+            <DetailedHeader meta={data} canRawView={section!=='logbook'} rawView={rawView} setRawView={setRawView} isBeamtime={isBeamtime}/>
             {rawView ? (
                 <RawMeta meta={data}/>
             ) : (

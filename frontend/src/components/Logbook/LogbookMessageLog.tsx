@@ -4,9 +4,23 @@ import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} fro
 import {LogEntryMessage} from "../../generated/graphql";
 import {getSplitedDate} from "./LogbookUtils";
 import LogbookGroupHeader from "./LogbookGroupHeader";
+import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 
+
+const useStyles = makeStyles((theme: Theme) =>
+    createStyles({
+        messageLogRoot: {
+            minHeight: theme.spacing(32),
+        },
+        smallText: {
+            color: theme.palette.text.hint,
+            fontSize: '0.8em',
+        },
+    }));
 
 const LogbookMessageLog = forwardRef(({ messages, onVisibleGroupChanged }: { messages: LogEntryMessage[], onVisibleGroupChanged: (groupValue: string) => void }, ref) => {
+    const classes = useStyles();
+
     const [groups, setGroups] = React.useState<string[]>([]);
     const [groupSizes, setGroupSizes] = React.useState<number[]>([]);
 
@@ -44,8 +58,10 @@ const LogbookMessageLog = forwardRef(({ messages, onVisibleGroupChanged }: { mes
         onVisibleGroupChanged(currentGroup);
     }, [currentGroup]);
 
-    return <GroupedVirtuoso
+    return (
+    <GroupedVirtuoso
         ref={virtuoso}
+        className={classes.messageLogRoot}
         computeItemKey={index => `message,${messages[index].time}`}
         groupIndices={(indices: any) => {
             if (groupIndices.length !== indices.length) {
@@ -55,11 +71,12 @@ const LogbookMessageLog = forwardRef(({ messages, onVisibleGroupChanged }: { mes
         style={{flex: '1', marginTop: 8}}
         groupCounts={groupSizes}
         group={(index) => {
-            return <LogbookGroupHeader label={`${groups[index]} (${groupSizes[index]} entries)`} />;
+            return <LogbookGroupHeader key={`header,${groups[index]}`}><span>{groups[index]} <span className={classes.smallText}>({groupSizes[index]} entries)</span></span></LogbookGroupHeader>;
         }}
         item={(index) => {
-            return <LogbookItem key={`message,${messages[index].time}`} message={messages[index]}/>;
+            return <LogbookItem key={`message,${messages[index].id}`} message={messages[index]}/>;
         }}
+
         rangeChanged={({startIndex}) => {
             let countLeft = startIndex;
             let group: string | undefined;
@@ -76,7 +93,7 @@ const LogbookMessageLog = forwardRef(({ messages, onVisibleGroupChanged }: { mes
             }
         }}
 
-    />;
+    />);
 });
 
 export default LogbookMessageLog;

@@ -9,6 +9,8 @@ import DetailedMetaTab from "./DetailedMetaTab";
 import DatasetsTableTab from "./DatasetsTableTab";
 import {useHistory} from "react-router-dom";
 import {BeamtimeMeta, CollectionEntry} from "../generated/graphql";
+import LogbooksPage from "../pages/LogbooksPage";
+import {flexableContentStyle} from "../styleHelper";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -43,13 +45,21 @@ function a11yProps(index: any) {
 }
 
 const useStyles = makeStyles((theme: Theme) => ({
-    root: {
-        flexGrow: 1,
+    detailedTabsRoot: {
+        ...flexableContentStyle,
         backgroundColor: theme.palette.background.paper,
     },
     marginLeftRight: {
         marginLeft: theme.spacing(1),
         marginRight: theme.spacing(1),
+
+        ...flexableContentStyle,
+        '&>div[role=tabpanel]:not([hidden])': {
+            ...flexableContentStyle,
+        },
+        '&>div[role=tabpanel]>div': {
+            ...flexableContentStyle,
+        }
     },
     navBar: {},
 }));
@@ -100,7 +110,7 @@ function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps): JSX.Element
     };
 
     return (
-        <div className={classes.root}>
+        <div className={classes.detailedTabsRoot}>
             <AppBar position="static" color="default" className={classes.navBar}>
                 <Tabs value={value} onChange={handleChange} aria-label="simple tabs example">
                     <Tab label="Metadata" {...a11yProps(0)} />
@@ -118,7 +128,9 @@ function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps): JSX.Element
                 </TabPanel>
                 }
                 <TabPanel value={value} index={showDataset ? 2 : 1}>
-                    very cool logbook
+                    <LogbooksPage
+                        prefilledBeamtimeId={meta.parentBeamtimeMeta ? meta.parentBeamtimeMeta.id : meta.id}
+                    />
                 </TabPanel>
             </div>
         </div>

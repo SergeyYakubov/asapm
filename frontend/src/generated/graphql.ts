@@ -218,6 +218,7 @@ export enum LogEntryType {
 export type GenericLogEntry = {
   id: Scalars['ID'];
   time: Scalars['DateTime'];
+  createdBy: Scalars['String'];
   entryType: LogEntryType;
   facility: Scalars['String'];
   beamtime: Maybe<Scalars['String']>;
@@ -229,6 +230,7 @@ export type LogEntryMessage = GenericLogEntry & {
   __typename?: 'LogEntryMessage';
   id: Scalars['ID'];
   time: Scalars['DateTime'];
+  createdBy: Scalars['String'];
   entryType: LogEntryType;
   facility: Scalars['String'];
   beamtime: Maybe<Scalars['String']>;
@@ -311,6 +313,7 @@ export type Query = {
   user: Maybe<UserAccount>;
   logEntry: Maybe<LogEntry>;
   logEntries: Maybe<LogEntryQueryResult>;
+  logEntriesUniqueFields: Array<UniqueField>;
 };
 
 
@@ -346,6 +349,12 @@ export type QueryLogEntriesArgs = {
   filter: Scalars['String'];
   start: Maybe<Scalars['Int']>;
   limit: Maybe<Scalars['Int']>;
+};
+
+
+export type QueryLogEntriesUniqueFieldsArgs = {
+  filter: Maybe<Scalars['String']>;
+  keys: Array<Scalars['String']>;
 };
 
 

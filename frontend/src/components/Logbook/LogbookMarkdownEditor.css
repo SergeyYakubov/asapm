@@ -323,10 +323,22 @@ li.ProseMirror-selectednode:after {
     outline: none;
 }
 
-.ProseMirror p { margin-bottom: 1em }
+.ProseMirror p {
+    margin-bottom: 0.75em;
+}
 
 
 .ProseMirror {
     overflow-y: auto;
     /*height: 150px;*/
+}
+
+.ProseMirror table {
+    border-collapse: collapse;
+    border: 1px solid #282c34;
+}
+
+.ProseMirror th, .ProseMirror td {
+    border: 1px solid;
+    padding: 0.5em;
 }

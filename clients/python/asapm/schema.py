@@ -168,9 +168,10 @@ class CollectionEntryInterface(sgqlc.types.Interface):
 
 class GenericLogEntry(sgqlc.types.Interface):
     __schema__ = schema
-    __field_names__ = ('id', 'time', 'entry_type', 'facility', 'beamtime', 'tags', 'source')
+    __field_names__ = ('id', 'time', 'created_by', 'entry_type', 'facility', 'beamtime', 'tags', 'source')
     id = sgqlc.types.Field(sgqlc.types.non_null(ID), graphql_name='id')
     time = sgqlc.types.Field(sgqlc.types.non_null(DateTime), graphql_name='time')
+    created_by = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='createdBy')
     entry_type = sgqlc.types.Field(sgqlc.types.non_null(LogEntryType), graphql_name='entryType')
     facility = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='facility')
     beamtime = sgqlc.types.Field(String, graphql_name='beamtime')
@@ -254,7 +255,7 @@ class ParentBeamtimeMeta(sgqlc.types.Type):
 
 class Query(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('meta', 'collections', 'unique_fields', 'user', 'log_entry', 'log_entries')
+    __field_names__ = ('meta', 'collections', 'unique_fields', 'user', 'log_entry', 'log_entries', 'log_entries_unique_fields')
     meta = sgqlc.types.Field(sgqlc.types.non_null(sgqlc.types.list_of(sgqlc.types.non_null('BeamtimeMeta'))), graphql_name='meta', args=sgqlc.types.ArgDict((
         ('filter', sgqlc.types.Arg(String, graphql_name='filter', default=None)),
         ('order_by', sgqlc.types.Arg(String, graphql_name='orderBy', default=None)),
@@ -282,6 +283,11 @@ class Query(sgqlc.types.Type):
         ('filter', sgqlc.types.Arg(sgqlc.types.non_null(String), graphql_name='filter', default=None)),
         ('start', sgqlc.types.Arg(Int, graphql_name='start', default=None)),
         ('limit', sgqlc.types.Arg(Int, graphql_name='limit', default=None)),
+))
+    )
+    log_entries_unique_fields = sgqlc.types.Field(sgqlc.types.non_null(sgqlc.types.list_of(sgqlc.types.non_null('UniqueField'))), graphql_name='logEntriesUniqueFields', args=sgqlc.types.ArgDict((
+        ('filter', sgqlc.types.Arg(String, graphql_name='filter', default=None)),
+        ('keys', sgqlc.types.Arg(sgqlc.types.non_null(sgqlc.types.list_of(sgqlc.types.non_null(String))), graphql_name='keys', default=None)),
 ))
     )
 

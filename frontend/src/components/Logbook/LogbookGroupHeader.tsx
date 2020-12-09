@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme: Theme) =>
             marginRight: 10,
             fontWeight: 'bold',
         },
-        whitemaker: {
+        whitemaker: { // So the topside of the bar is always opaque
             position: 'absolute',
             width: '100%',
             height: '50%',
@@ -32,15 +32,18 @@ const useStyles = makeStyles((theme: Theme) =>
         }
     })
 );
-function LogbookGroupHeader({label}: {label: string}): JSX.Element {
-    const classes = useStyles();
 
-    console.log('header');
+interface LogbookGroupHeaderProps {
+    children: React.ReactNode,
+}
+
+function LogbookGroupHeader({children}: LogbookGroupHeaderProps): JSX.Element {
+    const classes = useStyles();
 
     return <div className={classes.groupRoot}>
         <div className={classes.whitemaker}></div>
         <div className={classes.bar}></div>
-        <div className={classes.label}><Chip size="small" label={label} /></div>
+        <div className={classes.label}><Chip size="small" label={children} /></div>
         <div className={classes.bar}></div>
     </div>;
 }

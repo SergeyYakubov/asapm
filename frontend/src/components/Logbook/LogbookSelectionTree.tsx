@@ -6,9 +6,9 @@ import TreeItem from "@material-ui/lab/TreeItem";
 import React, {useEffect} from "react";
 import {LogEntryMessage} from "../../generated/graphql";
 import {getSplitedDate, monthIdxToText} from "./LogbookUtils";
-import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
+import {createStyles, makeStyles} from "@material-ui/core/styles";
 
-const useStyles = makeStyles((theme: Theme) =>
+const useStyles = makeStyles(() =>
     createStyles({
         treeRoot: {
             width: '100%',
@@ -46,7 +46,6 @@ function LogbookSelectionTree({ messages, currentVisibleDate, onDateSelected }: 
     }, [messages]);
 
     useEffect(() => {
-        console.log('adsada', currentVisibleDate);
         easyTreeSelect(currentVisibleDate);
     }, [currentVisibleDate]);
 
@@ -73,14 +72,15 @@ function LogbookSelectionTree({ messages, currentVisibleDate, onDateSelected }: 
         }
     }
 
-    return <div style={{ minWidth: '220px', paddingRight: '8px' }}>
+    return <div style={{ minWidth: '220px', marginRight: '8px', overflowY: 'auto' }}>
         <Box style={{ marginBottom: '8px' }}>
             <FormControl fullWidth={true}>
                 <InputLabel id="order-by-label">Order by</InputLabel>
                 <Select
                     labelId="order-by-label"
                     id="order-by"
-                    //value={orderBy}
+                    value={'datetime'/*todo*/}
+                    readOnly={true/*TODO*/}
                 >
                     <MenuItem value={'datetime'}>Datetime</MenuItem>
                     <MenuItem value={'facility'}>Facility</MenuItem>

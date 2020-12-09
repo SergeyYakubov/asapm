@@ -106,88 +106,113 @@ export const COLLECTIONS = gql`
         keyName
         values
     }
-    collections (filter: $filter,orderBy: $orderBy){
-    id
-    title
-    parentBeamtimeMeta {
-        applicant {
-         email
-         institute
-         lastname
-         userId
-         username
-        }
-        beamline
-        beamlineAlias
+    collections (filter: $filter,orderBy: $orderBy) {
         id
-        status
-        contact
-        corePath
-        eventEnd
-        eventStart
-        facility
-        generated
-        leader {
-         email
-         institute
-         lastname
-         userId
-         username
-        }    
-        onlineAnalysis {
-         asapoBeamtimeTokenPath
-         reservedNodes
-         slurmReservation
-         slurmPartition
-         sshPrivateKeyPath
-         sshPublicKeyPath
-         userAccount
-        }
-        pi {
-         email
-         institute
-         lastname
-         userId
-         username
-        }
-        proposalId
-        proposalType
         title
-        unixId
-        users {
-         doorDb
-         special
-         special
+        parentBeamtimeMeta {
+            applicant {
+                email
+                institute
+                lastname
+                userId
+                username
+            }
+            beamline
+            beamlineAlias
+            id
+            status
+            contact
+            corePath
+            eventEnd
+            eventStart
+            facility
+            generated
+            leader {
+                email
+                institute
+                lastname
+                userId
+                username
+            }    
+            onlineAnalysis {
+                asapoBeamtimeTokenPath
+                reservedNodes
+                slurmReservation
+                slurmPartition
+                sshPrivateKeyPath
+                sshPublicKeyPath
+                userAccount
+            }
+            pi {
+                email
+                institute
+                lastname
+                userId
+                username
+            }
+            proposalId
+            proposalType
+            title
+            unixId
+            users {
+                doorDb
+                special
+                special
+            }
         }
+        eventStart
+        eventEnd
+        type
+        customValues
     }
-    eventStart
-    eventEnd
-    type
-    customValues
-  }
 }
 `;
 
 
 export const ADD_LOG_MESSAGE = gql`
-mutation addMessageLogEntryLocal($facility: String!, $beamtime: String, $message: String!) {
+mutation addMessageLogEntryLocal($facility: String!, $beamtime: String, $message: String!, $attachments: Map) {
     addMessageLogEntry(input: {
         facility: $facility,
         beamtime: $beamtime,
-        message: $message
+        message: $message,
+        attachments: $attachments
     })
 }
 `;
 
+/*
+  logEntriesUniqueFields (filter: $filter, keys:["facility","beamtime"]){
+    keyName
+    values
+  }
+ */
+
+export const LOG_GET_BEAMTIMES = gql`
+query ($filter: String!) {
+  uniqueFields(filter: $filter, keys:["parentBeamtimeMeta._id"]) {
+    values
+  }
+}
+`;
+
+export const LOG_GET_FACILITIES = gql`
+query ($filter: String!) {
+  uniqueFields(filter: $filter, keys:["parentBeamtimeMeta.facility"]) {
+    values
+  }
+}
+`;
+
 export const LOG_MESSAGES = gql`
-query {
-  logEntries(filter: "") {
+query ($filter: String!) {
+  logEntries(filter: $filter) {
     entries {
       __typename,
       ... on LogEntryMessage {
         id,
         entryType,
         time,
+        createdBy,
         facility,
         beamtime,
         tags,

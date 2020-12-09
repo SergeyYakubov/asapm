@@ -7,10 +7,10 @@ import 'prosemirror-example-setup/style/style.css';
 import 'prosemirror-menu/style/menu.css';
 import './LogbookMarkdownEditor.css';
 
-import { EditorState, Plugin, PluginKey } from "prosemirror-state";
+import {EditorState, PluginKey, Transaction} from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import React, {forwardRef, useEffect, useImperativeHandle, useRef} from "react";
-import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
+import {createStyles, makeStyles} from "@material-ui/core/styles";
 import {Dropdown, MenuItem} from "prosemirror-menu";
 import {
     addColumnAfter,
@@ -19,17 +19,14 @@ import {
     addRowBefore,
     deleteColumn,
     deleteRow,
-    deleteTable, fixTables, goToNextCell, isInTable,
+    deleteTable,
+    isInTable,
     mergeCells,
-    setCellAttr,
     splitCell,
     tableEditing,
     tableNodes,
-    toggleHeaderCell,
-    toggleHeaderColumn,
-    toggleHeaderRow
 } from "prosemirror-tables";
-import {DOMParser, Schema, Fragment}  from "prosemirror-model";
+import {Schema, Fragment}  from "prosemirror-model";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {exampleSetup, buildMenuItems} = require('prosemirror-example-setup');
@@ -49,68 +46,86 @@ const schema = new Schema({
     marks: baseSchema.spec.marks
 });
 
-console.log(schema.spec);
+function createMenu(onFileUpload: (file: File) => void): any {
+    const menu = buildMenuItems(schema).fullMenu;
+    function item(label: string, cmd: any) {
+        return new MenuItem({label, select: cmd, run: cmd});
+    }
 
-const menu = buildMenuItems(schema).fullMenu;
-function item(label: string, cmd: any) {
-    return new MenuItem({label, select: cmd, run: cmd});
+    const tableMenu = [
+        item("Insert column before", addColumnBefore),
+        item("Insert column after", addColumnAfter),
+        item("Delete column", deleteColumn),
+        item("Insert row before", addRowBefore),
+        item("Insert row after", addRowAfter),
+        item("Delete row", deleteRow),
+        item("Delete table", deleteTable),
+        item("Merge cells", mergeCells),
+        item("Split cell", splitCell),
+        /*
+        item("Toggle header column", toggleHeaderColumn),
+        item("Toggle header row", toggleHeaderRow),
+        item("Toggle header cells", toggleHeaderCell),
+        item("Make cell green", setCellAttr("background", "#dfd")),
+        item("Make cell not-green", setCellAttr("background", null)),
+         */
+    ];
+    menu.splice(2, 0, [new Dropdown(tableMenu, {label: "Table"})]);
+
+    // Push into the "insert" menu
+    menu[1][0].content.push(new MenuItem({
+        label: 'Table',
+        select: (s) => !isInTable(s),
+        run: (state, dispatch) => {
+            const tr = state.tr.replaceSelectionWith(
+                state.schema.nodes.table.create(
+                    undefined,
+                    Fragment.fromArray([
+                        state.schema.nodes.table_row.create(undefined, Fragment.fromArray([
+                            state.schema.nodes.table_cell.createAndFill(),
+                            state.schema.nodes.table_cell.createAndFill()
+                        ]))
+                    ])
+                )
+            );
+
+            if (dispatch) {
+                dispatch(tr);
+            }
+
+            return true;
+        }}));
+    menu[1][0].content.push(new MenuItem({
+        label: 'File',
+        run: () => {
+            const tmpFileElement = document.createElement('input');
+            tmpFileElement.type = 'file';
+
+            tmpFileElement.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                    onFileUpload(file);
+                }
+            };
+
+            tmpFileElement.click();
+
+            return true;
+        }}));
+
+    // Customize existing menu entries
+    const foundTyping = menu[1].find((x: any) => x.options.label === 'Type...');
+    if (foundTyping) {
+        foundTyping.options.label = 'Style';
+    }
+    menu[4] = menu[4].filter((x: any) => x.spec.title !== 'Select parent node');
+
+    return menu;
 }
-
-const tableMenu = [
-    item("Insert column before", addColumnBefore),
-    item("Insert column after", addColumnAfter),
-    item("Delete column", deleteColumn),
-    item("Insert row before", addRowBefore),
-    item("Insert row after", addRowAfter),
-    item("Delete row", deleteRow),
-    item("Delete table", deleteTable),
-    item("Merge cells", mergeCells),
-    item("Split cell", splitCell),
-    item("Toggle header column", toggleHeaderColumn),
-    item("Toggle header row", toggleHeaderRow),
-    item("Toggle header cells", toggleHeaderCell),
-    item("Make cell green", setCellAttr("background", "#dfd")),
-    item("Make cell not-green", setCellAttr("background", null))
-];
-menu.splice(2, 0, [new Dropdown(tableMenu, {label: "Table"})]);
-menu[1][0].content.push(new MenuItem({
-    label: 'Table',
-    select: (s) => !isInTable(s),
-    run: (state, dispatch, view) => {
-        const tr = state.tr.replaceSelectionWith(
-            state.schema.nodes.table.create(
-                undefined,
-                Fragment.fromArray([
-                    state.schema.nodes.table_row.create(undefined, Fragment.fromArray([
-                        state.schema.nodes.table_cell.createAndFill(),
-                        state.schema.nodes.table_cell.createAndFill()
-                    ]))
-                ])
-            )
-        );
-
-        if (dispatch) {
-            dispatch(tr);
-        }
-
-        return true;
-    }}));
-console.log(menu[1][0].content[1]);
-
 
 const reactPropsKey = new PluginKey("reactProps");
 
-function reactProps(initialProps: any) {
-    return new Plugin({
-        key: reactPropsKey,
-        state: {
-            init: () => initialProps,
-            apply: (tr, prev) => tr.getMeta(reactPropsKey) || prev,
-        },
-    });
-}
-
-const useStyles = makeStyles((theme: Theme) =>
+const useStyles = makeStyles(() =>
     createStyles({
         editor: {
             '& .ProseMirror': {
@@ -119,7 +134,16 @@ const useStyles = makeStyles((theme: Theme) =>
         }
     })
 );
-const LogbookMarkdownEditor = forwardRef((props, ref) => {
+
+interface LogbookMarkdownEditorProps {
+    onFileUpload: (file: File) => void;
+    onHasContent: (hasContent: boolean) => void;
+}
+export interface LogbookMarkdownEditorInterface {
+    getRawContent(): string;
+}
+
+const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, LogbookMarkdownEditorProps>((props, ref) => {
     const classes = useStyles();
 
     const viewHost = useRef() as any;
@@ -135,19 +159,26 @@ const LogbookMarkdownEditor = forwardRef((props, ref) => {
             };
             console.log(view.current.state.schema);
             return ProseMirrorMarkdown.defaultMarkdownSerializer.serialize(view.current.state.doc);
-        }
+        },
     }));
 
     useEffect(() => { // initial render
-        let state = EditorState.create({schema, plugins: [
+        const state = EditorState.create({schema, plugins: [
             tableEditing(),
-        ].concat(exampleSetup({schema, menuContent: menu}))});
+        ].concat(exampleSetup({schema, menuContent: createMenu(props.onFileUpload)}))});
 
-        const fix = fixTables(state);
-        if (fix)
-            state = state.apply(fix.setMeta("addToHistory", false));
+        view.current = new EditorView(viewHost.current, {
+            state,
+            dispatchTransaction(transaction) { // proxy dispatchTransaction function, to check has content
+                const { state, transactions } = view.current.state.applyTransaction(transaction);
+                view.current.updateState(state);
 
-        view.current = new EditorView(viewHost.current, { state });
+                if (transactions.some((tr: Transaction) => tr.docChanged)) {
+                    props.onHasContent(!!ProseMirrorMarkdown.defaultMarkdownSerializer.serialize(state.doc).length);
+                }
+            }
+        });
+        props.onHasContent(!!ProseMirrorMarkdown.defaultMarkdownSerializer.serialize(state.doc).length);
 
         return () => view.current.destroy();
     }, []);

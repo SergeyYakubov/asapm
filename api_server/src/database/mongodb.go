@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strings"
@@ -180,17 +181,42 @@ func (db *Mongodb) readRecord(dbName string, dataCollectionName string, extra_pa
 	return json.Marshal(resMap)
 }
 
+func (db *Mongodb) readRecordByObjectId(dbName string, dataCollectionName string, extraParams ...interface{}) ([]byte, error) {
+	if len(extraParams) != 2 {
+		return nil, errors.New("wrong number of parameters")
+	}
+	id, ok := extraParams[0].(string)
+	if !ok {
+		return nil, errors.New("an argument must be string")
+	}
+
+	oId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	q := bson.M{"_id": oId}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+
+	res := extraParams[1]
+	err = c.FindOne(context.TODO(), q, options.FindOne()).Decode(res)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
 func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 1 {
 		return nil, errors.New("wrong number of parameters")
 	}
 	record := extra_params[0]
 	c := db.client.Database(dbName).Collection(dataCollectionName)
-	_, err := c.InsertOne(context.TODO(), record, options.InsertOne())
+	res, err := c.InsertOne(context.TODO(), record, options.InsertOne())
 	if err != nil {
 		return nil, err
 	}
-	return nil, err
+	newId := res.InsertedID.(primitive.ObjectID)
+	return []byte(newId.Hex()), nil
 }
 
 func (db *Mongodb) uniqueFields(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
@@ -378,6 +404,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.updateRecord(db_name, data_collection_name, extra_params...)
 	case "read_record":
 		return db.readRecord(db_name, data_collection_name, extra_params...)
+	case "read_record_oid_and_parse":
+		return db.readRecordByObjectId(db_name, data_collection_name, extra_params...)
 	case "create_record":
 		return db.createRecord(db_name, data_collection_name, extra_params...)
 	case "read_records":

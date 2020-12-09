@@ -114,6 +114,7 @@ type InputUsers struct {
 type LogEntryMessage struct {
 	ID          string                 `json:"_id" bson:"_id"`
 	Time        time.Time              `json:"time" bson:"time"`
+	CreatedBy   string                 `json:"createdBy" bson:"createdBy"`
 	EntryType   LogEntryType           `json:"entryType" bson:"entryType"`
 	Facility    string                 `json:"facility" bson:"facility"`
 	Beamtime    *string                `json:"beamtime" bson:"beamtime"`

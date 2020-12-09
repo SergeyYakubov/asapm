@@ -1,3 +1,15 @@
+/*
+export enum GroupMessagesBy {
+    DateTime,
+    //Facillity,
+    //Beamtime,
+}
+ */
+
+export interface LogbookUniqueFields {
+    facilities: string[];
+    beamtimes: string[];
+}
 
 const monthToText = [
     'January',

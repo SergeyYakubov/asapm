@@ -1,5 +1,5 @@
-import React, {useCallback, useEffect} from 'react';
-import {IconButton, List, ListItem, ListItemIcon, ListItemText, ListSubheader, Popover} from "@material-ui/core";
+import React from 'react';
+import {IconButton, List, ListItem, ListItemIcon, ListItemText, Popover} from "@material-ui/core";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
@@ -97,7 +97,7 @@ function LogbookItemPopover({idRef}: {idRef: string}): JSX.Element {
         setAnchorEl(null);
     };
 
-    const handleEnable = (enable: boolean) => {
+    const handleItemClick = () => {
         handleClose();
     };
 
@@ -112,7 +112,7 @@ function LogbookItemPopover({idRef}: {idRef: string}): JSX.Element {
         <IconButton onClick={handleClick}>
             <MoreVertIcon  className={classes.buttonWithoutPadding}/>
         </IconButton>
-        <Popover
+        {anchorEl && <Popover
             id="simple-menu"
             anchorEl={anchorEl}
             keepMounted
@@ -131,20 +131,20 @@ function LogbookItemPopover({idRef}: {idRef: string}): JSX.Element {
                 dense={true}
                 component="nav"
             >
-                <ListItem button onClick={() => {handleEnable(true); handleEdit();}}>
+                <ListItem button onClick={() => {handleItemClick(); handleEdit();}}>
                     <ListItemIcon className={classes.listItemWithIcon}>
                         <EditIcon fontSize={"small"}/>
                     </ListItemIcon>
                     <ListItemText primary="Edit"/>
                 </ListItem>
-                <ListItem button onClick={() => {handleEnable(false); handleDelete();}}>
+                <ListItem button onClick={() => {handleItemClick(); handleDelete();}}>
                     <ListItemIcon className={classes.listItemWithIcon}>
                         <DeleteIcon className={classes.colorError} fontSize={"small"}/>
                     </ListItemIcon>
                     <ListItemText className={classes.colorError} primary="Remove"/>
                 </ListItem>
             </List>
-        </Popover>
+        </Popover>}
     </div>;
 }
 

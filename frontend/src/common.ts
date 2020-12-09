@@ -170,7 +170,7 @@ export function GetFilterString(filter: CollectionFilter): string {
         filterString = AddToFilter(filterString, filterRange, "and");
     }
 
-    console.log(filterString)
+    console.log('GetFilterString', filterString);
 
     if (filter.textSearch === "") {
         return filterString;
@@ -179,4 +179,46 @@ export function GetFilterString(filter: CollectionFilter): string {
     filterString = AddToFilter(filterString, "jsonString regexp '" + filter.textSearch + "'", "and");
 
     return filterString;
+}
+
+// If REACT_APP_API_URL available use it, otherwise use the current host with PUBLIC_URL
+const baseHost = process.env.REACT_APP_API_URL
+                ? process.env.REACT_APP_API_URL
+                : (window.location.origin + process.env.PUBLIC_URL);
+export const ApplicationApiBaseUrl = baseHost + process.env.REACT_APP_API_SUFFIX;
+
+/**
+ * @param path api endpoint path
+ * @param file the file to upload
+ * @param progressCallback will be called if the upload progress has changed (value form 0 to 1)
+ * @returns Promise resolves with response string if status is 200, otherwise reject
+ */
+export function EasyFileUpload(path: string, file: File, progressCallback?: (progress: number) => void): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+        try {
+            const request = new XMLHttpRequest();
+            request.open('POST', path, true);
+            request.upload.onprogress = (e) => {
+                progressCallback?.(e.loaded / e.total);
+            };
+
+            request.onload = () => {
+                if (request.status == 200) {
+                    resolve(request.responseText);
+                } else {
+                    reject(new Error(`Response status was '${request.statusText}'`));
+                }
+            };
+
+            request.onerror = () => {
+                reject(new Error('XMLHttpRequest onerror'));
+            };
+
+            const fd = new FormData();
+            fd.append('file', file);
+            request.send(fd);
+        } catch(e) {
+            reject(e);
+        }
+    });
 }
