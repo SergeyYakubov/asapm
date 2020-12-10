@@ -1,9 +1,9 @@
 import React from "react";
 import {Paper, Theme} from "@material-ui/core";
-import Grid from "@material-ui/core/Grid";
-import Box from "@material-ui/core/Box";
-import TextField from "@material-ui/core/TextField";
 import {createStyles, makeStyles} from "@material-ui/core/styles";
+import {CustomFilter} from "../CustomFilter";
+import {useQuery} from "@apollo/client";
+import {BeamtimeFilterData, beamtimeFilterVar, GET_BEAMTIME_FILTER} from "../FilterBoxes";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -16,6 +16,10 @@ const useStyles = makeStyles((theme: Theme) =>
             background: theme.palette.lightBackground.main,
             borderRadius: 0,
         },
+        filterPaper: {
+            margin: 0,
+            padding: 0,
+        }
     }),
 );
 
@@ -25,20 +29,25 @@ interface LogbookFilterProps {
 
 function LogbookFilter({}: LogbookFilterProps): JSX.Element {
     const classes = useStyles();
-    return <Paper className={classes.paper}>
-        <div>
-            <Grid container spacing={1} alignItems="flex-end">
-                <Grid item md={8} xs={12} />
-                <Grid item md={4} xs={12}>
-                    <Box
-                        display="flex"
-                        alignItems="flex-end"
-                    >
-                        <TextField id="standard-search" margin="dense" label="Search" type="search"/>
-                    </Box>
-                </Grid>
-            </Grid>
-        </div>
+
+    /*
+    const [filter, setFilter] = useState<CollectionFilter>({
+        showBeamtime: false,
+        showSubcollections: false,
+        textSearch: '',
+        sortBy: 'date',
+        sortDir: 'asc',
+        fieldFilters: [],
+        dateFrom: undefined,
+        dateTo: undefined,
+    });
+     */
+
+    const {data} = useQuery<BeamtimeFilterData>(GET_BEAMTIME_FILTER);
+    const filter = data!.beamtimeFilter;
+
+    return <Paper variant="outlined" className={classes.filterPaper}>
+        <CustomFilter collections={undefined} currentFilter={filter} filterVar={beamtimeFilterVar} />
     </Paper>;
 }
 
