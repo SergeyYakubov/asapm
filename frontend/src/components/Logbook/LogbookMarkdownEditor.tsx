@@ -73,7 +73,8 @@ function createMenu(onFileUpload: (file: File) => void): any {
     menu.splice(2, 0, [new Dropdown(tableMenu, {label: "Table"})]);
 
     // Push into the "insert" menu
-    menu[1][0].content.push(new MenuItem({
+    const insertSubMenu = menu[1][0];
+    insertSubMenu.content.push(new MenuItem({
         label: 'Table',
         select: (s) => !isInTable(s),
         run: (state, dispatch) => {
@@ -95,7 +96,8 @@ function createMenu(onFileUpload: (file: File) => void): any {
 
             return true;
         }}));
-    menu[1][0].content.push(new MenuItem({
+    insertSubMenu.content.pop(); // Temporarily disabled table because the serialization is not supported.
+    insertSubMenu.content.push(new MenuItem({
         label: 'File',
         run: () => {
             const tmpFileElement = document.createElement('input');
@@ -154,7 +156,7 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
             console.log(ProseMirrorMarkdown.defaultMarkdownSerializer);
             ProseMirrorMarkdown.defaultMarkdownSerializer.nodes['table'] = function(state, node) {
                 state.ensureNewLine();
-                state.write('abc');
+                state.write('TODO:TableSupport');
                 state.closeBlock(node);
             };
             console.log(view.current.state.schema);

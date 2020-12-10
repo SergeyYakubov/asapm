@@ -20,10 +20,9 @@ import {makeStyles} from "@material-ui/core/styles";
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import {useMutation, useQuery} from "@apollo/client";
 import {ADD_LOG_MESSAGE, LOG_GET_BEAMTIMES, LOG_GET_FACILITIES} from "../../graphQLSchemes";
-import {ApplicationApiBaseUrl, EasyFileUpload, GetFilterString} from "../../common";
+import {ApplicationApiBaseUrl, EasyFileUpload} from "../../common";
 import {Query} from "../../generated/graphql";
 import debounce from "lodash.debounce";
-import {collectionFilterVar} from "../FilterBoxes";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
