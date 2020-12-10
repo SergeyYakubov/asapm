@@ -139,9 +139,9 @@ def addMeta():
     )
     s = Template(query)
     query = s.substitute(d)
-    #print (query)
-    #res = client.execute(query=query)
-    #print (res)
+    print (query)
+    res = client.execute(query=query)
+    print (res)
 
     return (startDate, d["facility"], d["beamtimeId"])
 
