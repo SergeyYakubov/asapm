@@ -215,8 +215,12 @@ func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_
 	if err != nil {
 		return nil, err
 	}
-	newId := res.InsertedID.(primitive.ObjectID)
-	return []byte(newId.Hex()), nil
+	newId, ok := res.InsertedID.(primitive.ObjectID)
+	if ok {
+		return []byte(newId.Hex()), nil
+	}
+	// TODO res.InsertedID to string and return []byte
+	return nil, nil
 }
 
 func (db *Mongodb) uniqueFields(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
