@@ -1,5 +1,5 @@
 import React from 'react';
-import {makeStyles, withStyles} from '@material-ui/core/styles';
+import {makeStyles, Theme, withStyles} from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
 import Menu, {MenuProps} from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -10,17 +10,22 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import UserService from "../../userService";
 
 import Typography from '@material-ui/core/Typography';
-import Brightness4Icon from '@material-ui/icons/Brightness4';
+import Brightness4OutlinedIcon from '@material-ui/icons/Brightness4Outlined';
+import Brightness5OutlinedIcon from '@material-ui/icons/Brightness5Outlined';
+import BrightnessAutoOutlinedIcon from '@material-ui/icons/BrightnessAutoOutlined';
 import Divider from '@material-ui/core/Divider';
 import Container from '@material-ui/core/Container';
 import userPreferences from "../../userPreferences";
+import {Box} from "@material-ui/core";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme: Theme) => ({
     userAccountButton: {
         marginLeft: 'auto',
     },
-    root: {
-        maxWidth: 345,
+    root: {},
+    box: {
+        marginLeft: theme.spacing(-2),
+        marginRight: theme.spacing(-2),
     },
 }));
 
@@ -44,13 +49,120 @@ const StyledMenu = withStyles({
     />
 ));
 
-export default function UserAccount(): JSX.Element {
+const StyledSubMenu = withStyles({
+    paper: {
+        border: '1px solid #d3d4d5',
+    },
+})((props: MenuProps) => (
+    <Menu
+        elevation={0}
+        getContentAnchorEl={null}
+        anchorOrigin={{
+            vertical: 'center',
+            horizontal: 'left',
+        }}
+        transformOrigin={{
+            vertical: 'center',
+            horizontal: 'right',
+        }}
+        {...props}
+    />
+));
+
+interface ThemeIconProps {
+    theme: string
+}
+
+function ThemeIcon({theme}: ThemeIconProps) {
+    switch (theme) {
+        case "light":
+            return <Brightness5OutlinedIcon fontSize="small"/>;
+        case "dark":
+            return <Brightness4OutlinedIcon fontSize="small"/>;
+        default:
+            return <BrightnessAutoOutlinedIcon fontSize="small"/>;
+    }
+}
+
+interface ThemeMenuProps {
+    closeParent : () => void
+}
+
+function ThemeMenu({closeParent}:ThemeMenuProps) {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
-    const {data} = userPreferences.useUserPreferences();
-    const themeType = data?.user?.preferences.schema || "light";
+    const handleClickListItem = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
 
+    const {data} = userPreferences.useUserPreferences();
+    const themeType = data?.user?.preferences.schema || "auto";
     const [changeTheme] = userPreferences.useUpdateUserTheme();
+
+
+    const handleChangeTheme = (event: React.MouseEvent<HTMLElement>, theme: string) => {
+        changeTheme({variables: {id: (data?.user?.id || ""), schema: theme}});
+        handleClose();
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+        closeParent();
+    };
+
+    return (
+        <MenuItem>
+            <Box display="flex" alignItems={'center'} onClick={handleClickListItem}>
+                <ListItemIcon>
+                    <ThemeIcon theme={themeType}/>
+                </ListItemIcon>
+                <ListItemText primary={"Change theme ..."}/>
+            </Box>
+            <StyledSubMenu
+                id="lock-menu"
+                anchorEl={anchorEl}
+                keepMounted
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+            >
+                <MenuItem
+                    key={"Auto"}
+                    selected={themeType === "auto"}
+                    onClick={(event) => handleChangeTheme(event, "auto")}
+                >
+                    <ListItemIcon>
+                        <BrightnessAutoOutlinedIcon fontSize="small"/>
+                    </ListItemIcon>
+                    <ListItemText primary={"Use system theme"}/>
+                </MenuItem>
+                <MenuItem
+                    key={"Dark"}
+                    selected={themeType === "dark"}
+                    onClick={(event) => handleChangeTheme(event, "dark")}
+                >
+                    <ListItemIcon>
+                        <Brightness4OutlinedIcon fontSize="small"/>
+                    </ListItemIcon>
+                    <ListItemText primary={"Use dark theme"}/>
+                </MenuItem>
+                <MenuItem
+                    key={"Light"}
+                    selected={themeType === "light"}
+                    onClick={(event) => handleChangeTheme(event, "light")}
+                >
+                    <ListItemIcon>
+                        <Brightness5OutlinedIcon fontSize="small"/>
+                    </ListItemIcon>
+                    <ListItemText primary={"Use light theme"}/>
+                </MenuItem>
+            </StyledSubMenu>
+        </MenuItem>
+    );
+}
+
+
+export default function UserAccount(): JSX.Element {
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -63,14 +175,6 @@ export default function UserAccount(): JSX.Element {
     const handleLogout = () => {
         UserService.doLogout();
     };
-
-    const otherTheme = themeType === "light" ? "dark" : "light";
-
-    const handleChangeTheme = () => {
-        changeTheme({variables: {id: (data?.user?.id || ""), schema: otherTheme.toString()}});
-        handleClose();
-    };
-
 
     const classes = useStyles();
     return (
@@ -96,12 +200,7 @@ export default function UserAccount(): JSX.Element {
                     </Container>
                 </MenuItem>
                 <Divider/>
-                <MenuItem onClick={handleChangeTheme}>
-                    <ListItemIcon>
-                        <Brightness4Icon fontSize="small"/>
-                    </ListItemIcon>
-                    <ListItemText primary={"Use " + otherTheme.toString() + " theme"}/>
-                </MenuItem>
+                <ThemeMenu closeParent={handleClose}/>
                 <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
                         <ExitToAppIcon fontSize="small"/>

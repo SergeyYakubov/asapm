@@ -6,7 +6,6 @@ import (
 	"asapm/common/utils"
 	"asapm/database"
 	"asapm/graphql/graph/model"
-	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -32,12 +31,11 @@ func TestCollectionTestSuite(t *testing.T) {
 func setup_and_init(t *testing.T) *database.MockedDatabase {
 	mock_db := new(database.MockedDatabase)
 	mock_db.On("Connect", mock.AnythingOfType("string")).Return(nil)
-	database.InitDB(mock_db,"")
+	database.InitDB(mock_db, "")
 	assertExpectations(t, mock_db)
 	logger.SetMockLog()
 	return mock_db
 }
-
 
 func (suite *CollectionTestSuite) SetupTest() {
 	suite.mock_db = setup_and_init(suite.T())
@@ -50,7 +48,7 @@ func (suite *CollectionTestSuite) TearDownTest() {
 	logger.UnsetMockLog()
 }
 
-var beamtime_meta=`
+var beamtime_meta = `
 {
 	"beamline": "p05",
 	"id": "81999364",
@@ -80,25 +78,24 @@ var beamtime_meta=`
 
 //prepared for testing acls, but for now only ingestor can add collections
 var aclImmediateAccess = auth.MetaAcl{
-	ImmediateAccess:   true,
+	ImmediateAccess: true,
 }
 
-var aclImmediateDeny = auth.MetaAcl {
-	ImmediateDeny:   true,
+var aclImmediateDeny = auth.MetaAcl{
+	ImmediateDeny: true,
 }
-
 
 var AddCollectionEntryTests = []struct {
-	acl auth.MetaAcl
-	allowed bool
-	collectionId   string
-	parentId string
-	dbCollectionName       string
-	message    string
+	acl              auth.MetaAcl
+	allowed          bool
+	collectionId     string
+	parentId         string
+	dbCollectionName string
+	message          string
 }{
-	{aclImmediateAccess, true,"12345.scan1","12345", KMetaNameInDb,"first layer"},
-	{aclImmediateAccess, true,"12345.scan1.subscan1","12345.scan1", KMetaNameInDb,"second layer"},
-//	{aclImmediateDeny, false,"12345.scan1","12345",KMetaNameInDb,"access denied"},
+	{aclImmediateAccess, true, "12345.scan1", "12345", KMetaNameInDb, "first layer"},
+	{aclImmediateAccess, true, "12345.scan1.subscan1", "12345.scan1", KMetaNameInDb, "second layer"},
+	//	{aclImmediateDeny, false,"12345.scan1","12345",KMetaNameInDb,"access denied"},
 }
 
 func (suite *CollectionTestSuite) TestAddCollectionEntry() {
@@ -111,7 +108,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			ChildCollectionName: nil,
 			CustomValues:        nil,
 		}
-		if  !test.allowed {
+		if !test.allowed {
 			_, err := AddCollectionEntry(test.acl, input)
 			suite.NotNil(err)
 			continue
@@ -126,12 +123,11 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		params_read := []interface{}{"12345"}
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return([]byte(beamtime_meta), nil)
 
-		params_update := []interface{}{test.parentId, "childCollection", baseInput,baseInput.ID}
+		params_update := []interface{}{test.parentId, "childCollection", baseInput, baseInput.ID}
 		suite.mock_db.On("ProcessRequest", "beamtime", test.dbCollectionName, "add_array_element", params_update).Return([]byte(""), nil)
 
-
 		var meta model.BeamtimeMeta
-		json.Unmarshal([]byte(beamtime_meta),&meta)
+		json.Unmarshal([]byte(beamtime_meta), &meta)
 
 		var input_entry model.CollectionEntry
 		utils.DeepCopy(input, &input_entry)
@@ -141,11 +137,9 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		input_entry.ChildCollectionName = &col
 		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
 
-		bentry,_ := json.Marshal(&input_entry)
+		bentry, _ := json.Marshal(&input_entry)
 		sentry := string(bentry)
-		input_entry.JSONString =&sentry
-
-
+		input_entry.JSONString = &sentry
 
 		params_create := []interface{}{&input_entry}
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "create_record", params_create).Return([]byte("{}"), nil)
@@ -162,8 +156,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 	}
 }
 
-
-func BenchmarkFib10(b *testing.B) {
+/*func BenchmarkFib10(b *testing.B) {
 	mb:=[]byte(beamtime_meta)
 	subb:=[]byte("Eiger")
 	for n := 0; n < b.N; n++ {
@@ -172,4 +165,25 @@ func BenchmarkFib10(b *testing.B) {
 			json.Unmarshal([]byte(beamtime_meta),&meta)
 		}
 	}
+}*/
+
+func (suite *CollectionTestSuite) TestDeleteSubcollection() {
+	id := "12345.123"
+	parentId := "12345"
+
+	var fs = database.FilterAndSort{
+		Filter: "id = '12345.123' OR id regexp '^12345.123.'",
+	}
+
+	params_delete := []interface{}{fs, true}
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_records", params_delete).Return([]byte(""), nil)
+
+	params_delete_element := []interface{}{parentId, id, "childCollection"}
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_array_element", params_delete_element).Return([]byte(""), nil)
+	//	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,baseEntry.ID)
+
+	res, err := DeleteCollectionsAndSubcollectionMeta(id)
+
+	suite.Nil(err)
+	suite.Equal(id, *res)
 }

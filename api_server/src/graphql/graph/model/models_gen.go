@@ -33,6 +33,7 @@ type BeamtimeMeta struct {
 	Applicant           *BeamtimeUser          `json:"applicant" bson:"applicant"`
 	Beamline            *string                `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                `json:"beamlineAlias" bson:"beamlineAlias"`
+	BeamlineSetup       *string                `json:"beamlineSetup" bson:"beamlineSetup"`
 	Status              string                 `json:"status" bson:"status"`
 	Contact             *string                `json:"contact" bson:"contact"`
 	CorePath            *string                `json:"corePath" bson:"corePath"`
@@ -137,6 +138,7 @@ type NewBeamtimeMeta struct {
 	Applicant           *InputBeamtimeUser       `json:"applicant" bson:"applicant"`
 	Beamline            *string                  `json:"beamline" bson:"beamline"`
 	BeamlineAlias       *string                  `json:"beamlineAlias" bson:"beamlineAlias"`
+	BeamlineSetup       *string                  `json:"beamlineSetup" bson:"beamlineSetup"`
 	ID                  string                   `json:"_id" bson:"_id"`
 	Status              string                   `json:"status" bson:"status"`
 	Contact             *string                  `json:"contact" bson:"contact"`

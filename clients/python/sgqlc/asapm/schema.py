@@ -76,10 +76,11 @@ class InputUsers(sgqlc.types.Input):
 
 class NewBeamtimeMeta(sgqlc.types.Input):
     __schema__ = schema
-    __field_names__ = ('applicant', 'beamline', 'beamline_alias', 'id', 'status', 'contact', 'core_path', 'event_end', 'event_start', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'title', 'unix_id', 'users', 'child_collection_name', 'custom_values')
+    __field_names__ = ('applicant', 'beamline', 'beamline_alias', 'beamline_setup', 'id', 'status', 'contact', 'core_path', 'event_end', 'event_start', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'title', 'unix_id', 'users', 'child_collection_name', 'custom_values')
     applicant = sgqlc.types.Field(InputBeamtimeUser, graphql_name='applicant')
     beamline = sgqlc.types.Field(String, graphql_name='beamline')
     beamline_alias = sgqlc.types.Field(String, graphql_name='beamlineAlias')
+    beamline_setup = sgqlc.types.Field(String, graphql_name='beamlineSetup')
     id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
     status = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='status')
     contact = sgqlc.types.Field(String, graphql_name='contact')
@@ -189,12 +190,16 @@ class LogEntryQueryResult(sgqlc.types.Type):
 
 class Mutation(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('create_meta', 'delete_meta', 'add_collection_entry', 'set_user_preferences', 'add_message_log_entry', 'remove_log_entry')
+    __field_names__ = ('create_meta', 'delete_meta', 'delete_subcollection', 'add_collection_entry', 'set_user_preferences', 'add_message_log_entry', 'remove_log_entry')
     create_meta = sgqlc.types.Field('BeamtimeMeta', graphql_name='createMeta', args=sgqlc.types.ArgDict((
         ('input', sgqlc.types.Arg(sgqlc.types.non_null(NewBeamtimeMeta), graphql_name='input', default=None)),
 ))
     )
     delete_meta = sgqlc.types.Field(String, graphql_name='deleteMeta', args=sgqlc.types.ArgDict((
+        ('id', sgqlc.types.Arg(sgqlc.types.non_null(String), graphql_name='id', default=None)),
+))
+    )
+    delete_subcollection = sgqlc.types.Field(String, graphql_name='deleteSubcollection', args=sgqlc.types.ArgDict((
         ('id', sgqlc.types.Arg(sgqlc.types.non_null(String), graphql_name='id', default=None)),
 ))
     )
@@ -322,10 +327,11 @@ class Users(sgqlc.types.Type):
 
 class BeamtimeMeta(sgqlc.types.Type, CollectionEntryInterface):
     __schema__ = schema
-    __field_names__ = ('applicant', 'beamline', 'beamline_alias', 'status', 'contact', 'core_path', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'unix_id', 'users')
+    __field_names__ = ('applicant', 'beamline', 'beamline_alias', 'beamline_setup', 'status', 'contact', 'core_path', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'unix_id', 'users')
     applicant = sgqlc.types.Field(BeamtimeUser, graphql_name='applicant')
     beamline = sgqlc.types.Field(String, graphql_name='beamline')
     beamline_alias = sgqlc.types.Field(String, graphql_name='beamlineAlias')
+    beamline_setup = sgqlc.types.Field(String, graphql_name='beamlineSetup')
     status = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='status')
     contact = sgqlc.types.Field(String, graphql_name='contact')
     core_path = sgqlc.types.Field(String, graphql_name='corePath')

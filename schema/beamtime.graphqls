@@ -104,6 +104,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     applicant: BeamtimeUser
     beamline: String
     beamlineAlias: String
+    beamlineSetup: String
     status: String!
     contact: String
     corePath: String
@@ -148,6 +149,7 @@ input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
     beamlineAlias: String #@inputNeedAcl(acl: WRITE)
+    beamlineSetup: String
     id: String!
     status: String!
     contact: String

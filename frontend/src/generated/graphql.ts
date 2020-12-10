@@ -135,6 +135,7 @@ export type BeamtimeMeta = CollectionEntryInterface & {
   applicant: Maybe<BeamtimeUser>;
   beamline: Maybe<Scalars['String']>;
   beamlineAlias: Maybe<Scalars['String']>;
+  beamlineSetup: Maybe<Scalars['String']>;
   status: Scalars['String'];
   contact: Maybe<Scalars['String']>;
   corePath: Maybe<Scalars['String']>;
@@ -185,6 +186,7 @@ export type NewBeamtimeMeta = {
   applicant: Maybe<InputBeamtimeUser>;
   beamline: Maybe<Scalars['String']>;
   beamlineAlias: Maybe<Scalars['String']>;
+  beamlineSetup: Maybe<Scalars['String']>;
   id: Scalars['String'];
   status: Scalars['String'];
   contact: Maybe<Scalars['String']>;
@@ -268,6 +270,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createMeta: Maybe<BeamtimeMeta>;
   deleteMeta: Maybe<Scalars['String']>;
+  deleteSubcollection: Maybe<Scalars['String']>;
   addCollectionEntry: Maybe<CollectionEntry>;
   setUserPreferences: Maybe<UserAccount>;
   addMessageLogEntry: Maybe<Scalars['ID']>;
@@ -281,6 +284,11 @@ export type MutationCreateMetaArgs = {
 
 
 export type MutationDeleteMetaArgs = {
+  id: Scalars['String'];
+};
+
+
+export type MutationDeleteSubcollectionArgs = {
   id: Scalars['String'];
 };
 

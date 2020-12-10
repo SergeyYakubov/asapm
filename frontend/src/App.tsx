@@ -4,7 +4,7 @@ import TopBar from "./components/Header/TopBar";
 import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
 import {PaletteType} from "@material-ui/core";
 import userPreferences from "./userPreferences";
-import MetaListPage from "./pages/MetaListPage";
+import BeamtimeMetaListPage from "./pages/BeamtimeMetaListPage";
 import CollectionListPage from "./pages/CollectionListPage";
 import {grey} from '@material-ui/core/colors';
 import SideBar from "./components/Sidebar/SideBar";
@@ -13,6 +13,8 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import {Route, Switch, Redirect} from 'react-router-dom';
 import DetailedPage from "./pages/DetailedPage";
 import LogbooksPage from "./pages/LogbooksPage";
+import useMediaQuery from '@material-ui/core/useMediaQuery';
+
 
 declare module "@material-ui/core/styles/createPalette" {
 // eslint-disable-next-line
@@ -35,14 +37,18 @@ const useStyles = makeStyles(() =>
 
 function App(): JSX.Element {
     const classes = useStyles();
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
     const {loading, error, data} = userPreferences.useUserPreferences();
     if (loading) return <p>Loading user preferences...</p>;
-    let themeType: PaletteType = "light";
+    let themeType: PaletteType = prefersDarkMode?"dark":"light";
     if (error) {
         console.log("cannot load user preferences, will use default");
     } else {
-        themeType = data?.user?.preferences.schema as PaletteType || themeType;
+        const saved_thema = data?.user?.preferences.schema;
+        if (saved_thema !=="auto") {
+            themeType = saved_thema as PaletteType || themeType;
+        }
     }
 
     const theme = createMuiTheme({
@@ -97,7 +103,7 @@ function App(): JSX.Element {
                                 <Redirect to="/collections"/>
                             </Route>
                             <Route path="/metaboard" render={() => (
-                                <MetaListPage/>
+                                <BeamtimeMetaListPage/>
                             )} exact/>
                             <Route key="beamtime" path={"/detailed/:id/:section"} render={(props) => (
                                 <DetailedPage {...props}  isBeamtime={true}/>
