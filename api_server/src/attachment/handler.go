@@ -1,6 +1,7 @@
 package attachment
 
 import (
+	"asapm/auth"
 	"asapm/database"
 	"bytes"
 	"fmt"
@@ -27,14 +28,21 @@ type UploadDbEntry struct {
 }
 
 func HandleUpload(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	username, err := auth.GetUsernameFromContext(ctx)
+	if err != nil {
+		panic("TODO GetUsernameFromContext")
+	}
+
 	// Since we are later storing these files in mongodb, we cannot exceed a size of 16 MiB
-	err := r.ParseMultipartForm(5 * 1024 * 1024) // 5MiB max payload size
+	err = r.ParseMultipartForm(5 * 1024 * 1024) // 5MiB max payload size
 
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		fmt.Println("Error Retrieving the File")
 		fmt.Println(err)
-		return
+		panic("TODO FormFile")
 	}
 
 	buf := new(bytes.Buffer)
@@ -47,7 +55,7 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
 
 	entry := &UploadDbEntry{
 		UploadTime: time.Now(),
-		Uploader:   "admin", // TODO
+		Uploader:   username,
 		MimeType:   contentType,
 		Data:       buf.Bytes(),
 	}
