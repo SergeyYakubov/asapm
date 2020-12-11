@@ -46,10 +46,7 @@ type logEntryMessageCreate struct {
 	Attachments map[string]interface{} `json:"attachments" bson:"attachments"`
 }
 
-func WriteNewMessage(newInput model.NewLogEntryMessage) (*string, error) {
-	// TODO ACL check
-	// Can write to Facility/Beamtime
-
+func WriteNewMessage(newInput model.NewLogEntryMessage, username string) (*string, error) {
 	messageTime := time.Now()
 	if newInput.Time != nil {
 		messageTime = *newInput.Time
@@ -57,7 +54,7 @@ func WriteNewMessage(newInput model.NewLogEntryMessage) (*string, error) {
 
 	newMessage := logEntryMessageCreate{
 		Time:        messageTime,
-		CreatedBy:   "AuthUsername", // TODO get username
+		CreatedBy:   username,
 		EntryType:   model.LogEntryTypeMessage,
 		Facility:    newInput.Facility,
 		Beamtime:    newInput.Beamtime,

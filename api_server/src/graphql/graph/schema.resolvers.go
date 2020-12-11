@@ -98,6 +98,7 @@ func (r *mutationResolver) DeleteSubcollection(ctx context.Context, id string) (
 }
 
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
+	// TODO Check if ctx.User is actually user he is trying to modify
 	return meta.SetUserPreferences(id, input)
 }
 
@@ -107,7 +108,25 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.UserAccount
 
 // Logbook API
 func (r *mutationResolver) AddMessageLogEntry(ctx context.Context, newMessage model.NewLogEntryMessage) (*string, error) {
-	return logbook.WriteNewMessage(newMessage)
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("ReadAclFromContext, access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	// TODO: How to check if user has write access?
+	if !acl.HasAccessToFacility(newMessage.Facility) {
+		logger.Error("HasAccessForFacility, access denied")
+		return nil, errors.New("access denied: HasAccessToFacility")
+	}
+
+	username, err := auth.GetUsernameFromContext(ctx)
+	if err != nil {
+		logger.Error("GetUsernameFromContext, access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	return logbook.WriteNewMessage(newMessage, username)
 }
 
 func (r *mutationResolver) RemoveLogEntry(ctx context.Context, id string) (*string, error) {
