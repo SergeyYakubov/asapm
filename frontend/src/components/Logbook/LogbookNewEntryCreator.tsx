@@ -23,6 +23,7 @@ import {ADD_LOG_MESSAGE, LOG_GET_BEAMTIMES, LOG_GET_FACILITIES} from "../../grap
 import {ApplicationApiBaseUrl, EasyFileUpload} from "../../common";
 import {Query} from "../../generated/graphql";
 import debounce from "lodash.debounce";
+import {centerHandVContent} from "../../styleHelper";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -53,6 +54,14 @@ const useStyles = makeStyles((theme: Theme) =>
                 top: 0,
                 left: 0,
             }
+        },
+        dragNdropIndicator: {
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 20,
+            ...centerHandVContent,
         }
     }),
 );
@@ -112,6 +121,8 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
     const getBeamtimesQueryResult = useQuery<Query, { filter: string }>(LOG_GET_BEAMTIMES, {
         variables: {filter: facility?.length ? `facility='${facility}'` : ''},
     });
+
+    const [dragRefCounter, setDragRefCounter] = useState<number>(0);
 
     useEffect(() => {
             if (getFacilitiesQueryResult.error) {
@@ -190,11 +201,15 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
         setInputIsOkay(!!(hasContent && facility?.length));
     });
 
+    async function uploadAndIfImageAddToMessageBody(file: File) {
+        await uploadAndAppendFile(file);
+    }
+
     async function uploadAndAppendFile(file: File) {
         {
             const existingFile = attachedFiles.find((f) => f.name == file.name);
             if (existingFile) {
-                if (!confirm("Warning: The filename is already in use. Do you want to overwrite it?")) {
+                if (!confirm('Warning: The filename is already in use. Do you want to overwrite it?')) {
                     return; // User canceled upload
                 }
                 removeAttachment(existingFile.localId);
@@ -232,12 +247,54 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
         // TODO Search in text for this attachment and remove it there!
     }
 
+    function onDragEnter(e: DragEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragRefCounter(dragRefCounter+1);
+    }
+
+    function onDragLeave(e: DragEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragRefCounter(Math.max(0, dragRefCounter-1));
+    }
+
+    function onDragOver(e: DragEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Even if this block is empty,
+        // it's required to actually catch the file
+    }
+
+    function onDrop(e: DragEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragRefCounter(0);
+        const item = e.dataTransfer?.items?.[0];
+        if (item?.kind === 'file') {
+            const file = item.getAsFile();
+            if (file) {
+                console.log('Dragged file', file);
+                /*noawait*/ uploadAndIfImageAddToMessageBody(file);
+            }
+        }
+    }
+
     return <Accordion>
         <MyAccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography className={classes.heading}>Compose new log entry</Typography>
         </MyAccordionSummary>
         <AccordionDetails>
-            <form style={{width: '100%'}} onSubmit={onSubmit}>
+            <form style={{width: '100%', position: 'relative'}}
+                  onSubmit={onSubmit}
+                  onDragEnter={onDragEnter as any}
+                  onDragLeave={onDragLeave as any}
+                  onDragOver={onDragOver as any}
+                  onDrop={onDrop as any}
+            >
+                {
+                    (dragRefCounter > 0) && <div className={classes.dragNdropIndicator}>Drop file here to upload</div>
+                }
                 <Grid container spacing={3}>
                     <Grid item xs={3}>
                         <Autocomplete

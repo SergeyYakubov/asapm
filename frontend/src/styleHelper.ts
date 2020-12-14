@@ -7,3 +7,14 @@ export const flexableContentStyle: {
     display: 'flex',
     flexDirection: 'column',
 };
+
+// Horizontal and Vertical centering of elements
+export const centerHandVContent: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center';
+} = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+};
