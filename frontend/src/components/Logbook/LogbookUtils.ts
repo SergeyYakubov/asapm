@@ -39,3 +39,8 @@ export function getSplitedDate(date: Date): { full: string, monthIdx: number, ye
         full,
     };
 }
+
+export interface ChangeableImageRef {
+    changeSource(src: string): void;
+    removeImage(): void;
+}

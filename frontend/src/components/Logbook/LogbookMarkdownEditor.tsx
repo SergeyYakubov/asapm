@@ -7,8 +7,8 @@ import 'prosemirror-example-setup/style/style.css';
 import 'prosemirror-menu/style/menu.css';
 import './LogbookMarkdownEditor.css';
 
-import {EditorState, PluginKey, Transaction} from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
+import {EditorState, Plugin, PluginKey, Transaction} from "prosemirror-state";
+import {Decoration, DecorationSet, EditorView} from "prosemirror-view";
 import React, {forwardRef, useEffect, useImperativeHandle, useRef} from "react";
 import {createStyles, makeStyles} from "@material-ui/core/styles";
 import {Dropdown, MenuItem} from "prosemirror-menu";
@@ -27,6 +27,7 @@ import {
     tableNodes,
 } from "prosemirror-tables";
 import {Schema, Fragment}  from "prosemirror-model";
+import {ChangeableImageRef} from "./LogbookUtils";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {exampleSetup, buildMenuItems} = require('prosemirror-example-setup');
@@ -125,6 +126,37 @@ function createMenu(onFileUpload: (file: File) => void): any {
     return menu;
 }
 
+
+interface PendingImageSpec {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    objRef: object; // Literally just the === check is used (ref check)
+}
+// Modified example from https://prosemirror.net/examples/upload/
+const pendingImageManagerPlugin = new Plugin({
+    state: {
+        init() { return DecorationSet.empty; },
+        apply(tr, set) {
+            // Adjust decoration positions to changes made by the transaction
+            set = set.map(tr.mapping, tr.doc);
+
+            // See if the transaction adds or removes any placeholders
+            const action = tr.getMeta(this);
+            if (action && action.add) {
+                const widget = document.createElement('placeholder');
+                const deco = Decoration.widget(action.add.pos, widget, {objRef: action.add.objRef} as PendingImageSpec);
+                set = set.add(tr.doc, [deco]);
+            } else if (action && action.remove) {
+                set = set.remove(set.find(null, null, (spec: PendingImageSpec) => spec.objRef == action.remove.objRef));
+            }
+
+            return set;
+        }
+    },
+    props: {
+        decorations(state) { return this.getState(state); }
+    }
+});
+
 const reactPropsKey = new PluginKey("reactProps");
 
 const useStyles = makeStyles(() =>
@@ -143,13 +175,21 @@ interface LogbookMarkdownEditorProps {
 }
 export interface LogbookMarkdownEditorInterface {
     getRawContent(): string;
+    addImage(): ChangeableImageRef;
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+function findPlaceholder(state: EditorState, objRef: object) {
+    const decos = pendingImageManagerPlugin.getState(state);
+    const found = decos.find(null, null, (spec: PendingImageSpec) => spec.objRef == objRef);
+    return found.length ? found[0].from : null;
 }
 
 const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, LogbookMarkdownEditorProps>((props, ref) => {
     const classes = useStyles();
 
     const viewHost = useRef() as any;
-    const view = useRef<EditorView>(null) as any;
+    const $view = useRef<EditorView>(null) as any;
 
     useImperativeHandle(ref, () => ({
         getRawContent(): string {
@@ -159,21 +199,46 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
                 state.write('TODO:TableSupport');
                 state.closeBlock(node);
             };
-            console.log(view.current.state.schema);
-            return ProseMirrorMarkdown.defaultMarkdownSerializer.serialize(view.current.state.doc);
+            console.log($view.current.state.schema);
+            return ProseMirrorMarkdown.defaultMarkdownSerializer.serialize($view.current.state.doc);
         },
+        addImage(): ChangeableImageRef {
+
+            const imageRef = {};
+
+            // Replace the selection with a placeholder
+            const tr = $view.current.state.tr;
+            if (!tr.selection.empty) {
+                tr.deleteSelection();
+            }
+
+            tr.setMeta(pendingImageManagerPlugin, {add: {objRef: imageRef, pos: tr.selection.from}});
+            $view.current.dispatch(tr);
+
+            return {
+                removeImage() {
+                    $view.current.dispatch(tr.setMeta(pendingImageManagerPlugin, {remove: {objRef: imageRef}}));
+                },
+                changeSource(src: string) {
+                    const pos = findPlaceholder($view.current.state, imageRef);
+                    $view.current.dispatch($view.current.state.tr
+                        .replaceWith(pos, pos, schema.nodes.image.create({src}))
+                        .setMeta(pendingImageManagerPlugin, {remove: {objRef: imageRef}}));
+                }
+            };
+        }
     }));
 
     useEffect(() => { // initial render
         const state = EditorState.create({schema, plugins: [
-            tableEditing(),
+            tableEditing(), pendingImageManagerPlugin
         ].concat(exampleSetup({schema, menuContent: createMenu(props.onFileUpload)}))});
 
-        view.current = new EditorView(viewHost.current, {
+        $view.current = new EditorView(viewHost.current, {
             state,
             dispatchTransaction(transaction) { // proxy dispatchTransaction function, to check has content
-                const { state, transactions } = view.current.state.applyTransaction(transaction);
-                view.current.updateState(state);
+                const { state, transactions } = $view.current.state.applyTransaction(transaction);
+                $view.current.updateState(state);
 
                 if (transactions.some((tr: Transaction) => tr.docChanged)) {
                     props.onHasContent(!!ProseMirrorMarkdown.defaultMarkdownSerializer.serialize(state.doc).length);
@@ -182,12 +247,12 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
         });
         props.onHasContent(!!ProseMirrorMarkdown.defaultMarkdownSerializer.serialize(state.doc).length);
 
-        return () => view.current.destroy();
+        return () => $view.current.destroy();
     }, []);
 
     useEffect(() => { // every render
-        const tr = view.current.state.tr.setMeta(reactPropsKey, {});
-        view.current.dispatch(tr);
+        const tr = $view.current.state.tr.setMeta(reactPropsKey, {});
+        $view.current.dispatch(tr);
     });
 
     return <div id="editor" ref={viewHost} className={classes.editor} />;

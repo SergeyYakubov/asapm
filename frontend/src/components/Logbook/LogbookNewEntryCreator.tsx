@@ -24,6 +24,7 @@ import {ApplicationApiBaseUrl, EasyFileUpload} from "../../common";
 import {Query} from "../../generated/graphql";
 import debounce from "lodash.debounce";
 import {centerHandVContent} from "../../styleHelper";
+import {ChangeableImageRef} from "./LogbookUtils";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -202,10 +203,25 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
     });
 
     async function uploadAndIfImageAddToMessageBody(file: File) {
-        await uploadAndAppendFile(file);
+        let imageElement: ChangeableImageRef | undefined = undefined;
+        switch(file.type) {
+            case 'image/png':
+            case 'image/gif':
+            case 'image/jpeg':
+                imageElement = markdownEditor!.current!.addImage();
+                break;
+        }
+        const uploadedImage = await uploadAndAppendFile(file);
+        if (imageElement) {
+            if (uploadedImage) {
+                imageElement.changeSource(`${ApplicationApiBaseUrl}/attachments/raw/${uploadedImage.id}`);
+            } else {
+                imageElement.removeImage();
+            }
+        }
     }
 
-    async function uploadAndAppendFile(file: File) {
+    async function uploadAndAppendFile(file: File): Promise<AttachedFileInfo | undefined> {
         {
             const existingFile = attachedFiles.find((f) => f.name == file.name);
             if (existingFile) {
@@ -235,11 +251,15 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
             console.log(`Upload of file ${file.name} complete (fileId: ${fileId})`);
             newFile.id = fileId;
             newFile.uploadProgress = 1;
+
+            return newFile;
         }
         catch (e) {
             setUploadErrorMessage(e.message);
             removeAttachment(newFile.localId);
         }
+
+        return undefined;
     }
 
     function removeAttachment(localId: string) {
