@@ -97,7 +97,7 @@ function LogbookSelectionTree({ messages, currentVisibleDate, onDateSelected }: 
             onNodeSelect={handleSelect}
         >
             {
-                Object.keys(preGroupByYear).map(year =>
+                Object.keys(preGroupByYear).sort((a, b) => Number(b) - Number(a)).map(year =>
                     <TreeItem key={`tree,year:${year}`} nodeId={`year:${year}`} label={year}>
                         {Object.keys(preGroupByYear[year]).slice().reverse().map(month =>
                             <TreeItem key={`tree,month:${month},year:${year}`} nodeId={`month:${month},${year}`} label={monthIdxToText(Number(month))}>
