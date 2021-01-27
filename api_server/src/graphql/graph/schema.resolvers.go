@@ -120,7 +120,7 @@ func (r *mutationResolver) AddMessageLogEntry(ctx context.Context, newMessage mo
 		return nil, errors.New("access denied: HasAccessToFacility")
 	}
 
-	username, err := auth.GetUsernameFromContext(ctx)
+	username, err := auth.GetPreferredFullNameFromContext(ctx)
 	if err != nil {
 		logger.Error("GetUsernameFromContext, access denied: " + err.Error())
 		return nil, errors.New("access denied: " + err.Error())

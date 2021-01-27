@@ -59,7 +59,7 @@ func StartServer() {
 	} else {
 		attachmentRouter.Handle("/upload", cors(auth.BypassAuth(utils.RemoveQuotes(attachment.HandleUpload)))).Methods("POST")
 	}
-	attachmentRouter.Handle("/raw/{id}", auth.BypassAuth(utils.RemoveQuotes(attachment.HandleDownload))).Methods("GET")
+	attachmentRouter.Handle("/raw/{id}", utils.RemoveQuotes(attachment.HandleDownload)).Methods("GET")
 
 	// GraphQL Service
 	gqlConfig := generateGqlConfig()

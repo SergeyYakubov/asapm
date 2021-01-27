@@ -12,6 +12,8 @@ import (
 
 type userProps struct {
 	UserName        string
+    FullName        string
+    Email           string
 	Roles           []string
 	Groups          []string
 	AuthorizedParty string
@@ -31,6 +33,8 @@ func (acl MetaAcl) HasAccessToFacility(facility string) bool {
 
 type claimFields struct {
 	UserName        string   `json:"preferred_username"`
+	FullName        string   `json:"name"` // Full name like "John Smith"
+	Email           string   `json:"email"`
 	Groups          []string `json:"groups"`
 	AuthorizedParty string   `json:"azp"`
 	Roles           []string `json:"roles"`
@@ -44,7 +48,7 @@ type FilterFields struct {
 
 func BypassAuth(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		claims := claimFields{Roles: []string{"admin"}, UserName: "admin", AuthorizedParty: "asapm"}
+		claims := claimFields{Roles: []string{"admin"}, UserName: "admin", Email: "admin@example.com", AuthorizedParty: "asapm"}
 		jwtClaims := jwt.MapClaims{}
 
 		utils.InterfaceToInterface(&claims, &jwtClaims)
@@ -70,6 +74,8 @@ func userPropsFromClaim(claim map[string]interface{}) (userProps, error) {
 	}
 
 	props.UserName = fields.UserName
+    props.FullName = fields.FullName
+    props.Email = fields.Email
 	props.Roles = fields.Roles
 	props.Groups = make([]string, len(fields.Groups))
 	props.AuthorizedParty = fields.AuthorizedParty
@@ -111,6 +117,18 @@ func GetUsernameFromContext(ctx context.Context) (string, error) {
 		return "Unauthorized", err
 	}
 	return props.UserName, nil
+}
+
+// Will FullName, fallbacks to UserName
+func GetPreferredFullNameFromContext(ctx context.Context) (string, error) {
+	props, err := userPropsFromContext(ctx)
+	if err != nil {
+		return "Unauthorized", err
+	}
+	if props.FullName == "" {
+		return props.UserName, nil
+	}
+	return props.FullName, nil
 }
 
 func AuthorizeWrite(ctx context.Context) error {
