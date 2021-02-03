@@ -9,8 +9,9 @@ import {
 import {LOG_MESSAGES} from "../graphQLSchemes";
 import LogbookNewEntryCreator from "../components/Logbook/LogbookNewEntryCreator";
 import LogbookSelectionTree from "../components/Logbook/LogbookSelectionTree";
-import LogbookMessageLog from "../components/Logbook/LogbookMessageLog";
+import LogbookMessageTimelineByDatetime from "../components/Logbook/LogbookMessageTimelineByDatetime";
 import LogbookFilter from "../components/Logbook/LogbookFilter";
+import LogbookMessageTimelineByFacility from "../components/Logbook/LogbookMessageTimelineByFacility";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -27,6 +28,8 @@ const useStyles = makeStyles((theme: Theme) =>
 interface LogbooksPageProps {
     prefilledBeamtimeId?: BeamtimeMeta['id'];
 }
+
+export type OrderType = 'datetime' | 'facility' | 'facility_and_beamtime';
 
 function LogbooksPage(props: LogbooksPageProps): JSX.Element {
     const classes = useStyles();
@@ -62,13 +65,17 @@ function LogbooksPage(props: LogbooksPageProps): JSX.Element {
 
     const hasPrefilledCondition = !!props.prefilledBeamtimeId;
 
-    //const [orderBy, setOrderBy] = React.useState('datetime');
+    const [orderBy, setOrderBy] = React.useState<OrderType>('datetime');
 
     return <div className={classes.logbookPageRoot}>
             <div style={{ flex: '1', display: 'flex' }}>
                 { hasPrefilledCondition ? null :
                     <LogbookSelectionTree messages={messages} currentVisibleDate={currentVisibleDate} onDateSelected={(fullDate) => {
                         $messageLog.current?.scrollToGroup(fullDate);
+                    }}
+                    orderBy={orderBy}
+                    onOrderByChanged={(newOrderBy) => {
+                        setOrderBy(newOrderBy);
                     }} />
                 }
                 <div style={{ flex: '1', display: 'flex' }}>
@@ -76,7 +83,13 @@ function LogbooksPage(props: LogbooksPageProps): JSX.Element {
                         <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
                             <LogbookNewEntryCreator prefilledBeamtime={props.prefilledBeamtimeId} />
                             <LogbookFilter />
-                            <LogbookMessageLog ref={$messageLog} messages={messages} onVisibleGroupChanged={(fullDate) => setCurrentVisibleDate(fullDate)} />
+                            {
+                                {
+                                    ['datetime']: <LogbookMessageTimelineByDatetime ref={$messageLog} messages={messages} onVisibleGroupChanged={(fullDate) => setCurrentVisibleDate(fullDate)} />,
+                                    ['facility']: <LogbookMessageTimelineByFacility ref={$messageLog} messages={messages} onVisibleGroupChanged={(fullDate) => setCurrentVisibleDate(fullDate)} />,
+                                    ['facility_and_beamtime']: <div />,
+                                }[orderBy]
+                            }
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import {LogEntryMessage} from "../../generated/graphql";
 import {getSplitedDate} from "./LogbookUtils";
 import LogbookGroupHeader from "./LogbookGroupHeader";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
+import {OrderType} from "../../pages/LogbooksPage";
 
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -18,7 +19,12 @@ const useStyles = makeStyles((theme: Theme) =>
         },
     }));
 
-const LogbookMessageLog = forwardRef(({ messages, onVisibleGroupChanged }: { messages: LogEntryMessage[], onVisibleGroupChanged: (groupValue: string) => void }, ref) => {
+interface LogbookMessageTimelineByDatetimeProps {
+    messages: LogEntryMessage[];
+    onVisibleGroupChanged: (groupValue: string) => void;
+}
+
+const LogbookMessageTimelineByDatetime = forwardRef(({ messages, onVisibleGroupChanged }: LogbookMessageTimelineByDatetimeProps, ref) => {
     const classes = useStyles();
 
     const [groups, setGroups] = React.useState<string[]>([]);
@@ -96,4 +102,4 @@ const LogbookMessageLog = forwardRef(({ messages, onVisibleGroupChanged }: { mes
     />);
 });
 
-export default LogbookMessageLog;
+export default LogbookMessageTimelineByDatetime;
