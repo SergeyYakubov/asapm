@@ -11,7 +11,7 @@ schema = sgqlc.types.Schema()
 ########################################################################
 class Acls(sgqlc.types.Enum):
     __schema__ = schema
-    __choices__ = ('WRITE', 'READ')
+    __choices__ = ('ADMIN', 'READ')
 
 
 Boolean = sgqlc.types.Boolean
@@ -65,6 +65,23 @@ class InputUsers(sgqlc.types.Input):
     door_db = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(String)), graphql_name='doorDb')
     special = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(String)), graphql_name='special')
     unknown = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(String)), graphql_name='unknown')
+
+
+class ModifiedBeamtimeMeta(sgqlc.types.Input):
+    __schema__ = schema
+    __field_names__ = ('id', 'status', 'users')
+    id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
+    status = sgqlc.types.Field(String, graphql_name='status')
+    users = sgqlc.types.Field(InputUsers, graphql_name='users')
+
+
+class ModifiedUserMeta(sgqlc.types.Input):
+    __schema__ = schema
+    __field_names__ = ('id', 'delete_fields', 'update_fields', 'add_fields')
+    id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
+    delete_fields = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(String)), graphql_name='deleteFields')
+    update_fields = sgqlc.types.Field(Map, graphql_name='updateFields')
+    add_fields = sgqlc.types.Field(Map, graphql_name='addFields')
 
 
 class NewBeamtimeMeta(sgqlc.types.Input):

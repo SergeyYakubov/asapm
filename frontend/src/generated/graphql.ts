@@ -207,6 +207,19 @@ export type NewBeamtimeMeta = {
   customValues: Maybe<Scalars['Map']>;
 };
 
+export type ModifiedBeamtimeMeta = {
+  id: Scalars['String'];
+  status: Maybe<Scalars['String']>;
+  users: Maybe<InputUsers>;
+};
+
+export type ModifiedUserMeta = {
+  id: Scalars['String'];
+  deleteFields: Maybe<Array<Scalars['String']>>;
+  updateFields: Maybe<Scalars['Map']>;
+  addFields: Maybe<Scalars['Map']>;
+};
+
 export type UniqueField = {
   __typename?: 'UniqueField';
   keyName: Scalars['String'];
@@ -214,7 +227,7 @@ export type UniqueField = {
 };
 
 export enum Acls {
-  Write = 'WRITE',
+  Admin = 'ADMIN',
   Read = 'READ'
 }
 

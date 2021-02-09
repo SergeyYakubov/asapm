@@ -148,7 +148,7 @@ input NewCollectionEntry {
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
-    beamlineAlias: String #@inputNeedAcl(acl: WRITE)
+    beamlineAlias: String
     beamlineSetup: String
     id: String!
     status: String!
@@ -168,5 +168,18 @@ input NewBeamtimeMeta {
     users: InputUsers
     childCollectionName: String
     customValues: Map
+}
+
+input ModifiedBeamtimeMeta {
+    id: String!
+    status: String
+    users: InputUsers
+}
+
+input ModifiedUserMeta {
+    id: String!
+    deleteFields: [String!]
+    updateFields: Map
+    addFields: Map
 }
 

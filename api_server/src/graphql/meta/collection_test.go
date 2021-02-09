@@ -111,7 +111,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			CustomValues:        nil,
 		}
 		if  !test.allowed {
-			_, err := AddCollectionEntry(test.acl, input)
+			_, err := AddCollectionEntry(input)
 			suite.NotNil(err)
 			continue
 		}
@@ -149,7 +149,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		params_create := []interface{}{&input_entry}
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "create_record", params_create).Return([]byte("{}"), nil)
 
-		entry, err := AddCollectionEntry(test.acl, input)
+		entry, err := AddCollectionEntry(input)
 
 		suite.Nil(err)
 		suite.Equal("p05", *entry.ParentBeamtimeMeta.Beamline)
@@ -195,3 +195,138 @@ func (suite *CollectionTestSuite) TestDeleteSubcollection() {
 	suite.Nil(err)
 	suite.Equal(id, *res)
 }
+
+
+/*
+var beamline = "bl"
+var facility = "facility"
+
+var ModifyMetaTests = []struct {
+	acl     auth.MetaAcl
+	error   bool
+	id      string
+	status  *string
+	users   *model.InputUsers
+	meta    *model.BeamtimeMeta
+	message string
+}{
+	{aclImmediateDeny, true, "12344", &statusRunning, nil, nil, "immediate access deny"},
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  []string{"1234"},
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	}, true, "12345", &statusRunning, nil, &model.BeamtimeMeta{
+		ID:       "12345",
+		Beamline: nil,
+		Facility: nil,
+		Status:   "none",
+		Users:    nil,
+	}, "wrong beamtime in acl"},
+		{auth.MetaAcl{
+			ImmediateDeny:     false,
+			ImmediateAccess:   false,
+			AllowedBeamtimes:  nil,
+			AllowedBeamlines:  []string{"bl"},
+			AllowedFacilities: nil,
+		}, false, "12346", &statusRunning, &model.InputUsers{
+			DoorDb:  []string{"test"},
+			Special: []string{},
+			Unknown: []string{},
+		}, &model.BeamtimeMeta{
+			ID:       "12346",
+			Beamline: &beamline,
+			Facility: nil,
+			Status:   "none",
+			Users:    nil,
+		}, "ok with beamline acls"},
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  []string{"12347"},
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	}, false, "12347", &statusRunning, &model.InputUsers{
+		DoorDb:  []string{"test"},
+		Special: []string{},
+		Unknown: []string{},
+	}, &model.BeamtimeMeta{
+		ID:       "12347",
+		Beamline: nil,
+		Facility: nil,
+		Status:   "none",
+		Users:    nil,
+	}, "ok with beamtime acl"},
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  nil,
+		AllowedFacilities: []string{"facility"},
+	}, false, "12348", &statusRunning, &model.InputUsers{
+		DoorDb:  []string{"test"},
+		Special: []string{},
+		Unknown: []string{},
+	}, &model.BeamtimeMeta{
+		ID:       "12348",
+		Beamline: nil,
+		Facility:  &facility ,
+		Status:   "none",
+		Users:    nil,
+	}, "ok with facility acl"},
+}
+
+func (suite *MetaSuite) TestModifyMeta() {
+	for _, test := range ModifyMetaTests {
+		input := model.ModifiedBeamtimeMeta{
+			ID:     test.id,
+			Status: test.status,
+			Users:  test.users,
+		}
+		if test.acl.ImmediateDeny {
+			_, err := ModifyBeamtimeMeta(test.acl, input)
+			suite.NotNil(err)
+			continue
+		}
+
+		params_modify := []interface{}{test.id}
+		metab, _ := json.Marshal(test.meta)
+		var db_err error
+		if test.meta == nil {
+			db_err = errors.New("not found")
+		}
+		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_modify).Return(metab, db_err)
+
+		if test.meta != nil && !test.error {
+			params_update := []interface{}{test.id,&input}
+			test.meta.Status = *test.status
+			if test.users!=nil {
+				test.meta.Users = &model.Users{}
+				test.meta.Users.Unknown = test.users.Unknown
+				test.meta.Users.Special = test.users.Special
+				test.meta.Users.DoorDb = test.users.DoorDb
+			}
+			metab, _ := json.Marshal(test.meta)
+
+			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "update_record", params_update).Return(metab, nil)
+		}
+		res, err := ModifyBeamtimeMeta(test.acl, input)
+		if test.meta == nil || test.error{
+			suite.NotNil(err)
+			suite.Nil(res)
+		} else
+		{
+			suite.Nil(err)
+			suite.NotNil(res)
+			if res != nil {
+				suite.Equal(*test.status, res.Status)
+				if test.users!=nil {
+					suite.Equal(test.users.DoorDb, res.Users.DoorDb)
+				}
+			}
+		}
+	}
+}
+
+ */

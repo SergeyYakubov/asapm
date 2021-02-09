@@ -141,7 +141,7 @@ func (db *Mongodb) insertRecord(dbname string, collection_name string, s interfa
 	return err
 }
 
-func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+func (db *Mongodb) replaceRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 2 {
 		return nil, errors.New("wrong number of parameters")
 	}
@@ -162,6 +162,29 @@ func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, extra_
 	}
 	return nil, err
 }
+
+func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 2 {
+		return nil, errors.New("wrong number of parameters")
+	}
+	id, ok := extra_params[0].(string)
+	if !ok {
+		return nil, errors.New("id must be string")
+	}
+	input := extra_params[1]
+	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	filter := bson.D{{"_id", id}}
+
+	update := bson.D{{"$set", input}}
+	var resMap map[string]interface{}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	err := c.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&resMap)
+	if err != nil {
+			return nil,err
+	}
+	return json.Marshal(resMap)
+}
+
 
 func (db *Mongodb) readRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 1 {
@@ -252,7 +275,7 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 	}
 
 	c := db.client.Database(dbName).Collection(dataCollectionName)
-	q := bson.M{"$and": []bson.M{bson.M{"_id": id}, bson.M{key: bson.M{"$exists": true}}, bson.M{key + "._id": bson.M{"$ne": uniqueId}}}}
+	q := bson.M{"$and": []bson.M{bson.M{"_id": id}, bson.M{key + "._id": bson.M{"$ne": uniqueId}}}}
 
 	update := bson.M{
 		"$addToSet": bson.M{
@@ -408,8 +431,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return nil, err
 	}
 	switch op {
-	case "update_record":
-		return db.updateRecord(db_name, data_collection_name, extra_params...)
+	case "replace_record":
+		return db.replaceRecord(db_name, data_collection_name, extra_params...)
 	case "read_record":
 		return db.readRecord(db_name, data_collection_name, extra_params...)
 	case "create_record":
@@ -424,6 +447,9 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.uniqueFields(db_name, data_collection_name, extra_params...)
 	case"delete_array_element":
 		return db.deleteArrayElement(db_name, data_collection_name, extra_params...)
+	case "update_record":
+		return db.updateRecord(db_name, data_collection_name, extra_params...)
+
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

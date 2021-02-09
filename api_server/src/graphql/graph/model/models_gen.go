@@ -14,197 +14,210 @@ type CollectionEntryInterface interface {
 }
 
 type BaseCollectionEntry struct {
-	ID         string     `json:"_id" bson:"_id"`
-	EventStart *time.Time `json:"eventStart" bson:"eventStart"`
-	EventEnd   *time.Time `json:"eventEnd" bson:"eventEnd"`
-	Title      *string    `json:"title" bson:"title"`
+	ID         string     `json:"_id,omitempty" bson:"_id,omitempty"`
+	EventStart *time.Time `json:"eventStart,omitempty" bson:"eventStart,omitempty"`
+	EventEnd   *time.Time `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
+	Title      *string    `json:"title,omitempty" bson:"title,omitempty"`
 }
 
 type BeamtimeMeta struct {
-	ID                  string                 `json:"_id" bson:"_id"`
-	Applicant           *BeamtimeUser          `json:"applicant" bson:"applicant"`
-	Beamline            *string                `json:"beamline" bson:"beamline"`
-	BeamlineAlias       *string                `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamlineSetup       *string                `json:"beamlineSetup" bson:"beamlineSetup"`
-	Status              string                 `json:"status" bson:"status"`
-	Contact             *string                `json:"contact" bson:"contact"`
-	CorePath            *string                `json:"corePath" bson:"corePath"`
-	EventEnd            *time.Time             `json:"eventEnd" bson:"eventEnd"`
-	EventStart          *time.Time             `json:"eventStart" bson:"eventStart"`
-	Facility            *string                `json:"facility" bson:"facility"`
-	Generated           *time.Time             `json:"generated" bson:"generated"`
-	Leader              *BeamtimeUser          `json:"leader" bson:"leader"`
-	OnlineAnalysis      *OnlineAnylysisMeta    `json:"onlineAnalysis" bson:"onlineAnalysis"`
-	Pi                  *BeamtimeUser          `json:"pi" bson:"pi"`
-	ProposalID          *string                `json:"proposalId" bson:"proposalId"`
-	ProposalType        *string                `json:"proposalType" bson:"proposalType"`
-	Title               *string                `json:"title" bson:"title"`
-	UnixID              *string                `json:"unixId" bson:"unixId"`
-	Users               *Users                 `json:"users" bson:"users"`
-	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
-	ChildCollection     []*BaseCollectionEntry `json:"childCollection" bson:"childCollection"`
-	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
-	Type                string                 `json:"type" bson:"type"`
-	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta" bson:"parentBeamtimeMeta"`
-	JSONString          *string                `json:"jsonString" bson:"jsonString"`
+	ID                  string                 `json:"_id,omitempty" bson:"_id,omitempty"`
+	Applicant           *BeamtimeUser          `json:"applicant,omitempty" bson:"applicant,omitempty"`
+	Beamline            *string                `json:"beamline,omitempty" bson:"beamline,omitempty"`
+	BeamlineAlias       *string                `json:"beamlineAlias,omitempty" bson:"beamlineAlias,omitempty"`
+	BeamlineSetup       *string                `json:"beamlineSetup,omitempty" bson:"beamlineSetup,omitempty"`
+	Status              string                 `json:"status,omitempty" bson:"status,omitempty"`
+	Contact             *string                `json:"contact,omitempty" bson:"contact,omitempty"`
+	CorePath            *string                `json:"corePath,omitempty" bson:"corePath,omitempty"`
+	EventEnd            *time.Time             `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
+	EventStart          *time.Time             `json:"eventStart,omitempty" bson:"eventStart,omitempty"`
+	Facility            *string                `json:"facility,omitempty" bson:"facility,omitempty"`
+	Generated           *time.Time             `json:"generated,omitempty" bson:"generated,omitempty"`
+	Leader              *BeamtimeUser          `json:"leader,omitempty" bson:"leader,omitempty"`
+	OnlineAnalysis      *OnlineAnylysisMeta    `json:"onlineAnalysis,omitempty" bson:"onlineAnalysis,omitempty"`
+	Pi                  *BeamtimeUser          `json:"pi,omitempty" bson:"pi,omitempty"`
+	ProposalID          *string                `json:"proposalId,omitempty" bson:"proposalId,omitempty"`
+	ProposalType        *string                `json:"proposalType,omitempty" bson:"proposalType,omitempty"`
+	Title               *string                `json:"title,omitempty" bson:"title,omitempty"`
+	UnixID              *string                `json:"unixId,omitempty" bson:"unixId,omitempty"`
+	Users               *Users                 `json:"users,omitempty" bson:"users,omitempty"`
+	ChildCollectionName *string                `json:"childCollectionName,omitempty" bson:"childCollectionName,omitempty"`
+	ChildCollection     []*BaseCollectionEntry `json:"childCollection,omitempty" bson:"childCollection,omitempty"`
+	CustomValues        map[string]interface{} `json:"customValues,omitempty" bson:"customValues,omitempty"`
+	Type                string                 `json:"type,omitempty" bson:"type,omitempty"`
+	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta,omitempty" bson:"parentBeamtimeMeta,omitempty"`
+	JSONString          *string                `json:"jsonString,omitempty" bson:"jsonString,omitempty"`
 }
 
 func (BeamtimeMeta) IsCollectionEntryInterface() {}
 
 type BeamtimeUser struct {
-	Applicant *string `json:"applicant" bson:"applicant"`
-	Email     *string `json:"email" bson:"email"`
-	Institute *string `json:"institute" bson:"institute"`
-	Lastname  *string `json:"lastname" bson:"lastname"`
-	UserID    *string `json:"userId" bson:"userId"`
-	Username  *string `json:"username" bson:"username"`
+	Applicant *string `json:"applicant,omitempty" bson:"applicant,omitempty"`
+	Email     *string `json:"email,omitempty" bson:"email,omitempty"`
+	Institute *string `json:"institute,omitempty" bson:"institute,omitempty"`
+	Lastname  *string `json:"lastname,omitempty" bson:"lastname,omitempty"`
+	UserID    *string `json:"userId,omitempty" bson:"userId,omitempty"`
+	Username  *string `json:"username,omitempty" bson:"username,omitempty"`
 }
 
 type CollectionEntry struct {
-	ID                  string                 `json:"_id" bson:"_id"`
-	EventStart          *time.Time             `json:"eventStart" bson:"eventStart"`
-	EventEnd            *time.Time             `json:"eventEnd" bson:"eventEnd"`
-	Title               *string                `json:"title" bson:"title"`
-	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
-	ChildCollection     []*BaseCollectionEntry `json:"childCollection" bson:"childCollection"`
-	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
-	Type                string                 `json:"type" bson:"type"`
-	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta" bson:"parentBeamtimeMeta"`
-	JSONString          *string                `json:"jsonString" bson:"jsonString"`
+	ID                  string                 `json:"_id,omitempty" bson:"_id,omitempty"`
+	EventStart          *time.Time             `json:"eventStart,omitempty" bson:"eventStart,omitempty"`
+	EventEnd            *time.Time             `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
+	Title               *string                `json:"title,omitempty" bson:"title,omitempty"`
+	ChildCollectionName *string                `json:"childCollectionName,omitempty" bson:"childCollectionName,omitempty"`
+	ChildCollection     []*BaseCollectionEntry `json:"childCollection,omitempty" bson:"childCollection,omitempty"`
+	CustomValues        map[string]interface{} `json:"customValues,omitempty" bson:"customValues,omitempty"`
+	Type                string                 `json:"type,omitempty" bson:"type,omitempty"`
+	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta,omitempty" bson:"parentBeamtimeMeta,omitempty"`
+	JSONString          *string                `json:"jsonString,omitempty" bson:"jsonString,omitempty"`
 }
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
 
 type InputBeamtimeUser struct {
-	Applicant *string `json:"applicant" bson:"applicant"`
-	Email     *string `json:"email" bson:"email"`
-	Institute *string `json:"institute" bson:"institute"`
-	Lastname  *string `json:"lastname" bson:"lastname"`
-	UserID    *string `json:"userId" bson:"userId"`
-	Username  *string `json:"username" bson:"username"`
+	Applicant *string `json:"applicant,omitempty" bson:"applicant,omitempty"`
+	Email     *string `json:"email,omitempty" bson:"email,omitempty"`
+	Institute *string `json:"institute,omitempty" bson:"institute,omitempty"`
+	Lastname  *string `json:"lastname,omitempty" bson:"lastname,omitempty"`
+	UserID    *string `json:"userId,omitempty" bson:"userId,omitempty"`
+	Username  *string `json:"username,omitempty" bson:"username,omitempty"`
 }
 
 type InputOnlineAnylysisMeta struct {
-	AsapoBeamtimeTokenPath *string  `json:"asapoBeamtimeTokenPath" bson:"asapoBeamtimeTokenPath"`
-	ReservedNodes          []string `json:"reservedNodes" bson:"reservedNodes"`
-	SlurmReservation       *string  `json:"slurmReservation" bson:"slurmReservation"`
-	SlurmPartition         *string  `json:"slurmPartition" bson:"slurmPartition"`
-	SSHPrivateKeyPath      *string  `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
-	SSHPublicKeyPath       *string  `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
-	UserAccount            *string  `json:"userAccount" bson:"userAccount"`
+	AsapoBeamtimeTokenPath *string  `json:"asapoBeamtimeTokenPath,omitempty" bson:"asapoBeamtimeTokenPath,omitempty"`
+	ReservedNodes          []string `json:"reservedNodes,omitempty" bson:"reservedNodes,omitempty"`
+	SlurmReservation       *string  `json:"slurmReservation,omitempty" bson:"slurmReservation,omitempty"`
+	SlurmPartition         *string  `json:"slurmPartition,omitempty" bson:"slurmPartition,omitempty"`
+	SSHPrivateKeyPath      *string  `json:"sshPrivateKeyPath,omitempty" bson:"sshPrivateKeyPath,omitempty"`
+	SSHPublicKeyPath       *string  `json:"sshPublicKeyPath,omitempty" bson:"sshPublicKeyPath,omitempty"`
+	UserAccount            *string  `json:"userAccount,omitempty" bson:"userAccount,omitempty"`
 }
 
 type InputUserPreferences struct {
-	Schema string `json:"schema" bson:"schema"`
+	Schema string `json:"schema,omitempty" bson:"schema,omitempty"`
 }
 
 type InputUsers struct {
-	DoorDb  []string `json:"doorDb" bson:"doorDb"`
-	Special []string `json:"special" bson:"special"`
-	Unknown []string `json:"unknown" bson:"unknown"`
+	DoorDb  []string `json:"doorDb,omitempty" bson:"doorDb,omitempty"`
+	Special []string `json:"special,omitempty" bson:"special,omitempty"`
+	Unknown []string `json:"unknown,omitempty" bson:"unknown,omitempty"`
+}
+
+type ModifiedBeamtimeMeta struct {
+	ID     string      `json:"_id,omitempty" bson:"_id,omitempty"`
+	Status *string     `json:"status,omitempty" bson:"status,omitempty"`
+	Users  *InputUsers `json:"users,omitempty" bson:"users,omitempty"`
+}
+
+type ModifiedUserMeta struct {
+	ID           string                 `json:"id,omitempty" bson:"id,omitempty"`
+	DeleteFields []string               `json:"deleteFields,omitempty" bson:"deleteFields,omitempty"`
+	UpdateFields map[string]interface{} `json:"updateFields,omitempty" bson:"updateFields,omitempty"`
+	AddFields    map[string]interface{} `json:"addFields,omitempty" bson:"addFields,omitempty"`
 }
 
 type NewBeamtimeMeta struct {
-	Applicant           *InputBeamtimeUser       `json:"applicant" bson:"applicant"`
-	Beamline            *string                  `json:"beamline" bson:"beamline"`
-	BeamlineAlias       *string                  `json:"beamlineAlias" bson:"beamlineAlias"`
-	BeamlineSetup       *string                  `json:"beamlineSetup" bson:"beamlineSetup"`
-	ID                  string                   `json:"_id" bson:"_id"`
-	Status              string                   `json:"status" bson:"status"`
-	Contact             *string                  `json:"contact" bson:"contact"`
-	CorePath            *string                  `json:"corePath" bson:"corePath"`
-	EventEnd            *time.Time               `json:"eventEnd" bson:"eventEnd"`
-	EventStart          *time.Time               `json:"eventStart" bson:"eventStart"`
-	Facility            *string                  `json:"facility" bson:"facility"`
-	Generated           *time.Time               `json:"generated" bson:"generated"`
-	Leader              *InputBeamtimeUser       `json:"leader" bson:"leader"`
-	OnlineAnalysis      *InputOnlineAnylysisMeta `json:"onlineAnalysis" bson:"onlineAnalysis"`
-	Pi                  *InputBeamtimeUser       `json:"pi" bson:"pi"`
-	ProposalID          *string                  `json:"proposalId" bson:"proposalId"`
-	ProposalType        *string                  `json:"proposalType" bson:"proposalType"`
-	Title               *string                  `json:"title" bson:"title"`
-	UnixID              *string                  `json:"unixId" bson:"unixId"`
-	Users               *InputUsers              `json:"users" bson:"users"`
-	ChildCollectionName *string                  `json:"childCollectionName" bson:"childCollectionName"`
-	CustomValues        map[string]interface{}   `json:"customValues" bson:"customValues"`
+	Applicant           *InputBeamtimeUser       `json:"applicant,omitempty" bson:"applicant,omitempty"`
+	Beamline            *string                  `json:"beamline,omitempty" bson:"beamline,omitempty"`
+	BeamlineAlias       *string                  `json:"beamlineAlias,omitempty" bson:"beamlineAlias,omitempty"`
+	BeamlineSetup       *string                  `json:"beamlineSetup,omitempty" bson:"beamlineSetup,omitempty"`
+	ID                  string                   `json:"_id,omitempty" bson:"_id,omitempty"`
+	Status              string                   `json:"status,omitempty" bson:"status,omitempty"`
+	Contact             *string                  `json:"contact,omitempty" bson:"contact,omitempty"`
+	CorePath            *string                  `json:"corePath,omitempty" bson:"corePath,omitempty"`
+	EventEnd            *time.Time               `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
+	EventStart          *time.Time               `json:"eventStart,omitempty" bson:"eventStart,omitempty"`
+	Facility            *string                  `json:"facility,omitempty" bson:"facility,omitempty"`
+	Generated           *time.Time               `json:"generated,omitempty" bson:"generated,omitempty"`
+	Leader              *InputBeamtimeUser       `json:"leader,omitempty" bson:"leader,omitempty"`
+	OnlineAnalysis      *InputOnlineAnylysisMeta `json:"onlineAnalysis,omitempty" bson:"onlineAnalysis,omitempty"`
+	Pi                  *InputBeamtimeUser       `json:"pi,omitempty" bson:"pi,omitempty"`
+	ProposalID          *string                  `json:"proposalId,omitempty" bson:"proposalId,omitempty"`
+	ProposalType        *string                  `json:"proposalType,omitempty" bson:"proposalType,omitempty"`
+	Title               *string                  `json:"title,omitempty" bson:"title,omitempty"`
+	UnixID              *string                  `json:"unixId,omitempty" bson:"unixId,omitempty"`
+	Users               *InputUsers              `json:"users,omitempty" bson:"users,omitempty"`
+	ChildCollectionName *string                  `json:"childCollectionName,omitempty" bson:"childCollectionName,omitempty"`
+	CustomValues        map[string]interface{}   `json:"customValues,omitempty" bson:"customValues,omitempty"`
 }
 
 type NewCollectionEntry struct {
-	ID                  string                 `json:"_id" bson:"_id"`
-	EventStart          *time.Time             `json:"eventStart" bson:"eventStart"`
-	EventEnd            *time.Time             `json:"eventEnd" bson:"eventEnd"`
-	Title               *string                `json:"title" bson:"title"`
-	ChildCollectionName *string                `json:"childCollectionName" bson:"childCollectionName"`
-	CustomValues        map[string]interface{} `json:"customValues" bson:"customValues"`
+	ID                  string                 `json:"_id,omitempty" bson:"_id,omitempty"`
+	EventStart          *time.Time             `json:"eventStart,omitempty" bson:"eventStart,omitempty"`
+	EventEnd            *time.Time             `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
+	Title               *string                `json:"title,omitempty" bson:"title,omitempty"`
+	ChildCollectionName *string                `json:"childCollectionName,omitempty" bson:"childCollectionName,omitempty"`
+	CustomValues        map[string]interface{} `json:"customValues,omitempty" bson:"customValues,omitempty"`
 }
 
 type OnlineAnylysisMeta struct {
-	AsapoBeamtimeTokenPath *string  `json:"asapoBeamtimeTokenPath" bson:"asapoBeamtimeTokenPath"`
-	ReservedNodes          []string `json:"reservedNodes" bson:"reservedNodes"`
-	SlurmReservation       *string  `json:"slurmReservation" bson:"slurmReservation"`
-	SlurmPartition         *string  `json:"slurmPartition" bson:"slurmPartition"`
-	SSHPrivateKeyPath      *string  `json:"sshPrivateKeyPath" bson:"sshPrivateKeyPath"`
-	SSHPublicKeyPath       *string  `json:"sshPublicKeyPath" bson:"sshPublicKeyPath"`
-	UserAccount            *string  `json:"userAccount" bson:"userAccount"`
+	AsapoBeamtimeTokenPath *string  `json:"asapoBeamtimeTokenPath,omitempty" bson:"asapoBeamtimeTokenPath,omitempty"`
+	ReservedNodes          []string `json:"reservedNodes,omitempty" bson:"reservedNodes,omitempty"`
+	SlurmReservation       *string  `json:"slurmReservation,omitempty" bson:"slurmReservation,omitempty"`
+	SlurmPartition         *string  `json:"slurmPartition,omitempty" bson:"slurmPartition,omitempty"`
+	SSHPrivateKeyPath      *string  `json:"sshPrivateKeyPath,omitempty" bson:"sshPrivateKeyPath,omitempty"`
+	SSHPublicKeyPath       *string  `json:"sshPublicKeyPath,omitempty" bson:"sshPublicKeyPath,omitempty"`
+	UserAccount            *string  `json:"userAccount,omitempty" bson:"userAccount,omitempty"`
 }
 
 type ParentBeamtimeMeta struct {
-	ID             string              `json:"_id" bson:"_id"`
-	Applicant      *BeamtimeUser       `json:"applicant" bson:"applicant"`
-	Beamline       *string             `json:"beamline" bson:"beamline"`
-	BeamlineAlias  *string             `json:"beamlineAlias" bson:"beamlineAlias"`
-	Status         string              `json:"status" bson:"status"`
-	Contact        *string             `json:"contact" bson:"contact"`
-	CorePath       *string             `json:"corePath" bson:"corePath"`
-	EventEnd       *time.Time          `json:"eventEnd" bson:"eventEnd"`
-	EventStart     *time.Time          `json:"eventStart" bson:"eventStart"`
-	Facility       *string             `json:"facility" bson:"facility"`
-	Generated      *time.Time          `json:"generated" bson:"generated"`
-	Leader         *BeamtimeUser       `json:"leader" bson:"leader"`
-	OnlineAnalysis *OnlineAnylysisMeta `json:"onlineAnalysis" bson:"onlineAnalysis"`
-	Pi             *BeamtimeUser       `json:"pi" bson:"pi"`
-	ProposalID     *string             `json:"proposalId" bson:"proposalId"`
-	ProposalType   *string             `json:"proposalType" bson:"proposalType"`
-	Title          *string             `json:"title" bson:"title"`
-	UnixID         *string             `json:"unixId" bson:"unixId"`
-	Users          *Users              `json:"users" bson:"users"`
+	ID             string              `json:"_id,omitempty" bson:"_id,omitempty"`
+	Applicant      *BeamtimeUser       `json:"applicant,omitempty" bson:"applicant,omitempty"`
+	Beamline       *string             `json:"beamline,omitempty" bson:"beamline,omitempty"`
+	BeamlineAlias  *string             `json:"beamlineAlias,omitempty" bson:"beamlineAlias,omitempty"`
+	Status         string              `json:"status,omitempty" bson:"status,omitempty"`
+	Contact        *string             `json:"contact,omitempty" bson:"contact,omitempty"`
+	CorePath       *string             `json:"corePath,omitempty" bson:"corePath,omitempty"`
+	EventEnd       *time.Time          `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
+	EventStart     *time.Time          `json:"eventStart,omitempty" bson:"eventStart,omitempty"`
+	Facility       *string             `json:"facility,omitempty" bson:"facility,omitempty"`
+	Generated      *time.Time          `json:"generated,omitempty" bson:"generated,omitempty"`
+	Leader         *BeamtimeUser       `json:"leader,omitempty" bson:"leader,omitempty"`
+	OnlineAnalysis *OnlineAnylysisMeta `json:"onlineAnalysis,omitempty" bson:"onlineAnalysis,omitempty"`
+	Pi             *BeamtimeUser       `json:"pi,omitempty" bson:"pi,omitempty"`
+	ProposalID     *string             `json:"proposalId,omitempty" bson:"proposalId,omitempty"`
+	ProposalType   *string             `json:"proposalType,omitempty" bson:"proposalType,omitempty"`
+	Title          *string             `json:"title,omitempty" bson:"title,omitempty"`
+	UnixID         *string             `json:"unixId,omitempty" bson:"unixId,omitempty"`
+	Users          *Users              `json:"users,omitempty" bson:"users,omitempty"`
 }
 
 type UniqueField struct {
-	KeyName string   `json:"keyName" bson:"keyName"`
-	Values  []string `json:"values" bson:"values"`
+	KeyName string   `json:"keyName,omitempty" bson:"keyName,omitempty"`
+	Values  []string `json:"values,omitempty" bson:"values,omitempty"`
 }
 
 type UserAccount struct {
-	ID          string           `json:"id" bson:"id"`
-	Preferences *UserPreferences `json:"preferences" bson:"preferences"`
+	ID          string           `json:"id,omitempty" bson:"id,omitempty"`
+	Preferences *UserPreferences `json:"preferences,omitempty" bson:"preferences,omitempty"`
 }
 
 type UserPreferences struct {
-	Schema string `json:"schema" bson:"schema"`
+	Schema string `json:"schema,omitempty" bson:"schema,omitempty"`
 }
 
 type Users struct {
-	DoorDb  []string `json:"doorDb" bson:"doorDb"`
-	Special []string `json:"special" bson:"special"`
-	Unknown []string `json:"unknown" bson:"unknown"`
+	DoorDb  []string `json:"doorDb,omitempty" bson:"doorDb,omitempty"`
+	Special []string `json:"special,omitempty" bson:"special,omitempty"`
+	Unknown []string `json:"unknown,omitempty" bson:"unknown,omitempty"`
 }
 
 type Acls string
 
 const (
-	AclsWrite Acls = "WRITE"
+	AclsAdmin Acls = "ADMIN"
 	AclsRead  Acls = "READ"
 )
 
 var AllAcls = []Acls{
-	AclsWrite,
+	AclsAdmin,
 	AclsRead,
 }
 
 func (e Acls) IsValid() bool {
 	switch e {
-	case AclsWrite, AclsRead:
+	case AclsAdmin, AclsRead:
 		return true
 	}
 	return false

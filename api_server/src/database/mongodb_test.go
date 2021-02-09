@@ -5,6 +5,7 @@ package database
 import (
 	"asapm/common/utils"
 	"asapm/graphql/graph/model"
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -61,7 +62,7 @@ func TestMongoDBUpdateUserPreferences(t *testing.T) {
 	defer cleanup()
 	schema := "sss"
 	rec := TestRecordPointer{&schema}
-	_, err = mongodb.ProcessRequest(dbname, collection, "update_record", "id",&rec)
+	_, err = mongodb.ProcessRequest(dbname, collection, "replace_record", "id",&rec)
 
 	assert.Nil(t, err)
 }
@@ -72,7 +73,7 @@ func TestMongoDBGetUserPreferences(t *testing.T) {
 	defer cleanup()
 	schema := "sss"
 	rec := TestRecordPointer{&schema}
-	mongodb.ProcessRequest(dbname, collection, "update_record", "id",&rec)
+	mongodb.ProcessRequest(dbname, collection, "replace_record", "id",&rec)
 
 	res, err := mongodb.ProcessRequest(dbname, collection, "read_record", "id")
 
@@ -206,4 +207,33 @@ func TestMongoDBDeleteArrayElement(t *testing.T) {
 
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_array_element", "123","123.123","childCollection")
 	assert.Nil(t, err)
+}
+
+type Users struct {
+	DoorDb  []string `json:"doorDb" bson:"doorDb"`
+	Special []string `json:"special" bson:"special"`
+	Unknown []string `json:"unknown" bson:"unknown"`
+}
+
+type TestUpdateMetaRecord struct {
+	ID          string `json:"_id" bson:"_id"`
+	Status      string `json:"status" bson:"status"`
+	InputUsers Users `json:"users" bson:"users"`
+}
+
+func TestMongoDBUpdateRecord(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	rec := TestUpdateMetaRecord{"123","running",Users{[]string{"test"},[]string{},[]string{}}}
+	_, err = mongodb.ProcessRequest(dbname, collection, "create_record", rec)
+	assert.Nil(t, err)
+
+	rec.Status = "stopped"
+	rec.InputUsers.DoorDb=[]string{"hello","buy"}
+	res,err := mongodb.ProcessRequest(dbname, collection, "update_record", "123",rec)
+
+	var rec_res TestUpdateMetaRecord
+	json.Unmarshal(res,&rec_res)
+	assert.Nil(t,err)
+	assert.Equal(t,rec_res.Status,rec.Status)
 }

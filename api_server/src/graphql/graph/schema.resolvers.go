@@ -13,17 +13,24 @@ import (
 	"errors"
 )
 
+func (r *mutationResolver)  ModifyBeamtimeMeta(ctx context.Context, input model.ModifiedBeamtimeMeta) (*model.BeamtimeMeta, error) {
+	res,err := meta.ModifyBeamtimeMeta(input)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	return res, err
+}
+
+func (r *mutationResolver)  ModifyUserMeta(ctx context.Context, input model.ModifiedUserMeta) (*model.CollectionEntry, error) {
+	return nil,nil
+}
+
+
 func (r *mutationResolver) AddCollectionEntry(ctx context.Context, input model.NewCollectionEntry) (*model.CollectionEntry, error) {
 	log_str := "processing request add_collection_entry"
 	logger.Debug(log_str)
 
-	acl,err := auth.ReadAclFromContext(ctx)
-	if err != nil {
-		logger.Error("access denied: "+err.Error())
-		return nil, errors.New("access denied: "+err.Error())
-	}
-
-	res,err := meta.AddCollectionEntry(acl,input)
+	res,err := meta.AddCollectionEntry(input)
 	if err != nil {
 		logger.Error(err.Error())
 	}

@@ -10,7 +10,8 @@ import (
 	"strings"
 )
 
-func  AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*model.CollectionEntry, error) {
+
+func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry, error) {
 	entry := &model.CollectionEntry{}
 	utils.DeepCopy(input, entry)
 
@@ -121,4 +122,34 @@ func  DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
 
 	return &id,nil
 }
+/*
+func ModifyBeamtimeMeta(acl auth.MetaAcl, input model.ModifiedBeamtimeMeta) (*model.BeamtimeMeta, error) {
+	if acl.ImmediateDeny {
+		return nil, errors.New("access denied, not enough permissions")
+	}
 
+	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var meta model.BeamtimeMeta
+	err = json.Unmarshal(res, &meta)
+	if err != nil {
+		return nil, err
+	}
+
+	if !checkAuth(acl,meta) {
+		return nil, errors.New("Access denied")
+	}
+
+	res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_record", input.ID,&input)
+	if err != nil {
+		return nil, err
+	}
+
+	var res_meta model.BeamtimeMeta
+	err = json.Unmarshal(res, &res_meta)
+	return &res_meta,err
+}
+*/

@@ -109,6 +109,8 @@ type ComplexityRoot struct {
 		CreateMeta          func(childComplexity int, input model.NewBeamtimeMeta) int
 		DeleteMeta          func(childComplexity int, id string) int
 		DeleteSubcollection func(childComplexity int, id string) int
+		ModifyBeamtimeMeta  func(childComplexity int, input model.ModifiedBeamtimeMeta) int
+		ModifyUserMeta      func(childComplexity int, input model.ModifiedUserMeta) int
 		SetUserPreferences  func(childComplexity int, id string, input model.InputUserPreferences) int
 	}
 
@@ -177,6 +179,8 @@ type MutationResolver interface {
 	DeleteMeta(ctx context.Context, id string) (*string, error)
 	DeleteSubcollection(ctx context.Context, id string) (*string, error)
 	AddCollectionEntry(ctx context.Context, input model.NewCollectionEntry) (*model.CollectionEntry, error)
+	ModifyBeamtimeMeta(ctx context.Context, input model.ModifiedBeamtimeMeta) (*model.BeamtimeMeta, error)
+	ModifyUserMeta(ctx context.Context, input model.ModifiedUserMeta) (*model.CollectionEntry, error)
 	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error)
 }
 type QueryResolver interface {
@@ -580,6 +584,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteSubcollection(childComplexity, args["id"].(string)), true
+
+	case "Mutation.modifyBeamtimeMeta":
+		if e.complexity.Mutation.ModifyBeamtimeMeta == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_modifyBeamtimeMeta_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ModifyBeamtimeMeta(childComplexity, args["input"].(model.ModifiedBeamtimeMeta)), true
+
+	case "Mutation.modifyUserMeta":
+		if e.complexity.Mutation.ModifyUserMeta == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_modifyUserMeta_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ModifyUserMeta(childComplexity, args["input"].(model.ModifiedUserMeta)), true
 
 	case "Mutation.setUserPreferences":
 		if e.complexity.Mutation.SetUserPreferences == nil {
@@ -1093,7 +1121,7 @@ input NewCollectionEntry {
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
-    beamlineAlias: String #@inputNeedAcl(acl: WRITE)
+    beamlineAlias: String
     beamlineSetup: String
     id: String!
     status: String!
@@ -1115,6 +1143,19 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
+input ModifiedBeamtimeMeta {
+    id: String!
+    status: String
+    users: InputUsers
+}
+
+input ModifiedUserMeta {
+    id: String!
+    deleteFields: [String!]
+    updateFields: Map
+    addFields: Map
+}
+
 `, BuiltIn: false},
 	&ast.Source{Name: "../../../schema/filters.graphqls", Input: `type UniqueField {
     keyName: String!
@@ -1126,16 +1167,18 @@ input NewBeamtimeMeta {
 #directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
 
 enum Acls {
-    WRITE
+    ADMIN
     READ
 }
 
 
 type Mutation {
-    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
-    deleteMeta(id: String!): String @needAcl(acl: WRITE)
-    deleteSubcollection(id: String!): String @needAcl(acl: WRITE)
-    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: WRITE)
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: ADMIN)
+    deleteMeta(id: String!): String @needAcl(acl: ADMIN)
+    deleteSubcollection(id: String!): String @needAcl(acl: ADMIN)
+    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: ADMIN)
+    modifyBeamtimeMeta(input: ModifiedBeamtimeMeta!): BeamtimeMeta @needAcl(acl: ADMIN)
+    modifyUserMeta(input: ModifiedUserMeta!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 
@@ -1279,6 +1322,34 @@ func (ec *executionContext) field_Mutation_deleteSubcollection_args(ctx context.
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_modifyBeamtimeMeta_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ModifiedBeamtimeMeta
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNModifiedBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐModifiedBeamtimeMeta(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_modifyUserMeta_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ModifiedUserMeta
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNModifiedUserMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐModifiedUserMeta(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -2926,7 +2997,7 @@ func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field grap
 			return ec.resolvers.Mutation().CreateMeta(rctx, args["input"].(model.NewBeamtimeMeta))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "WRITE")
+			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
 			if err != nil {
 				return nil, err
 			}
@@ -2988,7 +3059,7 @@ func (ec *executionContext) _Mutation_deleteMeta(ctx context.Context, field grap
 			return ec.resolvers.Mutation().DeleteMeta(rctx, args["id"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "WRITE")
+			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
 			if err != nil {
 				return nil, err
 			}
@@ -3050,7 +3121,7 @@ func (ec *executionContext) _Mutation_deleteSubcollection(ctx context.Context, f
 			return ec.resolvers.Mutation().DeleteSubcollection(rctx, args["id"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "WRITE")
+			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
 			if err != nil {
 				return nil, err
 			}
@@ -3112,7 +3183,7 @@ func (ec *executionContext) _Mutation_addCollectionEntry(ctx context.Context, fi
 			return ec.resolvers.Mutation().AddCollectionEntry(rctx, args["input"].(model.NewCollectionEntry))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "WRITE")
+			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
 			if err != nil {
 				return nil, err
 			}
@@ -3133,6 +3204,106 @@ func (ec *executionContext) _Mutation_addCollectionEntry(ctx context.Context, fi
 			return data, nil
 		}
 		return nil, fmt.Errorf(`unexpected type %T from directive, should be *asapm/graphql/graph/model.CollectionEntry`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.CollectionEntry)
+	fc.Result = res
+	return ec.marshalOCollectionEntry2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_modifyBeamtimeMeta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_modifyBeamtimeMeta_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ModifyBeamtimeMeta(rctx, args["input"].(model.ModifiedBeamtimeMeta))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.NeedAcl == nil {
+				return nil, errors.New("directive needAcl is not implemented")
+			}
+			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.BeamtimeMeta); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *asapm/graphql/graph/model.BeamtimeMeta`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.BeamtimeMeta)
+	fc.Result = res
+	return ec.marshalOBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_modifyUserMeta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_modifyUserMeta_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ModifyUserMeta(rctx, args["input"].(model.ModifiedUserMeta))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5694,6 +5865,72 @@ func (ec *executionContext) unmarshalInputInputUsers(ctx context.Context, obj in
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputModifiedBeamtimeMeta(ctx context.Context, obj interface{}) (model.ModifiedBeamtimeMeta, error) {
+	var it model.ModifiedBeamtimeMeta
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "status":
+			var err error
+			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "users":
+			var err error
+			it.Users, err = ec.unmarshalOInputUsers2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputUsers(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputModifiedUserMeta(ctx context.Context, obj interface{}) (model.ModifiedUserMeta, error) {
+	var it model.ModifiedUserMeta
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "deleteFields":
+			var err error
+			it.DeleteFields, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updateFields":
+			var err error
+			it.UpdateFields, err = ec.unmarshalOMap2map(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "addFields":
+			var err error
+			it.AddFields, err = ec.unmarshalOMap2map(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, obj interface{}) (model.NewBeamtimeMeta, error) {
 	var it model.NewBeamtimeMeta
 	var asMap = obj.(map[string]interface{})
@@ -6144,6 +6381,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteSubcollection(ctx, field)
 		case "addCollectionEntry":
 			out.Values[i] = ec._Mutation_addCollectionEntry(ctx, field)
+		case "modifyBeamtimeMeta":
+			out.Values[i] = ec._Mutation_modifyBeamtimeMeta(ctx, field)
+		case "modifyUserMeta":
+			out.Values[i] = ec._Mutation_modifyUserMeta(ctx, field)
 		case "setUserPreferences":
 			out.Values[i] = ec._Mutation_setUserPreferences(ctx, field)
 		default:
@@ -6861,6 +7102,14 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 
 func (ec *executionContext) unmarshalNInputUserPreferences2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUserPreferences(ctx context.Context, v interface{}) (model.InputUserPreferences, error) {
 	return ec.unmarshalInputInputUserPreferences(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNModifiedBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐModifiedBeamtimeMeta(ctx context.Context, v interface{}) (model.ModifiedBeamtimeMeta, error) {
+	return ec.unmarshalInputModifiedBeamtimeMeta(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNModifiedUserMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐModifiedUserMeta(ctx context.Context, v interface{}) (model.ModifiedUserMeta, error) {
+	return ec.unmarshalInputModifiedUserMeta(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx context.Context, v interface{}) (model.NewBeamtimeMeta, error) {
