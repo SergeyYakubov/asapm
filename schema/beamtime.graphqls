@@ -176,10 +176,17 @@ input ModifiedBeamtimeMeta {
     users: InputUsers
 }
 
-input ModifiedUserMeta {
+input FieldsToDelete {
     id: String!
-    deleteFields: [String!]
-    updateFields: Map
-    addFields: Map
+    deleteFields: [String!]!
 }
 
+input FieldsToUpdate {
+    id: String!
+    updateFields: Map!
+}
+
+input FieldsToAdd {
+    id: String!
+    addFields: Map!
+}

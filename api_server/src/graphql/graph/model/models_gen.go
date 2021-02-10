@@ -75,6 +75,21 @@ type CollectionEntry struct {
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
 
+type FieldsToAdd struct {
+	ID        string                 `json:"id,omitempty" bson:"id,omitempty"`
+	AddFields map[string]interface{} `json:"addFields,omitempty" bson:"addFields,omitempty"`
+}
+
+type FieldsToDelete struct {
+	ID           string   `json:"id,omitempty" bson:"id,omitempty"`
+	DeleteFields []string `json:"deleteFields,omitempty" bson:"deleteFields,omitempty"`
+}
+
+type FieldsToUpdate struct {
+	ID           string                 `json:"id,omitempty" bson:"id,omitempty"`
+	UpdateFields map[string]interface{} `json:"updateFields,omitempty" bson:"updateFields,omitempty"`
+}
+
 type InputBeamtimeUser struct {
 	Applicant *string `json:"applicant,omitempty" bson:"applicant,omitempty"`
 	Email     *string `json:"email,omitempty" bson:"email,omitempty"`
@@ -108,13 +123,6 @@ type ModifiedBeamtimeMeta struct {
 	ID     string      `json:"_id,omitempty" bson:"_id,omitempty"`
 	Status *string     `json:"status,omitempty" bson:"status,omitempty"`
 	Users  *InputUsers `json:"users,omitempty" bson:"users,omitempty"`
-}
-
-type ModifiedUserMeta struct {
-	ID           string                 `json:"id,omitempty" bson:"id,omitempty"`
-	DeleteFields []string               `json:"deleteFields,omitempty" bson:"deleteFields,omitempty"`
-	UpdateFields map[string]interface{} `json:"updateFields,omitempty" bson:"updateFields,omitempty"`
-	AddFields    map[string]interface{} `json:"addFields,omitempty" bson:"addFields,omitempty"`
 }
 
 type NewBeamtimeMeta struct {

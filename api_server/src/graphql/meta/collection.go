@@ -10,6 +10,11 @@ import (
 	"strings"
 )
 
+const (
+	ModeAddFields int = iota
+	ModeUpdateFields
+	ModeDeleteFields
+)
 
 func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry, error) {
 	entry := &model.CollectionEntry{}
@@ -68,6 +73,102 @@ func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry
 	return entry, nil
 }
 
+func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry) bool {
+	if acl.ImmediateAccess {
+		return true
+	}
+
+	if acl.ImmediateDeny {
+		return false
+	}
+
+	if meta.ParentBeamtimeMeta.Beamline != nil {
+		if utils.StringInSlice(*meta.ParentBeamtimeMeta.Beamline, acl.AllowedBeamlines) {
+			return true
+		}
+	}
+
+	if meta.ParentBeamtimeMeta.Facility != nil {
+		if utils.StringInSlice(*meta.ParentBeamtimeMeta.Facility, acl.AllowedFacilities) {
+			return true
+		}
+	}
+
+	if utils.StringInSlice(meta.ParentBeamtimeMeta.ID, acl.AllowedBeamtimes) {
+		return true
+	}
+
+	return false
+}
+
+func modifyUserMetaInDb(mode int, input interface{})(res []byte, err error) {
+	switch mode {
+	case ModeDeleteFields:
+		input_delete,ok:=input.(*model.FieldsToDelete)
+		if !ok {
+			return nil, errors.New("wrong mode/input in ModifyUserMeta")
+		}
+		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_fields", input_delete)
+	case ModeAddFields:
+		input_add,ok:=input.(*model.FieldsToAdd)
+		if !ok {
+			return nil, errors.New("wrong mode/input in ModifyUserMeta")
+		}
+		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_fields", input_add)
+	case ModeUpdateFields:
+		input_update,ok:=input.(*model.FieldsToUpdate)
+		if !ok {
+			return nil, errors.New("wrong mode/input in ModifyUserMeta")
+		}
+		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_fields", input_update)
+	default:
+		return nil,errors.New("wrong mode in ModifyUserMeta")
+	}
+	return res,err
+}
+
+func auhthorizeModifyRequest(acl auth.MetaAcl, id string) error {
+	if acl.ImmediateDeny {
+		return errors.New("access denied, not enough permissions")
+	}
+
+	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", id)
+	if err != nil {
+		return err
+	}
+
+	var meta model.CollectionEntry
+	err = json.Unmarshal(res, &meta)
+	if err != nil {
+		return err
+	}
+
+	if !checkAuth(acl,meta) {
+		return errors.New("Access denied")
+	}
+
+	return nil
+}
+
+func ModifyUserMeta(acl auth.MetaAcl,mode int, id string, input interface{} ,keepFields []string,removeFields []string)(*model.CollectionEntry, error) {
+	err := auhthorizeModifyRequest(acl,id)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := modifyUserMetaInDb(mode,input)
+	if err != nil {
+		return nil, err
+	}
+
+	var res_meta model.CollectionEntry
+	err = json.Unmarshal(res, &res_meta)
+	if err== nil {
+		updateFields(keepFields,removeFields, &res_meta.CustomValues)
+	}
+	return &res_meta,err
+}
+
 
 func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFields []string,removeFields []string) ([]*model.CollectionEntry, error) {
 	if acl.ImmediateDeny {
@@ -119,37 +220,5 @@ func  DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
 		return nil,err
 	}
 
-
 	return &id,nil
 }
-/*
-func ModifyBeamtimeMeta(acl auth.MetaAcl, input model.ModifiedBeamtimeMeta) (*model.BeamtimeMeta, error) {
-	if acl.ImmediateDeny {
-		return nil, errors.New("access denied, not enough permissions")
-	}
-
-	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", input.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	var meta model.BeamtimeMeta
-	err = json.Unmarshal(res, &meta)
-	if err != nil {
-		return nil, err
-	}
-
-	if !checkAuth(acl,meta) {
-		return nil, errors.New("Access denied")
-	}
-
-	res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_record", input.ID,&input)
-	if err != nil {
-		return nil, err
-	}
-
-	var res_meta model.BeamtimeMeta
-	err = json.Unmarshal(res, &res_meta)
-	return &res_meta,err
-}
-*/

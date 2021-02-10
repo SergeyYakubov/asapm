@@ -97,34 +97,6 @@ func DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
 	return &id, nil
 }
 
-func checkAuth(acl auth.MetaAcl, meta model.BeamtimeMeta) bool {
-	if acl.ImmediateAccess {
-		return true
-	}
-
-	if acl.ImmediateDeny {
-		return false
-	}
-
-	if meta.Beamline != nil {
-		if utils.StringInSlice(*meta.Beamline, acl.AllowedBeamlines) {
-			return true
-		}
-	}
-
-	if meta.Facility != nil {
-		if utils.StringInSlice(*meta.Facility, acl.AllowedFacilities) {
-			return true
-		}
-	}
-
-	if utils.StringInSlice(meta.ID, acl.AllowedBeamtimes) {
-		return true
-	}
-
-	return false
-}
-
 func ModifyBeamtimeMeta(input model.ModifiedBeamtimeMeta) (*model.BeamtimeMeta, error) {
 	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", input.ID)
 	if err != nil {

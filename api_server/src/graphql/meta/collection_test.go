@@ -7,6 +7,7 @@ import (
 	"asapm/database"
 	"asapm/graphql/graph/model"
 	"encoding/json"
+	"errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -197,136 +198,137 @@ func (suite *CollectionTestSuite) TestDeleteSubcollection() {
 }
 
 
-/*
+
 var beamline = "bl"
 var facility = "facility"
 
-var ModifyMetaTests = []struct {
+var AddUserMetaTests = []struct {
 	acl     auth.MetaAcl
-	error   bool
-	id      string
-	status  *string
-	users   *model.InputUsers
-	meta    *model.BeamtimeMeta
+	id string
+	mode int
+	dbCmd string
+	input   interface{}
+	meta    *model.CollectionEntry
+	resultErrors   bool
 	message string
 }{
-	{aclImmediateDeny, true, "12344", &statusRunning, nil, nil, "immediate access deny"},
+	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+		ID:        "12345.1",
+		AddFields: nil,
+	}, nil, true, "immediate access deny"},
+
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
 		ImmediateAccess:   false,
-		AllowedBeamtimes:  []string{"1234"},
+		AllowedBeamtimes:  []string{"12346"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	}, true, "12345", &statusRunning, nil, &model.BeamtimeMeta{
-		ID:       "12345",
-		Beamline: nil,
-		Facility: nil,
-		Status:   "none",
-		Users:    nil,
-	}, "wrong beamtime in acl"},
-		{auth.MetaAcl{
-			ImmediateDeny:     false,
-			ImmediateAccess:   false,
-			AllowedBeamtimes:  nil,
-			AllowedBeamlines:  []string{"bl"},
-			AllowedFacilities: nil,
-		}, false, "12346", &statusRunning, &model.InputUsers{
-			DoorDb:  []string{"test"},
-			Special: []string{},
-			Unknown: []string{},
-		}, &model.BeamtimeMeta{
-			ID:       "12346",
+	},"12346.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+		ID:        "12346.1",
+		AddFields: nil,
+	}, &model.CollectionEntry{
+		ID:       "12346.1",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12346",
+		},
+	}, false, "ok, access via beamtime"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  []string{beamline},
+		AllowedFacilities: nil,
+	},"12347.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+		ID:        "12347.1",
+		AddFields: nil,
+	}, &model.CollectionEntry{
+		ID:       "12347.1",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12348",
 			Beamline: &beamline,
-			Facility: nil,
-			Status:   "none",
-			Users:    nil,
-		}, "ok with beamline acls"},
-	{auth.MetaAcl{
-		ImmediateDeny:     false,
-		ImmediateAccess:   false,
-		AllowedBeamtimes:  []string{"12347"},
-		AllowedBeamlines:  nil,
-		AllowedFacilities: nil,
-	}, false, "12347", &statusRunning, &model.InputUsers{
-		DoorDb:  []string{"test"},
-		Special: []string{},
-		Unknown: []string{},
-	}, &model.BeamtimeMeta{
-		ID:       "12347",
-		Beamline: nil,
-		Facility: nil,
-		Status:   "none",
-		Users:    nil,
-	}, "ok with beamtime acl"},
+		},
+	}, false, "ok, access via beamline"},
+
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
 		ImmediateAccess:   false,
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
-		AllowedFacilities: []string{"facility"},
-	}, false, "12348", &statusRunning, &model.InputUsers{
-		DoorDb:  []string{"test"},
-		Special: []string{},
-		Unknown: []string{},
-	}, &model.BeamtimeMeta{
-		ID:       "12348",
-		Beamline: nil,
-		Facility:  &facility ,
-		Status:   "none",
-		Users:    nil,
-	}, "ok with facility acl"},
+		AllowedFacilities: []string{facility},
+	},"12348.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+		ID:        "12348.1",
+		AddFields: nil,
+	}, &model.CollectionEntry{
+		ID:       "12348.1",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12349",
+			Facility: &facility,
+		},
+	}, false, "ok, access via facility"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   true,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12349", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
+		ID:        "12349",
+		DeleteFields: []string{},
+	}, &model.CollectionEntry{
+		ID:       "12349",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12349",
+		},
+	}, false, "ok delete_fields"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   true,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12350", ModeUpdateFields,"update_fields",&model.FieldsToUpdate{
+		ID:        "12350",
+		UpdateFields: nil,
+	}, &model.CollectionEntry{
+		ID:       "12350",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12350",
+		},
+	}, false, "ok update_fields"},
 }
 
-func (suite *MetaSuite) TestModifyMeta() {
-	for _, test := range ModifyMetaTests {
-		input := model.ModifiedBeamtimeMeta{
-			ID:     test.id,
-			Status: test.status,
-			Users:  test.users,
-		}
+func (suite *MetaSuite) TestAddUserMeta() {
+	for _, test := range AddUserMetaTests {
 		if test.acl.ImmediateDeny {
-			_, err := ModifyBeamtimeMeta(test.acl, input)
+			_, err := ModifyUserMeta(test.acl,ModeAddFields,test.id,test.input,[]string{},[]string{})
 			suite.NotNil(err)
 			continue
 		}
 
-		params_modify := []interface{}{test.id}
+		params_read := []interface{}{test.id}
 		metab, _ := json.Marshal(test.meta)
 		var db_err error
 		if test.meta == nil {
 			db_err = errors.New("not found")
 		}
-		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_modify).Return(metab, db_err)
+		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return(metab, db_err)
 
-		if test.meta != nil && !test.error {
-			params_update := []interface{}{test.id,&input}
-			test.meta.Status = *test.status
-			if test.users!=nil {
-				test.meta.Users = &model.Users{}
-				test.meta.Users.Unknown = test.users.Unknown
-				test.meta.Users.Special = test.users.Special
-				test.meta.Users.DoorDb = test.users.DoorDb
-			}
-			metab, _ := json.Marshal(test.meta)
-
-			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "update_record", params_update).Return(metab, nil)
+		if test.meta != nil && !test.resultErrors {
+			params := []interface{}{test.input}
+			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, test.dbCmd, params).Return(metab, nil)
 		}
-		res, err := ModifyBeamtimeMeta(test.acl, input)
-		if test.meta == nil || test.error{
+		res, err := ModifyUserMeta(test.acl, test.mode,test.id,test.input,[]string{},[]string{})
+		if test.meta == nil || test.resultErrors{
 			suite.NotNil(err)
 			suite.Nil(res)
 		} else
 		{
 			suite.Nil(err)
 			suite.NotNil(res)
-			if res != nil {
-				suite.Equal(*test.status, res.Status)
-				if test.users!=nil {
-					suite.Equal(test.users.DoorDb, res.Users.DoorDb)
-				}
-			}
 		}
 	}
 }
 
- */
