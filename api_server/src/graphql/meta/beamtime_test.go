@@ -72,9 +72,9 @@ var ModifyMetaTests = []struct {
 
 func (suite *MetaSuite) TestModifyMeta() {
 	for _, test := range ModifyMetaTests {
-		input := model.FieldsToUpdate{
+		input := model.FieldsToSet{
 			ID:     test.id,
-			UpdateFields: map[string]interface{}{"status":test.status,"users":test.users},
+			Fields: map[string]interface{}{"status":test.status,"users":test.users},
 		}
 
 		params_modify := []interface{}{test.id}

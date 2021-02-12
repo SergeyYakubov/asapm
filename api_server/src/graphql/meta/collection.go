@@ -95,13 +95,13 @@ func checkUserFields(mode int, input interface{}) bool {
 	switch mode {
 	case ModeDeleteFields:
 		input_delete,ok:=input.(*model.FieldsToDelete)
-		return ok && checkArrayHasOnlyUserFields(input_delete.DeleteFields)
+		return ok && checkArrayHasOnlyUserFields(input_delete.Fields)
 	case ModeAddFields:
-		input_add,ok:=input.(*model.FieldsToAdd)
-		return ok && checkMapHasOnlyUserFields(input_add.AddFields)
+		input_add,ok:=input.(*model.FieldsToSet)
+		return ok && checkMapHasOnlyUserFields(input_add.Fields)
 	case ModeUpdateFields:
-		input_update,ok:=input.(*model.FieldsToUpdate)
-		return ok && checkMapHasOnlyUserFields(input_update.UpdateFields)
+		input_update,ok:=input.(*model.FieldsToSet)
+		return ok && checkMapHasOnlyUserFields(input_update.Fields)
 	default:
 		return false
 	}
@@ -139,28 +139,28 @@ func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry,mode int, input inte
 	return false
 }
 
-func modifyUserMetaInDb(mode int, input interface{})(res []byte, err error) {
+func modifyMetaInDb(mode int, input interface{})(res []byte, err error) {
 	switch mode {
 	case ModeDeleteFields:
 		input_delete,ok:=input.(*model.FieldsToDelete)
 		if !ok {
-			return nil, errors.New("wrong mode/input in ModifyUserMeta")
+			return nil, errors.New("wrong mode/input in ModifyCollectionEntryMeta")
 		}
 		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_fields", input_delete)
 	case ModeAddFields:
-		input_add,ok:=input.(*model.FieldsToAdd)
+		input_add,ok:=input.(*model.FieldsToSet)
 		if !ok {
-			return nil, errors.New("wrong mode/input in ModifyUserMeta")
+			return nil, errors.New("wrong mode/input in ModifyCollectionEntryMeta")
 		}
 		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_fields", input_add)
 	case ModeUpdateFields:
-		input_update,ok:=input.(*model.FieldsToUpdate)
+		input_update,ok:=input.(*model.FieldsToSet)
 		if !ok {
-			return nil, errors.New("wrong mode/input in ModifyUserMeta")
+			return nil, errors.New("wrong mode/input in ModifyCollectionEntryMeta")
 		}
 		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_fields", input_update)
 	default:
-		return nil,errors.New("wrong mode in ModifyUserMeta")
+		return nil,errors.New("wrong mode in ModifyCollectionEntryMeta")
 	}
 	return res,err
 }
@@ -188,13 +188,13 @@ func auhthorizeModifyRequest(acl auth.MetaAcl, id string,mode int, input interfa
 	return nil
 }
 
-func ModifyUserMeta(acl auth.MetaAcl,mode int, id string, input interface{} ,keepFields []string,removeFields []string)(*model.CollectionEntry, error) {
+func ModifyCollectionEntryMeta(acl auth.MetaAcl,mode int, id string, input interface{} ,keepFields []string,removeFields []string)(*model.CollectionEntry, error) {
 	err := auhthorizeModifyRequest(acl,id,mode, input)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := modifyUserMetaInDb(mode,input)
+	res, err := modifyMetaInDb(mode,input)
 	if err != nil {
 		return nil, err
 	}

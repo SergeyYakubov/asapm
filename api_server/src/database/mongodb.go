@@ -178,7 +178,7 @@ func (db *Mongodb) deleteFields(dbName string, dataCollectionName string, extra_
 	filter := bson.D{{"_id", input.ID}}
 
 	deleteFields := make(map[string]string)
-	for _, field := range input.DeleteFields {
+	for _, field := range input.Fields {
 		deleteFields[field] = ""
 	}
 	update := bson.D{{"$unset", deleteFields}}
@@ -213,24 +213,49 @@ func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, upsert
 	return json.Marshal(resMap)
 }
 
+func flatten(prefix string, src map[string]interface{}, dest map[string]interface{}) {
+	if len(prefix) > 0 {
+		prefix += "."
+	}
+	for k, v := range src {
+		switch child := v.(type) {
+		case map[string]interface{}:
+			flatten(prefix+k, child, dest)
+/*		case []interface{}:
+			for i := 0; i < len(child); i++ {
+				dest[prefix+k+"."+strconv.Itoa(i)] = child[i]
+			}*/
+		default:
+			dest[prefix+k] = v
+		}
+	}
+}
+
+func mapToMapWithDots(origin map[string]interface{}) (res map[string]interface{}) {
+	res = make(map[string]interface{})
+	flatten("",origin,res)
+	return res
+}
+
 func (db *Mongodb) setFields(dbName string, dataCollectionName string, exist bool, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 1 {
 		return nil, errors.New("wrong number of parameters")
 	}
 
-	input, ok := extra_params[0].(*model.FieldsToUpdate)
+	input, ok := extra_params[0].(*model.FieldsToSet)
 	if !ok {
 		return nil, errors.New("cannot extract fields to add/update")
 	}
 	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
 	filter := bson.D{{"_id", input.ID}}
 	filters := []bson.D{filter}
-	for field := range input.UpdateFields {
+	inputWithDots := mapToMapWithDots(input.Fields)
+	for field := range inputWithDots {
 		filters = append(filters, bson.D{{field, bson.D{{"$exists", exist}}}})
 	}
 	filter = bson.D{{"$and", filters}}
 
-	update := bson.D{{"$set", input.UpdateFields}}
+	update := bson.D{{"$set", inputWithDots}}
 	var resMap map[string]interface{}
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 	err := c.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&resMap)

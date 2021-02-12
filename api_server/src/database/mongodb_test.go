@@ -218,9 +218,9 @@ func TestMongoDBUpdateRecord(t *testing.T) {
 	_, err = mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	assert.Nil(t, err)
 
-	var update    model.FieldsToUpdate
+	var update    model.FieldsToSet
 	update.ID = "123"
-	update.UpdateFields =  map[string]interface{}{"status":"stopped","users.doorDb":[]string{"hello", "buy"}}
+	update.Fields =  map[string]interface{}{"status":"stopped","users.doorDb":[]string{"hello", "buy"}}
 
 	res, err := mongodb.ProcessRequest(dbname, collection, "update_fields", &update)
 
@@ -255,38 +255,50 @@ func TestMongoDBDeleteFields(t *testing.T) {
 	assert.Equal(t, string(res), "{\"_id\":\"123\",\"customValues\":{\"number\":22,\"test\":{\"val\":2}}}")
 }
 
+func toMap(str string) (res map[string]interface{}) {
+	json.Unmarshal([]byte(str),&res)
+	return res
+}
+
 var UpdateFieldsTest = []struct {
 	input     TestUserMetaRecord
-	update    model.FieldsToUpdate
+	update    model.FieldsToSet
 	mustExist bool
 	output    TestUserMetaRecord
 	ok        bool
 	message   string
 }{
-	{TestUserMetaRecord{"1", map[string]interface{}{"simple": "123", "number": 22}},
-		model.FieldsToUpdate{"1", map[string]interface{}{"customValues.simple": "345"}},
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"simple": "345"}}`)},
 		true,
 		TestUserMetaRecord{"1", map[string]interface{}{"simple": "345", "number": 22}},
 		true, "update field"},
 
-	{TestUserMetaRecord{"1", map[string]interface{}{"simple": "123", "number": 22}},
-		model.FieldsToUpdate{"1", map[string]interface{}{"customValues.non_exist": "345"}},
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"nonExist": "345"}}`)},
 		true,
 		TestUserMetaRecord{},
 		false, "update non-existing field"},
 
-	{TestUserMetaRecord{"1", map[string]interface{}{"simple": "123", "nested": map[string]interface{}{"val1": 1, "val2": 2}}},
-		model.FieldsToUpdate{"1", map[string]interface{}{"customValues.simple":"345","customValues.nested.val1": 3}},
+		{TestUserMetaRecord{"1", toMap(`{"simple": "123", "nested":{"val1":1,"val2":2}}`)},
+			model.FieldsToSet{"1", toMap(`{"customValues": {"simple": "345", "nested":{"val1":3}}}`)},
 		true,
-		TestUserMetaRecord{"1", map[string]interface{}{"simple": "345", "nested": map[string]interface{}{"val1": 3, "val2": 2}}},
+			TestUserMetaRecord{"1", toMap(`{"simple": "345", "nested":{"val1":3,"val2":2}}`)},
 		true, "update nested field"},
 
 
-	{TestUserMetaRecord{"1", map[string]interface{}{"simple": "123", "number": 22}},
-		model.FieldsToUpdate{"1", map[string]interface{}{"customValues.non_exist": "345"}},
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"non_exist": "345", "nested":{"val1":3}}}`)},
 		false,
-		TestUserMetaRecord{"1", map[string]interface{}{"simple": "123", "number": 22,"non_exist": "345"}},
+		TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22,"non_exist": "345", "nested":{"val1":3}}`)},
 		true, "add non-existing field"},
+
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"simple": "345", "nested":{"val1":3}}}`)},
+		false,
+		TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22,"non_exist": "345", "nested":{"val1":3}}`)},
+		false, "add existing field"},
+
 }
 
 func TestMongoDBUpdateFields(t *testing.T) {

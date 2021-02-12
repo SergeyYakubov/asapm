@@ -172,15 +172,10 @@ input NewBeamtimeMeta {
 
 input FieldsToDelete {
     id: String!
-    deleteFields: [String!]!
+    fields: [String!]!
 }
 
-input FieldsToUpdate {
+input FieldsToSet {
     id: String!
-    updateFields: Map!
-}
-
-input FieldsToAdd {
-    id: String!
-    addFields: Map!
+    fields: Map!
 }

@@ -105,15 +105,15 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddCollectionEntry  func(childComplexity int, input model.NewCollectionEntry) int
-		AddUserFields       func(childComplexity int, input model.FieldsToAdd) int
-		CreateMeta          func(childComplexity int, input model.NewBeamtimeMeta) int
-		DeleteMeta          func(childComplexity int, id string) int
-		DeleteSubcollection func(childComplexity int, id string) int
-		DeleteUserFields    func(childComplexity int, input model.FieldsToDelete) int
-		ModifyBeamtimeMeta  func(childComplexity int, input model.FieldsToUpdate) int
-		SetUserPreferences  func(childComplexity int, id string, input model.InputUserPreferences) int
-		UpdateUserFields    func(childComplexity int, input model.FieldsToUpdate) int
+		AddCollectionEntry          func(childComplexity int, input model.NewCollectionEntry) int
+		AddCollectionEntryFields    func(childComplexity int, input model.FieldsToSet) int
+		CreateMeta                  func(childComplexity int, input model.NewBeamtimeMeta) int
+		DeleteCollectionEntryFields func(childComplexity int, input model.FieldsToDelete) int
+		DeleteMeta                  func(childComplexity int, id string) int
+		DeleteSubcollection         func(childComplexity int, id string) int
+		ModifyBeamtimeMeta          func(childComplexity int, input model.FieldsToSet) int
+		SetUserPreferences          func(childComplexity int, id string, input model.InputUserPreferences) int
+		UpdateCollectionEntryFields func(childComplexity int, input model.FieldsToSet) int
 	}
 
 	OnlineAnylysisMeta struct {
@@ -181,10 +181,10 @@ type MutationResolver interface {
 	DeleteMeta(ctx context.Context, id string) (*string, error)
 	DeleteSubcollection(ctx context.Context, id string) (*string, error)
 	AddCollectionEntry(ctx context.Context, input model.NewCollectionEntry) (*model.CollectionEntry, error)
-	ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToUpdate) (*model.BeamtimeMeta, error)
-	UpdateUserFields(ctx context.Context, input model.FieldsToUpdate) (*model.CollectionEntry, error)
-	AddUserFields(ctx context.Context, input model.FieldsToAdd) (*model.CollectionEntry, error)
-	DeleteUserFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error)
+	ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToSet) (*model.BeamtimeMeta, error)
+	UpdateCollectionEntryFields(ctx context.Context, input model.FieldsToSet) (*model.CollectionEntry, error)
+	AddCollectionEntryFields(ctx context.Context, input model.FieldsToSet) (*model.CollectionEntry, error)
+	DeleteCollectionEntryFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error)
 	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error)
 }
 type QueryResolver interface {
@@ -553,17 +553,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddCollectionEntry(childComplexity, args["input"].(model.NewCollectionEntry)), true
 
-	case "Mutation.addUserFields":
-		if e.complexity.Mutation.AddUserFields == nil {
+	case "Mutation.addCollectionEntryFields":
+		if e.complexity.Mutation.AddCollectionEntryFields == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_addUserFields_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_addCollectionEntryFields_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddUserFields(childComplexity, args["input"].(model.FieldsToAdd)), true
+		return e.complexity.Mutation.AddCollectionEntryFields(childComplexity, args["input"].(model.FieldsToSet)), true
 
 	case "Mutation.createMeta":
 		if e.complexity.Mutation.CreateMeta == nil {
@@ -576,6 +576,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateMeta(childComplexity, args["input"].(model.NewBeamtimeMeta)), true
+
+	case "Mutation.deleteCollectionEntryFields":
+		if e.complexity.Mutation.DeleteCollectionEntryFields == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteCollectionEntryFields_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteCollectionEntryFields(childComplexity, args["input"].(model.FieldsToDelete)), true
 
 	case "Mutation.deleteMeta":
 		if e.complexity.Mutation.DeleteMeta == nil {
@@ -601,18 +613,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteSubcollection(childComplexity, args["id"].(string)), true
 
-	case "Mutation.deleteUserFields":
-		if e.complexity.Mutation.DeleteUserFields == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteUserFields_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteUserFields(childComplexity, args["input"].(model.FieldsToDelete)), true
-
 	case "Mutation.modifyBeamtimeMeta":
 		if e.complexity.Mutation.ModifyBeamtimeMeta == nil {
 			break
@@ -623,7 +623,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ModifyBeamtimeMeta(childComplexity, args["input"].(model.FieldsToUpdate)), true
+		return e.complexity.Mutation.ModifyBeamtimeMeta(childComplexity, args["input"].(model.FieldsToSet)), true
 
 	case "Mutation.setUserPreferences":
 		if e.complexity.Mutation.SetUserPreferences == nil {
@@ -637,17 +637,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.SetUserPreferences(childComplexity, args["id"].(string), args["input"].(model.InputUserPreferences)), true
 
-	case "Mutation.updateUserFields":
-		if e.complexity.Mutation.UpdateUserFields == nil {
+	case "Mutation.updateCollectionEntryFields":
+		if e.complexity.Mutation.UpdateCollectionEntryFields == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateUserFields_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateCollectionEntryFields_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateUserFields(childComplexity, args["input"].(model.FieldsToUpdate)), true
+		return e.complexity.Mutation.UpdateCollectionEntryFields(childComplexity, args["input"].(model.FieldsToSet)), true
 
 	case "OnlineAnylysisMeta.asapoBeamtimeTokenPath":
 		if e.complexity.OnlineAnylysisMeta.AsapoBeamtimeTokenPath == nil {
@@ -1173,17 +1173,12 @@ input NewBeamtimeMeta {
 
 input FieldsToDelete {
     id: String!
-    deleteFields: [String!]!
+    fields: [String!]!
 }
 
-input FieldsToUpdate {
+input FieldsToSet {
     id: String!
-    updateFields: Map!
-}
-
-input FieldsToAdd {
-    id: String!
-    addFields: Map!
+    fields: Map!
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "../../../schema/filters.graphqls", Input: `type UniqueField {
@@ -1206,10 +1201,10 @@ type Mutation {
     deleteMeta(id: String!): String @needAcl(acl: ADMIN)
     deleteSubcollection(id: String!): String @needAcl(acl: ADMIN)
     addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: ADMIN)
-    modifyBeamtimeMeta(input: FieldsToUpdate!): BeamtimeMeta @needAcl(acl: ADMIN)
-    updateUserFields(input: FieldsToUpdate!): CollectionEntry
-    addUserFields(input: FieldsToAdd!): CollectionEntry
-    deleteUserFields(input: FieldsToDelete!): CollectionEntry
+    modifyBeamtimeMeta(input: FieldsToSet!): BeamtimeMeta @needAcl(acl: ADMIN)
+    updateCollectionEntryFields(input: FieldsToSet!): CollectionEntry
+    addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
+    deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 
@@ -1300,6 +1295,20 @@ func (ec *executionContext) field_CollectionEntry_customValues_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_addCollectionEntryFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.FieldsToSet
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNFieldsToSet2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToSet(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_addCollectionEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1314,12 +1323,12 @@ func (ec *executionContext) field_Mutation_addCollectionEntry_args(ctx context.C
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_addUserFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createMeta_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.FieldsToAdd
+	var arg0 model.NewBeamtimeMeta
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNFieldsToAdd2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToAdd(ctx, tmp)
+		arg0, err = ec.unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1328,12 +1337,12 @@ func (ec *executionContext) field_Mutation_addUserFields_args(ctx context.Contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createMeta_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteCollectionEntryFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewBeamtimeMeta
+	var arg0 model.FieldsToDelete
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx, tmp)
+		arg0, err = ec.unmarshalNFieldsToDelete2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToDelete(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1370,26 +1379,12 @@ func (ec *executionContext) field_Mutation_deleteSubcollection_args(ctx context.
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteUserFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.FieldsToDelete
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNFieldsToDelete2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToDelete(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_modifyBeamtimeMeta_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.FieldsToUpdate
+	var arg0 model.FieldsToSet
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNFieldsToUpdate2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToUpdate(ctx, tmp)
+		arg0, err = ec.unmarshalNFieldsToSet2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToSet(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1420,12 +1415,12 @@ func (ec *executionContext) field_Mutation_setUserPreferences_args(ctx context.C
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateUserFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateCollectionEntryFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.FieldsToUpdate
+	var arg0 model.FieldsToSet
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNFieldsToUpdate2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToUpdate(ctx, tmp)
+		arg0, err = ec.unmarshalNFieldsToSet2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToSet(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3301,7 +3296,7 @@ func (ec *executionContext) _Mutation_modifyBeamtimeMeta(ctx context.Context, fi
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ModifyBeamtimeMeta(rctx, args["input"].(model.FieldsToUpdate))
+			return ec.resolvers.Mutation().ModifyBeamtimeMeta(rctx, args["input"].(model.FieldsToSet))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
@@ -3338,7 +3333,7 @@ func (ec *executionContext) _Mutation_modifyBeamtimeMeta(ctx context.Context, fi
 	return ec.marshalOBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_updateUserFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_updateCollectionEntryFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3354,7 +3349,7 @@ func (ec *executionContext) _Mutation_updateUserFields(ctx context.Context, fiel
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updateUserFields_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_updateCollectionEntryFields_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -3362,7 +3357,7 @@ func (ec *executionContext) _Mutation_updateUserFields(ctx context.Context, fiel
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateUserFields(rctx, args["input"].(model.FieldsToUpdate))
+		return ec.resolvers.Mutation().UpdateCollectionEntryFields(rctx, args["input"].(model.FieldsToSet))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3376,7 +3371,7 @@ func (ec *executionContext) _Mutation_updateUserFields(ctx context.Context, fiel
 	return ec.marshalOCollectionEntry2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntry(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_addUserFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_addCollectionEntryFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3392,7 +3387,7 @@ func (ec *executionContext) _Mutation_addUserFields(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_addUserFields_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_addCollectionEntryFields_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -3400,7 +3395,7 @@ func (ec *executionContext) _Mutation_addUserFields(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddUserFields(rctx, args["input"].(model.FieldsToAdd))
+		return ec.resolvers.Mutation().AddCollectionEntryFields(rctx, args["input"].(model.FieldsToSet))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3414,7 +3409,7 @@ func (ec *executionContext) _Mutation_addUserFields(ctx context.Context, field g
 	return ec.marshalOCollectionEntry2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntry(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_deleteUserFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_deleteCollectionEntryFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3430,7 +3425,7 @@ func (ec *executionContext) _Mutation_deleteUserFields(ctx context.Context, fiel
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_deleteUserFields_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_deleteCollectionEntryFields_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -3438,7 +3433,7 @@ func (ec *executionContext) _Mutation_deleteUserFields(ctx context.Context, fiel
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteUserFields(rctx, args["input"].(model.FieldsToDelete))
+		return ec.resolvers.Mutation().DeleteCollectionEntryFields(rctx, args["input"].(model.FieldsToDelete))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5850,30 +5845,6 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputFieldsToAdd(ctx context.Context, obj interface{}) (model.FieldsToAdd, error) {
-	var it model.FieldsToAdd
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "id":
-			var err error
-			it.ID, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "addFields":
-			var err error
-			it.AddFields, err = ec.unmarshalNMap2map(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputFieldsToDelete(ctx context.Context, obj interface{}) (model.FieldsToDelete, error) {
 	var it model.FieldsToDelete
 	var asMap = obj.(map[string]interface{})
@@ -5886,9 +5857,9 @@ func (ec *executionContext) unmarshalInputFieldsToDelete(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
-		case "deleteFields":
+		case "fields":
 			var err error
-			it.DeleteFields, err = ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+			it.Fields, err = ec.unmarshalNString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5898,8 +5869,8 @@ func (ec *executionContext) unmarshalInputFieldsToDelete(ctx context.Context, ob
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputFieldsToUpdate(ctx context.Context, obj interface{}) (model.FieldsToUpdate, error) {
-	var it model.FieldsToUpdate
+func (ec *executionContext) unmarshalInputFieldsToSet(ctx context.Context, obj interface{}) (model.FieldsToSet, error) {
+	var it model.FieldsToSet
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -5910,9 +5881,9 @@ func (ec *executionContext) unmarshalInputFieldsToUpdate(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
-		case "updateFields":
+		case "fields":
 			var err error
-			it.UpdateFields, err = ec.unmarshalNMap2map(ctx, v)
+			it.Fields, err = ec.unmarshalNMap2map(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6524,12 +6495,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_addCollectionEntry(ctx, field)
 		case "modifyBeamtimeMeta":
 			out.Values[i] = ec._Mutation_modifyBeamtimeMeta(ctx, field)
-		case "updateUserFields":
-			out.Values[i] = ec._Mutation_updateUserFields(ctx, field)
-		case "addUserFields":
-			out.Values[i] = ec._Mutation_addUserFields(ctx, field)
-		case "deleteUserFields":
-			out.Values[i] = ec._Mutation_deleteUserFields(ctx, field)
+		case "updateCollectionEntryFields":
+			out.Values[i] = ec._Mutation_updateCollectionEntryFields(ctx, field)
+		case "addCollectionEntryFields":
+			out.Values[i] = ec._Mutation_addCollectionEntryFields(ctx, field)
+		case "deleteCollectionEntryFields":
+			out.Values[i] = ec._Mutation_deleteCollectionEntryFields(ctx, field)
 		case "setUserPreferences":
 			out.Values[i] = ec._Mutation_setUserPreferences(ctx, field)
 		default:
@@ -7231,16 +7202,12 @@ func (ec *executionContext) marshalNCollectionEntry2ᚖasapmᚋgraphqlᚋgraph�
 	return ec._CollectionEntry(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFieldsToAdd2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToAdd(ctx context.Context, v interface{}) (model.FieldsToAdd, error) {
-	return ec.unmarshalInputFieldsToAdd(ctx, v)
-}
-
 func (ec *executionContext) unmarshalNFieldsToDelete2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToDelete(ctx context.Context, v interface{}) (model.FieldsToDelete, error) {
 	return ec.unmarshalInputFieldsToDelete(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNFieldsToUpdate2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToUpdate(ctx context.Context, v interface{}) (model.FieldsToUpdate, error) {
-	return ec.unmarshalInputFieldsToUpdate(ctx, v)
+func (ec *executionContext) unmarshalNFieldsToSet2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToSet(ctx context.Context, v interface{}) (model.FieldsToSet, error) {
+	return ec.unmarshalInputFieldsToSet(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {

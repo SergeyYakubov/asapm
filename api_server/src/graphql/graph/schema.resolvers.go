@@ -13,7 +13,7 @@ import (
 	"errors"
 )
 
-func (r *mutationResolver)  ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToUpdate) (*model.BeamtimeMeta, error) {
+func (r *mutationResolver)  ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToSet) (*model.BeamtimeMeta, error) {
 	res,err := meta.ModifyBeamtimeMeta(input)
 	if err != nil {
 		logger.Error(err.Error())
@@ -21,7 +21,7 @@ func (r *mutationResolver)  ModifyBeamtimeMeta(ctx context.Context, input model.
 	return res, err
 }
 
-func ModifyUserFields(ctx context.Context, mode int,id string, input interface{}) (*model.CollectionEntry, error) {
+func ModifyCollectionEntryFields(ctx context.Context, mode int,id string, input interface{}) (*model.CollectionEntry, error) {
 	acl,err := auth.ReadAclFromContext(ctx)
 	if err != nil {
 		logger.Error("access denied: "+err.Error())
@@ -29,7 +29,7 @@ func ModifyUserFields(ctx context.Context, mode int,id string, input interface{}
 	}
 	keep,remove := extractModificationFields(ctx)
 
-	res,err := meta.ModifyUserMeta(acl,mode, id, input, keep,remove)
+	res,err := meta.ModifyCollectionEntryMeta(acl,mode, id, input, keep,remove)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -37,16 +37,16 @@ func ModifyUserFields(ctx context.Context, mode int,id string, input interface{}
 
 }
 
-func (r *mutationResolver) UpdateUserFields(ctx context.Context, input model.FieldsToUpdate) (*model.CollectionEntry, error) {
-	return ModifyUserFields(ctx, meta.ModeUpdateFields,input.ID,&input)
+func (r *mutationResolver) UpdateCollectionEntryFields(ctx context.Context, input model.FieldsToSet) (*model.CollectionEntry, error) {
+	return ModifyCollectionEntryFields(ctx, meta.ModeUpdateFields,input.ID,&input)
 }
 
-func (r *mutationResolver) AddUserFields(ctx context.Context, input model.FieldsToAdd) (*model.CollectionEntry, error) {
-	return ModifyUserFields(ctx, meta.ModeAddFields,input.ID,&input)
+func (r *mutationResolver) AddCollectionEntryFields(ctx context.Context, input model.FieldsToSet) (*model.CollectionEntry, error) {
+	return ModifyCollectionEntryFields(ctx, meta.ModeAddFields,input.ID,&input)
 }
 
-func (r *mutationResolver) DeleteUserFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error) {
-	return ModifyUserFields(ctx, meta.ModeDeleteFields,input.ID,&input)
+func (r *mutationResolver) DeleteCollectionEntryFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error) {
+	return ModifyCollectionEntryFields(ctx, meta.ModeDeleteFields,input.ID,&input)
 }
 
 func (r *mutationResolver) AddCollectionEntry(ctx context.Context, input model.NewCollectionEntry) (*model.CollectionEntry, error) {

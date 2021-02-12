@@ -75,19 +75,14 @@ type CollectionEntry struct {
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
 
-type FieldsToAdd struct {
-	ID        string                 `json:"id,omitempty" bson:"id,omitempty"`
-	AddFields map[string]interface{} `json:"addFields,omitempty" bson:"addFields,omitempty"`
-}
-
 type FieldsToDelete struct {
-	ID           string   `json:"id,omitempty" bson:"id,omitempty"`
-	DeleteFields []string `json:"deleteFields,omitempty" bson:"deleteFields,omitempty"`
+	ID     string   `json:"id,omitempty" bson:"id,omitempty"`
+	Fields []string `json:"fields,omitempty" bson:"fields,omitempty"`
 }
 
-type FieldsToUpdate struct {
-	ID           string                 `json:"id,omitempty" bson:"id,omitempty"`
-	UpdateFields map[string]interface{} `json:"updateFields,omitempty" bson:"updateFields,omitempty"`
+type FieldsToSet struct {
+	ID     string                 `json:"id,omitempty" bson:"id,omitempty"`
+	Fields map[string]interface{} `json:"fields,omitempty" bson:"fields,omitempty"`
 }
 
 type InputBeamtimeUser struct {

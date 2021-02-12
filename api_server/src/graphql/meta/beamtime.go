@@ -97,7 +97,7 @@ func DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
 	return &id, nil
 }
 
-func ModifyBeamtimeMeta(input model.FieldsToUpdate) (*model.BeamtimeMeta, error) {
+func ModifyBeamtimeMeta(input model.FieldsToSet) (*model.BeamtimeMeta, error) {
 	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", input.ID)
 	if err != nil {
 		return nil, err

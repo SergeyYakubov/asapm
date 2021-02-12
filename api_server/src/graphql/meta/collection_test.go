@@ -212,9 +212,9 @@ var AddUserMetaTests = []struct {
 	resultErrors   bool
 	message string
 }{
-	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToSet{
 		ID:        "12345.1",
-		AddFields: nil,
+		Fields: nil,
 	}, nil, true, "immediate access deny"},
 
 	{auth.MetaAcl{
@@ -223,9 +223,9 @@ var AddUserMetaTests = []struct {
 		AllowedBeamtimes:  []string{"12346"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12346.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+	},"12346.1", ModeAddFields,"add_fields",&model.FieldsToSet{
 		ID:        "12346.1",
-		AddFields: nil,
+		Fields: nil,
 	}, &model.CollectionEntry{
 		ID:       "12346.1",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -234,9 +234,9 @@ var AddUserMetaTests = []struct {
 	}, false, "ok, access via beamtime"},
 
 
-	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToSet{
 		ID:        "12345.1",
-		AddFields: nil,
+		Fields: nil,
 	}, nil, true, "immediate access deny"},
 
 	{auth.MetaAcl{
@@ -245,9 +245,9 @@ var AddUserMetaTests = []struct {
 		AllowedBeamtimes:  []string{"12346"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12346.2", ModeAddFields,"add_fields",&model.FieldsToAdd{
+	},"12346.2", ModeAddFields,"add_fields",&model.FieldsToSet{
 		ID:        "12346.2",
-		AddFields: map[string]interface{}{"hello":2},
+		Fields: map[string]interface{}{"hello":2},
 	}, &model.CollectionEntry{
 		ID:       "12346.2",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -261,9 +261,9 @@ var AddUserMetaTests = []struct {
 		AllowedBeamtimes:  []string{"12346"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12346.3", ModeAddFields,"add_fields",&model.FieldsToAdd{
+	},"12346.3", ModeAddFields,"add_fields",&model.FieldsToSet{
 		ID:        "12346.3",
-		AddFields: map[string]interface{}{KUserFieldName+".hello":2},
+		Fields: map[string]interface{}{KUserFieldName+".hello":2},
 	}, &model.CollectionEntry{
 		ID:       "12346.3",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -277,9 +277,9 @@ var AddUserMetaTests = []struct {
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12346.4", ModeAddFields,"add_fields",&model.FieldsToAdd{
+	},"12346.4", ModeAddFields,"add_fields",&model.FieldsToSet{
 		ID:        "12346.4",
-		AddFields: map[string]interface{}{"hello":2},
+		Fields: map[string]interface{}{"hello":2},
 	}, &model.CollectionEntry{
 		ID:       "12346.4",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -294,9 +294,9 @@ var AddUserMetaTests = []struct {
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  []string{beamline},
 		AllowedFacilities: nil,
-	},"12347.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+	},"12347.1", ModeAddFields,"add_fields",&model.FieldsToSet{
 		ID:        "12347.1",
-		AddFields: nil,
+		Fields: nil,
 	}, &model.CollectionEntry{
 		ID:       "12347.1",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -311,9 +311,9 @@ var AddUserMetaTests = []struct {
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
 		AllowedFacilities: []string{facility},
-	},"12348.1", ModeAddFields,"add_fields",&model.FieldsToAdd{
+	},"12348.1", ModeAddFields,"add_fields",&model.FieldsToSet{
 		ID:        "12348.1",
-		AddFields: nil,
+		Fields: nil,
 	}, &model.CollectionEntry{
 		ID:       "12348.1",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -330,7 +330,7 @@ var AddUserMetaTests = []struct {
 		AllowedFacilities: nil,
 	},"12349", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
 		ID:        "12349",
-		DeleteFields: []string{},
+		Fields: []string{},
 	}, &model.CollectionEntry{
 		ID:       "12349",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -346,7 +346,7 @@ var AddUserMetaTests = []struct {
 		AllowedFacilities: nil,
 	},"12349", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
 		ID:        "12349",
-		DeleteFields: []string{KUserFieldName+".hello"},
+		Fields: []string{KUserFieldName+".hello"},
 	}, &model.CollectionEntry{
 		ID:       "12349",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -362,7 +362,7 @@ var AddUserMetaTests = []struct {
 		AllowedFacilities: nil,
 	},"12351", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
 		ID:        "12351",
-		DeleteFields: []string{"hello"},
+		Fields: []string{"hello"},
 	}, &model.CollectionEntry{
 		ID:       "12351",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -378,7 +378,7 @@ var AddUserMetaTests = []struct {
 		AllowedFacilities: nil,
 	},"12352", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
 		ID:        "12352",
-		DeleteFields: []string{"hello"},
+		Fields: []string{"hello"},
 	}, &model.CollectionEntry{
 		ID:       "12352",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -393,9 +393,9 @@ var AddUserMetaTests = []struct {
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12350", ModeUpdateFields,"update_fields",&model.FieldsToUpdate{
+	},"12350", ModeUpdateFields,"update_fields",&model.FieldsToSet{
 		ID:        "12350",
-		UpdateFields: nil,
+		Fields: nil,
 	}, &model.CollectionEntry{
 		ID:       "12350",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
@@ -407,7 +407,7 @@ var AddUserMetaTests = []struct {
 func (suite *MetaSuite) TestAddUserMeta() {
 	for _, test := range AddUserMetaTests {
 		if test.acl.ImmediateDeny {
-			_, err := ModifyUserMeta(test.acl,ModeAddFields,test.id,test.input,[]string{},[]string{})
+			_, err := ModifyCollectionEntryMeta(test.acl,ModeAddFields,test.id,test.input,[]string{},[]string{})
 			suite.NotNil(err)
 			continue
 		}
@@ -424,7 +424,7 @@ func (suite *MetaSuite) TestAddUserMeta() {
 			params := []interface{}{test.input}
 			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, test.dbCmd, params).Return(metab, nil)
 		}
-		res, err := ModifyUserMeta(test.acl, test.mode,test.id,test.input,[]string{},[]string{})
+		res, err := ModifyCollectionEntryMeta(test.acl, test.mode,test.id,test.input,[]string{},[]string{})
 		if test.meta == nil || test.resultErrors{
 			suite.NotNil(err,test.message)
 			suite.Nil(res,test.message)

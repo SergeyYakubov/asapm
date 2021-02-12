@@ -12,10 +12,10 @@ type Mutation {
     deleteMeta(id: String!): String @needAcl(acl: ADMIN)
     deleteSubcollection(id: String!): String @needAcl(acl: ADMIN)
     addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: ADMIN)
-    modifyBeamtimeMeta(input: FieldsToUpdate!): BeamtimeMeta @needAcl(acl: ADMIN)
-    updateUserFields(input: FieldsToUpdate!): CollectionEntry
-    addUserFields(input: FieldsToAdd!): CollectionEntry
-    deleteUserFields(input: FieldsToDelete!): CollectionEntry
+    modifyBeamtimeMeta(input: FieldsToSet!): BeamtimeMeta @needAcl(acl: ADMIN)
+    updateCollectionEntryFields(input: FieldsToSet!): CollectionEntry
+    addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
+    deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 
