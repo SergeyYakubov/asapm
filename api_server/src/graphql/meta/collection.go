@@ -73,12 +73,50 @@ func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry
 	return entry, nil
 }
 
-func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry) bool {
+func checkArrayHasOnlyUserFields(fields []string) bool {
+	for _,field:= range(fields) {
+		if !strings.HasPrefix(field,KUserFieldName) {
+			return false
+		}
+	}
+	return true
+}
+
+func checkMapHasOnlyUserFields(fields map[string]interface{}) bool {
+	for field:= range(fields) {
+		if !strings.HasPrefix(field,KUserFieldName) {
+			return false
+		}
+	}
+	return true
+}
+
+func checkUserFields(mode int, input interface{}) bool {
+	switch mode {
+	case ModeDeleteFields:
+		input_delete,ok:=input.(*model.FieldsToDelete)
+		return ok && checkArrayHasOnlyUserFields(input_delete.DeleteFields)
+	case ModeAddFields:
+		input_add,ok:=input.(*model.FieldsToAdd)
+		return ok && checkMapHasOnlyUserFields(input_add.AddFields)
+	case ModeUpdateFields:
+		input_update,ok:=input.(*model.FieldsToUpdate)
+		return ok && checkMapHasOnlyUserFields(input_update.UpdateFields)
+	default:
+		return false
+	}
+}
+
+func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry,mode int, input interface{}) bool {
 	if acl.ImmediateAccess {
 		return true
 	}
 
 	if acl.ImmediateDeny {
+		return false
+	}
+
+	if !checkUserFields(mode,input) {
 		return false
 	}
 
@@ -127,7 +165,7 @@ func modifyUserMetaInDb(mode int, input interface{})(res []byte, err error) {
 	return res,err
 }
 
-func auhthorizeModifyRequest(acl auth.MetaAcl, id string) error {
+func auhthorizeModifyRequest(acl auth.MetaAcl, id string,mode int, input interface{}) error {
 	if acl.ImmediateDeny {
 		return errors.New("access denied, not enough permissions")
 	}
@@ -143,7 +181,7 @@ func auhthorizeModifyRequest(acl auth.MetaAcl, id string) error {
 		return err
 	}
 
-	if !checkAuth(acl,meta) {
+	if !checkAuth(acl,meta,mode, input) {
 		return errors.New("Access denied")
 	}
 
@@ -151,7 +189,7 @@ func auhthorizeModifyRequest(acl auth.MetaAcl, id string) error {
 }
 
 func ModifyUserMeta(acl auth.MetaAcl,mode int, id string, input interface{} ,keepFields []string,removeFields []string)(*model.CollectionEntry, error) {
-	err := auhthorizeModifyRequest(acl,id)
+	err := auhthorizeModifyRequest(acl,id,mode, input)
 	if err != nil {
 		return nil, err
 	}

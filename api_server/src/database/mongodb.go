@@ -4,6 +4,7 @@ package database
 
 import (
 	"asapm/common/utils"
+	"asapm/graphql/graph/model"
 	"context"
 	"encoding/json"
 	"errors"
@@ -163,7 +164,34 @@ func (db *Mongodb) replaceRecord(dbName string, dataCollectionName string, extra
 	return nil, err
 }
 
-func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+func (db *Mongodb) deleteFields(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 1 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	input, ok := extra_params[0].(*model.FieldsToDelete)
+	if !ok {
+		return nil, errors.New("cannot extract fields to delete")
+	}
+
+	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
+	filter := bson.D{{"_id", input.ID}}
+
+	deleteFields := make(map[string]string)
+	for _, field := range input.DeleteFields {
+		deleteFields[field] = ""
+	}
+	update := bson.D{{"$unset", deleteFields}}
+	var resMap map[string]interface{}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	err := c.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&resMap)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(resMap)
+}
+
+func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, upsert bool, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 2 {
 		return nil, errors.New("wrong number of parameters")
 	}
@@ -172,7 +200,7 @@ func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, extra_
 		return nil, errors.New("id must be string")
 	}
 	input := extra_params[1]
-	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+	opts := options.FindOneAndUpdate().SetUpsert(upsert).SetReturnDocument(options.After)
 	filter := bson.D{{"_id", id}}
 
 	update := bson.D{{"$set", input}}
@@ -180,11 +208,37 @@ func (db *Mongodb) updateRecord(dbName string, dataCollectionName string, extra_
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 	err := c.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&resMap)
 	if err != nil {
-			return nil,err
+		return nil, err
 	}
 	return json.Marshal(resMap)
 }
 
+func (db *Mongodb) setFields(dbName string, dataCollectionName string, exist bool, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 1 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	input, ok := extra_params[0].(*model.FieldsToUpdate)
+	if !ok {
+		return nil, errors.New("cannot extract fields to add/update")
+	}
+	opts := options.FindOneAndUpdate().SetUpsert(false).SetReturnDocument(options.After)
+	filter := bson.D{{"_id", input.ID}}
+	filters := []bson.D{filter}
+	for field := range input.UpdateFields {
+		filters = append(filters, bson.D{{field, bson.D{{"$exists", exist}}}})
+	}
+	filter = bson.D{{"$and", filters}}
+
+	update := bson.D{{"$set", input.UpdateFields}}
+	var resMap map[string]interface{}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+	err := c.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&resMap)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(resMap)
+}
 
 func (db *Mongodb) readRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 1 {
@@ -320,14 +374,12 @@ func (db *Mongodb) deleteArrayElement(dbName string, dataCollectionName string, 
 	q := bson.M{"_id": parentId}
 
 	update := bson.M{
-		"$pull": bson.M{key:bson.M{"_id":id}},
+		"$pull": bson.M{key: bson.M{"_id": id}},
 	}
 
 	_, err := c.UpdateOne(context.TODO(), q, update)
 	return nil, err
 }
-
-
 
 func getQueryString(fs FilterAndSort) string {
 	queryStr := ""
@@ -445,11 +497,16 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.addArrayElement(db_name, data_collection_name, extra_params...)
 	case "unique_fields":
 		return db.uniqueFields(db_name, data_collection_name, extra_params...)
-	case"delete_array_element":
+	case "delete_array_element":
 		return db.deleteArrayElement(db_name, data_collection_name, extra_params...)
 	case "update_record":
-		return db.updateRecord(db_name, data_collection_name, extra_params...)
-
+		return db.updateRecord(db_name, data_collection_name, false, extra_params...)
+	case "delete_fields":
+		return db.deleteFields(db_name, data_collection_name, extra_params...)
+	case "update_fields":
+		return db.setFields(db_name, data_collection_name, true, extra_params...)
+	case "add_fields":
+		return db.setFields(db_name, data_collection_name, false, extra_params...)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)
