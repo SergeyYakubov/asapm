@@ -13,7 +13,7 @@ import (
 	"errors"
 )
 
-func (r *mutationResolver)  ModifyBeamtimeMeta(ctx context.Context, input model.ModifiedBeamtimeMeta) (*model.BeamtimeMeta, error) {
+func (r *mutationResolver)  ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToUpdate) (*model.BeamtimeMeta, error) {
 	res,err := meta.ModifyBeamtimeMeta(input)
 	if err != nil {
 		logger.Error(err.Error())

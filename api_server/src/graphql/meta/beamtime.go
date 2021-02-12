@@ -97,24 +97,25 @@ func DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
 	return &id, nil
 }
 
-func ModifyBeamtimeMeta(input model.ModifiedBeamtimeMeta) (*model.BeamtimeMeta, error) {
+func ModifyBeamtimeMeta(input model.FieldsToUpdate) (*model.BeamtimeMeta, error) {
 	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", input.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	var meta model.BeamtimeMeta
-	err = json.Unmarshal(res, &meta)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_record", input.ID,&input)
+	res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_fields", &input)
 	if err != nil {
 		return nil, err
 	}
 
 	var res_meta model.BeamtimeMeta
 	err = json.Unmarshal(res, &res_meta)
+
+	parentMeta := model.ParentBeamtimeMeta{}
+	utils.DeepCopy(res_meta, &parentMeta)
+	smeta := string(res)
+	res_meta.JSONString = &smeta
+	res_meta.ParentBeamtimeMeta = &parentMeta
+
 	return &res_meta,err
 }

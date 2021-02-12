@@ -72,10 +72,9 @@ var ModifyMetaTests = []struct {
 
 func (suite *MetaSuite) TestModifyMeta() {
 	for _, test := range ModifyMetaTests {
-		input := model.ModifiedBeamtimeMeta{
+		input := model.FieldsToUpdate{
 			ID:     test.id,
-			Status: test.status,
-			Users:  test.users,
+			UpdateFields: map[string]interface{}{"status":test.status,"users":test.users},
 		}
 
 		params_modify := []interface{}{test.id}
@@ -87,7 +86,7 @@ func (suite *MetaSuite) TestModifyMeta() {
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_modify).Return(metab, db_err)
 
 		if test.meta != nil {
-			params_update := []interface{}{test.id,&input}
+			params_update := []interface{}{&input}
 			test.meta.Status = *test.status
 			if test.users!=nil {
 				test.meta.Users = &model.Users{}
@@ -97,7 +96,7 @@ func (suite *MetaSuite) TestModifyMeta() {
 			}
 			metab, _ := json.Marshal(test.meta)
 
-			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "update_record", params_update).Return(metab, nil)
+			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "update_fields", params_update).Return(metab, nil)
 		}
 		res, err := ModifyBeamtimeMeta(input)
 		if test.meta == nil {
@@ -109,6 +108,7 @@ func (suite *MetaSuite) TestModifyMeta() {
 			suite.NotNil(res)
 			if res != nil {
 				suite.Equal(*test.status, res.Status)
+				suite.Equal(*test.status, res.ParentBeamtimeMeta.Status)
 				if test.users!=nil {
 					suite.Equal(test.users.DoorDb, res.Users.DoorDb)
 				}

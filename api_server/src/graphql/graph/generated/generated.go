@@ -111,7 +111,7 @@ type ComplexityRoot struct {
 		DeleteMeta          func(childComplexity int, id string) int
 		DeleteSubcollection func(childComplexity int, id string) int
 		DeleteUserFields    func(childComplexity int, input model.FieldsToDelete) int
-		ModifyBeamtimeMeta  func(childComplexity int, input model.ModifiedBeamtimeMeta) int
+		ModifyBeamtimeMeta  func(childComplexity int, input model.FieldsToUpdate) int
 		SetUserPreferences  func(childComplexity int, id string, input model.InputUserPreferences) int
 		UpdateUserFields    func(childComplexity int, input model.FieldsToUpdate) int
 	}
@@ -181,7 +181,7 @@ type MutationResolver interface {
 	DeleteMeta(ctx context.Context, id string) (*string, error)
 	DeleteSubcollection(ctx context.Context, id string) (*string, error)
 	AddCollectionEntry(ctx context.Context, input model.NewCollectionEntry) (*model.CollectionEntry, error)
-	ModifyBeamtimeMeta(ctx context.Context, input model.ModifiedBeamtimeMeta) (*model.BeamtimeMeta, error)
+	ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToUpdate) (*model.BeamtimeMeta, error)
 	UpdateUserFields(ctx context.Context, input model.FieldsToUpdate) (*model.CollectionEntry, error)
 	AddUserFields(ctx context.Context, input model.FieldsToAdd) (*model.CollectionEntry, error)
 	DeleteUserFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error)
@@ -623,7 +623,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ModifyBeamtimeMeta(childComplexity, args["input"].(model.ModifiedBeamtimeMeta)), true
+		return e.complexity.Mutation.ModifyBeamtimeMeta(childComplexity, args["input"].(model.FieldsToUpdate)), true
 
 	case "Mutation.setUserPreferences":
 		if e.complexity.Mutation.SetUserPreferences == nil {
@@ -1152,7 +1152,7 @@ input NewBeamtimeMeta {
     beamlineAlias: String
     beamlineSetup: String
     id: String!
-    status: String!
+    status: String
     contact: String
     corePath: String
     eventEnd: DateTime
@@ -1169,12 +1169,6 @@ input NewBeamtimeMeta {
     users: InputUsers
     childCollectionName: String
     customValues: Map
-}
-
-input ModifiedBeamtimeMeta {
-    id: String!
-    status: String
-    users: InputUsers
 }
 
 input FieldsToDelete {
@@ -1212,7 +1206,7 @@ type Mutation {
     deleteMeta(id: String!): String @needAcl(acl: ADMIN)
     deleteSubcollection(id: String!): String @needAcl(acl: ADMIN)
     addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: ADMIN)
-    modifyBeamtimeMeta(input: ModifiedBeamtimeMeta!): BeamtimeMeta @needAcl(acl: ADMIN)
+    modifyBeamtimeMeta(input: FieldsToUpdate!): BeamtimeMeta @needAcl(acl: ADMIN)
     updateUserFields(input: FieldsToUpdate!): CollectionEntry
     addUserFields(input: FieldsToAdd!): CollectionEntry
     deleteUserFields(input: FieldsToDelete!): CollectionEntry
@@ -1393,9 +1387,9 @@ func (ec *executionContext) field_Mutation_deleteUserFields_args(ctx context.Con
 func (ec *executionContext) field_Mutation_modifyBeamtimeMeta_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.ModifiedBeamtimeMeta
+	var arg0 model.FieldsToUpdate
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNModifiedBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐModifiedBeamtimeMeta(ctx, tmp)
+		arg0, err = ec.unmarshalNFieldsToUpdate2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToUpdate(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3307,7 +3301,7 @@ func (ec *executionContext) _Mutation_modifyBeamtimeMeta(ctx context.Context, fi
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ModifyBeamtimeMeta(rctx, args["input"].(model.ModifiedBeamtimeMeta))
+			return ec.resolvers.Mutation().ModifyBeamtimeMeta(rctx, args["input"].(model.FieldsToUpdate))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
@@ -6078,36 +6072,6 @@ func (ec *executionContext) unmarshalInputInputUsers(ctx context.Context, obj in
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputModifiedBeamtimeMeta(ctx context.Context, obj interface{}) (model.ModifiedBeamtimeMeta, error) {
-	var it model.ModifiedBeamtimeMeta
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "id":
-			var err error
-			it.ID, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "status":
-			var err error
-			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "users":
-			var err error
-			it.Users, err = ec.unmarshalOInputUsers2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputUsers(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, obj interface{}) (model.NewBeamtimeMeta, error) {
 	var it model.NewBeamtimeMeta
 	var asMap = obj.(map[string]interface{})
@@ -6146,7 +6110,7 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 			}
 		case "status":
 			var err error
-			it.Status, err = ec.unmarshalNString2string(ctx, v)
+			it.Status, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7318,10 +7282,6 @@ func (ec *executionContext) marshalNMap2map(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNModifiedBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐModifiedBeamtimeMeta(ctx context.Context, v interface{}) (model.ModifiedBeamtimeMeta, error) {
-	return ec.unmarshalInputModifiedBeamtimeMeta(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐNewBeamtimeMeta(ctx context.Context, v interface{}) (model.NewBeamtimeMeta, error) {

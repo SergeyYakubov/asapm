@@ -119,19 +119,13 @@ type InputUsers struct {
 	Unknown []string `json:"unknown,omitempty" bson:"unknown,omitempty"`
 }
 
-type ModifiedBeamtimeMeta struct {
-	ID     string      `json:"_id,omitempty" bson:"_id,omitempty"`
-	Status *string     `json:"status,omitempty" bson:"status,omitempty"`
-	Users  *InputUsers `json:"users,omitempty" bson:"users,omitempty"`
-}
-
 type NewBeamtimeMeta struct {
 	Applicant           *InputBeamtimeUser       `json:"applicant,omitempty" bson:"applicant,omitempty"`
 	Beamline            *string                  `json:"beamline,omitempty" bson:"beamline,omitempty"`
 	BeamlineAlias       *string                  `json:"beamlineAlias,omitempty" bson:"beamlineAlias,omitempty"`
 	BeamlineSetup       *string                  `json:"beamlineSetup,omitempty" bson:"beamlineSetup,omitempty"`
 	ID                  string                   `json:"_id,omitempty" bson:"_id,omitempty"`
-	Status              string                   `json:"status,omitempty" bson:"status,omitempty"`
+	Status              *string                  `json:"status,omitempty" bson:"status,omitempty"`
 	Contact             *string                  `json:"contact,omitempty" bson:"contact,omitempty"`
 	CorePath            *string                  `json:"corePath,omitempty" bson:"corePath,omitempty"`
 	EventEnd            *time.Time               `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`

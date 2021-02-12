@@ -151,7 +151,7 @@ input NewBeamtimeMeta {
     beamlineAlias: String
     beamlineSetup: String
     id: String!
-    status: String!
+    status: String
     contact: String
     corePath: String
     eventEnd: DateTime
@@ -168,12 +168,6 @@ input NewBeamtimeMeta {
     users: InputUsers
     childCollectionName: String
     customValues: Map
-}
-
-input ModifiedBeamtimeMeta {
-    id: String!
-    status: String
-    users: InputUsers
 }
 
 input FieldsToDelete {
