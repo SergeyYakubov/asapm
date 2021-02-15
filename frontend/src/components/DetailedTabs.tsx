@@ -8,7 +8,8 @@ import {TableDataFromMeta, TableDataFromCollection} from "../meta";
 import DetailedMetaTab from "./DetailedMetaTab";
 import DatasetsTableTab from "./DatasetsTableTab";
 import {useHistory} from "react-router-dom";
-import {BeamtimeMeta, CollectionEntry} from "../generated/graphql";
+import {BeamtimeMeta, CollectionEntry,Query} from "../generated/graphql";
+import {QueryResult} from "@apollo/client";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -55,12 +56,13 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 type DetailedTabsProps = {
+    originalQuery: QueryResult<Query>
     meta: BeamtimeMeta | CollectionEntry
     isBeamtime: boolean
     section: string
 }
 
-function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps): JSX.Element {
+function DetailedTabs({originalQuery, meta,isBeamtime,section}: DetailedTabsProps): JSX.Element {
     const classes = useStyles();
     let value: number;
     const showDataset = meta.childCollection && (meta.childCollection.length > 0);
@@ -110,7 +112,7 @@ function DetailedTabs({meta,isBeamtime,section}: DetailedTabsProps): JSX.Element
             </AppBar>
             <div className={classes.marginLeftRight}>
                 <TabPanel value={value} index={0}>
-                    <DetailedMetaTab meta={meta} isBeamtime={isBeamtime} tableFromMeta={isBeamtime?TableDataFromMeta:TableDataFromCollection}/>
+                    <DetailedMetaTab originalQuery={originalQuery} meta={meta} isBeamtime={isBeamtime} tableFromMeta={isBeamtime?TableDataFromMeta:TableDataFromCollection}/>
                 </TabPanel>
                 {showDataset &&
                 <TabPanel value={value} index={1}>

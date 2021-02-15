@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {forwardRef, useRef, useState} from "react";
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -14,7 +14,13 @@ import Switch from '@material-ui/core/Switch';
 
 import {TableEntry, TableData, TableFromData} from "../common";
 import {TableIcons} from "../TableIcons";
-import {BeamtimeMeta, CollectionEntry} from "../generated/graphql";
+import {BeamtimeMeta, CollectionEntry, Query} from "../generated/graphql";
+import AddCircleIcon from "@material-ui/icons/AddCircle";
+import Fab from "@material-ui/core/Fab";
+import AddBox from "@material-ui/icons/AddBox";
+import { client } from"../index";
+import {DELETE_ENTRY_FIELDS} from "../graphQLSchemes";
+import {QueryResult} from "@apollo/client";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -91,10 +97,12 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 type MetaViewProps = {
+    originalQuery: QueryResult<Query>
     meta: BeamtimeMeta | CollectionEntry
 }
 
 type StaticMetaProps = {
+    originalQuery: QueryResult<Query>
     meta: BeamtimeMeta | CollectionEntry
     isBeamtime: boolean
     tableFromMeta: TableFromData,
@@ -109,6 +117,9 @@ type StaticSectionProps = {
 }
 
 type CustomTableProps = {
+    originalQuery: QueryResult<Query>
+    suffix: string
+    id: string
     data: KvObj,
 }
 
@@ -205,24 +216,49 @@ function plainDataFromObject(plainData: TableData, data: KvObj, root: string) {
     }
 }
 
-function CustomTable({data}: CustomTableProps) {
+function CustomTable({originalQuery,suffix,id,data}: CustomTableProps) {
     const plainData: TableData=[];
     plainDataFromObject(plainData,data,"");
+
     return <MaterialTable
-        icons={TableIcons}
+        editable={{
+//            onRowUpdate: (newData, oldData) =>
+//                client.mutate().then(),
+            onRowDelete: oldData =>  {
+                return client.mutate({
+                    mutation: DELETE_ENTRY_FIELDS,
+                    variables: { id: id, fields: [suffix+"."+oldData.name] },
+                }).then((response)=> {
+                    originalQuery.refetch();
+                }).catch((err)=>console.log(err))},
+            onRowAddCancelled: rowData => console.log('Row adding cancelled'),
+            onRowAdd: newData =>
+                new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        /* setData([...data, newData]); */
+                        resolve();
+                    }, 1000);
+                }),
+        }}
+        icons={{
+            ...TableIcons, Add: forwardRef((props, ref) => (
+                    <AddCircleIcon  data-mycustomid={"add-icon-handler"} color={'secondary'}/>
+            ))
+        }}
         options={{
             filtering: false,
             header: false,
             showTitle: false,
             search: false,
             paging: false,
-            toolbar: false,
+            toolbar: true,
             draggable: false,
             minBodyHeight: "50vh",
+            actionsColumnIndex: -1,
         }}
         columns={[
-            {title: 'Name', field: 'name'},
-            {title: 'Value', field: 'value'},
+            {title: 'Name', field: 'name', editable:'onAdd'},
+            {title: 'Value', field: 'value', editable:'always'},
         ]}
         data={plainData}
         onRowClick={OnRowClick}
@@ -307,7 +343,7 @@ function TabPanel(props: TabPanelProps) {
     );
 }
 
-function CategorizedMeta({meta}: MetaViewProps): JSX.Element {
+function CategorizedMeta({originalQuery, meta}: MetaViewProps): JSX.Element {
     const classes = useStyles();
 
     const [tabValue, setTabValue] = React.useState(0);
@@ -353,13 +389,13 @@ function CategorizedMeta({meta}: MetaViewProps): JSX.Element {
     <Grid item xs={10}>
         {isMainCategory &&
         <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={4}>
-            <CustomTable data={mainCategory}/>
+            <CustomTable originalQuery={originalQuery} suffix={"customValues"} id={meta.id} data={mainCategory}/>
         </TabPanel>
         }
         {
-            Object.entries(customCategories).map(([,value]) =>
+            Object.entries(customCategories).map(([key,value]) =>
                 <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={n}>
-                    <CustomTable data={value}/>
+                    <CustomTable originalQuery={originalQuery}  suffix={"customValues."+key} id={meta.id} data={value}/>
                 </TabPanel>
             )
         }
@@ -367,15 +403,15 @@ function CategorizedMeta({meta}: MetaViewProps): JSX.Element {
     </Grid>;
 }
 
-function PlainMeta({meta}: MetaViewProps) {
+function PlainMeta({originalQuery, meta}: MetaViewProps) {
     return <Grid container>
         <Grid item xs={12}>
-            <CustomTable data={meta.customValues as KvObj}/>
+            <CustomTable originalQuery={originalQuery} suffix={"customValues"} id={meta.id} data={meta.customValues as KvObj}/>
         </Grid>
     </Grid>;
 }
 
-function CustomMeta({meta}: MetaViewProps) {
+function CustomMeta({originalQuery,meta}: MetaViewProps) {
     const classes = useStyles();
     const [plainView, setPlainView] = React.useState(false);
 
@@ -405,19 +441,19 @@ function CustomMeta({meta}: MetaViewProps) {
         </Grid>
         <Paper className={classes.paper}>
             {plainView
-            ? <PlainMeta meta={meta}/>
-            : <CategorizedMeta meta={meta}/>
+            ? <PlainMeta originalQuery={originalQuery} meta={meta}/>
+            : <CategorizedMeta originalQuery={originalQuery} meta={meta}/>
             }
         </Paper>
     </div>;
 }
 
-function DetailedMetaTab({meta,tableFromMeta,isBeamtime}: StaticMetaProps): JSX.Element {
+function DetailedMetaTab({originalQuery, meta,tableFromMeta,isBeamtime}: StaticMetaProps): JSX.Element {
     return (
                 <div>
-                    <StaticMeta meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}/>
+                    <StaticMeta originalQuery={originalQuery} meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}/>
                     { meta.customValues &&
-                        <CustomMeta meta={meta}/>
+                        <CustomMeta originalQuery={originalQuery} meta={meta}/>
                     }
                 </div>
     );

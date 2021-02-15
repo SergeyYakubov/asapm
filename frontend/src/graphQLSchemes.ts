@@ -1,5 +1,16 @@
 import {gql} from "@apollo/client";
 
+export const DELETE_ENTRY_FIELDS = gql`
+    mutation ($id: String!,$fields: [String!]!)  {
+    deleteCollectionEntryFields(input:{
+        id:$id    
+        fields:$fields,
+    }){
+        id
+    }
+}
+`;
+
 export const METAS_DETAILED = gql`
    query ($filter:String) {
     meta (filter: $filter){
