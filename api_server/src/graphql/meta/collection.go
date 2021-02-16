@@ -202,6 +202,8 @@ func ModifyCollectionEntryMeta(acl auth.MetaAcl,mode int, id string, input inter
 	var res_meta model.CollectionEntry
 	err = json.Unmarshal(res, &res_meta)
 	if err== nil {
+		s := string(res)
+		res_meta.JSONString =&s
 		updateFields(keepFields,removeFields, &res_meta.CustomValues)
 	}
 	return &res_meta,err

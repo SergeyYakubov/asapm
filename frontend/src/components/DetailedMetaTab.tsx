@@ -1,4 +1,4 @@
-import React, {forwardRef, useRef, useState} from "react";
+import React, {forwardRef} from "react";
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -16,8 +16,6 @@ import {TableEntry, TableData, TableFromData} from "../common";
 import {TableIcons} from "../TableIcons";
 import {BeamtimeMeta, CollectionEntry, Query} from "../generated/graphql";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
-import Fab from "@material-ui/core/Fab";
-import AddBox from "@material-ui/icons/AddBox";
 import { client } from"../index";
 import {DELETE_ENTRY_FIELDS} from "../graphQLSchemes";
 import {QueryResult} from "@apollo/client";
@@ -206,6 +204,9 @@ function Table({meta, section,tableFromMeta}: StaticSectionProps) {
 
 
 function plainDataFromObject(plainData: TableData, data: KvObj, root: string) {
+    if (!data) {
+        return;
+    }
     for (const [key, value] of Object.entries(data)) {
         const fullKey = (root !== "" ? root+"." : "")+key;
         if (value.constructor.name === "Object") {
@@ -225,12 +226,16 @@ function CustomTable({originalQuery,suffix,id,data}: CustomTableProps) {
 //            onRowUpdate: (newData, oldData) =>
 //                client.mutate().then(),
             onRowDelete: oldData =>  {
+                let fields = [suffix+"."+oldData.name];
+                if (plainData.length===1 && suffix !== "customValues") {
+                    fields = [suffix]; // we remove the whole section since it will be empty otherwise
+                }
                 return client.mutate({
                     mutation: DELETE_ENTRY_FIELDS,
-                    variables: { id: id, fields: [suffix+"."+oldData.name] },
-                }).then((response)=> {
+                    variables: { id: id, fields: fields},
+                }).then(()=> {
                     originalQuery.refetch();
-                }).catch((err)=>console.log(err))},
+                }).catch((err)=>console.log(err));},
             onRowAddCancelled: rowData => console.log('Row adding cancelled'),
             onRowAdd: newData =>
                 new Promise((resolve, reject) => {
@@ -241,7 +246,7 @@ function CustomTable({originalQuery,suffix,id,data}: CustomTableProps) {
                 }),
         }}
         icons={{
-            ...TableIcons, Add: forwardRef((props, ref) => (
+            ...TableIcons, Add: forwardRef(() => (
                     <AddCircleIcon  data-mycustomid={"add-icon-handler"} color={'secondary'}/>
             ))
         }}
@@ -354,47 +359,45 @@ function CategorizedMeta({originalQuery, meta}: MetaViewProps): JSX.Element {
 
     const customCategories: { [k: string]: any } = {};
     const mainCategory: { [k: string]: any } = {};
-    let isMainCategory = false;
-    for (const [key, value] of Object.entries(meta.customValues as KvObj)) {
-        if (value.constructor.name === "Object") {
-            customCategories[key] = value;
-        } else {
-            isMainCategory = true;
-            mainCategory[key] = value;
+    if (meta.customValues) {
+        for (const [key, value] of Object.entries(meta.customValues as KvObj)) {
+            if (value.constructor.name === "Object") {
+                customCategories[key] = value;
+            } else {
+                mainCategory[key] = value;
+            }
         }
     }
 
-
     let n = 0;
+    const tValue = Object.entries(customCategories).length >= tabValue?tabValue:0;
     return <Grid container>
     <Grid item xs={2}>
         <Tabs
             orientation="vertical"
-            variant="scrollable"
-            value={tabValue}
+            variant="standard"
+            value={tValue}
             onChange={handleTabChange}
             aria-label="Vertical tabs example"
             className={classes.tabs}
         >
-            {isMainCategory &&
             <Tab classes={{wrapper: classes.tabLabel}} label="general" {...a11yProps(0)}/>
-            }
             {
-                Object.entries(customCategories).map(([key]) =>
-                    <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} key={key}/>
+                Object.entries(customCategories).map(([key]) => {
+                    return <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} key={key}/>;
+                }
                 )
             }
+
         </Tabs>
     </Grid>
     <Grid item xs={10}>
-        {isMainCategory &&
-        <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={4}>
+        <TabPanel value={tValue} index={n++} className={classes.tabPanel} key={n}>
             <CustomTable originalQuery={originalQuery} suffix={"customValues"} id={meta.id} data={mainCategory}/>
         </TabPanel>
-        }
         {
             Object.entries(customCategories).map(([key,value]) =>
-                <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={n}>
+                <TabPanel value={tValue} index={n++} className={classes.tabPanel} key={n}>
                     <CustomTable originalQuery={originalQuery}  suffix={"customValues."+key} id={meta.id} data={value}/>
                 </TabPanel>
             )
@@ -452,9 +455,7 @@ function DetailedMetaTab({originalQuery, meta,tableFromMeta,isBeamtime}: StaticM
     return (
                 <div>
                     <StaticMeta originalQuery={originalQuery} meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}/>
-                    { meta.customValues &&
-                        <CustomMeta originalQuery={originalQuery} meta={meta}/>
-                    }
+                    <CustomMeta originalQuery={originalQuery} meta={meta}/>
                 </div>
     );
 }

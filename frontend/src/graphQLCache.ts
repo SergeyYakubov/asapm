@@ -4,6 +4,24 @@ import {collectionFilterVar,beamtimeFilterVar} from "./components/FilterBoxes";
 
 export const cache: InMemoryCache = new InMemoryCache({
     typePolicies: {
+        BeamtimeMeta: {
+            fields: {
+                customValues: {
+                    merge(existing, incoming) {
+                        return incoming;
+                    },
+                },
+            },
+        },
+        CollectionEntry: {
+            fields: {
+                customValues: {
+                    merge(existing, incoming) {
+                        return incoming;
+                    },
+                },
+            },
+        },
         Query: {
             fields: {
                 columns: {
