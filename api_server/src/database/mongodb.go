@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -250,6 +251,7 @@ func (db *Mongodb) setFields(dbName string, dataCollectionName string, exist boo
 	filter := bson.D{{"_id", input.ID}}
 	filters := []bson.D{filter}
 	inputWithDots := mapToMapWithDots(input.Fields)
+	fmt.Println(inputWithDots,input.Fields)
 	for field := range inputWithDots {
 		filters = append(filters, bson.D{{field, bson.D{{"$exists", exist}}}})
 	}
