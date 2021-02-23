@@ -104,14 +104,35 @@ type ComplexityRoot struct {
 		Type                func(childComplexity int) int
 	}
 
+	LogEntryMessage struct {
+		Attachments func(childComplexity int) int
+		Beamtime    func(childComplexity int) int
+		CreatedBy   func(childComplexity int) int
+		EntryType   func(childComplexity int) int
+		Facility    func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Message     func(childComplexity int) int
+		Source      func(childComplexity int) int
+		Tags        func(childComplexity int) int
+		Time        func(childComplexity int) int
+	}
+
+	LogEntryQueryResult struct {
+		Entries func(childComplexity int) int
+		HasMore func(childComplexity int) int
+		Start   func(childComplexity int) int
+	}
+
 	Mutation struct {
 		AddCollectionEntry          func(childComplexity int, input model.NewCollectionEntry) int
 		AddCollectionEntryFields    func(childComplexity int, input model.FieldsToSet) int
+		AddMessageLogEntry          func(childComplexity int, input model.NewLogEntryMessage) int
 		CreateMeta                  func(childComplexity int, input model.NewBeamtimeMeta) int
 		DeleteCollectionEntryFields func(childComplexity int, input model.FieldsToDelete) int
 		DeleteMeta                  func(childComplexity int, id string) int
 		DeleteSubcollection         func(childComplexity int, id string) int
 		ModifyBeamtimeMeta          func(childComplexity int, input model.FieldsToSet) int
+		RemoveLogEntry              func(childComplexity int, id string) int
 		SetUserPreferences          func(childComplexity int, id string, input model.InputUserPreferences) int
 		UpdateCollectionEntryFields func(childComplexity int, input model.FieldsToSet) int
 	}
@@ -149,10 +170,13 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Collections  func(childComplexity int, filter *string, orderBy *string) int
-		Meta         func(childComplexity int, filter *string, orderBy *string) int
-		UniqueFields func(childComplexity int, filter *string, keys []string) int
-		User         func(childComplexity int, id string) int
+		Collections            func(childComplexity int, filter *string, orderBy *string) int
+		LogEntries             func(childComplexity int, filter string, start *int, limit *int) int
+		LogEntriesUniqueFields func(childComplexity int, filter *string, keys []string) int
+		LogEntry               func(childComplexity int, id string) int
+		Meta                   func(childComplexity int, filter *string, orderBy *string) int
+		UniqueFields           func(childComplexity int, filter *string, keys []string) int
+		User                   func(childComplexity int, id string) int
 	}
 
 	UniqueField struct {
@@ -186,12 +210,17 @@ type MutationResolver interface {
 	AddCollectionEntryFields(ctx context.Context, input model.FieldsToSet) (*model.CollectionEntry, error)
 	DeleteCollectionEntryFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error)
 	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error)
+	AddMessageLogEntry(ctx context.Context, input model.NewLogEntryMessage) (*string, error)
+	RemoveLogEntry(ctx context.Context, id string) (*string, error)
 }
 type QueryResolver interface {
 	Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error)
 	Collections(ctx context.Context, filter *string, orderBy *string) ([]*model.CollectionEntry, error)
 	UniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error)
 	User(ctx context.Context, id string) (*model.UserAccount, error)
+	LogEntry(ctx context.Context, id string) (model.LogEntry, error)
+	LogEntries(ctx context.Context, filter string, start *int, limit *int) (*model.LogEntryQueryResult, error)
+	LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error)
 }
 
 type executableSchema struct {
@@ -541,6 +570,97 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CollectionEntry.Type(childComplexity), true
 
+	case "LogEntryMessage.attachments":
+		if e.complexity.LogEntryMessage.Attachments == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.Attachments(childComplexity), true
+
+	case "LogEntryMessage.beamtime":
+		if e.complexity.LogEntryMessage.Beamtime == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.Beamtime(childComplexity), true
+
+	case "LogEntryMessage.createdBy":
+		if e.complexity.LogEntryMessage.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.CreatedBy(childComplexity), true
+
+	case "LogEntryMessage.entryType":
+		if e.complexity.LogEntryMessage.EntryType == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.EntryType(childComplexity), true
+
+	case "LogEntryMessage.facility":
+		if e.complexity.LogEntryMessage.Facility == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.Facility(childComplexity), true
+
+	case "LogEntryMessage.id":
+		if e.complexity.LogEntryMessage.ID == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.ID(childComplexity), true
+
+	case "LogEntryMessage.message":
+		if e.complexity.LogEntryMessage.Message == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.Message(childComplexity), true
+
+	case "LogEntryMessage.source":
+		if e.complexity.LogEntryMessage.Source == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.Source(childComplexity), true
+
+	case "LogEntryMessage.tags":
+		if e.complexity.LogEntryMessage.Tags == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.Tags(childComplexity), true
+
+	case "LogEntryMessage.time":
+		if e.complexity.LogEntryMessage.Time == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.Time(childComplexity), true
+
+	case "LogEntryQueryResult.entries":
+		if e.complexity.LogEntryQueryResult.Entries == nil {
+			break
+		}
+
+		return e.complexity.LogEntryQueryResult.Entries(childComplexity), true
+
+	case "LogEntryQueryResult.hasMore":
+		if e.complexity.LogEntryQueryResult.HasMore == nil {
+			break
+		}
+
+		return e.complexity.LogEntryQueryResult.HasMore(childComplexity), true
+
+	case "LogEntryQueryResult.start":
+		if e.complexity.LogEntryQueryResult.Start == nil {
+			break
+		}
+
+		return e.complexity.LogEntryQueryResult.Start(childComplexity), true
+
 	case "Mutation.addCollectionEntry":
 		if e.complexity.Mutation.AddCollectionEntry == nil {
 			break
@@ -564,6 +684,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddCollectionEntryFields(childComplexity, args["input"].(model.FieldsToSet)), true
+
+	case "Mutation.addMessageLogEntry":
+		if e.complexity.Mutation.AddMessageLogEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addMessageLogEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddMessageLogEntry(childComplexity, args["input"].(model.NewLogEntryMessage)), true
 
 	case "Mutation.createMeta":
 		if e.complexity.Mutation.CreateMeta == nil {
@@ -624,6 +756,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ModifyBeamtimeMeta(childComplexity, args["input"].(model.FieldsToSet)), true
+
+	case "Mutation.removeLogEntry":
+		if e.complexity.Mutation.RemoveLogEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeLogEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RemoveLogEntry(childComplexity, args["id"].(string)), true
 
 	case "Mutation.setUserPreferences":
 		if e.complexity.Mutation.SetUserPreferences == nil {
@@ -842,6 +986,42 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Collections(childComplexity, args["filter"].(*string), args["orderBy"].(*string)), true
+
+	case "Query.logEntries":
+		if e.complexity.Query.LogEntries == nil {
+			break
+		}
+
+		args, err := ec.field_Query_logEntries_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LogEntries(childComplexity, args["filter"].(string), args["start"].(*int), args["limit"].(*int)), true
+
+	case "Query.logEntriesUniqueFields":
+		if e.complexity.Query.LogEntriesUniqueFields == nil {
+			break
+		}
+
+		args, err := ec.field_Query_logEntriesUniqueFields_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LogEntriesUniqueFields(childComplexity, args["filter"].(*string), args["keys"].([]string)), true
+
+	case "Query.logEntry":
+		if e.complexity.Query.LogEntry == nil {
+			break
+		}
+
+		args, err := ec.field_Query_logEntry_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.LogEntry(childComplexity, args["id"].(string)), true
 
 	case "Query.meta":
 		if e.complexity.Query.Meta == nil {
@@ -1187,6 +1367,59 @@ input FieldsToSet {
 }
 
 `, BuiltIn: false},
+	&ast.Source{Name: "../../../schema/logbook.graphqls", Input: `enum LogEntryType {
+    Message,
+}
+
+interface GenericLogEntry {
+    id: ID!
+    time: DateTime!
+    createdBy: String!
+    entryType: LogEntryType!
+
+    facility: String!
+    beamtime: String
+    tags: [String!]
+    source: String
+}
+
+type LogEntryMessage implements GenericLogEntry {
+    id: ID!
+    time: DateTime!
+    createdBy: String!
+    entryType: LogEntryType! # Always LogEntryType.Message
+
+    facility: String!
+    beamtime: String
+    tags: [String!]
+    source: String
+
+    # Payload
+    message: String!
+    attachments: Map # Map<Filename, Base64>
+}
+
+input NewLogEntryMessage {
+    time: DateTime # If not set, its Now()
+
+    facility: String!
+    beamtime: String
+    tags: [String!]
+    source: String
+
+    # Payload
+    message: String!
+    attachments: Map # Map<Filename, Base64>
+}
+
+union LogEntry = LogEntryMessage
+
+type LogEntryQueryResult {
+    entries: [LogEntry!]!
+    start: Int!
+    hasMore: Boolean!
+}
+`, BuiltIn: false},
 	&ast.Source{Name: "../../../schema/queries.graphqls", Input: `directive @needAcl(acl: Acls!) on FIELD_DEFINITION
 #directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
 
@@ -1206,22 +1439,32 @@ type Mutation {
     addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
+
+    # Logbook API
+    addMessageLogEntry(input: NewLogEntryMessage!): ID @needAcl(acl: ADMIN)
+    removeLogEntry(id: ID!): ID @needAcl(acl: ADMIN)
 }
 
 type Query {
     meta (filter: String, orderBy: String): [BeamtimeMeta!]!
     collections (filter: String, orderBy: String): [CollectionEntry!]!
-    uniqueFields  (filter: String,keys: [String!]!): [UniqueField!]!
+    uniqueFields  (filter: String, keys: [String!]!): [UniqueField!]!
     user (id: ID!): UserAccount
-}`, BuiltIn: false},
+
+    # Logbook API
+    logEntry (id: ID!): LogEntry
+    logEntries (filter: String!, start: Int, limit: Int): LogEntryQueryResult
+    logEntriesUniqueFields (filter: String, keys: [String!]!): [UniqueField!]!
+}
+`, BuiltIn: false},
 	&ast.Source{Name: "../../../schema/user.graphqls", Input: `scalar Map
 
 type UserPreferences {
- schema: String!
+    schema: String!
 }
 
 input InputUserPreferences {
-  schema: String!
+    schema: String!
 }
 
 type UserAccount {
@@ -1323,6 +1566,20 @@ func (ec *executionContext) field_Mutation_addCollectionEntry_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_addMessageLogEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.NewLogEntryMessage
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNNewLogEntryMessage2asapmᚋgraphqlᚋgraphᚋmodelᚐNewLogEntryMessage(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createMeta_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1390,6 +1647,20 @@ func (ec *executionContext) field_Mutation_modifyBeamtimeMeta_args(ctx context.C
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeLogEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1462,6 +1733,72 @@ func (ec *executionContext) field_Query_collections_args(ctx context.Context, ra
 		}
 	}
 	args["orderBy"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_logEntriesUniqueFields_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
+	var arg1 []string
+	if tmp, ok := rawArgs["keys"]; ok {
+		arg1, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["keys"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_logEntries_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["start"]; ok {
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["start"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_logEntry_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -3023,6 +3360,436 @@ func (ec *executionContext) _CollectionEntry_jsonString(ctx context.Context, fie
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _LogEntryMessage_id(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_time(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Time, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNDateTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_entryType(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EntryType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.LogEntryType)
+	fc.Result = res
+	return ec.marshalNLogEntryType2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_facility(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Facility, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_beamtime(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Beamtime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_tags(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tags, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_source(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_message(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_attachments(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Attachments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(map[string]interface{})
+	fc.Result = res
+	return ec.marshalOMap2map(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryQueryResult_entries(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryQueryResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryQueryResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Entries, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]model.LogEntry)
+	fc.Result = res
+	return ec.marshalNLogEntry2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryQueryResult_start(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryQueryResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryQueryResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Start, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryQueryResult_hasMore(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryQueryResult) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryQueryResult",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasMore, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3483,6 +4250,130 @@ func (ec *executionContext) _Mutation_setUserPreferences(ctx context.Context, fi
 	res := resTmp.(*model.UserAccount)
 	fc.Result = res
 	return ec.marshalOUserAccount2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_addMessageLogEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addMessageLogEntry_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddMessageLogEntry(rctx, args["input"].(model.NewLogEntryMessage))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.NeedAcl == nil {
+				return nil, errors.New("directive needAcl is not implemented")
+			}
+			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_removeLogEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_removeLogEntry_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RemoveLogEntry(rctx, args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.NeedAcl == nil {
+				return nil, errors.New("directive needAcl is not implemented")
+			}
+			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OnlineAnylysisMeta_asapoBeamtimeTokenPath(ctx context.Context, field graphql.CollectedField, obj *model.OnlineAnylysisMeta) (ret graphql.Marshaler) {
@@ -4456,6 +5347,123 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	res := resTmp.(*model.UserAccount)
 	fc.Result = res
 	return ec.marshalOUserAccount2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_logEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_logEntry_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().LogEntry(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(model.LogEntry)
+	fc.Result = res
+	return ec.marshalOLogEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_logEntries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_logEntries_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().LogEntries(rctx, args["filter"].(string), args["start"].(*int), args["limit"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.LogEntryQueryResult)
+	fc.Result = res
+	return ec.marshalOLogEntryQueryResult2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryQueryResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_logEntriesUniqueFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_logEntriesUniqueFields_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().LogEntriesUniqueFields(rctx, args["filter"].(*string), args["keys"].([]string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.UniqueField)
+	fc.Result = res
+	return ec.marshalNUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6235,6 +7243,60 @@ func (ec *executionContext) unmarshalInputNewCollectionEntry(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewLogEntryMessage(ctx context.Context, obj interface{}) (model.NewLogEntryMessage, error) {
+	var it model.NewLogEntryMessage
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "time":
+			var err error
+			it.Time, err = ec.unmarshalODateTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "facility":
+			var err error
+			it.Facility, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "beamtime":
+			var err error
+			it.Beamtime, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "tags":
+			var err error
+			it.Tags, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "source":
+			var err error
+			it.Source, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "message":
+			var err error
+			it.Message, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "attachments":
+			var err error
+			it.Attachments, err = ec.unmarshalOMap2map(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -6257,6 +7319,38 @@ func (ec *executionContext) _CollectionEntryInterface(ctx context.Context, sel a
 			return graphql.Null
 		}
 		return ec._BeamtimeMeta(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _GenericLogEntry(ctx context.Context, sel ast.SelectionSet, obj model.GenericLogEntry) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.LogEntryMessage:
+		return ec._LogEntryMessage(ctx, sel, &obj)
+	case *model.LogEntryMessage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._LogEntryMessage(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
+func (ec *executionContext) _LogEntry(ctx context.Context, sel ast.SelectionSet, obj model.LogEntry) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.LogEntryMessage:
+		return ec._LogEntryMessage(ctx, sel, &obj)
+	case *model.LogEntryMessage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._LogEntryMessage(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -6470,6 +7564,103 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 	return out
 }
 
+var logEntryMessageImplementors = []string{"LogEntryMessage", "GenericLogEntry", "LogEntry"}
+
+func (ec *executionContext) _LogEntryMessage(ctx context.Context, sel ast.SelectionSet, obj *model.LogEntryMessage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, logEntryMessageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LogEntryMessage")
+		case "id":
+			out.Values[i] = ec._LogEntryMessage_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "time":
+			out.Values[i] = ec._LogEntryMessage_time(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createdBy":
+			out.Values[i] = ec._LogEntryMessage_createdBy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "entryType":
+			out.Values[i] = ec._LogEntryMessage_entryType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "facility":
+			out.Values[i] = ec._LogEntryMessage_facility(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "beamtime":
+			out.Values[i] = ec._LogEntryMessage_beamtime(ctx, field, obj)
+		case "tags":
+			out.Values[i] = ec._LogEntryMessage_tags(ctx, field, obj)
+		case "source":
+			out.Values[i] = ec._LogEntryMessage_source(ctx, field, obj)
+		case "message":
+			out.Values[i] = ec._LogEntryMessage_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "attachments":
+			out.Values[i] = ec._LogEntryMessage_attachments(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var logEntryQueryResultImplementors = []string{"LogEntryQueryResult"}
+
+func (ec *executionContext) _LogEntryQueryResult(ctx context.Context, sel ast.SelectionSet, obj *model.LogEntryQueryResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, logEntryQueryResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LogEntryQueryResult")
+		case "entries":
+			out.Values[i] = ec._LogEntryQueryResult_entries(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "start":
+			out.Values[i] = ec._LogEntryQueryResult_start(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasMore":
+			out.Values[i] = ec._LogEntryQueryResult_hasMore(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -6503,6 +7694,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteCollectionEntryFields(ctx, field)
 		case "setUserPreferences":
 			out.Values[i] = ec._Mutation_setUserPreferences(ctx, field)
+		case "addMessageLogEntry":
+			out.Values[i] = ec._Mutation_addMessageLogEntry(ctx, field)
+		case "removeLogEntry":
+			out.Values[i] = ec._Mutation_removeLogEntry(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6682,6 +7877,42 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_user(ctx, field)
+				return res
+			})
+		case "logEntry":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_logEntry(ctx, field)
+				return res
+			})
+		case "logEntries":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_logEntries(ctx, field)
+				return res
+			})
+		case "logEntriesUniqueFields":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_logEntriesUniqueFields(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "__type":
@@ -7202,6 +8433,20 @@ func (ec *executionContext) marshalNCollectionEntry2ᚖasapmᚋgraphqlᚋgraph�
 	return ec._CollectionEntry(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNDateTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return graphql.UnmarshalTime(v)
+}
+
+func (ec *executionContext) marshalNDateTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNFieldsToDelete2asapmᚋgraphqlᚋgraphᚋmodelᚐFieldsToDelete(ctx context.Context, v interface{}) (model.FieldsToDelete, error) {
 	return ec.unmarshalInputFieldsToDelete(ctx, v)
 }
@@ -7226,6 +8471,76 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 
 func (ec *executionContext) unmarshalNInputUserPreferences2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUserPreferences(ctx context.Context, v interface{}) (model.InputUserPreferences, error) {
 	return ec.unmarshalInputInputUserPreferences(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	return graphql.UnmarshalInt(v)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNLogEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntry(ctx context.Context, sel ast.SelectionSet, v model.LogEntry) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._LogEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLogEntry2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.LogEntry) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNLogEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntry(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) unmarshalNLogEntryType2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryType(ctx context.Context, v interface{}) (model.LogEntryType, error) {
+	var res model.LogEntryType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNLogEntryType2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryType(ctx context.Context, sel ast.SelectionSet, v model.LogEntryType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNMap2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
@@ -7257,6 +8572,10 @@ func (ec *executionContext) unmarshalNNewBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋ
 
 func (ec *executionContext) unmarshalNNewCollectionEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐNewCollectionEntry(ctx context.Context, v interface{}) (model.NewCollectionEntry, error) {
 	return ec.unmarshalInputNewCollectionEntry(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNNewLogEntryMessage2asapmᚋgraphqlᚋgraphᚋmodelᚐNewLogEntryMessage(ctx context.Context, v interface{}) (model.NewLogEntryMessage, error) {
+	return ec.unmarshalInputNewLogEntryMessage(ctx, v)
 }
 
 func (ec *executionContext) marshalNParentBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐParentBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v model.ParentBeamtimeMeta) graphql.Marshaler {
@@ -7726,6 +9045,29 @@ func (ec *executionContext) marshalODateTime2ᚖtimeᚐTime(ctx context.Context,
 	return ec.marshalODateTime2timeᚐTime(ctx, sel, *v)
 }
 
+func (ec *executionContext) unmarshalOID2string(ctx context.Context, v interface{}) (string, error) {
+	return graphql.UnmarshalID(v)
+}
+
+func (ec *executionContext) marshalOID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	return graphql.MarshalID(v)
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOID2string(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOID2string(ctx, sel, *v)
+}
+
 func (ec *executionContext) unmarshalOInputBeamtimeUser2asapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx context.Context, v interface{}) (model.InputBeamtimeUser, error) {
 	return ec.unmarshalInputInputBeamtimeUser(ctx, v)
 }
@@ -7760,6 +9102,47 @@ func (ec *executionContext) unmarshalOInputUsers2ᚖasapmᚋgraphqlᚋgraphᚋmo
 	}
 	res, err := ec.unmarshalOInputUsers2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUsers(ctx, v)
 	return &res, err
+}
+
+func (ec *executionContext) unmarshalOInt2int(ctx context.Context, v interface{}) (int, error) {
+	return graphql.UnmarshalInt(v)
+}
+
+func (ec *executionContext) marshalOInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	return graphql.MarshalInt(v)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOInt2int(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOInt2int(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOLogEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntry(ctx context.Context, sel ast.SelectionSet, v model.LogEntry) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LogEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOLogEntryQueryResult2asapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryQueryResult(ctx context.Context, sel ast.SelectionSet, v model.LogEntryQueryResult) graphql.Marshaler {
+	return ec._LogEntryQueryResult(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOLogEntryQueryResult2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐLogEntryQueryResult(ctx context.Context, sel ast.SelectionSet, v *model.LogEntryQueryResult) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._LogEntryQueryResult(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOMap2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {

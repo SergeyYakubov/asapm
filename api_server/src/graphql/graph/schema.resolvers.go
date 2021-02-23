@@ -8,6 +8,7 @@ import (
 	"asapm/common/logger"
 	"asapm/graphql/graph/generated"
 	"asapm/graphql/graph/model"
+	"asapm/graphql/logbook"
 	"asapm/graphql/meta"
 	"context"
 	"errors"
@@ -63,19 +64,18 @@ func (r *mutationResolver) AddCollectionEntry(ctx context.Context, input model.N
 func (r *queryResolver) Collections(ctx context.Context, filter *string,orderBy *string) ([]*model.CollectionEntry, error) {
 	acl,err := auth.ReadAclFromContext(ctx)
 	if err != nil {
-		logger.Error("access denied: "+err.Error())
-		return []*model.CollectionEntry{}, errors.New("access denied: "+err.Error())
+		logger.Error("access denied: " + err.Error())
+		return []*model.CollectionEntry{}, errors.New("access denied: " + err.Error())
 	}
 
-	keep,remove := extractModificationFields(ctx)
+	keep, remove := extractModificationFields(ctx)
 
-	res,err := meta.ReadCollectionsMeta(acl,filter,orderBy,keep,remove)
+	res, err := meta.ReadCollectionsMeta(acl, filter, orderBy, keep, remove)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 	return res, err
 }
-
 
 func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
 	log_str := "processing request create_meta"
@@ -83,60 +83,113 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 	return meta.CreateBeamtimeMeta(input)
 }
 
-
-func (r *queryResolver) Meta(ctx context.Context, filter *string,orderBy *string) ([]*model.BeamtimeMeta, error) {
+func (r *queryResolver) Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error) {
 	log_str := "processing request read_meta"
 	logger.Debug(log_str)
 
-	acl,err := auth.ReadAclFromContext(ctx)
+	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {
-		logger.Error("access denied: "+err.Error())
-		return []*model.BeamtimeMeta{}, errors.New("access denied: "+err.Error())
+		logger.Error("access denied: " + err.Error())
+		return []*model.BeamtimeMeta{}, errors.New("access denied: " + err.Error())
 	}
 
-	keep,remove := extractModificationFields(ctx)
+	keep, remove := extractModificationFields(ctx)
 
-	res,err := meta.ReadBeamtimeMeta(acl,filter,orderBy,keep,remove)
+	res, err := meta.ReadBeamtimeMeta(acl, filter, orderBy, keep, remove)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 	return res, err
 }
 
-func (r *queryResolver) UniqueFields(ctx context.Context,filter *string, keys []string) ([]*model.UniqueField, error) {
+func (r *queryResolver) UniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error) {
 	log_str := "processing request UniqueFields"
 
-	acl,err := auth.ReadAclFromContext(ctx)
+	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {
-		logger.Error("access denied: "+err.Error())
-		return []*model.UniqueField{}, errors.New("access denied: "+err.Error())
+		logger.Error("access denied: " + err.Error())
+		return []*model.UniqueField{}, errors.New("access denied: " + err.Error())
 	}
 
 	logger.Debug(log_str)
-	return meta.UniqueFields(acl,filter,keys)
+	return meta.UniqueFields(acl, filter, keys)
 }
 
-
-func (r *mutationResolver)  DeleteMeta(ctx context.Context, id string) (*string, error) {
+func (r *mutationResolver) DeleteMeta(ctx context.Context, id string) (*string, error) {
 	log_str := "processing request delete_meta"
 	logger.Debug(log_str)
 	return meta.DeleteBeamtimeMetaAndCollections(id)
 }
 
-func (r *mutationResolver)  DeleteSubcollection(ctx context.Context, id string) (*string, error) {
+func (r *mutationResolver) DeleteSubcollection(ctx context.Context, id string) (*string, error) {
 	log_str := "processing request delete_collection"
 	logger.Debug(log_str)
 	return meta.DeleteCollectionsAndSubcollectionMeta(id)
 }
 
-
-
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
-	return meta.SetUserPreferences(id,input)
+	// TODO Check if ctx.User is actually user he is trying to modify
+	return meta.SetUserPreferences(id, input)
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.UserAccount, error) {
 	return meta.GetUserPreferences(id)
+}
+
+// Logbook API
+func (r *mutationResolver) AddMessageLogEntry(ctx context.Context, newMessage model.NewLogEntryMessage) (*string, error) {
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("ReadAclFromContext, access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	// TODO: How to check if user has write access?
+	if !acl.HasAccessToFacility(newMessage.Facility) {
+		logger.Error("HasAccessForFacility, access denied")
+		return nil, errors.New("access denied: HasAccessToFacility")
+	}
+
+	username, err := auth.GetPreferredFullNameFromContext(ctx)
+	if err != nil {
+		logger.Error("GetUsernameFromContext, access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	return logbook.WriteNewMessage(newMessage, username)
+}
+
+func (r *mutationResolver) RemoveLogEntry(ctx context.Context, id string) (*string, error) {
+	panic("TODO mutation RemoveLogEntry")
+}
+
+func (r *queryResolver) LogEntry(ctx context.Context, id string) (model.LogEntry, error) {
+	panic("TODO query LogEntry")
+}
+
+func (r *queryResolver) LogEntries(ctx context.Context, filter string, start *int, limit *int) (*model.LogEntryQueryResult, error) {
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return &model.LogEntryQueryResult{}, errors.New("access denied: " + err.Error())
+	}
+
+	//keep, remove := extractModificationFields(ctx)
+
+	res, err := logbook.ReadEntries(acl, filter, nil)
+	/*
+		res, err := meta.ReadCollectionsMeta(acl, filter, )
+		if err != nil {
+			logger.Error(err.Error())
+		}
+	*/
+	return res, err
+}
+
+func (r *queryResolver) LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error) {
+	var result []*model.UniqueField
+
+	return result, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

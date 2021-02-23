@@ -43,36 +43,35 @@ func ReadJsonFromFile(fname string, config interface{}) error {
 	return nil
 }
 
-
 func ReadFileAsString(fname string) (string, error) {
 	content, err := ioutil.ReadFile(fname)
 	if err != nil {
-		return "",err
+		return "", err
 	}
-	return string(content),nil
+	return string(content), nil
 }
 
 func ReadStringsFromFile(fname string) ([]string, error) {
 	content, err := ioutil.ReadFile(fname)
 	if err != nil {
-		return []string{},err
+		return []string{}, err
 	}
 	lines := strings.Split(string(content), "\n")
 
-	return lines,nil
+	return lines, nil
 }
 
 func ReadFirstStringFromFile(fname string) (string, error) {
-	lines,err  := ReadStringsFromFile(fname)
+	lines, err := ReadStringsFromFile(fname)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
-	if len(lines)==0 {
-		return "",errors.New("empty file")
+	if len(lines) == 0 {
+		return "", errors.New("empty file")
 	}
 
-	return lines[0],nil
+	return lines[0], nil
 }
 
 func InterfaceToInterface(from interface{}, to interface{}) error {
@@ -86,7 +85,6 @@ func InterfaceToInterface(from interface{}, to interface{}) error {
 	}
 	return nil
 }
-
 
 func MapToStruct(m map[string]interface{}, val interface{}) error {
 	tmp, err := json.Marshal(m)
@@ -112,11 +110,10 @@ func DeepCopy(a, b interface{}) {
 	json.Unmarshal(byt, b)
 }
 
-
 func RemoveQuotes(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		b,_ := ioutil.ReadAll(r.Body)
-		b = regexp.MustCompile(`\\"([\w-.]*?)\\":`).ReplaceAll(b,[]byte(`$1:`))
+		b, _ := ioutil.ReadAll(r.Body)
+		b = regexp.MustCompile(`\\"([\w-.]*?)\\":`).ReplaceAll(b, []byte(`$1:`))
 		r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
 		fn(w, r)
 	}

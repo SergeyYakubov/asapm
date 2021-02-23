@@ -20,30 +20,30 @@ func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry
 	entry := &model.CollectionEntry{}
 	utils.DeepCopy(input, entry)
 
-	ids:= strings.Split(input.ID, ".")
-	if len(ids)<2 {
+	ids := strings.Split(input.ID, ".")
+	if len(ids) < 2 {
 		return &model.CollectionEntry{}, errors.New("wrong id format")
 	}
 	id := ids[0]
 
-	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record",id)
+	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", id)
 	if err != nil {
 		return &model.CollectionEntry{}, err
 	}
 
 	var btMeta model.BeamtimeMeta
-	if err := json.Unmarshal(btMetaBytes,&btMeta); err!=nil {
+	if err := json.Unmarshal(btMetaBytes, &btMeta); err != nil {
 		return &model.CollectionEntry{}, err
 	}
 
 	var baseEntry model.BaseCollectionEntry
-	utils.DeepCopy(entry,&baseEntry)
+	utils.DeepCopy(entry, &baseEntry)
 
 	if len(ids) == 2 {
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",id, KChildCollectionKey,baseEntry,baseEntry.ID)
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element", id, KChildCollectionKey, baseEntry, baseEntry.ID)
 	} else {
-		parentId:=strings.Join(ids[:len(ids)-1],".")
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,baseEntry.ID)
+		parentId := strings.Join(ids[:len(ids)-1], ".")
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element", parentId, KChildCollectionKey, baseEntry, baseEntry.ID)
 	}
 
 	if err != nil {
@@ -53,19 +53,18 @@ func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry
 	if entry.ChildCollection == nil {
 		entry.ChildCollection = []*model.BaseCollectionEntry{}
 	}
-	if entry.ChildCollectionName==nil {
-		col:= KDefaultCollectionName
-		entry.ChildCollectionName=&col
+	if entry.ChildCollectionName == nil {
+		col := KDefaultCollectionName
+		entry.ChildCollectionName = &col
 	}
 	entry.Type = KCollectionTypeName
 	entry.ParentBeamtimeMeta = btMeta.ParentBeamtimeMeta
 
-	bentry,_ := json.Marshal(&entry)
+	bentry, _ := json.Marshal(&entry)
 	sentry := string(bentry)
-	entry.JSONString =&sentry
+	entry.JSONString = &sentry
 
-
-	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "create_record",entry)
+	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "create_record", entry)
 	if err != nil {
 		return &model.CollectionEntry{}, err
 	}
@@ -222,43 +221,42 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 	}
 
 	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl,filter,ff)
+		filter = auth.AddAclToSqlFilter(acl, filter, ff)
 	}
 
 	var response = []*model.CollectionEntry{}
 
-	fs := getFilterAndSort(filter,orderBy)
+	fs := getFilterAndSort(filter, orderBy)
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records",fs,&response)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
 	}
 
-
 	for _, meta := range response {
-		updateFields(keepFields,removeFields, &meta.CustomValues)
+		updateFields(keepFields, removeFields, &meta.CustomValues)
 	}
 
 	return response, nil
 
 }
 
-func  DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
-	filter:= "id = '" + id+"' OR id regexp '^"+id+".'"
-	fs := getFilterAndSort(&filter,nil)
+func DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
+	filter := "id = '" + id + "' OR id regexp '^" + id + ".'"
+	fs := getFilterAndSort(&filter, nil)
 
-	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true);err!=nil {
-		return nil,err
+	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true); err != nil {
+		return nil, err
 	}
 
-	ind := strings.LastIndex(id,".")
-	if ind==-1 {
-		return nil,errors.New("wrong id format: "+id)
+	ind := strings.LastIndex(id, ".")
+	if ind == -1 {
+		return nil, errors.New("wrong id format: " + id)
 	}
 
-	parentId:=id[:ind]
-	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_array_element", parentId, id,KChildCollectionKey);err!=nil {
-		return nil,err
+	parentId := id[:ind]
+	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_array_element", parentId, id, KChildCollectionKey); err != nil {
+		return nil, err
 	}
 
-	return &id,nil
+	return &id, nil
 }

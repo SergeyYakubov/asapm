@@ -1,28 +1,9 @@
-package meta
+package common
 
 import (
 	"asapm/database"
 	"strings"
 )
-
-const KDefaultCollectionName = "datasets"
-const KChildCollectionKey = "childCollection"
-const KMetaNameInDb = "meta"
-const KCollectionTypeName = "collection"
-const KBeamtimeTypeName = "beamtime"
-
-const KUserFieldName = "customValues"
-
-func getFilterAndSort(filter *string, orderBy *string) database.FilterAndSort {
-	fs := database.FilterAndSort{}
-	if filter != nil {
-		fs.Filter = *filter
-	}
-	if orderBy != nil {
-		fs.Order = *orderBy
-	}
-	return fs
-}
 
 func keepFields(m map[string]interface{}, keep []string, prefix string) map[string]interface{} {
 	for key, v := range m {
@@ -77,7 +58,7 @@ func removeFields(m map[string]interface{}, remove []string, prefix string) map[
 	return m
 }
 
-func updateFields(keep []string, remove []string, customValues *map[string]interface{}) {
+func UpdateFields(keep []string, remove []string, customValues *map[string]interface{}) {
 	if len(keep) != 0 {
 		*customValues = keepFields(*customValues, keep, "")
 	} else {
@@ -88,4 +69,15 @@ func updateFields(keep []string, remove []string, customValues *map[string]inter
 		*customValues = nil
 	}
 	return
+}
+
+func GetFilterAndSort(filter *string,orderBy *string) database.FilterAndSort {
+	fs := database.FilterAndSort{}
+	if filter !=nil {
+		fs.Filter =*filter
+	}
+	if orderBy !=nil {
+		fs.Order =*orderBy
+	}
+	return fs
 }

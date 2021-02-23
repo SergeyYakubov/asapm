@@ -17,11 +17,20 @@ type Mutation {
     addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
+
+    # Logbook API
+    addMessageLogEntry(input: NewLogEntryMessage!): ID @needAcl(acl: ADMIN)
+    removeLogEntry(id: ID!): ID @needAcl(acl: ADMIN)
 }
 
 type Query {
     meta (filter: String, orderBy: String): [BeamtimeMeta!]!
     collections (filter: String, orderBy: String): [CollectionEntry!]!
-    uniqueFields  (filter: String,keys: [String!]!): [UniqueField!]!
+    uniqueFields  (filter: String, keys: [String!]!): [UniqueField!]!
     user (id: ID!): UserAccount
+
+    # Logbook API
+    logEntry (id: ID!): LogEntry
+    logEntries (filter: String!, start: Int, limit: Int): LogEntryQueryResult
+    logEntriesUniqueFields (filter: String, keys: [String!]!): [UniqueField!]!
 }

@@ -12,24 +12,32 @@ import (
 
 type userProps struct {
 	UserName        string
+    FullName        string
+    Email           string
 	Roles           []string
 	Groups          []string
 	AuthorizedParty string
 }
 
 type MetaAcl struct {
-	ImmediateDeny bool
-	ImmediateAccess bool
-	AllowedBeamtimes []string
-	AllowedBeamlines []string
+	ImmediateDeny     bool
+	ImmediateAccess   bool // Indicates an sort of 'Admin' account, access to all
+	AllowedBeamtimes  []string
+	AllowedBeamlines  []string
 	AllowedFacilities []string
+}
+
+func (acl MetaAcl) HasAccessToFacility(facility string) bool {
+	return !acl.ImmediateDeny && (acl.ImmediateAccess || utils.StringInSlice(facility, acl.AllowedFacilities))
 }
 
 type claimFields struct {
 	UserName        string   `json:"preferred_username"`
+	FullName        string   `json:"name"` // Full name like "John Smith"
+	Email           string   `json:"email"`
 	Groups          []string `json:"groups"`
 	AuthorizedParty string   `json:"azp"`
-	Roles []string `json:"roles"`
+	Roles           []string `json:"roles"`
 }
 
 type FilterFields struct {
@@ -40,10 +48,10 @@ type FilterFields struct {
 
 func BypassAuth(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		claims := claimFields{Roles: []string{"admin"},UserName: "admin",AuthorizedParty: "asapm"}
+		claims := claimFields{Roles: []string{"admin"}, UserName: "admin", Email: "admin@example.com", AuthorizedParty: "asapm"}
 		jwtClaims := jwt.MapClaims{}
 
-		utils.InterfaceToInterface(&claims,&jwtClaims)
+		utils.InterfaceToInterface(&claims, &jwtClaims)
 
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &jwtClaims)
@@ -51,11 +59,10 @@ func BypassAuth(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-
 func userPropsFromClaim(claim map[string]interface{}) (userProps, error) {
 	var props userProps
 	bClaim, _ := json.Marshal(&claim)
-	fields := claimFields {}
+	fields := claimFields{}
 
 	err := json.Unmarshal(bClaim, &fields)
 
@@ -67,6 +74,8 @@ func userPropsFromClaim(claim map[string]interface{}) (userProps, error) {
 	}
 
 	props.UserName = fields.UserName
+    props.FullName = fields.FullName
+    props.Email = fields.Email
 	props.Roles = fields.Roles
 	props.Groups = make([]string, len(fields.Groups))
 	props.AuthorizedParty = fields.AuthorizedParty
@@ -84,24 +93,42 @@ func checkAuthorizedParty(authorizedParty string) error {
 	return nil
 }
 
-
-func userPropsFromContext(ctx context.Context) (userProps,error) {
+func userPropsFromContext(ctx context.Context) (userProps, error) {
 	var props userProps
 	var claims map[string]interface{}
 	if err := utils.JobClaimFromContext(ctx, &claims); err != nil {
-		return props,err
+		return props, err
 	}
 
 	props, err := userPropsFromClaim(claims)
 	if err != nil {
-		return props,err
+		return props, err
 	}
 
 	if err := checkAuthorizedParty(props.AuthorizedParty); err != nil {
-		return props,err
+		return props, err
 	}
-	return props,nil
+	return props, nil
+}
 
+func GetUsernameFromContext(ctx context.Context) (string, error) {
+	props, err := userPropsFromContext(ctx)
+	if err != nil {
+		return "Unauthorized", err
+	}
+	return props.UserName, nil
+}
+
+// Will FullName, fallbacks to UserName
+func GetPreferredFullNameFromContext(ctx context.Context) (string, error) {
+	props, err := userPropsFromContext(ctx)
+	if err != nil {
+		return "Unauthorized", err
+	}
+	if props.FullName == "" {
+		return props.UserName, nil
+	}
+	return props.FullName, nil
 }
 
 func AuthorizeWrite(ctx context.Context) error {
@@ -109,7 +136,6 @@ func AuthorizeWrite(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 
 	if !utils.StringInSlice("admin", props.Roles) && !utils.StringInSlice("ingestor", props.Roles) {
 		return errors.New("need admin or ingestor role")
@@ -122,8 +148,8 @@ func checkImmediateReadAccess(props userProps) bool {
 		return true
 	}
 
-	groupsThatCanRead := []string{"fs-dmgt","fsdata"}
-	for _,group :=range groupsThatCanRead {
+	groupsThatCanRead := []string{"fs-dmgt", "fsdata"}
+	for _, group := range groupsThatCanRead {
 		if utils.StringInSlice(group, props.Groups) {
 			return true
 		}
@@ -132,28 +158,28 @@ func checkImmediateReadAccess(props userProps) bool {
 	return false
 }
 
-func extractGroupWithSuffix(groups []string,suffixes []string,props userProps)[]string {
-	for _,suffix :=range suffixes {
-		for _,group := range props.Groups {
-			if strings.HasSuffix(group,suffix) {
-				groups = append(groups,strings.TrimSuffix(group,suffix))
+func extractGroupWithSuffix(groups []string, suffixes []string, props userProps) []string {
+	for _, suffix := range suffixes {
+		for _, group := range props.Groups {
+			if strings.HasSuffix(group, suffix) {
+				groups = append(groups, strings.TrimSuffix(group, suffix))
 			}
 		}
 	}
 	return groups
 }
 
-func addAllowedBeamtimes(acl MetaAcl,props userProps) MetaAcl {
-	beamtimeSuffixes := []string{"-clbt","-part","-dmgt"}
-	acl.AllowedBeamtimes = extractGroupWithSuffix(acl.AllowedBeamtimes,beamtimeSuffixes,props)
+func addAllowedBeamtimes(acl MetaAcl, props userProps) MetaAcl {
+	beamtimeSuffixes := []string{"-clbt", "-part", "-dmgt"}
+	acl.AllowedBeamtimes = extractGroupWithSuffix(acl.AllowedBeamtimes, beamtimeSuffixes, props)
 	return acl
 }
 
-func addAllowedBeamlines(acl MetaAcl,props userProps) MetaAcl {
-	beamlineSuffixes := []string{"dmgt","staff"}
-	acl.AllowedBeamlines = extractGroupWithSuffix(acl.AllowedBeamlines,beamlineSuffixes,props)
-	for i,bl := range(acl.AllowedBeamlines) {
-		if bl=="p021" || bl=="p022" || bl=="p211" || bl=="p212" {
+func addAllowedBeamlines(acl MetaAcl, props userProps) MetaAcl {
+	beamlineSuffixes := []string{"dmgt", "staff"}
+	acl.AllowedBeamlines = extractGroupWithSuffix(acl.AllowedBeamlines, beamlineSuffixes, props)
+	for i, bl := range acl.AllowedBeamlines {
+		if bl == "p021" || bl == "p022" || bl == "p211" || bl == "p212" {
 			bl_new := bl[:3] + "." + bl[3:]
 			acl.AllowedBeamlines[i] = bl_new
 		}
@@ -161,11 +187,11 @@ func addAllowedBeamlines(acl MetaAcl,props userProps) MetaAcl {
 	return acl
 }
 
-func ReadAclFromContext(ctx context.Context) (MetaAcl,error) {
+func ReadAclFromContext(ctx context.Context) (MetaAcl, error) {
 	var acl MetaAcl
 	props, err := userPropsFromContext(ctx)
 	if err != nil {
-		return acl,err
+		return acl, err
 	}
 
 	if checkImmediateReadAccess(props) {
@@ -173,36 +199,35 @@ func ReadAclFromContext(ctx context.Context) (MetaAcl,error) {
 		return acl, nil
 	}
 
-	acl = addAllowedBeamlines(acl,props)
-	acl = addAllowedBeamtimes(acl,props)
+	acl = addAllowedBeamlines(acl, props)
+	acl = addAllowedBeamtimes(acl, props)
 
-
-	if acl.AllowedBeamlines==nil && acl.AllowedBeamtimes==nil && acl.AllowedFacilities==nil {
+	if acl.AllowedBeamlines == nil && acl.AllowedBeamtimes == nil && acl.AllowedFacilities == nil {
 		acl.ImmediateDeny = true
 	}
 
-	return acl,nil
+	return acl, nil
 }
 
 func addFilterForNameInList(currentFilter, name string, list []string) string {
 	if list != nil {
 		list := strings.Join(list, `','`)
-		if len(currentFilter)==0 {
-			currentFilter = "("+name+" IN ('"+list+"'))"
+		if len(currentFilter) == 0 {
+			currentFilter = "(" + name + " IN ('" + list + "'))"
 		} else {
-			currentFilter = currentFilter + " OR (" + name+ " IN ('"+list+"'))"
+			currentFilter = currentFilter + " OR (" + name + " IN ('" + list + "'))"
 		}
 	}
 	return currentFilter
 }
 
 func AddAclToSqlFilter(acl MetaAcl, curFilter *string, filterFields FilterFields) *string {
-	aclFilter := addFilterForNameInList("",filterFields.BeamtimeId,acl.AllowedBeamtimes)
-	aclFilter = addFilterForNameInList(aclFilter,filterFields.Beamline,acl.AllowedBeamlines)
-	aclFilter = addFilterForNameInList(aclFilter,filterFields.Facility,acl.AllowedFacilities)
+	aclFilter := addFilterForNameInList("", filterFields.BeamtimeId, acl.AllowedBeamtimes)
+	aclFilter = addFilterForNameInList(aclFilter, filterFields.Beamline, acl.AllowedBeamlines)
+	aclFilter = addFilterForNameInList(aclFilter, filterFields.Facility, acl.AllowedFacilities)
 
 	if curFilter != nil {
-		s := "("+ aclFilter +") AND ("+ *curFilter +")"
+		s := "(" + aclFilter + ") AND (" + *curFilter + ")"
 		return &s
 	} else {
 		return &aclFilter

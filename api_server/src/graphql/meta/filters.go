@@ -1,10 +1,11 @@
 package meta
 
 import (
+	"asapm/auth"
 	"asapm/database"
+	"asapm/graphql/common"
 	"asapm/graphql/graph/model"
 	"encoding/json"
-	"asapm/auth"
 	"errors"
 )
 
@@ -25,7 +26,7 @@ func UniqueFields(acl auth.MetaAcl,filter *string,keys []string)  ([]*model.Uniq
 		filter = auth.AddAclToSqlFilter(acl,filter,ff)
 	}
 
-	fl := getFilterAndSort(filter,nil)
+	fl := common.GetFilterAndSort(filter,nil)
 
 	res := make([]*model.UniqueField,0)
 

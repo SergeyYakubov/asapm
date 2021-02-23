@@ -178,8 +178,7 @@ func TestMongoDBUniqueFields(t *testing.T) {
 	rec2 := TestMetaRecord{"345", []TestCollectionEntry{}, time.Now()}
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec2)
-	var fs = FilterAndSort{
-	}
+	var fs = FilterAndSort{}
 
 	res, err := mongodb.ProcessRequest(dbname, collection, "unique_fields", fs, "_id")
 	assert.Nil(t, err)
@@ -280,10 +279,10 @@ var UpdateFieldsTest = []struct {
 		TestUserMetaRecord{},
 		false, "update non-existing field"},
 
-		{TestUserMetaRecord{"1", toMap(`{"simple": "123", "nested":{"val1":1,"val2":2}}`)},
-			model.FieldsToSet{"1", toMap(`{"customValues": {"simple": "345", "nested":{"val1":3}}}`)},
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "nested":{"val1":1,"val2":2}}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"simple": "345", "nested":{"val1":3}}}`)},
 		true,
-			TestUserMetaRecord{"1", toMap(`{"simple": "345", "nested":{"val1":3,"val2":2}}`)},
+		TestUserMetaRecord{"1", toMap(`{"simple": "345", "nested":{"val1":3,"val2":2}}`)},
 		true, "update nested field"},
 
 

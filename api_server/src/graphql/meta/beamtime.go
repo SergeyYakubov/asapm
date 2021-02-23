@@ -9,17 +9,6 @@ import (
 	"errors"
 )
 
-func getFilterAndSort(filter *string, orderBy *string) database.FilterAndSort {
-	fs := database.FilterAndSort{}
-	if filter != nil {
-		fs.Filter = *filter
-	}
-	if orderBy != nil {
-		fs.Order = *orderBy
-	}
-	return fs
-}
-
 func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFields []string, removeFields []string) ([]*model.BeamtimeMeta, error) {
 	if acl.ImmediateDeny {
 		return []*model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")

@@ -1,0 +1,52 @@
+enum LogEntryType {
+    Message,
+}
+
+interface GenericLogEntry {
+    id: ID!
+    time: DateTime!
+    createdBy: String!
+    entryType: LogEntryType!
+
+    facility: String!
+    beamtime: String
+    tags: [String!]
+    source: String
+}
+
+type LogEntryMessage implements GenericLogEntry {
+    id: ID!
+    time: DateTime!
+    createdBy: String!
+    entryType: LogEntryType! # Always LogEntryType.Message
+
+    facility: String!
+    beamtime: String
+    tags: [String!]
+    source: String
+
+    # Payload
+    message: String!
+    attachments: Map # Map<Filename, Base64>
+}
+
+input NewLogEntryMessage {
+    time: DateTime # If not set, its Now()
+
+    facility: String!
+    beamtime: String
+    tags: [String!]
+    source: String
+
+    # Payload
+    message: String!
+    attachments: Map # Map<Filename, Base64>
+}
+
+union LogEntry = LogEntryMessage
+
+type LogEntryQueryResult {
+    entries: [LogEntry!]!
+    start: Int!
+    hasMore: Boolean!
+}

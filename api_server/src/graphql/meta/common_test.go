@@ -1,9 +1,10 @@
 package meta
 
 import (
+	"asapm/graphql/common"
 	"encoding/json"
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 
@@ -40,7 +41,7 @@ func TestProcessUpdateFieldTests(t *testing.T) {
 	for _, test := range updateFieldsTests {
 		var customValues map[string]interface{}
 		json.Unmarshal([]byte(test.customValues),&customValues)
-		updateFields(test.keep,test.remove,&customValues)
+		common.UpdateFields(test.keep,test.remove,&customValues)
 
 		res,_:=json.Marshal(&customValues)
 		assert.Equal(t, test.res, string(res), test.message)

@@ -82,6 +82,7 @@ function App(): JSX.Element {
     };
 
     const mainStyle = {
+        display: 'flex',
         overflow: 'auto' as const,
         flex: 1,
     };

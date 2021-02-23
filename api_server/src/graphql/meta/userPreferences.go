@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 )
 
-func  SetUserPreferences(id string, input model.InputUserPreferences) (*model.UserAccount, error) {
+func SetUserPreferences(id string, input model.InputUserPreferences) (*model.UserAccount, error) {
 	_, err := database.GetDb().ProcessRequest("users", "preferences", "replace_record", id, &input)
 	if err != nil {
 		return &model.UserAccount{}, err
@@ -18,11 +18,11 @@ func  SetUserPreferences(id string, input model.InputUserPreferences) (*model.Us
 	return &pref, err
 }
 
-func  GetUserPreferences(id string) (*model.UserAccount, error) {
+func GetUserPreferences(id string) (*model.UserAccount, error) {
 	res, err := database.GetDb().ProcessRequest("users", "preferences", "read_record", id)
 	if err != nil {
 		props := model.InputUserPreferences{"auto"}
-		return SetUserPreferences(id,props)
+		return SetUserPreferences(id, props)
 	}
 	var ac model.UserAccount
 	ac.ID = id
@@ -32,4 +32,3 @@ func  GetUserPreferences(id string) (*model.UserAccount, error) {
 	}
 	return &ac, nil
 }
-

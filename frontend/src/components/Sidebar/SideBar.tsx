@@ -114,7 +114,7 @@ export default function SideBar(): JSX.Element {
                     </ListItem>
                     <ListItem button key="LogbooksPage" component={RouterLink} to={"/logbooks"} exact activeClassName="Mui-selected">
                         <ListItemIcon className={classes.listItem}><CollectionsBookmarkIcon/></ListItemIcon>
-                        <ListItemText primary="Logbooks Page"/>
+                        <ListItemText primary="Logbook"/>
                     </ListItem>
                 </List>
             </div>
