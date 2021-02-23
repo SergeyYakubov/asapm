@@ -263,12 +263,12 @@ function rowDataFromTypedInput(name: string, valueType: string, value: string): 
             entry.data = num;
             return [entry, ""];
         case "slist":
-            let arr = value.split(',');
+            let arr = value?value.split(','):[];
             arr = arr.map(val => val.trim()).filter(val => val!=="");
-            entry.data = arr;
+            entry.data = arr; 
             return [entry, ""];
         case "nlist":
-            let arrS = value.split(',');
+            let arrS = value?value.split(','):[];
             arrS = arrS.map(val => val.trim()).filter(val => val!=="");
             const arrN : number[]=[];
             for (const elem of arrS){
@@ -325,7 +325,7 @@ function TypedInput({props}: TypedInputProps) {
                        error
                    }
         />
-        <FormControl className={classes.typedField}>
+        <FormControl className={classes.typedField} disabled={value!==undefined}>
             <InputLabel>Type</InputLabel>
             <Select
                 value={valueType}
@@ -439,7 +439,7 @@ function CustomTable({suffix, id, data}: CustomTableProps) {
                 )
             },
             {
-                title: 'Value', field: 'value', editable: 'always',initialEditValue:'',
+                title: 'Value', field: 'value', editable: 'always',initialEditValue:undefined,
                 editComponent: props => (
                     <TypedInput props={props}/>
                 )
