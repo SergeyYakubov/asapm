@@ -12,7 +12,7 @@ import MaterialTable, {EditComponentProps} from "material-table";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
-import {TableEntry, TableData, TableFromData, FieldFilter} from "../common";
+import {TableEntry, TableData, TableFromData} from "../common";
 import {TableIcons} from "../TableIcons";
 import {BeamtimeMeta, CollectionEntry, Query} from "../generated/graphql";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
@@ -33,7 +33,7 @@ const useStyles = makeStyles((theme: Theme) =>
                 margin: theme.spacing(2),
             },
             typedField: {
-                marginLeft: theme.spacing(1),
+                marginLeft: theme.spacing(2),
                 marginRight: theme.spacing(1),
             },
             title: {
@@ -239,7 +239,7 @@ function ValueType(val: any): string {
                     return "nlist";
                 }
             } else {
-                return "string"
+                return "string";
             }
         default:
             return "string";
@@ -316,6 +316,15 @@ function TypedInput({props}: TypedInputProps) {
     };
 
     return <div>
+        <TextField id="standard-basic"
+                   label="Value"
+                   value={value || ''}
+                   onChange={handleValueChange}
+                   error={error !== ""}
+                   helperText={
+                       error
+                   }
+        />
         <FormControl className={classes.typedField}>
             <InputLabel>Type</InputLabel>
             <Select
@@ -327,20 +336,11 @@ function TypedInput({props}: TypedInputProps) {
                 <MenuItem value={"nlist"}>Numerical List</MenuItem>
             </Select>
         </FormControl>
-        <TextField id="standard-basic" label="Value"
-                   value={value}
-                   onChange={handleValueChange}
-                   error={error !== ""}
-                   helperText={
-                       error
-                   }
-
-        />
-    </div>
+    </div>;
 }
 
 
-function CustomTable({originalQuery, suffix, id, data}: CustomTableProps) {
+function CustomTable({suffix, id, data}: CustomTableProps) {
     const [plainData, setPlainData] = useState(() => {
         const pd: TableData = [];
         plainDataFromObject(pd, data, "");
@@ -351,12 +351,12 @@ function CustomTable({originalQuery, suffix, id, data}: CustomTableProps) {
         const pd: TableData = [];
         plainDataFromObject(pd, data, "");
         setPlainData(pd);
-    }, [data])
+    }, [data]);
 
 
     return <MaterialTable
         editable={{
-            onRowUpdate: (newData, oldData) =>
+            onRowUpdate: (newData) =>
                 new Promise((resolve, reject) => {
                     if (newData.value === "") {
                         reject();
@@ -403,7 +403,7 @@ function CustomTable({originalQuery, suffix, id, data}: CustomTableProps) {
                         variables: {id: id, fields: obj},
                     }).then(() => {
                         setPlainData([...plainData,newData]);
-//                        return originalQuery.refetch();
+//                        originalQuery.refetch();
                         resolve();
                     }).catch((err) => {
                             reject();
@@ -429,9 +429,17 @@ function CustomTable({originalQuery, suffix, id, data}: CustomTableProps) {
             actionsColumnIndex: -1,
         }}
         columns={[
-            {title: 'Name', field: 'name', editable: 'onAdd'},
+            {title: 'Name', field: 'name', editable: 'onAdd',initialEditValue:'',
+                editComponent: props => (
+                    <TextField
+                               label="Name"
+                               value={props.value || ''}
+                               onChange={e => props.onChange(e.target.value)}
+                    />
+                )
+            },
             {
-                title: 'Value', field: 'value', editable: 'always',
+                title: 'Value', field: 'value', editable: 'always',initialEditValue:'',
                 editComponent: props => (
                     <TypedInput props={props}/>
                 )
