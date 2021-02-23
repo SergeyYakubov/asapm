@@ -3,7 +3,7 @@ set -e
 
 HOST="*.desy.de"
 
-TAG=0.44
+TAG=0.45
 
 suffix="-flash"
 
