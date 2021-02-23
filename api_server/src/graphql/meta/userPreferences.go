@@ -7,7 +7,7 @@ import (
 )
 
 func SetUserPreferences(id string, input model.InputUserPreferences) (*model.UserAccount, error) {
-	_, err := database.GetDb().ProcessRequest("users", "preferences", "update_record", id, &input)
+	_, err := database.GetDb().ProcessRequest("users", "preferences", "replace_record", id, &input)
 	if err != nil {
 		return &model.UserAccount{}, err
 	}

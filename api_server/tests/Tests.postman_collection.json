@@ -594,6 +594,237 @@
 					]
 				},
 				{
+					"name": "modify status 81999365",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "26dd5af6-2b1f-4319-9f8a-5296fe70d296",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Modifies meta\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.modifyBeamtimeMeta.status).to.eql(\"stopped\");",
+									"    pm.expect(jsonData.data.modifyBeamtimeMeta.users.doorDb[0]).to.eql(\"test_user\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  modifyBeamtimeMeta(\n    input: {\n        id: \"81999365\"\n        fields: { status:\"stopped\",users: {doorDb: [\"test_user\"] }}\n        }\n  ) {\n    id\n    status\n    users {\n      doorDb\n    }\n  }\n}\n",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{api_server_uri}}/query",
+							"host": [
+								"{{api_server_uri}}"
+							],
+							"path": [
+								"query"
+							]
+						},
+						"description": "> Postman launched built-in support for GraphQL in version 7.2.\n\nIf you're using Postman v7.2 or later, the app supports the following:\n\n* Sending GraphQL queries in request body as POST requests\n* Support for GraphQL variables\n* Creating APIs in Postman with GraphQL schema type\n* Query autocompletion integrated with user-defined GraphQL schemas\n \nThis example is from this step-by-step tutorial about [how to use Postman with the Spotify GraphQL API](https://blog.getpostman.com/2019/06/18/postman-v7-2-supports-graphql/).\n\n![[GraphQL in Postman](https://i.imgur.com/4nKoPU7.png)](https://i.imgur.com/4nKoPU7.png)\n\nTo enable the autocompletion, you will need to add a GraphQL schema under the APIs tab, and then select the schema while typing your query. An example GraphQL schema:\n\n```\ntype Album {\n  name: String\n  id: ID\n  image: String\n  tracks: [Track]\n}\n\ntype Artist {\n  name: String!\n  id: ID\n  image: String\n  albums(limit: Int = 10): [Album]\n}\n\ntype Query {\n  hi(message: String = \"Hi\"): String\n  queryArtists(byName: String = \"Red Hot Chili Peppers\"): [Artist]\n}\n\ntype Track {\n  name: String!\n  artists: [Artist]\n  preview_url: String\n  id: ID\n}\n```"
+					},
+					"response": [
+						{
+							"name": "successful response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query getByArtist ($name: String!) {\n    queryArtists (byName: $name) {\n        name\n        image\n        albums {\n            name\n        }\n    }\n}",
+										"variables": "{\n    \"name\": \"{{artist}}\"\n}"
+									}
+								},
+								"url": {
+									"raw": "https://spotify-graphql-server.herokuapp.com/graphql",
+									"protocol": "https",
+									"host": [
+										"spotify-graphql-server",
+										"herokuapp",
+										"com"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "3453"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"d7d-Tpc/sCuFhUg6s283JzeQA6Wh6zo\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 18 Jun 2019 21:07:28 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"queryArtists\": [\n            {\n                \"name\": \"Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/e69f71e2be4b67b82af90fb8e9d805715e0684fa\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"Pulse\"\n                    },\n                    {\n                        \"name\": \"Pulse (Live)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound of Thunder (Live)\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound Of Thunder\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse Of Reason (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut\"\n                    },\n                    {\n                        \"name\": \"The Wall\"\n                    },\n                    {\n                        \"name\": \"The Wall (Remastered)\"\n                    },\n                    {\n                        \"name\": \"Animals\"\n                    },\n                    {\n                        \"name\": \"Animals (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here [Remastered] (Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Dark Side of the Moon\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Dj Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/1e6e870d6fa368e77cb23fe628ca8d5d093f2d7c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Go to Sleep\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Think Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/15978deb5e42e26bbc81a0464084b9638457cb76\",\n                \"albums\": [\n                    {\n                        \"name\": \"Billy Martin\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Redux\",\n                \"image\": \"https://i.scdn.co/image/92911e90e7cfa8c64c2c790b22b75bce1e31508e\",\n                \"albums\": [\n                    {\n                        \"name\": \"A New Music Experience\"\n                    },\n                    {\n                        \"name\": \"Pink Floyd Redux\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Australian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/4080bc55ea9ccc9f4fb101eae4c14351e832c382\",\n                \"albums\": [\n                    {\n                        \"name\": \"Exposed In The Light\"\n                    },\n                    {\n                        \"name\": \"Live at Hammersmith Apollo 2011\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Celtic Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/41c1dd9c5d40e9e3d2e2abe90d7c6d751075af3b\",\n                \"albums\": [\n                    {\n                        \"name\": \"In Studio\"\n                    },\n                    {\n                        \"name\": \"Celtic Pink Floyd\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Pink Floyd Story\",\n                \"image\": \"https://i.scdn.co/image/2480d7c24b9ad93408a8455b1dc281d3f7239268\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Great Gig In the Sky\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"Travellers - The Complete Fantasy Playlist\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Floyd Pink\",\n                \"image\": \"https://i.scdn.co/image/5fd98e28dcbbaa97b3cc2ed84683589dddc424b4\",\n                \"albums\": [\n                    {\n                        \"name\": \"Money (Broke Version)\"\n                    },\n                    {\n                        \"name\": \"PUSH EP\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Project\",\n                \"image\": \"https://i.scdn.co/image/948813e539c645da4b8b0ef8a7560102a27bfc80\",\n                \"albums\": [\n                    {\n                        \"name\": \"Jelling Musikfestival 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Hungarian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/53f81d7757b55320a9b4248cc96ef36d26f8dfe1\",\n                \"albums\": [\n                    {\n                        \"name\": \"On The Turning Away 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Atom Pink Floyd Tribute\",\n                \"image\": \"https://i.scdn.co/image/6cbd40d400a19ef0d86eec900b4cb78c18ed1354\",\n                \"albums\": [\n                    {\n                        \"name\": \"Tearing Down the Wall: Live 2015\"\n                    },\n                    {\n                        \"name\": \"Studio Sessions - Wish You Were Here\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Tribute Band\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The Only Rock Tributes Album You'll Ever Need! (Deluxe Version)\"\n                    },\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The only Rock Tributes album you'll ever need!\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Made famous by Pink Floyd\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"Lesbian Music\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Machine Perform Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/52a23a39ff1313c05a54a624734d90cc3057d34c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Two Nights At The Keswick, Volume 2\"\n                    },\n                    {\n                        \"name\": \"The Machine Unplugged\"\n                    },\n                    {\n                        \"name\": \"Two Nights at the Keswick, Volume 1\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"THE ILLUSION A SOUND LIKE PINK FLOYD\",\n                \"image\": \"https://i.scdn.co/image/b83e98cbf88f9807fbe31c7cff33b959ba12cd67\",\n                \"albums\": [\n                    {\n                        \"name\": \"Project One\"\n                    },\n                    {\n                        \"name\": \"Leaving the Earth\"\n                    }\n                ]\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "check id 81999365",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "eca8cc32-0a4c-45a9-a669-5ddf309c7f6e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"check status changed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.meta[0].status).to.eql(\"stopped\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  meta (orderBy:\"id\") {\n    id\n    beamline\n    childCollection {id,title}\n    childCollectionName\n    customValues(removeFields: [\"hello\"])\n    status\n  }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{api_server_uri}}/query",
+							"host": [
+								"{{api_server_uri}}"
+							],
+							"path": [
+								"query"
+							]
+						},
+						"description": "> Postman launched built-in support for GraphQL in version 7.2.\n\nIf you're using Postman v7.2 or later, the app supports the following:\n\n* Sending GraphQL queries in request body as POST requests\n* Support for GraphQL variables\n* Creating APIs in Postman with GraphQL schema type\n* Query autocompletion integrated with user-defined GraphQL schemas\n \nThis example is from this step-by-step tutorial about [how to use Postman with the Spotify GraphQL API](https://blog.getpostman.com/2019/06/18/postman-v7-2-supports-graphql/).\n\n![[GraphQL in Postman](https://i.imgur.com/4nKoPU7.png)](https://i.imgur.com/4nKoPU7.png)\n\nTo enable the autocompletion, you will need to add a GraphQL schema under the APIs tab, and then select the schema while typing your query. An example GraphQL schema:\n\n```\ntype Album {\n  name: String\n  id: ID\n  image: String\n  tracks: [Track]\n}\n\ntype Artist {\n  name: String!\n  id: ID\n  image: String\n  albums(limit: Int = 10): [Album]\n}\n\ntype Query {\n  hi(message: String = \"Hi\"): String\n  queryArtists(byName: String = \"Red Hot Chili Peppers\"): [Artist]\n}\n\ntype Track {\n  name: String!\n  artists: [Artist]\n  preview_url: String\n  id: ID\n}\n```"
+					},
+					"response": [
+						{
+							"name": "successful response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query getByArtist ($name: String!) {\n    queryArtists (byName: $name) {\n        name\n        image\n        albums {\n            name\n        }\n    }\n}",
+										"variables": "{\n    \"name\": \"{{artist}}\"\n}"
+									}
+								},
+								"url": {
+									"raw": "https://spotify-graphql-server.herokuapp.com/graphql",
+									"protocol": "https",
+									"host": [
+										"spotify-graphql-server",
+										"herokuapp",
+										"com"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "3453"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"d7d-Tpc/sCuFhUg6s283JzeQA6Wh6zo\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 18 Jun 2019 21:07:28 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"queryArtists\": [\n            {\n                \"name\": \"Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/e69f71e2be4b67b82af90fb8e9d805715e0684fa\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"Pulse\"\n                    },\n                    {\n                        \"name\": \"Pulse (Live)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound of Thunder (Live)\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound Of Thunder\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse Of Reason (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut\"\n                    },\n                    {\n                        \"name\": \"The Wall\"\n                    },\n                    {\n                        \"name\": \"The Wall (Remastered)\"\n                    },\n                    {\n                        \"name\": \"Animals\"\n                    },\n                    {\n                        \"name\": \"Animals (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here [Remastered] (Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Dark Side of the Moon\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Dj Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/1e6e870d6fa368e77cb23fe628ca8d5d093f2d7c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Go to Sleep\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Think Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/15978deb5e42e26bbc81a0464084b9638457cb76\",\n                \"albums\": [\n                    {\n                        \"name\": \"Billy Martin\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Redux\",\n                \"image\": \"https://i.scdn.co/image/92911e90e7cfa8c64c2c790b22b75bce1e31508e\",\n                \"albums\": [\n                    {\n                        \"name\": \"A New Music Experience\"\n                    },\n                    {\n                        \"name\": \"Pink Floyd Redux\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Australian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/4080bc55ea9ccc9f4fb101eae4c14351e832c382\",\n                \"albums\": [\n                    {\n                        \"name\": \"Exposed In The Light\"\n                    },\n                    {\n                        \"name\": \"Live at Hammersmith Apollo 2011\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Celtic Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/41c1dd9c5d40e9e3d2e2abe90d7c6d751075af3b\",\n                \"albums\": [\n                    {\n                        \"name\": \"In Studio\"\n                    },\n                    {\n                        \"name\": \"Celtic Pink Floyd\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Pink Floyd Story\",\n                \"image\": \"https://i.scdn.co/image/2480d7c24b9ad93408a8455b1dc281d3f7239268\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Great Gig In the Sky\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"Travellers - The Complete Fantasy Playlist\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Floyd Pink\",\n                \"image\": \"https://i.scdn.co/image/5fd98e28dcbbaa97b3cc2ed84683589dddc424b4\",\n                \"albums\": [\n                    {\n                        \"name\": \"Money (Broke Version)\"\n                    },\n                    {\n                        \"name\": \"PUSH EP\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Project\",\n                \"image\": \"https://i.scdn.co/image/948813e539c645da4b8b0ef8a7560102a27bfc80\",\n                \"albums\": [\n                    {\n                        \"name\": \"Jelling Musikfestival 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Hungarian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/53f81d7757b55320a9b4248cc96ef36d26f8dfe1\",\n                \"albums\": [\n                    {\n                        \"name\": \"On The Turning Away 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Atom Pink Floyd Tribute\",\n                \"image\": \"https://i.scdn.co/image/6cbd40d400a19ef0d86eec900b4cb78c18ed1354\",\n                \"albums\": [\n                    {\n                        \"name\": \"Tearing Down the Wall: Live 2015\"\n                    },\n                    {\n                        \"name\": \"Studio Sessions - Wish You Were Here\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Tribute Band\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The Only Rock Tributes Album You'll Ever Need! (Deluxe Version)\"\n                    },\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The only Rock Tributes album you'll ever need!\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Made famous by Pink Floyd\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"Lesbian Music\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Machine Perform Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/52a23a39ff1313c05a54a624734d90cc3057d34c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Two Nights At The Keswick, Volume 2\"\n                    },\n                    {\n                        \"name\": \"The Machine Unplugged\"\n                    },\n                    {\n                        \"name\": \"Two Nights at the Keswick, Volume 1\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"THE ILLUSION A SOUND LIKE PINK FLOYD\",\n                \"image\": \"https://i.scdn.co/image/b83e98cbf88f9807fbe31c7cff33b959ba12cd67\",\n                \"albums\": [\n                    {\n                        \"name\": \"Project One\"\n                    },\n                    {\n                        \"name\": \"Leaving the Earth\"\n                    }\n                ]\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
 					"name": "list with filter",
 					"event": [
 						{
@@ -739,7 +970,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  addCollectionEntry(\n    input: {\n      id: \"81999365.scan1\"\n      title: \"scan1\"\n    }\n  ) {\n  \tid\n    title\n    parentBeamtimeMeta {\n      id\n    }\n  }\n}",
+								"query": "mutation {\n  addCollectionEntry(\n    input: {\n      id: \"81999365.scan1\"\n      title: \"scan1\"\n      customValues: {test:1}\n    }\n  ) {\n  \tid\n    title\n    parentBeamtimeMeta {\n      id\n    }\n  }\n}",
 								"variables": ""
 							}
 						},
@@ -1059,6 +1290,351 @@
 					]
 				},
 				{
+					"name": "update collection 81999365 field",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "d3fb92aa-e6eb-4c4f-8d79-b12289493e9f",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Modifies meta\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.updateCollectionEntryFields.customValues.test).to.eql(2);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  updateCollectionEntryFields(\n    input: {\n        id: \"81999365.scan1\"\n        fields: { customValues: {test: 2 }}\n        }\n  ) {\n    id\n    customValues\n  }\n}\n",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{api_server_uri}}/query",
+							"host": [
+								"{{api_server_uri}}"
+							],
+							"path": [
+								"query"
+							]
+						},
+						"description": "> Postman launched built-in support for GraphQL in version 7.2.\n\nIf you're using Postman v7.2 or later, the app supports the following:\n\n* Sending GraphQL queries in request body as POST requests\n* Support for GraphQL variables\n* Creating APIs in Postman with GraphQL schema type\n* Query autocompletion integrated with user-defined GraphQL schemas\n \nThis example is from this step-by-step tutorial about [how to use Postman with the Spotify GraphQL API](https://blog.getpostman.com/2019/06/18/postman-v7-2-supports-graphql/).\n\n![[GraphQL in Postman](https://i.imgur.com/4nKoPU7.png)](https://i.imgur.com/4nKoPU7.png)\n\nTo enable the autocompletion, you will need to add a GraphQL schema under the APIs tab, and then select the schema while typing your query. An example GraphQL schema:\n\n```\ntype Album {\n  name: String\n  id: ID\n  image: String\n  tracks: [Track]\n}\n\ntype Artist {\n  name: String!\n  id: ID\n  image: String\n  albums(limit: Int = 10): [Album]\n}\n\ntype Query {\n  hi(message: String = \"Hi\"): String\n  queryArtists(byName: String = \"Red Hot Chili Peppers\"): [Artist]\n}\n\ntype Track {\n  name: String!\n  artists: [Artist]\n  preview_url: String\n  id: ID\n}\n```"
+					},
+					"response": [
+						{
+							"name": "successful response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query getByArtist ($name: String!) {\n    queryArtists (byName: $name) {\n        name\n        image\n        albums {\n            name\n        }\n    }\n}",
+										"variables": "{\n    \"name\": \"{{artist}}\"\n}"
+									}
+								},
+								"url": {
+									"raw": "https://spotify-graphql-server.herokuapp.com/graphql",
+									"protocol": "https",
+									"host": [
+										"spotify-graphql-server",
+										"herokuapp",
+										"com"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "3453"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"d7d-Tpc/sCuFhUg6s283JzeQA6Wh6zo\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 18 Jun 2019 21:07:28 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"queryArtists\": [\n            {\n                \"name\": \"Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/e69f71e2be4b67b82af90fb8e9d805715e0684fa\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"Pulse\"\n                    },\n                    {\n                        \"name\": \"Pulse (Live)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound of Thunder (Live)\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound Of Thunder\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse Of Reason (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut\"\n                    },\n                    {\n                        \"name\": \"The Wall\"\n                    },\n                    {\n                        \"name\": \"The Wall (Remastered)\"\n                    },\n                    {\n                        \"name\": \"Animals\"\n                    },\n                    {\n                        \"name\": \"Animals (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here [Remastered] (Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Dark Side of the Moon\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Dj Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/1e6e870d6fa368e77cb23fe628ca8d5d093f2d7c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Go to Sleep\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Think Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/15978deb5e42e26bbc81a0464084b9638457cb76\",\n                \"albums\": [\n                    {\n                        \"name\": \"Billy Martin\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Redux\",\n                \"image\": \"https://i.scdn.co/image/92911e90e7cfa8c64c2c790b22b75bce1e31508e\",\n                \"albums\": [\n                    {\n                        \"name\": \"A New Music Experience\"\n                    },\n                    {\n                        \"name\": \"Pink Floyd Redux\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Australian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/4080bc55ea9ccc9f4fb101eae4c14351e832c382\",\n                \"albums\": [\n                    {\n                        \"name\": \"Exposed In The Light\"\n                    },\n                    {\n                        \"name\": \"Live at Hammersmith Apollo 2011\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Celtic Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/41c1dd9c5d40e9e3d2e2abe90d7c6d751075af3b\",\n                \"albums\": [\n                    {\n                        \"name\": \"In Studio\"\n                    },\n                    {\n                        \"name\": \"Celtic Pink Floyd\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Pink Floyd Story\",\n                \"image\": \"https://i.scdn.co/image/2480d7c24b9ad93408a8455b1dc281d3f7239268\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Great Gig In the Sky\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"Travellers - The Complete Fantasy Playlist\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Floyd Pink\",\n                \"image\": \"https://i.scdn.co/image/5fd98e28dcbbaa97b3cc2ed84683589dddc424b4\",\n                \"albums\": [\n                    {\n                        \"name\": \"Money (Broke Version)\"\n                    },\n                    {\n                        \"name\": \"PUSH EP\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Project\",\n                \"image\": \"https://i.scdn.co/image/948813e539c645da4b8b0ef8a7560102a27bfc80\",\n                \"albums\": [\n                    {\n                        \"name\": \"Jelling Musikfestival 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Hungarian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/53f81d7757b55320a9b4248cc96ef36d26f8dfe1\",\n                \"albums\": [\n                    {\n                        \"name\": \"On The Turning Away 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Atom Pink Floyd Tribute\",\n                \"image\": \"https://i.scdn.co/image/6cbd40d400a19ef0d86eec900b4cb78c18ed1354\",\n                \"albums\": [\n                    {\n                        \"name\": \"Tearing Down the Wall: Live 2015\"\n                    },\n                    {\n                        \"name\": \"Studio Sessions - Wish You Were Here\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Tribute Band\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The Only Rock Tributes Album You'll Ever Need! (Deluxe Version)\"\n                    },\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The only Rock Tributes album you'll ever need!\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Made famous by Pink Floyd\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"Lesbian Music\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Machine Perform Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/52a23a39ff1313c05a54a624734d90cc3057d34c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Two Nights At The Keswick, Volume 2\"\n                    },\n                    {\n                        \"name\": \"The Machine Unplugged\"\n                    },\n                    {\n                        \"name\": \"Two Nights at the Keswick, Volume 1\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"THE ILLUSION A SOUND LIKE PINK FLOYD\",\n                \"image\": \"https://i.scdn.co/image/b83e98cbf88f9807fbe31c7cff33b959ba12cd67\",\n                \"albums\": [\n                    {\n                        \"name\": \"Project One\"\n                    },\n                    {\n                        \"name\": \"Leaving the Earth\"\n                    }\n                ]\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "add collection 81999365 field",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "48b2ecee-c3d0-42c3-8b27-7fc76022673b",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Modifies meta\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.addCollectionEntryFields.customValues.test1).to.eql(1);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  addCollectionEntryFields(\n    input: {\n        id: \"81999365.scan1\"\n        fields: { customValues: {test1: 1 }}\n        }\n  ) {\n    id\n    customValues\n  }\n}\n",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{api_server_uri}}/query",
+							"host": [
+								"{{api_server_uri}}"
+							],
+							"path": [
+								"query"
+							]
+						},
+						"description": "> Postman launched built-in support for GraphQL in version 7.2.\n\nIf you're using Postman v7.2 or later, the app supports the following:\n\n* Sending GraphQL queries in request body as POST requests\n* Support for GraphQL variables\n* Creating APIs in Postman with GraphQL schema type\n* Query autocompletion integrated with user-defined GraphQL schemas\n \nThis example is from this step-by-step tutorial about [how to use Postman with the Spotify GraphQL API](https://blog.getpostman.com/2019/06/18/postman-v7-2-supports-graphql/).\n\n![[GraphQL in Postman](https://i.imgur.com/4nKoPU7.png)](https://i.imgur.com/4nKoPU7.png)\n\nTo enable the autocompletion, you will need to add a GraphQL schema under the APIs tab, and then select the schema while typing your query. An example GraphQL schema:\n\n```\ntype Album {\n  name: String\n  id: ID\n  image: String\n  tracks: [Track]\n}\n\ntype Artist {\n  name: String!\n  id: ID\n  image: String\n  albums(limit: Int = 10): [Album]\n}\n\ntype Query {\n  hi(message: String = \"Hi\"): String\n  queryArtists(byName: String = \"Red Hot Chili Peppers\"): [Artist]\n}\n\ntype Track {\n  name: String!\n  artists: [Artist]\n  preview_url: String\n  id: ID\n}\n```"
+					},
+					"response": [
+						{
+							"name": "successful response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query getByArtist ($name: String!) {\n    queryArtists (byName: $name) {\n        name\n        image\n        albums {\n            name\n        }\n    }\n}",
+										"variables": "{\n    \"name\": \"{{artist}}\"\n}"
+									}
+								},
+								"url": {
+									"raw": "https://spotify-graphql-server.herokuapp.com/graphql",
+									"protocol": "https",
+									"host": [
+										"spotify-graphql-server",
+										"herokuapp",
+										"com"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "3453"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"d7d-Tpc/sCuFhUg6s283JzeQA6Wh6zo\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 18 Jun 2019 21:07:28 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"queryArtists\": [\n            {\n                \"name\": \"Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/e69f71e2be4b67b82af90fb8e9d805715e0684fa\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"Pulse\"\n                    },\n                    {\n                        \"name\": \"Pulse (Live)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound of Thunder (Live)\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound Of Thunder\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse Of Reason (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut\"\n                    },\n                    {\n                        \"name\": \"The Wall\"\n                    },\n                    {\n                        \"name\": \"The Wall (Remastered)\"\n                    },\n                    {\n                        \"name\": \"Animals\"\n                    },\n                    {\n                        \"name\": \"Animals (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here [Remastered] (Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Dark Side of the Moon\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Dj Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/1e6e870d6fa368e77cb23fe628ca8d5d093f2d7c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Go to Sleep\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Think Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/15978deb5e42e26bbc81a0464084b9638457cb76\",\n                \"albums\": [\n                    {\n                        \"name\": \"Billy Martin\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Redux\",\n                \"image\": \"https://i.scdn.co/image/92911e90e7cfa8c64c2c790b22b75bce1e31508e\",\n                \"albums\": [\n                    {\n                        \"name\": \"A New Music Experience\"\n                    },\n                    {\n                        \"name\": \"Pink Floyd Redux\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Australian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/4080bc55ea9ccc9f4fb101eae4c14351e832c382\",\n                \"albums\": [\n                    {\n                        \"name\": \"Exposed In The Light\"\n                    },\n                    {\n                        \"name\": \"Live at Hammersmith Apollo 2011\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Celtic Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/41c1dd9c5d40e9e3d2e2abe90d7c6d751075af3b\",\n                \"albums\": [\n                    {\n                        \"name\": \"In Studio\"\n                    },\n                    {\n                        \"name\": \"Celtic Pink Floyd\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Pink Floyd Story\",\n                \"image\": \"https://i.scdn.co/image/2480d7c24b9ad93408a8455b1dc281d3f7239268\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Great Gig In the Sky\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"Travellers - The Complete Fantasy Playlist\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Floyd Pink\",\n                \"image\": \"https://i.scdn.co/image/5fd98e28dcbbaa97b3cc2ed84683589dddc424b4\",\n                \"albums\": [\n                    {\n                        \"name\": \"Money (Broke Version)\"\n                    },\n                    {\n                        \"name\": \"PUSH EP\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Project\",\n                \"image\": \"https://i.scdn.co/image/948813e539c645da4b8b0ef8a7560102a27bfc80\",\n                \"albums\": [\n                    {\n                        \"name\": \"Jelling Musikfestival 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Hungarian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/53f81d7757b55320a9b4248cc96ef36d26f8dfe1\",\n                \"albums\": [\n                    {\n                        \"name\": \"On The Turning Away 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Atom Pink Floyd Tribute\",\n                \"image\": \"https://i.scdn.co/image/6cbd40d400a19ef0d86eec900b4cb78c18ed1354\",\n                \"albums\": [\n                    {\n                        \"name\": \"Tearing Down the Wall: Live 2015\"\n                    },\n                    {\n                        \"name\": \"Studio Sessions - Wish You Were Here\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Tribute Band\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The Only Rock Tributes Album You'll Ever Need! (Deluxe Version)\"\n                    },\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The only Rock Tributes album you'll ever need!\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Made famous by Pink Floyd\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"Lesbian Music\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Machine Perform Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/52a23a39ff1313c05a54a624734d90cc3057d34c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Two Nights At The Keswick, Volume 2\"\n                    },\n                    {\n                        \"name\": \"The Machine Unplugged\"\n                    },\n                    {\n                        \"name\": \"Two Nights at the Keswick, Volume 1\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"THE ILLUSION A SOUND LIKE PINK FLOYD\",\n                \"image\": \"https://i.scdn.co/image/b83e98cbf88f9807fbe31c7cff33b959ba12cd67\",\n                \"albums\": [\n                    {\n                        \"name\": \"Project One\"\n                    },\n                    {\n                        \"name\": \"Leaving the Earth\"\n                    }\n                ]\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "delete collection 81999365 field",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "32213ccb-ff5e-4b65-88d4-029321f7ec1f",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Modifies meta\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.deleteCollectionEntryFields.customValues).to.eql(null);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  deleteCollectionEntryFields(\n    input: {\n        id: \"81999365.scan1\"\n        fields: [\"customValues.test\",\"customValues.test1\"]\n        }\n  ) {\n    id\n    customValues\n  }\n}\n",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "{{api_server_uri}}/query",
+							"host": [
+								"{{api_server_uri}}"
+							],
+							"path": [
+								"query"
+							]
+						},
+						"description": "> Postman launched built-in support for GraphQL in version 7.2.\n\nIf you're using Postman v7.2 or later, the app supports the following:\n\n* Sending GraphQL queries in request body as POST requests\n* Support for GraphQL variables\n* Creating APIs in Postman with GraphQL schema type\n* Query autocompletion integrated with user-defined GraphQL schemas\n \nThis example is from this step-by-step tutorial about [how to use Postman with the Spotify GraphQL API](https://blog.getpostman.com/2019/06/18/postman-v7-2-supports-graphql/).\n\n![[GraphQL in Postman](https://i.imgur.com/4nKoPU7.png)](https://i.imgur.com/4nKoPU7.png)\n\nTo enable the autocompletion, you will need to add a GraphQL schema under the APIs tab, and then select the schema while typing your query. An example GraphQL schema:\n\n```\ntype Album {\n  name: String\n  id: ID\n  image: String\n  tracks: [Track]\n}\n\ntype Artist {\n  name: String!\n  id: ID\n  image: String\n  albums(limit: Int = 10): [Album]\n}\n\ntype Query {\n  hi(message: String = \"Hi\"): String\n  queryArtists(byName: String = \"Red Hot Chili Peppers\"): [Artist]\n}\n\ntype Track {\n  name: String!\n  artists: [Artist]\n  preview_url: String\n  id: ID\n}\n```"
+					},
+					"response": [
+						{
+							"name": "successful response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query getByArtist ($name: String!) {\n    queryArtists (byName: $name) {\n        name\n        image\n        albums {\n            name\n        }\n    }\n}",
+										"variables": "{\n    \"name\": \"{{artist}}\"\n}"
+									}
+								},
+								"url": {
+									"raw": "https://spotify-graphql-server.herokuapp.com/graphql",
+									"protocol": "https",
+									"host": [
+										"spotify-graphql-server",
+										"herokuapp",
+										"com"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Server",
+									"value": "Cowboy"
+								},
+								{
+									"key": "Connection",
+									"value": "keep-alive"
+								},
+								{
+									"key": "X-Powered-By",
+									"value": "Express"
+								},
+								{
+									"key": "Access-Control-Allow-Origin",
+									"value": "*"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								},
+								{
+									"key": "Content-Length",
+									"value": "3453"
+								},
+								{
+									"key": "Etag",
+									"value": "W/\"d7d-Tpc/sCuFhUg6s283JzeQA6Wh6zo\""
+								},
+								{
+									"key": "Date",
+									"value": "Tue, 18 Jun 2019 21:07:28 GMT"
+								},
+								{
+									"key": "Via",
+									"value": "1.1 vegur"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"queryArtists\": [\n            {\n                \"name\": \"Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/e69f71e2be4b67b82af90fb8e9d805715e0684fa\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"The Endless River\"\n                    },\n                    {\n                        \"name\": \"Pulse\"\n                    },\n                    {\n                        \"name\": \"Pulse (Live)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Division Bell\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound of Thunder (Live)\"\n                    },\n                    {\n                        \"name\": \"Delicate Sound Of Thunder\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse of Reason\"\n                    },\n                    {\n                        \"name\": \"A Momentary Lapse Of Reason (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Final Cut\"\n                    },\n                    {\n                        \"name\": \"The Wall\"\n                    },\n                    {\n                        \"name\": \"The Wall (Remastered)\"\n                    },\n                    {\n                        \"name\": \"Animals\"\n                    },\n                    {\n                        \"name\": \"Animals (2011 Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here\"\n                    },\n                    {\n                        \"name\": \"Wish You Were Here [Remastered] (Remastered Version)\"\n                    },\n                    {\n                        \"name\": \"The Dark Side of the Moon\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Dj Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/1e6e870d6fa368e77cb23fe628ca8d5d093f2d7c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Go to Sleep\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Think Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/15978deb5e42e26bbc81a0464084b9638457cb76\",\n                \"albums\": [\n                    {\n                        \"name\": \"Billy Martin\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Redux\",\n                \"image\": \"https://i.scdn.co/image/92911e90e7cfa8c64c2c790b22b75bce1e31508e\",\n                \"albums\": [\n                    {\n                        \"name\": \"A New Music Experience\"\n                    },\n                    {\n                        \"name\": \"Pink Floyd Redux\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Australian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/4080bc55ea9ccc9f4fb101eae4c14351e832c382\",\n                \"albums\": [\n                    {\n                        \"name\": \"Exposed In The Light\"\n                    },\n                    {\n                        \"name\": \"Live at Hammersmith Apollo 2011\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Celtic Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/41c1dd9c5d40e9e3d2e2abe90d7c6d751075af3b\",\n                \"albums\": [\n                    {\n                        \"name\": \"In Studio\"\n                    },\n                    {\n                        \"name\": \"Celtic Pink Floyd\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Pink Floyd Story\",\n                \"image\": \"https://i.scdn.co/image/2480d7c24b9ad93408a8455b1dc281d3f7239268\",\n                \"albums\": [\n                    {\n                        \"name\": \"The Great Gig In the Sky\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"American Horror Story - The Name Game\"\n                    },\n                    {\n                        \"name\": \"Travellers - The Complete Fantasy Playlist\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Floyd Pink\",\n                \"image\": \"https://i.scdn.co/image/5fd98e28dcbbaa97b3cc2ed84683589dddc424b4\",\n                \"albums\": [\n                    {\n                        \"name\": \"Money (Broke Version)\"\n                    },\n                    {\n                        \"name\": \"PUSH EP\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Project\",\n                \"image\": \"https://i.scdn.co/image/948813e539c645da4b8b0ef8a7560102a27bfc80\",\n                \"albums\": [\n                    {\n                        \"name\": \"Jelling Musikfestival 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Hungarian Pink Floyd Show\",\n                \"image\": \"https://i.scdn.co/image/53f81d7757b55320a9b4248cc96ef36d26f8dfe1\",\n                \"albums\": [\n                    {\n                        \"name\": \"On The Turning Away 2012\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Atom Pink Floyd Tribute\",\n                \"image\": \"https://i.scdn.co/image/6cbd40d400a19ef0d86eec900b4cb78c18ed1354\",\n                \"albums\": [\n                    {\n                        \"name\": \"Tearing Down the Wall: Live 2015\"\n                    },\n                    {\n                        \"name\": \"Studio Sessions - Wish You Were Here\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Pink Floyd Tribute Band\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The Only Rock Tributes Album You'll Ever Need! (Deluxe Version)\"\n                    },\n                    {\n                        \"name\": \"World's Greatest Rock Anthems - The only Rock Tributes album you'll ever need!\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"Made famous by Pink Floyd\",\n                \"image\": \"\",\n                \"albums\": [\n                    {\n                        \"name\": \"Lesbian Music\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"The Machine Perform Pink Floyd\",\n                \"image\": \"https://i.scdn.co/image/52a23a39ff1313c05a54a624734d90cc3057d34c\",\n                \"albums\": [\n                    {\n                        \"name\": \"Two Nights At The Keswick, Volume 2\"\n                    },\n                    {\n                        \"name\": \"The Machine Unplugged\"\n                    },\n                    {\n                        \"name\": \"Two Nights at the Keswick, Volume 1\"\n                    }\n                ]\n            },\n            {\n                \"name\": \"THE ILLUSION A SOUND LIKE PINK FLOYD\",\n                \"image\": \"https://i.scdn.co/image/b83e98cbf88f9807fbe31c7cff33b959ba12cd67\",\n                \"albums\": [\n                    {\n                        \"name\": \"Project One\"\n                    },\n                    {\n                        \"name\": \"Leaving the Earth\"\n                    }\n                ]\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
 					"name": "delete scan1",
 					"event": [
 						{
@@ -1088,6 +1664,9 @@
 							"graphql": {
 								"query": "mutation {\n  deleteSubcollection(id: \"81999365.scan1\")\n}",
 								"variables": ""
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1328,6 +1907,9 @@
 							"graphql": {
 								"query": "query {\n  collections (orderBy: \"id\"){\n    id\n    childCollection {id, title}     \n  }\n}",
 								"variables": ""
+							},
+							"options": {
+								"graphql": {}
 							}
 						},
 						"url": {
@@ -1720,17 +2302,17 @@
 	],
 	"variable": [
 		{
-			"id": "8b3d4ea8-1103-4702-a6ee-82cb6d3f0131",
+			"id": "2763924a-b163-469b-8651-23ff06785204",
 			"key": "Auth_Url",
 			"value": "https://keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token"
 		},
 		{
-			"id": "2f374ff4-15b2-4199-a285-ee1f61608142",
+			"id": "74cdfd2f-28cc-4a09-bdc3-b019451c608a",
 			"key": "Username",
 			"value": "asapm-test"
 		},
 		{
-			"id": "bc1e6a37-386c-49f5-bf4a-75a379ac29f4",
+			"id": "c645d82a-4705-462a-abb6-65a22d4bf251",
 			"key": "Password",
 			"value": "test"
 		}

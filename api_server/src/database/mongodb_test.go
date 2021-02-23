@@ -5,6 +5,7 @@ package database
 import (
 	"asapm/common/utils"
 	"asapm/graphql/graph/model"
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -61,7 +62,7 @@ func TestMongoDBUpdateUserPreferences(t *testing.T) {
 	defer cleanup()
 	schema := "sss"
 	rec := TestRecordPointer{&schema}
-	_, err = mongodb.ProcessRequest(dbname, collection, "update_record", "id", &rec)
+	_, err = mongodb.ProcessRequest(dbname, collection, "replace_record", "id", &rec)
 
 	assert.Nil(t, err)
 }
@@ -71,7 +72,7 @@ func TestMongoDBGetUserPreferences(t *testing.T) {
 	defer cleanup()
 	schema := "sss"
 	rec := TestRecordPointer{&schema}
-	mongodb.ProcessRequest(dbname, collection, "update_record", "id", &rec)
+	mongodb.ProcessRequest(dbname, collection, "replace_record", "id", &rec)
 
 	res, err := mongodb.ProcessRequest(dbname, collection, "read_record", "id")
 
@@ -195,4 +196,133 @@ func TestMongoDBDeleteArrayElement(t *testing.T) {
 
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_array_element", "123", "123.123", "childCollection")
 	assert.Nil(t, err)
+}
+
+type Users struct {
+	DoorDb  []string `json:"doorDb" bson:"doorDb"`
+	Special []string `json:"special" bson:"special"`
+	Unknown []string `json:"unknown" bson:"unknown"`
+}
+
+type TestUpdateMetaRecord struct {
+	ID         string `json:"_id" bson:"_id"`
+	Status     string `json:"status" bson:"status"`
+	InputUsers Users  `json:"users" bson:"users"`
+}
+
+func TestMongoDBUpdateRecord(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	rec := TestUpdateMetaRecord{"123", "running", Users{[]string{"test"}, []string{}, []string{}}}
+	_, err = mongodb.ProcessRequest(dbname, collection, "create_record", rec)
+	assert.Nil(t, err)
+
+	var update    model.FieldsToSet
+	update.ID = "123"
+	update.Fields =  map[string]interface{}{"status":"stopped","users.doorDb":[]string{"hello", "buy"}}
+
+	res, err := mongodb.ProcessRequest(dbname, collection, "update_fields", &update)
+
+	var rec_res TestUpdateMetaRecord
+	json.Unmarshal(res, &rec_res)
+	assert.Nil(t, err)
+	assert.Equal(t, "stopped", rec_res.Status)
+	assert.Equal(t, "hello", rec_res.InputUsers.DoorDb[0])
+}
+
+type TestUserMetaRecord struct {
+	ID           string                 `json:"_id,omitempty" bson:"_id,omitempty"`
+	CustomValues map[string]interface{} `json:"customValues,omitempty" bson:"customValues,omitempty"`
+}
+
+func TestMongoDBDeleteFields(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	rec := TestUserMetaRecord{"123", map[string]interface{}{"hello": "123", "number": 22,
+		"test": map[string]interface{}{"blabla": 1, "val": 2}}}
+
+	_, err = mongodb.ProcessRequest(dbname, collection, "create_record", rec)
+	assert.Nil(t, err)
+
+	input := model.FieldsToDelete{"123", []string{"customValues.hello", "customValues.test.blabla"}}
+
+	res, err := mongodb.ProcessRequest(dbname, collection, "delete_fields", &input)
+
+	var rec_res TestUserMetaRecord
+	json.Unmarshal(res, &rec_res)
+	assert.Nil(t, err)
+	assert.Equal(t, string(res), "{\"_id\":\"123\",\"customValues\":{\"number\":22,\"test\":{\"val\":2}}}")
+}
+
+func toMap(str string) (res map[string]interface{}) {
+	json.Unmarshal([]byte(str),&res)
+	return res
+}
+
+var UpdateFieldsTest = []struct {
+	input     TestUserMetaRecord
+	update    model.FieldsToSet
+	mustExist bool
+	output    TestUserMetaRecord
+	ok        bool
+	message   string
+}{
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"simple": "345"}}`)},
+		true,
+		TestUserMetaRecord{"1", map[string]interface{}{"simple": "345", "number": 22}},
+		true, "update field"},
+
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"nonExist": "345"}}`)},
+		true,
+		TestUserMetaRecord{},
+		false, "update non-existing field"},
+
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "nested":{"val1":1,"val2":2}}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"simple": "345", "nested":{"val1":3}}}`)},
+		true,
+		TestUserMetaRecord{"1", toMap(`{"simple": "345", "nested":{"val1":3,"val2":2}}`)},
+		true, "update nested field"},
+
+
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"non_exist": "345", "nested":{"val1":3}}}`)},
+		false,
+		TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22,"non_exist": "345", "nested":{"val1":3}}`)},
+		true, "add non-existing field"},
+
+	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
+		model.FieldsToSet{"1", toMap(`{"customValues": {"simple": "345", "nested":{"val1":3}}}`)},
+		false,
+		TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22,"non_exist": "345", "nested":{"val1":3}}`)},
+		false, "add existing field"},
+
+}
+
+func TestMongoDBUpdateFields(t *testing.T) {
+	err := mongodb.Connect(dbaddress)
+	defer cleanup()
+	for _, test := range UpdateFieldsTest {
+		_, err = mongodb.ProcessRequest(dbname, collection, "create_record", test.input)
+		assert.Nil(t, err)
+		op := ""
+		if test.mustExist {
+			op = "update_fields"
+		} else {
+			op = "add_fields"
+		}
+		res, err := mongodb.ProcessRequest(dbname, collection, op,&test.update)
+		if test.ok {
+			assert.Nil(t, err, test.message)
+			expectedOutput, _ := json.Marshal(test.output)
+			assert.Equal(t, string(expectedOutput), string(res), test.message)
+		} else {
+			assert.NotNil(t, err, test.message)
+		}
+		fs := FilterAndSort{
+			Filter: "id = '" + test.input.ID + "'",
+		}
+		mongodb.ProcessRequest(dbname, collection, "delete_records", fs, true)
+	}
 }

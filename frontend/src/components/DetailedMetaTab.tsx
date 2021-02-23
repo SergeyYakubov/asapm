@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {forwardRef, useState} from "react";
 import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
@@ -8,13 +8,18 @@ import KeyboardArrowRightIcon from '@material-ui/icons/KeyboardArrowRight';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
-import MaterialTable from "material-table";
+import MaterialTable, {EditComponentProps} from "material-table";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
 import {TableEntry, TableData, TableFromData} from "../common";
 import {TableIcons} from "../TableIcons";
-import {BeamtimeMeta, CollectionEntry} from "../generated/graphql";
+import {BeamtimeMeta, CollectionEntry, Query} from "../generated/graphql";
+import AddCircleIcon from "@material-ui/icons/AddCircle";
+import {client} from "../index";
+import {DELETE_ENTRY_FIELDS, ADD_ENTRY_FIELDS, UPDATE_ENTRY_FIELDS} from "../graphQLSchemes";
+import {QueryResult} from "@apollo/client";
+import {FormControl, InputLabel, MenuItem, Select, TextField} from "@material-ui/core";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -27,6 +32,10 @@ const useStyles = makeStyles((theme: Theme) =>
                 marginRight: theme.spacing(-1),
                 margin: theme.spacing(2),
             },
+            typedField: {
+                marginLeft: theme.spacing(2),
+                marginRight: theme.spacing(1),
+            },
             title: {
                 marginTop: theme.spacing(0),
                 marginBottom: theme.spacing(2),
@@ -38,8 +47,7 @@ const useStyles = makeStyles((theme: Theme) =>
                 marginTop: theme.spacing(3),
                 marginLeft: theme.spacing(2),
             },
-            chip: {
-            },
+            chip: {},
             chipRunning: {
 //            backgroundColor: '#4caf50',
 //            color: '#4caf50',
@@ -91,10 +99,12 @@ const useStyles = makeStyles((theme: Theme) =>
 
 
 type MetaViewProps = {
+    originalQuery: QueryResult<Query>
     meta: BeamtimeMeta | CollectionEntry
 }
 
 type StaticMetaProps = {
+    originalQuery: QueryResult<Query>
     meta: BeamtimeMeta | CollectionEntry
     isBeamtime: boolean
     tableFromMeta: TableFromData,
@@ -105,10 +115,13 @@ type StaticSectionProps = {
     meta: BeamtimeMeta | CollectionEntry
     tableFromMeta: TableFromData
     section: string
-    isBeamtime:boolean
+    isBeamtime: boolean
 }
 
 type CustomTableProps = {
+    originalQuery: QueryResult<Query>
+    suffix: string
+    id: string
     data: KvObj,
 }
 
@@ -170,7 +183,7 @@ function OnRowClick(event?: React.MouseEvent, rowData?: TableEntry, toggleDetail
     return toggleDetailPanel ? toggleDetailPanel() : {};
 }
 
-function Table({meta, section,tableFromMeta}: StaticSectionProps) {
+function Table({meta, section, tableFromMeta}: StaticSectionProps) {
     return <MaterialTable
         icons={TableIcons}
         options={{
@@ -195,75 +208,285 @@ function Table({meta, section,tableFromMeta}: StaticSectionProps) {
 
 
 function plainDataFromObject(plainData: TableData, data: KvObj, root: string) {
+    if (!data) {
+        return;
+    }
     for (const [key, value] of Object.entries(data)) {
-        const fullKey = (root !== "" ? root+"." : "")+key;
+        const fullKey = (root !== "" ? root + "." : "") + key;
         if (value.constructor.name === "Object") {
             plainDataFromObject(plainData, value, fullKey);
         } else {
-            plainData.push({name: fullKey, value: StringFromValue(value)});
+            plainData.push({name: fullKey, value: StringFromValue(value), data: value});
         }
     }
 }
 
-function CustomTable({data}: CustomTableProps) {
-    const plainData: TableData=[];
-    plainDataFromObject(plainData,data,"");
+type TypedInputProps = {
+    props: EditComponentProps<TableEntry>
+}
+
+function ValueType(val: any): string {
+    const res: string = typeof (val);
+    switch (res) {
+        case "number":
+        case "string":
+            return res;
+        case "object":
+            if (Array.isArray(val) && Array.from(val).length > 0) {
+                if (ValueType(Array.from(val)[0]) == "string") {
+                    return "slist";
+                } else {
+                    return "nlist";
+                }
+            } else {
+                return "string";
+            }
+        default:
+            return "string";
+    }
+}
+
+function rowDataFromTypedInput(name: string, valueType: string, value: string): [TableEntry, string] {
+    const entry: TableEntry = {
+        name: name,
+        data: value,
+        value: value
+    };
+    switch (valueType) {
+        case "string":
+            return [entry, ""];
+        case "number":
+            const num = Number(value);
+            if (isNaN(num)) {
+                return [entry, "input number"];
+            }
+            entry.data = num;
+            return [entry, ""];
+        case "slist":
+            let arr = value?value.split(','):[];
+            arr = arr.map(val => val.trim()).filter(val => val!=="");
+            entry.data = arr; 
+            return [entry, ""];
+        case "nlist":
+            let arrS = value?value.split(','):[];
+            arrS = arrS.map(val => val.trim()).filter(val => val!=="");
+            const arrN : number[]=[];
+            for (const elem of arrS){
+                const n = Number(elem);
+                if (isNaN(n)) {
+                    return [entry, "list should be numerical"];
+                }
+                arrN.push(n);
+            }
+            entry.data = arrN;
+            return [entry, ""];
+    }
+    return [entry, "wrong type"];
+}
+
+function updateRowValue(error:string, setError: React.Dispatch<React.SetStateAction<string>>, valueType: string, value: string, props: EditComponentProps<TableEntry>) {
+    const [data, err] = rowDataFromTypedInput(props.rowData.name, valueType, value);
+    if (err !== "") {
+        setError(err);
+        data.value = "";
+    } else {
+        if (error !== "") {
+            setError("");
+        }
+    }
+    props.onRowDataChange(data);
+}
+
+function TypedInput({props}: TypedInputProps) {
+    const classes = useStyles();
+    const [valueType, setValueType] = React.useState(ValueType(props.rowData.data));
+    const [value, setValue] = React.useState(props.rowData.value);
+    const [error, setError] = React.useState('');
+
+    const handleSelectChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+        const valType = event.target.value as string;
+        updateRowValue(error, setError, valType, value, props);
+        setValueType(valType);
+    };
+
+    const handleValueChange = (e: React.ChangeEvent<{ value: unknown }>) => {
+        const stringVal = e.target.value as string;
+        updateRowValue(error, setError, valueType, stringVal, props);
+        setValue(stringVal);
+    };
+
+    return <div>
+        <TextField id="standard-basic"
+                   label="Value"
+                   value={value || ''}
+                   onChange={handleValueChange}
+                   error={error !== ""}
+                   helperText={
+                       error
+                   }
+        />
+        <FormControl className={classes.typedField} disabled={value!==undefined}>
+            <InputLabel>Type</InputLabel>
+            <Select
+                value={valueType}
+                onChange={handleSelectChange}>
+                <MenuItem value={"string"}>String</MenuItem>
+                <MenuItem value={"number"}>Number</MenuItem>
+                <MenuItem value={"slist"}>String List</MenuItem>
+                <MenuItem value={"nlist"}>Numerical List</MenuItem>
+            </Select>
+        </FormControl>
+    </div>;
+}
+
+
+function CustomTable({suffix, id, data}: CustomTableProps) {
+    const [plainData, setPlainData] = useState(() => {
+        const pd: TableData = [];
+        plainDataFromObject(pd, data, "");
+        return pd;
+    });
+
+    React.useEffect(() => {
+        const pd: TableData = [];
+        plainDataFromObject(pd, data, "");
+        setPlainData(pd);
+    }, [data]);
+
+
     return <MaterialTable
-        icons={TableIcons}
+        editable={{
+            onRowUpdate: (newData) =>
+                new Promise((resolve, reject) => {
+                    if (newData.value === "") {
+                        reject();
+                        return;
+                    }
+                    const obj: { [k: string]: any } = {};
+                    obj[suffix + "." + newData.name] = newData.data;
+                    newData.value = StringFromValue(newData.data);
+                    return client.mutate({
+                        mutation: UPDATE_ENTRY_FIELDS,
+                        variables: {id: id, fields: obj},
+                    }).then(() => {
+                        setPlainData(plainData.map((item) => item.name === newData.name ? newData : item));
+                        resolve();
+                    }).catch((err) => {
+                            reject();
+                            console.log(err);
+                        }
+                    );
+                }),
+            onRowDelete: oldData => {
+                let fields = [suffix + "." + oldData.name];
+                if (plainData.length === 1 && suffix !== "customValues") {
+                    fields = [suffix]; // we remove the whole section since it will be empty otherwise
+                }
+                return client.mutate({
+                    mutation: DELETE_ENTRY_FIELDS,
+                    variables: {id: id, fields: fields},
+                }).then(() => {
+                    setPlainData(plainData.filter(item => item.name !== oldData.name));
+                }).catch((err) => console.log(err));
+            },
+            onRowAdd: (newData) =>
+                new Promise((resolve, reject) => {
+                    if (newData.value === "") {
+                        reject();
+                        return;
+                    }
+                    const obj: { [k: string]: any } = {};
+                    obj[suffix + "." + newData.name] = newData.data;
+                    newData.value = StringFromValue(newData.data);
+                    return client.mutate({
+                        mutation: ADD_ENTRY_FIELDS,
+                        variables: {id: id, fields: obj},
+                    }).then(() => {
+                        setPlainData([...plainData,newData]);
+//                        originalQuery.refetch();
+                        resolve();
+                    }).catch((err) => {
+                            reject();
+                            console.log(err);
+                        }
+                    );
+                }),
+        }}
+        icons={{
+            ...TableIcons, Add: forwardRef(() => (
+                <AddCircleIcon data-mycustomid={"add-icon-handler"} color={'secondary'}/>
+            ))
+        }}
         options={{
             filtering: false,
             header: false,
             showTitle: false,
             search: false,
             paging: false,
-            toolbar: false,
+            toolbar: true,
             draggable: false,
             minBodyHeight: "50vh",
+            actionsColumnIndex: -1,
         }}
         columns={[
-            {title: 'Name', field: 'name'},
-            {title: 'Value', field: 'value'},
+            {title: 'Name', field: 'name', editable: 'onAdd',initialEditValue:'',
+                editComponent: props => (
+                    <TextField
+                               label="Name"
+                               value={props.value || ''}
+                               onChange={e => props.onChange(e.target.value)}
+                    />
+                )
+            },
+            {
+                title: 'Value', field: 'value', editable: 'always',initialEditValue:undefined,
+                editComponent: props => (
+                    <TypedInput props={props}/>
+                )
+            },
         ]}
         data={plainData}
-        onRowClick={OnRowClick}
     />;
 }
 
-function StaticSection({meta, section,tableFromMeta, isBeamtime}: StaticSectionProps) {
+function StaticSection({meta, section, tableFromMeta, isBeamtime}: StaticSectionProps) {
     const classes = useStyles();
-    return  <Grid
+    return <Grid
         container
         direction="column"
         justify="center"
         alignItems="stretch"
     >
-        <Grid  item xs={12}>
+        <Grid item xs={12}>
             <Typography variant="overline" align="center" className={classes.tableTitle}>
                 {section}
             </Typography>
         </Grid>
-        <Grid  item xs={12}>
+        <Grid item xs={12}>
             <Paper className={classes.paper}>
-        <Table meta={meta} tableFromMeta={tableFromMeta} section={section} isBeamtime={isBeamtime}/>
-        </Paper>
+                <Table meta={meta} tableFromMeta={tableFromMeta} section={section} isBeamtime={isBeamtime}/>
+            </Paper>
         </Grid>
     </Grid>;
 }
 
-function StaticMeta({meta,tableFromMeta,isBeamtime}: StaticMetaProps) {
+function StaticMeta({meta, tableFromMeta, isBeamtime}: StaticMetaProps) {
     return <div>
-        {isBeamtime?
-        <Grid container direction="row" alignItems="stretch" spacing={1}>
-            <Grid item xs={12} sm={12} md={4}>
-                <StaticSection meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime} section="Beamtime"/>
+        {isBeamtime ?
+            <Grid container direction="row" alignItems="stretch" spacing={1}>
+                <Grid item xs={12} sm={12} md={4}>
+                    <StaticSection meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}
+                                   section="Beamtime"/>
+                </Grid>
+                <Grid item xs={12} sm={12} md={4}>
+                    <StaticSection meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}
+                                   section="Proposal"/>
+                </Grid>
+                <Grid item xs={12} sm={12} md={4}>
+                    <StaticSection meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}
+                                   section="Analysis"/>
+                </Grid>
             </Grid>
-            <Grid item xs={12} sm={12} md={4}>
-                <StaticSection meta={meta}  tableFromMeta={tableFromMeta} isBeamtime={isBeamtime} section="Proposal"/>
-            </Grid>
-            <Grid item xs={12} sm={12} md={4}>
-                <StaticSection meta={meta}  tableFromMeta={tableFromMeta} isBeamtime={isBeamtime} section="Analysis"/>
-            </Grid>
-        </Grid>
             :
             <Grid container direction="row" alignItems="stretch" spacing={1}>
                 <Grid item xs={12}>
@@ -307,7 +530,7 @@ function TabPanel(props: TabPanelProps) {
     );
 }
 
-function CategorizedMeta({meta}: MetaViewProps): JSX.Element {
+function CategorizedMeta({originalQuery, meta}: MetaViewProps): JSX.Element {
     const classes = useStyles();
 
     const [tabValue, setTabValue] = React.useState(0);
@@ -318,64 +541,64 @@ function CategorizedMeta({meta}: MetaViewProps): JSX.Element {
 
     const customCategories: { [k: string]: any } = {};
     const mainCategory: { [k: string]: any } = {};
-    let isMainCategory = false;
-    for (const [key, value] of Object.entries(meta.customValues as KvObj)) {
-        if (value.constructor.name === "Object") {
-            customCategories[key] = value;
-        } else {
-            isMainCategory = true;
-            mainCategory[key] = value;
+    if (meta.customValues) {
+        for (const [key, value] of Object.entries(meta.customValues as KvObj)) {
+            if (value.constructor.name === "Object") {
+                customCategories[key] = value;
+            } else {
+                mainCategory[key] = value;
+            }
         }
     }
 
-
     let n = 0;
+    const tValue = Object.entries(customCategories).length >= tabValue ? tabValue : 0;
     return <Grid container>
-    <Grid item xs={2}>
-        <Tabs
-            orientation="vertical"
-            variant="scrollable"
-            value={tabValue}
-            onChange={handleTabChange}
-            aria-label="Vertical tabs example"
-            className={classes.tabs}
-        >
-            {isMainCategory &&
-            <Tab classes={{wrapper: classes.tabLabel}} label="general" {...a11yProps(0)}/>
-            }
+        <Grid item xs={2}>
+            <Tabs
+                orientation="vertical"
+                variant="standard"
+                value={tValue}
+                onChange={handleTabChange}
+                aria-label="Vertical tabs example"
+                className={classes.tabs}
+            >
+                <Tab classes={{wrapper: classes.tabLabel}} label="general" {...a11yProps(0)}/>
+                {
+                    Object.entries(customCategories).map(([key]) => {
+                            return <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} key={key}/>;
+                        }
+                    )
+                }
+
+            </Tabs>
+        </Grid>
+        <Grid item xs={10}>
+            <TabPanel value={tValue} index={n++} className={classes.tabPanel} key={n}>
+                <CustomTable originalQuery={originalQuery} suffix={"customValues"} id={meta.id} data={mainCategory}/>
+            </TabPanel>
             {
-                Object.entries(customCategories).map(([key]) =>
-                    <Tab classes={{wrapper: classes.tabLabel}} label={key} {...a11yProps(1)} key={key}/>
+                Object.entries(customCategories).map(([key, value]) =>
+                    <TabPanel value={tValue} index={n++} className={classes.tabPanel} key={n}>
+                        <CustomTable originalQuery={originalQuery} suffix={"customValues." + key} id={meta.id}
+                                     data={value}/>
+                    </TabPanel>
                 )
             }
-        </Tabs>
-    </Grid>
-    <Grid item xs={10}>
-        {isMainCategory &&
-        <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={4}>
-            <CustomTable data={mainCategory}/>
-        </TabPanel>
-        }
-        {
-            Object.entries(customCategories).map(([,value]) =>
-                <TabPanel value={tabValue} index={n++} className={classes.tabPanel} key={n}>
-                    <CustomTable data={value}/>
-                </TabPanel>
-            )
-        }
-    </Grid>
-    </Grid>;
-}
-
-function PlainMeta({meta}: MetaViewProps) {
-    return <Grid container>
-        <Grid item xs={12}>
-            <CustomTable data={meta.customValues as KvObj}/>
         </Grid>
     </Grid>;
 }
 
-function CustomMeta({meta}: MetaViewProps) {
+function PlainMeta({originalQuery, meta}: MetaViewProps) {
+    return <Grid container>
+        <Grid item xs={12}>
+            <CustomTable originalQuery={originalQuery} suffix={"customValues"} id={meta.id}
+                         data={meta.customValues as KvObj}/>
+        </Grid>
+    </Grid>;
+}
+
+function CustomMeta({originalQuery, meta}: MetaViewProps) {
     const classes = useStyles();
     const [plainView, setPlainView] = React.useState(false);
 
@@ -405,21 +628,20 @@ function CustomMeta({meta}: MetaViewProps) {
         </Grid>
         <Paper className={classes.paper}>
             {plainView
-            ? <PlainMeta meta={meta}/>
-            : <CategorizedMeta meta={meta}/>
+                ? <PlainMeta originalQuery={originalQuery} meta={meta}/>
+                : <CategorizedMeta originalQuery={originalQuery} meta={meta}/>
             }
         </Paper>
     </div>;
 }
 
-function DetailedMetaTab({meta,tableFromMeta,isBeamtime}: StaticMetaProps): JSX.Element {
+function DetailedMetaTab({originalQuery, meta, tableFromMeta, isBeamtime}: StaticMetaProps): JSX.Element {
     return (
-                <div>
-                    <StaticMeta meta={meta} tableFromMeta={tableFromMeta} isBeamtime={isBeamtime}/>
-                    { meta.customValues &&
-                        <CustomMeta meta={meta}/>
-                    }
-                </div>
+        <div>
+            <StaticMeta originalQuery={originalQuery} meta={meta} tableFromMeta={tableFromMeta}
+                        isBeamtime={isBeamtime}/>
+            <CustomMeta originalQuery={originalQuery} meta={meta}/>
+        </div>
     );
 }
 

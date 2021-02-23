@@ -10,7 +10,7 @@ then
   exit
 fi
 
-TAG=0.43
+TAG=0.44
 
 docker build -t $DOCKER_REPO_NAME/asapm-api-server:$TAG api_server
 docker build -t $DOCKER_REPO_NAME/asapm-frontend:$TAG frontend

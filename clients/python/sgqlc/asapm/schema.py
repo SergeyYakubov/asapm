@@ -11,7 +11,7 @@ schema = sgqlc.types.Schema()
 ########################################################################
 class Acls(sgqlc.types.Enum):
     __schema__ = schema
-    __choices__ = ('WRITE', 'READ')
+    __choices__ = ('ADMIN', 'READ')
 
 
 Boolean = sgqlc.types.Boolean
@@ -37,6 +37,20 @@ String = sgqlc.types.String
 ########################################################################
 # Input Objects
 ########################################################################
+class FieldsToDelete(sgqlc.types.Input):
+    __schema__ = schema
+    __field_names__ = ('id', 'fields')
+    id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
+    fields = sgqlc.types.Field(sgqlc.types.non_null(sgqlc.types.list_of(sgqlc.types.non_null(String))), graphql_name='fields')
+
+
+class FieldsToSet(sgqlc.types.Input):
+    __schema__ = schema
+    __field_names__ = ('id', 'fields')
+    id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
+    fields = sgqlc.types.Field(sgqlc.types.non_null(Map), graphql_name='fields')
+
+
 class InputBeamtimeUser(sgqlc.types.Input):
     __schema__ = schema
     __field_names__ = ('applicant', 'email', 'institute', 'lastname', 'user_id', 'username')
@@ -82,7 +96,7 @@ class NewBeamtimeMeta(sgqlc.types.Input):
     beamline_alias = sgqlc.types.Field(String, graphql_name='beamlineAlias')
     beamline_setup = sgqlc.types.Field(String, graphql_name='beamlineSetup')
     id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
-    status = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='status')
+    status = sgqlc.types.Field(String, graphql_name='status')
     contact = sgqlc.types.Field(String, graphql_name='contact')
     core_path = sgqlc.types.Field(String, graphql_name='corePath')
     event_end = sgqlc.types.Field(DateTime, graphql_name='eventEnd')
@@ -190,7 +204,7 @@ class LogEntryQueryResult(sgqlc.types.Type):
 
 class Mutation(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('create_meta', 'delete_meta', 'delete_subcollection', 'add_collection_entry', 'set_user_preferences', 'add_message_log_entry', 'remove_log_entry')
+    __field_names__ = ('create_meta', 'delete_meta', 'delete_subcollection', 'add_collection_entry', 'modify_beamtime_meta', 'update_collection_entry_fields', 'add_collection_entry_fields', 'delete_collection_entry_fields', 'set_user_preferences', 'add_message_log_entry', 'remove_log_entry')
     create_meta = sgqlc.types.Field('BeamtimeMeta', graphql_name='createMeta', args=sgqlc.types.ArgDict((
         ('input', sgqlc.types.Arg(sgqlc.types.non_null(NewBeamtimeMeta), graphql_name='input', default=None)),
 ))
@@ -205,6 +219,22 @@ class Mutation(sgqlc.types.Type):
     )
     add_collection_entry = sgqlc.types.Field('CollectionEntry', graphql_name='addCollectionEntry', args=sgqlc.types.ArgDict((
         ('input', sgqlc.types.Arg(sgqlc.types.non_null(NewCollectionEntry), graphql_name='input', default=None)),
+))
+    )
+    modify_beamtime_meta = sgqlc.types.Field('BeamtimeMeta', graphql_name='modifyBeamtimeMeta', args=sgqlc.types.ArgDict((
+        ('input', sgqlc.types.Arg(sgqlc.types.non_null(FieldsToSet), graphql_name='input', default=None)),
+))
+    )
+    update_collection_entry_fields = sgqlc.types.Field('CollectionEntry', graphql_name='updateCollectionEntryFields', args=sgqlc.types.ArgDict((
+        ('input', sgqlc.types.Arg(sgqlc.types.non_null(FieldsToSet), graphql_name='input', default=None)),
+))
+    )
+    add_collection_entry_fields = sgqlc.types.Field('CollectionEntry', graphql_name='addCollectionEntryFields', args=sgqlc.types.ArgDict((
+        ('input', sgqlc.types.Arg(sgqlc.types.non_null(FieldsToSet), graphql_name='input', default=None)),
+))
+    )
+    delete_collection_entry_fields = sgqlc.types.Field('CollectionEntry', graphql_name='deleteCollectionEntryFields', args=sgqlc.types.ArgDict((
+        ('input', sgqlc.types.Arg(sgqlc.types.non_null(FieldsToDelete), graphql_name='input', default=None)),
 ))
     )
     set_user_preferences = sgqlc.types.Field('UserAccount', graphql_name='setUserPreferences', args=sgqlc.types.ArgDict((

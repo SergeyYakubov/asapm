@@ -227,7 +227,7 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps): JSX.Element {
             {rawView ? (
                 <RawMeta meta={data}/>
             ) : (
-                <DetailedTabs meta={data} section={section} isBeamtime={isBeamtime}/>
+                <DetailedTabs originalQuery={queryResult} meta={data} section={section} isBeamtime={isBeamtime}/>
             )}
         </div>
     );

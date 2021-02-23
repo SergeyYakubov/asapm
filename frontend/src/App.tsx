@@ -15,7 +15,6 @@ import DetailedPage from "./pages/DetailedPage";
 import LogbooksPage from "./pages/LogbooksPage";
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 
-
 declare module "@material-ui/core/styles/createPalette" {
 // eslint-disable-next-line
     interface Palette {
