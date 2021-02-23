@@ -7,6 +7,7 @@ import (
 	"asapm/database"
 	"asapm/graphql/graph/model"
 	"encoding/json"
+	"errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -111,7 +112,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			CustomValues:        nil,
 		}
 		if  !test.allowed {
-			_, err := AddCollectionEntry(test.acl, input)
+			_, err := AddCollectionEntry(input)
 			suite.NotNil(err)
 			continue
 		}
@@ -149,7 +150,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		params_create := []interface{}{&input_entry}
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "create_record", params_create).Return([]byte("{}"), nil)
 
-		entry, err := AddCollectionEntry(test.acl, input)
+		entry, err := AddCollectionEntry(input)
 
 		suite.Nil(err)
 		suite.Equal("p05", *entry.ParentBeamtimeMeta.Beamline)
@@ -195,3 +196,243 @@ func (suite *CollectionTestSuite) TestDeleteSubcollection() {
 	suite.Nil(err)
 	suite.Equal(id, *res)
 }
+
+
+
+var beamline = "bl"
+var facility = "facility"
+
+var AddUserMetaTests = []struct {
+	acl     auth.MetaAcl
+	id string
+	mode int
+	dbCmd string
+	input   interface{}
+	meta    *model.CollectionEntry
+	resultErrors   bool
+	message string
+}{
+	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToSet{
+		ID:        "12345.1",
+		Fields: nil,
+	}, nil, true, "immediate access deny"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  []string{"12346"},
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12346.1", ModeAddFields,"add_fields",&model.FieldsToSet{
+		ID:        "12346.1",
+		Fields: nil,
+	}, &model.CollectionEntry{
+		ID:       "12346.1",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12346",
+		},
+	}, false, "ok, access via beamtime"},
+
+
+	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToSet{
+		ID:        "12345.1",
+		Fields: nil,
+	}, nil, true, "immediate access deny"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  []string{"12346"},
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12346.2", ModeAddFields,"add_fields",&model.FieldsToSet{
+		ID:        "12346.2",
+		Fields: map[string]interface{}{"hello":2},
+	}, &model.CollectionEntry{
+		ID:       "12346.2",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12346",
+		},
+	}, true, "error does not start with user fields"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  []string{"12346"},
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12346.3", ModeAddFields,"add_fields",&model.FieldsToSet{
+		ID:        "12346.3",
+		Fields: map[string]interface{}{KUserFieldName+".hello":2},
+	}, &model.CollectionEntry{
+		ID:       "12346.3",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12346",
+		},
+	}, false, "ok, starts with user fields"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   true,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12346.4", ModeAddFields,"add_fields",&model.FieldsToSet{
+		ID:        "12346.4",
+		Fields: map[string]interface{}{"hello":2},
+	}, &model.CollectionEntry{
+		ID:       "12346.4",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12346",
+		},
+	}, false, "ok, does not start with user fields but admin access"},
+
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  []string{beamline},
+		AllowedFacilities: nil,
+	},"12347.1", ModeAddFields,"add_fields",&model.FieldsToSet{
+		ID:        "12347.1",
+		Fields: nil,
+	}, &model.CollectionEntry{
+		ID:       "12347.1",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12348",
+			Beamline: &beamline,
+		},
+	}, false, "ok, access via beamline"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  nil,
+		AllowedFacilities: []string{facility},
+	},"12348.1", ModeAddFields,"add_fields",&model.FieldsToSet{
+		ID:        "12348.1",
+		Fields: nil,
+	}, &model.CollectionEntry{
+		ID:       "12348.1",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12349",
+			Facility: &facility,
+		},
+	}, false, "ok, access via facility"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   true,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12349", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
+		ID:        "12349",
+		Fields: []string{},
+	}, &model.CollectionEntry{
+		ID:       "12349",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12349",
+		},
+	}, false, "ok delete empty custom values fields"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  []string{"12349"},
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12349", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
+		ID:        "12349",
+		Fields: []string{KUserFieldName+".hello"},
+	}, &model.CollectionEntry{
+		ID:       "12349",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12349",
+		},
+	}, false, "ok delete custom values fields"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   false,
+		AllowedBeamtimes:  []string{"12351"},
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12351", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
+		ID:        "12351",
+		Fields: []string{"hello"},
+	}, &model.CollectionEntry{
+		ID:       "12351",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12351",
+		},
+	}, true, "error delete non custom values field"},
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   true,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12352", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
+		ID:        "12352",
+		Fields: []string{"hello"},
+	}, &model.CollectionEntry{
+		ID:       "12352",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12352",
+		},
+	}, false, "ok delete non custom values field with immediate access"},
+
+
+	{auth.MetaAcl{
+		ImmediateDeny:     false,
+		ImmediateAccess:   true,
+		AllowedBeamtimes:  nil,
+		AllowedBeamlines:  nil,
+		AllowedFacilities: nil,
+	},"12350", ModeUpdateFields,"update_fields",&model.FieldsToSet{
+		ID:        "12350",
+		Fields: nil,
+	}, &model.CollectionEntry{
+		ID:       "12350",
+		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
+			ID: "12350",
+		},
+	}, false, "ok update_fields"},
+}
+
+func (suite *MetaSuite) TestAddUserMeta() {
+	for _, test := range AddUserMetaTests {
+		if test.acl.ImmediateDeny {
+			_, err := ModifyCollectionEntryMeta(test.acl,ModeAddFields,test.id,test.input,[]string{},[]string{})
+			suite.NotNil(err)
+			continue
+		}
+
+		params_read := []interface{}{test.id}
+		metab, _ := json.Marshal(test.meta)
+		var db_err error
+		if test.meta == nil {
+			db_err = errors.New("not found")
+		}
+		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return(metab, db_err)
+
+		if test.meta != nil && !test.resultErrors {
+			params := []interface{}{test.input}
+			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, test.dbCmd, params).Return(metab, nil)
+		}
+		res, err := ModifyCollectionEntryMeta(test.acl, test.mode,test.id,test.input,[]string{},[]string{})
+		if test.meta == nil || test.resultErrors{
+			suite.NotNil(err,test.message)
+			suite.Nil(res,test.message)
+		} else
+		{
+			suite.Nil(err,test.message)
+			suite.NotNil(res,test.message)
+		}
+	}
+}
+

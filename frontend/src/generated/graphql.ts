@@ -188,7 +188,7 @@ export type NewBeamtimeMeta = {
   beamlineAlias: Maybe<Scalars['String']>;
   beamlineSetup: Maybe<Scalars['String']>;
   id: Scalars['String'];
-  status: Scalars['String'];
+  status: Maybe<Scalars['String']>;
   contact: Maybe<Scalars['String']>;
   corePath: Maybe<Scalars['String']>;
   eventEnd: Maybe<Scalars['DateTime']>;
@@ -207,6 +207,16 @@ export type NewBeamtimeMeta = {
   customValues: Maybe<Scalars['Map']>;
 };
 
+export type FieldsToDelete = {
+  id: Scalars['String'];
+  fields: Array<Scalars['String']>;
+};
+
+export type FieldsToSet = {
+  id: Scalars['String'];
+  fields: Scalars['Map'];
+};
+
 export type UniqueField = {
   __typename?: 'UniqueField';
   keyName: Scalars['String'];
@@ -214,7 +224,7 @@ export type UniqueField = {
 };
 
 export enum Acls {
-  Write = 'WRITE',
+  Admin = 'ADMIN',
   Read = 'READ'
 }
 
@@ -224,6 +234,10 @@ export type Mutation = {
   deleteMeta: Maybe<Scalars['String']>;
   deleteSubcollection: Maybe<Scalars['String']>;
   addCollectionEntry: Maybe<CollectionEntry>;
+  modifyBeamtimeMeta: Maybe<BeamtimeMeta>;
+  updateCollectionEntryFields: Maybe<CollectionEntry>;
+  addCollectionEntryFields: Maybe<CollectionEntry>;
+  deleteCollectionEntryFields: Maybe<CollectionEntry>;
   setUserPreferences: Maybe<UserAccount>;
 };
 
@@ -245,6 +259,26 @@ export type MutationDeleteSubcollectionArgs = {
 
 export type MutationAddCollectionEntryArgs = {
   input: NewCollectionEntry;
+};
+
+
+export type MutationModifyBeamtimeMetaArgs = {
+  input: FieldsToSet;
+};
+
+
+export type MutationUpdateCollectionEntryFieldsArgs = {
+  input: FieldsToSet;
+};
+
+
+export type MutationAddCollectionEntryFieldsArgs = {
+  input: FieldsToSet;
+};
+
+
+export type MutationDeleteCollectionEntryFieldsArgs = {
+  input: FieldsToDelete;
 };
 
 

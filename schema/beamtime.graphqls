@@ -148,10 +148,10 @@ input NewCollectionEntry {
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
     beamline: String
-    beamlineAlias: String #@inputNeedAcl(acl: WRITE)
+    beamlineAlias: String
     beamlineSetup: String
     id: String!
-    status: String!
+    status: String
     contact: String
     corePath: String
     eventEnd: DateTime
@@ -170,3 +170,12 @@ input NewBeamtimeMeta {
     customValues: Map
 }
 
+input FieldsToDelete {
+    id: String!
+    fields: [String!]!
+}
+
+input FieldsToSet {
+    id: String!
+    fields: Map!
+}

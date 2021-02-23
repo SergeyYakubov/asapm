@@ -2,16 +2,20 @@ directive @needAcl(acl: Acls!) on FIELD_DEFINITION
 #directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
 
 enum Acls {
-    WRITE
+    ADMIN
     READ
 }
 
 
 type Mutation {
-    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: WRITE)
-    deleteMeta(id: String!): String @needAcl(acl: WRITE)
-    deleteSubcollection(id: String!): String @needAcl(acl: WRITE)
-    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: WRITE)
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: ADMIN)
+    deleteMeta(id: String!): String @needAcl(acl: ADMIN)
+    deleteSubcollection(id: String!): String @needAcl(acl: ADMIN)
+    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: ADMIN)
+    modifyBeamtimeMeta(input: FieldsToSet!): BeamtimeMeta @needAcl(acl: ADMIN)
+    updateCollectionEntryFields(input: FieldsToSet!): CollectionEntry
+    addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
+    deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 }
 

@@ -18,7 +18,7 @@ import (
 func generateGqlConfig() generated.Config {
 	c := generated.Config{ Resolvers: &graph.Resolver{}}
 	c.Directives.NeedAcl = func(ctx context.Context, obj interface{}, next graphql.Resolver, acl model.Acls) (interface{}, error) {
-		if acl != model.AclsWrite {
+		if acl != model.AclsAdmin {
 			return next(ctx)
 		}
 		if  err := auth.AuthorizeWrite(ctx); err != nil {

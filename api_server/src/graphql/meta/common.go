@@ -10,6 +10,9 @@ const KMetaNameInDb = "meta"
 const KCollectionTypeName = "collection"
 const KBeamtimeTypeName = "beamtime"
 
+const KUserFieldName = "customValues"
+
+
 func keepFields(m map[string]interface{}, keep []string, prefix string) map[string]interface{} {
 	for key, v := range m {
 		full_key := key
