@@ -65,15 +65,21 @@ func bsonMArray(key string, vals []*ValueFromSQL) bson.M {
 	return bson.M{key: v}
 }
 
-func keyFromColumnName(cn *sqlparser.ColName) string {
-	par_key := cn.Qualifier.Name.String()
-	par_par_key := cn.Qualifier.Qualifier.String()
-	key := cn.Name.String()
-	if len(par_key) > 0 {
-		key = par_key + "." + key
-	}
-	if len(par_par_key) > 0 {
-		key = par_par_key + "." + key
+func keyFromColumnName(column sqlparser.Expr) string {
+	var key string
+	switch cn := column.(type) {
+	case *sqlparser.ColName:
+		par_key := cn.Qualifier.Name.String()
+		par_par_key := cn.Qualifier.Qualifier.String()
+		key = cn.Name.String()
+		if len(par_key) > 0 {
+			key = par_key + "." + key
+		}
+		if len(par_par_key) > 0 {
+			key = par_par_key + "." + key
+		}
+	case *sqlparser.SQLVal:
+		key = string(cn.Val)
 	}
 	if key == "id" {
 		key = "_id"
@@ -147,7 +153,7 @@ func getSQLValFromExpr(expr sqlparser.Expr) *ValueFromSQL {
 
 func processComparisonExpr(expr *sqlparser.ComparisonExpr) (res bson.M, err error) {
 	mongoOp := SQLOperatorToMongo(expr.Operator)
-	key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
+	key := keyFromColumnName(expr.Left)
 	var vals []*ValueFromSQL
 	if tuple, ok := expr.Right.(sqlparser.ValTuple); ok { // SQL in
 		for _, elem := range tuple {
@@ -178,7 +184,7 @@ func processComparisonExpr(expr *sqlparser.ComparisonExpr) (res bson.M, err erro
 }
 
 func processRangeCond(expr *sqlparser.RangeCond) (res bson.M, err error) {
-	key := keyFromColumnName(expr.Left.(*sqlparser.ColName))
+	key := keyFromColumnName(expr.Left)
 	var mongoOpLeft, mongoOpRight, mongoCond string
 	if expr.Operator == sqlparser.BetweenStr {
 		mongoOpLeft = "$gte"
@@ -237,12 +243,7 @@ func getSortBSONFromOrderArray(order_array sqlparser.OrderBy) (bson.M, error) {
 	}
 
 	order := order_array[0]
-	val, ok := order.Expr.(*sqlparser.ColName)
-	if !ok {
-		return bson.M{}, errors.New("order has to be key name")
-	}
-
-	name := keyFromColumnName(val)
+	name := keyFromColumnName(order.Expr)
 	sign := 1
 	if order.Direction == sqlparser.DescScr {
 		sign = -1
@@ -250,7 +251,12 @@ func getSortBSONFromOrderArray(order_array sqlparser.OrderBy) (bson.M, error) {
 	return bson.M{name: sign}, nil
 }
 
-func (db *Mongodb) BSONFromSQL(query string) (bson.M, bson.M, error) {
+func (db *Mongodb) BSONFromSQL(query string) (q bson.M, sort bson.M, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
 	stmt, err := sqlparser.Parse("select * from dbname " + query)
 	if err != nil {
 		return bson.M{}, bson.M{}, err

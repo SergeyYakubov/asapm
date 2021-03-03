@@ -18,21 +18,23 @@ type TestRecordMeta struct {
 	ID    int      `bson:"_id" json:"_id"`
 	FName string   `bson:"fname" json:"fname"`
 	Meta  MetaData `bson:"meta" json:"meta"`
+	Index int `bson:"index" json:"index"`
 }
 
-var recq1 = TestRecordMeta{1, "aaa", MetaData{10.2, 10, "aaa"}}
-var recq2 = TestRecordMeta{2, "bbb", MetaData{11.2, 11, "bbb"}}
-var recq3 = TestRecordMeta{3, "ccc", MetaData{10.2, 10, "ccc"}}
-var recq4 = TestRecordMeta{4, "ddd", MetaData{13.2, 13, ""}}
+var recq1 = TestRecordMeta{1, "aaa", MetaData{10.2, 10, "aaa"},0}
+var recq2 = TestRecordMeta{2, "bbb", MetaData{11.2, 11, "bbb"},1}
+var recq3 = TestRecordMeta{3, "ccc", MetaData{10.2, 10, "ccc"},2}
+var recq4 = TestRecordMeta{4, "ddd", MetaData{13.2, 13, ""},3}
 
 var tests = []struct {
 	query string
 	res   []TestRecordMeta
 	ok    bool
 }{
+	{"\"index\" > 0 ORDER BY \"index\"", []TestRecordMeta{recq2,recq3,recq4}, true},
 	{"id > 0", []TestRecordMeta{recq1,recq2,recq3,recq4}, true},
 	{"meta.counter = 10", []TestRecordMeta{recq1, recq3}, true},
-	{"meta.counter = 10 ORDER BY id DESC", []TestRecordMeta{recq3, recq1}, true},
+		{"meta.counter = 10 ORDER BY id DESC", []TestRecordMeta{recq3, recq1}, true},
 	{"meta.counter > 10 ORDER BY meta.counter DESC", []TestRecordMeta{recq4, recq2}, true},
 	{"meta.counter = 18", nil, true},
 	{"meta.counter = 11", []TestRecordMeta{recq2}, true},

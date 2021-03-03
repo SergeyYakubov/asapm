@@ -75,6 +75,10 @@ type CollectionEntry implements CollectionEntryInterface {
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
+    nextEntry: String
+    prevEntry: String
+    parentId: String!
+    index: Int
 }
 
 type ParentBeamtimeMeta {
@@ -133,6 +137,7 @@ type BaseCollectionEntry {
     eventStart: DateTime
     eventEnd: DateTime
     title: String
+    index: Int
 }
 
 
@@ -142,6 +147,7 @@ input NewCollectionEntry {
     eventEnd: DateTime
     title: String
     childCollectionName: String
+    index: Int
     customValues: Map
 }
 
