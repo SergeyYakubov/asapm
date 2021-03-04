@@ -52,7 +52,7 @@ func (suite *CollectionTestSuite) TearDownTest() {
 var beamtime_meta = `
 {
 	"beamline": "p05",
-	"id": "81999364",
+	"_id": "81999364",
 	"eventEnd": "2019-12-31T19:46:00Z",
 	"facility": "facility",
 	"generated": "2019-12-31T14:46:00Z",
@@ -64,7 +64,7 @@ var beamtime_meta = `
 	},
 	"parentBeamtimeMeta" : {
 		"beamline": "p05",
-		"id": "81999364",
+		"_id": "81999364",
 		"eventEnd": "2019-12-31T19:46:00Z",
 		"facility": "facility",
 		"generated": "2019-12-31T14:46:00Z",
@@ -94,8 +94,8 @@ var AddCollectionEntryTests = []struct {
 	dbCollectionName string
 	message          string
 }{
-	{aclImmediateAccess, true, "12345.scan1", "12345", KMetaNameInDb, "first layer"},
-	{aclImmediateAccess, true, "12345.scan1.subscan1", "12345.scan1", KMetaNameInDb, "second layer"},
+	{aclImmediateAccess, true, "81999364.scan1", "81999364", KMetaNameInDb, "first layer"},
+	{aclImmediateAccess, true, "81999364.scan1.subscan1", "81999364.scan1", KMetaNameInDb, "second layer"},
 	//	{aclImmediateDeny, false,"12345.scan1","12345",KMetaNameInDb,"access denied"},
 }
 
@@ -121,7 +121,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			Title:      input.Title,
 		}
 
-		params_read := []interface{}{"12345"}
+		params_read := []interface{}{"81999364"}
 		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return([]byte(beamtime_meta), nil)
 
 		params_update := []interface{}{test.parentId, "childCollection", baseInput, baseInput.ID}
@@ -138,7 +138,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		col := KDefaultCollectionName
 		input_entry.ChildCollectionName = &col
 		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
-
+		input_entry.ParentID = test.parentId
 		bentry, _ := json.Marshal(&input_entry)
 		sentry := string(bentry)
 		input_entry.JSONString = &sentry
@@ -152,6 +152,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 		suite.Equal("p05", *entry.ParentBeamtimeMeta.Beamline)
 		suite.Equal("facility", *entry.ParentBeamtimeMeta.Facility)
 		suite.Equal(test.collectionId, entry.ID)
+		suite.Equal(test.parentId, entry.ParentID)
 		suite.Equal(meta.ID, entry.ParentBeamtimeMeta.ID)
 		suite.Equal("collection", entry.Type)
 

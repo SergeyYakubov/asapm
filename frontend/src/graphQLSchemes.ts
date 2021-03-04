@@ -118,6 +118,8 @@ export const COLLECTION_ENTITY_DETAILED = gql`
       eventEnd
     }
     customValues
+    prevEntry
+    nextEntry
   }
 }
 `;

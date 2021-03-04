@@ -50,6 +50,7 @@ type ComplexityRoot struct {
 		EventEnd   func(childComplexity int) int
 		EventStart func(childComplexity int) int
 		ID         func(childComplexity int) int
+		Index      func(childComplexity int) int
 		Title      func(childComplexity int) int
 	}
 
@@ -98,8 +99,12 @@ type ComplexityRoot struct {
 		EventEnd            func(childComplexity int) int
 		EventStart          func(childComplexity int) int
 		ID                  func(childComplexity int) int
+		Index               func(childComplexity int) int
 		JSONString          func(childComplexity int) int
+		NextEntry           func(childComplexity int) int
 		ParentBeamtimeMeta  func(childComplexity int) int
+		ParentID            func(childComplexity int) int
+		PrevEntry           func(childComplexity int) int
 		Title               func(childComplexity int) int
 		Type                func(childComplexity int) int
 	}
@@ -258,6 +263,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BaseCollectionEntry.ID(childComplexity), true
+
+	case "BaseCollectionEntry.index":
+		if e.complexity.BaseCollectionEntry.Index == nil {
+			break
+		}
+
+		return e.complexity.BaseCollectionEntry.Index(childComplexity), true
 
 	case "BaseCollectionEntry.title":
 		if e.complexity.BaseCollectionEntry.Title == nil {
@@ -542,6 +554,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CollectionEntry.ID(childComplexity), true
 
+	case "CollectionEntry.index":
+		if e.complexity.CollectionEntry.Index == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.Index(childComplexity), true
+
 	case "CollectionEntry.jsonString":
 		if e.complexity.CollectionEntry.JSONString == nil {
 			break
@@ -549,12 +568,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CollectionEntry.JSONString(childComplexity), true
 
+	case "CollectionEntry.nextEntry":
+		if e.complexity.CollectionEntry.NextEntry == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.NextEntry(childComplexity), true
+
 	case "CollectionEntry.parentBeamtimeMeta":
 		if e.complexity.CollectionEntry.ParentBeamtimeMeta == nil {
 			break
 		}
 
 		return e.complexity.CollectionEntry.ParentBeamtimeMeta(childComplexity), true
+
+	case "CollectionEntry.parentId":
+		if e.complexity.CollectionEntry.ParentID == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.ParentID(childComplexity), true
+
+	case "CollectionEntry.prevEntry":
+		if e.complexity.CollectionEntry.PrevEntry == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.PrevEntry(childComplexity), true
 
 	case "CollectionEntry.title":
 		if e.complexity.CollectionEntry.Title == nil {
@@ -1256,6 +1296,10 @@ type CollectionEntry implements CollectionEntryInterface {
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
+    nextEntry: String
+    prevEntry: String
+    parentId: String!
+    index: Int
 }
 
 type ParentBeamtimeMeta {
@@ -1314,6 +1358,7 @@ type BaseCollectionEntry {
     eventStart: DateTime
     eventEnd: DateTime
     title: String
+    index: Int
 }
 
 
@@ -1323,6 +1368,7 @@ input NewCollectionEntry {
     eventEnd: DateTime
     title: String
     childCollectionName: String
+    index: Int
     customValues: Map
 }
 
@@ -2021,6 +2067,37 @@ func (ec *executionContext) _BaseCollectionEntry_title(ctx context.Context, fiel
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BaseCollectionEntry_index(ctx context.Context, field graphql.CollectedField, obj *model.BaseCollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BaseCollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Index, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_id(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -3358,6 +3435,133 @@ func (ec *executionContext) _CollectionEntry_jsonString(ctx context.Context, fie
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_nextEntry(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NextEntry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_prevEntry(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrevEntry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_parentId(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ParentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_index(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Index, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LogEntryMessage_id(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
@@ -7231,6 +7435,12 @@ func (ec *executionContext) unmarshalInputNewCollectionEntry(ctx context.Context
 			if err != nil {
 				return it, err
 			}
+		case "index":
+			var err error
+			it.Index, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "customValues":
 			var err error
 			it.CustomValues, err = ec.unmarshalOMap2map(ctx, v)
@@ -7382,6 +7592,8 @@ func (ec *executionContext) _BaseCollectionEntry(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._BaseCollectionEntry_eventEnd(ctx, field, obj)
 		case "title":
 			out.Values[i] = ec._BaseCollectionEntry_title(ctx, field, obj)
+		case "index":
+			out.Values[i] = ec._BaseCollectionEntry_index(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7553,6 +7765,17 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 			}
 		case "jsonString":
 			out.Values[i] = ec._CollectionEntry_jsonString(ctx, field, obj)
+		case "nextEntry":
+			out.Values[i] = ec._CollectionEntry_nextEntry(ctx, field, obj)
+		case "prevEntry":
+			out.Values[i] = ec._CollectionEntry_prevEntry(ctx, field, obj)
+		case "parentId":
+			out.Values[i] = ec._CollectionEntry_parentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "index":
+			out.Values[i] = ec._CollectionEntry_index(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

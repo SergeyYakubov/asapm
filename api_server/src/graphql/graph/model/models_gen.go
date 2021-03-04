@@ -26,6 +26,7 @@ type BaseCollectionEntry struct {
 	EventStart *time.Time `json:"eventStart,omitempty" bson:"eventStart,omitempty"`
 	EventEnd   *time.Time `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
 	Title      *string    `json:"title,omitempty" bson:"title,omitempty"`
+	Index      *int       `json:"index,omitempty" bson:"index,omitempty"`
 }
 
 type BeamtimeMeta struct {
@@ -79,6 +80,10 @@ type CollectionEntry struct {
 	Type                string                 `json:"type,omitempty" bson:"type,omitempty"`
 	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta,omitempty" bson:"parentBeamtimeMeta,omitempty"`
 	JSONString          *string                `json:"jsonString,omitempty" bson:"jsonString,omitempty"`
+	NextEntry           *string                `json:"nextEntry,omitempty" bson:"nextEntry,omitempty"`
+	PrevEntry           *string                `json:"prevEntry,omitempty" bson:"prevEntry,omitempty"`
+	ParentID            string                 `json:"parentId,omitempty" bson:"parentId,omitempty"`
+	Index               *int                   `json:"index,omitempty" bson:"index,omitempty"`
 }
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
@@ -175,6 +180,7 @@ type NewCollectionEntry struct {
 	EventEnd            *time.Time             `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
 	Title               *string                `json:"title,omitempty" bson:"title,omitempty"`
 	ChildCollectionName *string                `json:"childCollectionName,omitempty" bson:"childCollectionName,omitempty"`
+	Index               *int                   `json:"index,omitempty" bson:"index,omitempty"`
 	CustomValues        map[string]interface{} `json:"customValues,omitempty" bson:"customValues,omitempty"`
 }
 

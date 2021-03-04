@@ -7,6 +7,7 @@ import (
 	"asapm/graphql/graph/model"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 )
 
@@ -16,7 +17,7 @@ const (
 	ModeDeleteFields
 )
 
-func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry, error) {
+func AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry, error) {
 	entry := &model.CollectionEntry{}
 	utils.DeepCopy(input, entry)
 
@@ -39,12 +40,11 @@ func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry
 	var baseEntry model.BaseCollectionEntry
 	utils.DeepCopy(entry, &baseEntry)
 
-	if len(ids) == 2 {
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element", id, KChildCollectionKey, baseEntry, baseEntry.ID)
-	} else {
-		parentId := strings.Join(ids[:len(ids)-1], ".")
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element", parentId, KChildCollectionKey, baseEntry, baseEntry.ID)
+	parentId := id
+	if len(ids) > 2 {
+		parentId = strings.Join(ids[:len(ids)-1], ".")
 	}
+	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element", parentId, KChildCollectionKey, baseEntry, baseEntry.ID)
 
 	if err != nil {
 		return &model.CollectionEntry{}, err
@@ -59,6 +59,7 @@ func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry
 	}
 	entry.Type = KCollectionTypeName
 	entry.ParentBeamtimeMeta = btMeta.ParentBeamtimeMeta
+	entry.ParentID = parentId
 
 	bentry, _ := json.Marshal(&entry)
 	sentry := string(bentry)
@@ -73,8 +74,8 @@ func  AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry
 }
 
 func checkArrayHasOnlyUserFields(fields []string) bool {
-	for _,field:= range(fields) {
-		if !strings.HasPrefix(field,KUserFieldName) {
+	for _, field := range fields {
+		if !strings.HasPrefix(field, KUserFieldName) {
 			return false
 		}
 	}
@@ -82,8 +83,8 @@ func checkArrayHasOnlyUserFields(fields []string) bool {
 }
 
 func checkMapHasOnlyUserFields(fields map[string]interface{}) bool {
-	for field:= range(fields) {
-		if !strings.HasPrefix(field,KUserFieldName) {
+	for field := range fields {
+		if !strings.HasPrefix(field, KUserFieldName) {
 			return false
 		}
 	}
@@ -93,20 +94,20 @@ func checkMapHasOnlyUserFields(fields map[string]interface{}) bool {
 func checkUserFields(mode int, input interface{}) bool {
 	switch mode {
 	case ModeDeleteFields:
-		input_delete,ok:=input.(*model.FieldsToDelete)
+		input_delete, ok := input.(*model.FieldsToDelete)
 		return ok && checkArrayHasOnlyUserFields(input_delete.Fields)
 	case ModeAddFields:
-		input_add,ok:=input.(*model.FieldsToSet)
+		input_add, ok := input.(*model.FieldsToSet)
 		return ok && checkMapHasOnlyUserFields(input_add.Fields)
 	case ModeUpdateFields:
-		input_update,ok:=input.(*model.FieldsToSet)
+		input_update, ok := input.(*model.FieldsToSet)
 		return ok && checkMapHasOnlyUserFields(input_update.Fields)
 	default:
 		return false
 	}
 }
 
-func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry,mode int, input interface{}) bool {
+func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry, mode int, input interface{}) bool {
 	if acl.ImmediateAccess {
 		return true
 	}
@@ -115,7 +116,7 @@ func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry,mode int, input inte
 		return false
 	}
 
-	if !checkUserFields(mode,input) {
+	if !checkUserFields(mode, input) {
 		return false
 	}
 
@@ -138,33 +139,33 @@ func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry,mode int, input inte
 	return false
 }
 
-func modifyMetaInDb(mode int, input interface{})(res []byte, err error) {
+func modifyMetaInDb(mode int, input interface{}) (res []byte, err error) {
 	switch mode {
 	case ModeDeleteFields:
-		input_delete,ok:=input.(*model.FieldsToDelete)
+		input_delete, ok := input.(*model.FieldsToDelete)
 		if !ok {
 			return nil, errors.New("wrong mode/input in ModifyCollectionEntryMeta")
 		}
 		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_fields", input_delete)
 	case ModeAddFields:
-		input_add,ok:=input.(*model.FieldsToSet)
+		input_add, ok := input.(*model.FieldsToSet)
 		if !ok {
 			return nil, errors.New("wrong mode/input in ModifyCollectionEntryMeta")
 		}
 		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_fields", input_add)
 	case ModeUpdateFields:
-		input_update,ok:=input.(*model.FieldsToSet)
+		input_update, ok := input.(*model.FieldsToSet)
 		if !ok {
 			return nil, errors.New("wrong mode/input in ModifyCollectionEntryMeta")
 		}
 		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_fields", input_update)
 	default:
-		return nil,errors.New("wrong mode in ModifyCollectionEntryMeta")
+		return nil, errors.New("wrong mode in ModifyCollectionEntryMeta")
 	}
-	return res,err
+	return res, err
 }
 
-func auhthorizeModifyRequest(acl auth.MetaAcl, id string,mode int, input interface{}) error {
+func auhthorizeModifyRequest(acl auth.MetaAcl, id string, mode int, input interface{}) error {
 	if acl.ImmediateDeny {
 		return errors.New("access denied, not enough permissions")
 	}
@@ -180,36 +181,61 @@ func auhthorizeModifyRequest(acl auth.MetaAcl, id string,mode int, input interfa
 		return err
 	}
 
-	if !checkAuth(acl,meta,mode, input) {
+	if !checkAuth(acl, meta, mode, input) {
 		return errors.New("Access denied")
 	}
 
 	return nil
 }
 
-func ModifyCollectionEntryMeta(acl auth.MetaAcl,mode int, id string, input interface{} ,keepFields []string,removeFields []string)(*model.CollectionEntry, error) {
-	err := auhthorizeModifyRequest(acl,id,mode, input)
+func ModifyCollectionEntryMeta(acl auth.MetaAcl, mode int, id string, input interface{}, keepFields []string, removeFields []string) (*model.CollectionEntry, error) {
+	err := auhthorizeModifyRequest(acl, id, mode, input)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := modifyMetaInDb(mode,input)
+	res, err := modifyMetaInDb(mode, input)
 	if err != nil {
 		return nil, err
 	}
 
 	var res_meta model.CollectionEntry
 	err = json.Unmarshal(res, &res_meta)
-	if err== nil {
+	if err == nil {
 		s := string(res)
-		res_meta.JSONString =&s
-		updateFields(keepFields,removeFields, &res_meta.CustomValues)
+		res_meta.JSONString = &s
+		updateFields(keepFields, removeFields, &res_meta.CustomValues)
 	}
-	return &res_meta,err
+	return &res_meta, err
 }
 
+func setPrevNext(meta *model.CollectionEntry) {
+	if meta.Index == nil {
+		return
+	}
+	filter := "parentId = '" + meta.ParentID + "' AND \"index\" < " + strconv.Itoa(*meta.Index)
+	order := "\"index\" DESC"
+	fsPrev := database.FilterAndSort{filter,order}
 
-func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFields []string,removeFields []string) ([]*model.CollectionEntry, error) {
+	var prev = model.CollectionEntry{}
+	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record_wfilter", fsPrev, &prev)
+	if err == nil {
+		meta.PrevEntry = &prev.ID
+	}
+
+	filter = "parentId = '" + meta.ParentID + "' AND \"index\" > " + strconv.Itoa(*meta.Index)
+	order = "\"index\""
+	fsNext := database.FilterAndSort{filter,order}
+
+	var next = model.CollectionEntry{}
+	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record_wfilter", fsNext, &next)
+	if err == nil {
+		meta.NextEntry = &next.ID
+	}
+
+}
+
+func ReadCollectionsMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFields []string, removeFields []string) ([]*model.CollectionEntry, error) {
 	if acl.ImmediateDeny {
 		return []*model.CollectionEntry{}, errors.New("access denied, not enough permissions")
 	}
@@ -227,13 +253,14 @@ func ReadCollectionsMeta(acl auth.MetaAcl,filter *string,orderBy *string, keepFi
 	var response = []*model.CollectionEntry{}
 
 	fs := getFilterAndSort(filter, orderBy)
-	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records",fs,&response)
+	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records", fs, &response)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
 	}
 
 	for _, meta := range response {
 		updateFields(keepFields, removeFields, &meta.CustomValues)
+		setPrevNext(meta)
 	}
 
 	return response, nil

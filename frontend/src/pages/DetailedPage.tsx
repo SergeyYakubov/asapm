@@ -5,7 +5,7 @@ import {METAS_DETAILED, COLLECTION_ENTITY_DETAILED} from "../graphQLSchemes";
 import {useQuery} from "@apollo/client";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
-import {Breadcrumbs, Divider} from "@material-ui/core";
+import {Breadcrumbs, Button, ButtonGroup, Divider} from "@material-ui/core";
 import Chip from '@material-ui/core/Chip';
 import clsx from "clsx";
 
@@ -27,6 +27,9 @@ const useStyles = makeStyles((theme: Theme) =>
                 marginLeft: theme.spacing(0),
                 marginRight: theme.spacing(0),
                 margin: theme.spacing(1),
+            },
+            Breadcrumbs: {
+                marginRight: theme.spacing(2),
             },
             marginLeftRight: {
                 marginLeft: theme.spacing(1),
@@ -61,6 +64,12 @@ const useStyles = makeStyles((theme: Theme) =>
             tabs: {
                 borderRight: `1px solid ${theme.palette.divider}`,
             },
+            icon: {
+                marginRight: theme.spacing(0),
+                marginBottom: theme.spacing(0),
+                width: 30,
+                height: 30,
+            },
         }),
 );
 
@@ -72,6 +81,7 @@ type DetailedHeaderProps = {
     setRawView: React.Dispatch<React.SetStateAction<boolean>>;
     isBeamtime: boolean;
     canRawView: boolean;
+    section: string;
 }
 
 type MetaViewProps = {
@@ -79,39 +89,53 @@ type MetaViewProps = {
 }
 
 type BreadcrumbsProps = {
-    meta: CollectionEntry
+    meta: BeamtimeMeta | CollectionEntry
 }
 
+function Navcrumbs({meta}: BreadcrumbsProps) {
+    const classes = useStyles();
 
-function Navmenu({meta}: BreadcrumbsProps) {
     const cols = meta.id.split(".");
-    const first = cols.shift();
-    const last = cols.pop();
-    const btPath = "/detailed/" + meta.parentBeamtimeMeta.id + "/meta";
-    const path = "/detailedcollection/" + meta.id + "/meta";
-    let curPath = "/detailedcollection/"+meta.id;
+    const beamtime = cols.shift();
+    const btPath = "/detailed/" + beamtime + "/meta";
+    let curPath = "/detailedcollection/"+beamtime;
 
-    return <Breadcrumbs aria-label="breadcrumb">
-        <Link color="inherit" to={btPath}>
-            {first}
+    return <Breadcrumbs aria-label="breadcrumb" maxItems={3} className={classes.Breadcrumbs}>
+        <Link key={"list"} color="inherit" to="/collections">
+            Collections
+        </Link>
+        <Link key={"bt"} color="inherit" to={btPath}>
+            {"BT-" + beamtime}
         </Link>
         {cols.map(value => {
             curPath+="."+value;
-            return <Link color="inherit" to={curPath+"/meta"}>
-                {value}
+            return <Link key={value} color="inherit" to={curPath+"/meta"}>
+                {"SC-" + value}
                 </Link>;
         })}
-        <Link
-            color="textPrimary"
-            to={path}
-            aria-current="page"
-        >
-            {last}
-        </Link>
     </Breadcrumbs>;
 }
 
-function DetailedHeader({meta, rawView, setRawView, isBeamtime, canRawView}: DetailedHeaderProps) {
+
+type NextPrevButtonsProps = {
+    meta: CollectionEntry
+    section: string
+}
+
+function NextPrevButtons({section,meta}:NextPrevButtonsProps) {
+    return <ButtonGroup variant="text" color="primary" aria-label="text primary button group">
+        {(meta.prevEntry || meta.nextEntry) &&
+            <Button color='secondary' disabled={!meta.prevEntry} size="small" component={Link} to={"/detailedcollection/" + meta.prevEntry + "/"+section}>
+                Previous Entry
+            </Button>}
+        {(meta.prevEntry || meta.nextEntry) &&
+            <Button color='secondary' disabled={!meta.nextEntry}  size="small" component={Link} to={"/detailedcollection/" + meta.nextEntry + "/"+section}>
+                Next Entry
+            </Button>}
+    </ButtonGroup>;
+}
+
+function DetailedHeader({meta, section, rawView, setRawView, isBeamtime, canRawView}: DetailedHeaderProps) {
     const classes = useStyles();
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,24 +147,25 @@ function DetailedHeader({meta, rawView, setRawView, isBeamtime, canRawView}: Det
                 <Typography variant="h6" color="textSecondary">
                     Detailed {isBeamtime ? "Beamtime" : "Collection"} View
                 </Typography>
-                {!isBeamtime && <Navmenu meta={meta as CollectionEntry}/>}
+                <Navcrumbs meta={meta}/>
                 <Grid item xs={12}>
                     <Typography variant="h5" align="center" className={classes.title}>
                         {isBeamtime ? meta.title : meta.title || (meta as CollectionEntry).id}
                     </Typography>
                 </Grid>
             </Grid>
-            <Grid container direction="row" justify={isBeamtime ? "space-between" : "flex-end"} alignItems="flex-end">
-                {isBeamtime &&
+            <Grid container direction="row" justify={"space-between"} alignItems="flex-end">
+                {isBeamtime ?
                 <Chip label={(meta as BeamtimeMeta).status} variant="outlined" className={clsx(classes.chip, {
                     [classes.chipRunning]: (meta as BeamtimeMeta).status === 'running',
                     [classes.chipCompleted]: (meta as BeamtimeMeta).status === 'completed',
                     [classes.chipScheduled]: (meta as BeamtimeMeta).status === 'scheduled',
                 })}/>
+                :
+                    <NextPrevButtons section={section} meta={meta as CollectionEntry}/>
                 }
                 {
-                    !canRawView ? null :
-                    <FormControlLabel
+                    <FormControlLabel style={{visibility: canRawView ?"visible" : "hidden"}}
                         control={
                             <Switch
                                 checked={rawView}
@@ -223,7 +248,7 @@ function DetailedPage({match, isBeamtime}: DetailedMetaProps): JSX.Element {
         queryResult.data!.collections[0];
     return (
         <div className={classes.detailedPageRoot}>
-            <DetailedHeader meta={data} canRawView={section!=='logbook'} rawView={rawView} setRawView={setRawView} isBeamtime={isBeamtime}/>
+            <DetailedHeader section={section} meta={data} canRawView={section!=='logbook'} rawView={rawView} setRawView={setRawView} isBeamtime={isBeamtime}/>
             {rawView ? (
                 <RawMeta meta={data}/>
             ) : (

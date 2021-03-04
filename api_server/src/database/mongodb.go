@@ -493,34 +493,39 @@ func (db *Mongodb) deleteRecords(dbName string, dataCollectionName string, extra
 	return nil, nil
 }
 
-func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
-	c := db.client.Database(dbName).Collection(dataCollectionName)
-
+func (db *Mongodb)getQueryAndSort(extra_params ...interface{})(q bson.M,sort bson.M,err error) {
 	if len(extra_params) != 2 {
-		return nil, errors.New("wrong number of parameters")
+		return bson.M{},bson.M{}, errors.New("wrong number of parameters")
 	}
 
 	fs, ok := extra_params[0].(FilterAndSort)
 	if !ok {
-		return nil, errors.New("mongo: filter and sort must be set")
+		return bson.M{},bson.M{}, errors.New("mongo: filter and sort must be set")
 	}
 
-	res := extra_params[1]
-
-	q := bson.M{}
-	sort := bson.M{}
-	var err error
-	opts := options.Find()
 	queryStr := getQueryString(fs)
-
 	if queryStr != "" {
 		queryStr = strings.ReplaceAll(queryStr, "\\", "\\\\")
 		q, sort, err = db.BSONFromSQL(queryStr)
 		if err != nil {
-			return nil, err
+			return bson.M{},bson.M{}, err
 		}
-		opts.SetSort(sort)
 	}
+	return q,sort,nil
+}
+
+
+func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+
+	q,sort,err := db.getQueryAndSort(extra_params...)
+	if err != nil {
+		return nil, err
+	}
+
+	res := extra_params[1]
+	opts := options.Find()
+	opts.SetSort(sort)
 
 	cursor, err := c.Find(context.TODO(), q, opts)
 	if err != nil {
@@ -532,6 +537,23 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 		return nil, err
 	}
 	return nil, nil
+}
+
+func (db *Mongodb) readRecordWithFilter(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+
+	q,sort,err := db.getQueryAndSort(extra_params...)
+	if err != nil {
+		return nil, err
+	}
+
+	res := extra_params[1]
+	opts := options.FindOne()
+	opts.SetSort(sort)
+
+	err = c.FindOne(context.TODO(), q, opts).Decode(res)
+
+	return nil, err
 }
 
 func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, op string, extra_params ...interface{}) ([]byte, error) {
@@ -549,6 +571,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.createRecord(db_name, data_collection_name, extra_params...)
 	case "read_records":
 		return db.readRecords(db_name, data_collection_name, extra_params...)
+	case "read_record_wfilter":
+		return db.readRecordWithFilter(db_name, data_collection_name, extra_params...)
 	case "delete_records":
 		return db.deleteRecords(db_name, data_collection_name, extra_params...)
 	case "add_array_element":

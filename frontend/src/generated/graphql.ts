@@ -98,6 +98,10 @@ export type CollectionEntry = CollectionEntryInterface & {
   type: Scalars['String'];
   parentBeamtimeMeta: ParentBeamtimeMeta;
   jsonString: Maybe<Scalars['String']>;
+  nextEntry: Maybe<Scalars['String']>;
+  prevEntry: Maybe<Scalars['String']>;
+  parentId: Scalars['String'];
+  index: Maybe<Scalars['Int']>;
 };
 
 
@@ -171,6 +175,7 @@ export type BaseCollectionEntry = {
   eventStart: Maybe<Scalars['DateTime']>;
   eventEnd: Maybe<Scalars['DateTime']>;
   title: Maybe<Scalars['String']>;
+  index: Maybe<Scalars['Int']>;
 };
 
 export type NewCollectionEntry = {
@@ -179,6 +184,7 @@ export type NewCollectionEntry = {
   eventEnd: Maybe<Scalars['DateTime']>;
   title: Maybe<Scalars['String']>;
   childCollectionName: Maybe<Scalars['String']>;
+  index: Maybe<Scalars['Int']>;
   customValues: Maybe<Scalars['Map']>;
 };
 
