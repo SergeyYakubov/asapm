@@ -5,7 +5,6 @@ import {LogEntryMessage} from "../../generated/graphql";
 import {getSplitedDate} from "./LogbookUtils";
 import LogbookGroupHeader from "./LogbookGroupHeader";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
-import {OrderType} from "../../pages/LogbooksPage";
 
 
 const useStyles = makeStyles((theme: Theme) =>

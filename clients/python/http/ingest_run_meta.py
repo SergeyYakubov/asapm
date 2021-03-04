@@ -6,11 +6,12 @@ url = 'http://guest-k8s-node3.desy.de/yakser/asapm-flash/api/query'
 # fill metadata
 data = {}
 data['eventStart'] = datetime.datetime.utcnow().isoformat() + "Z"
-data['title'] = "run 1"
+data['title'] = "run 2"
 # id must include beamtimeid followed by dot
 data['id'] = "11009763.1"
 data['customValues'] = {}
-data['customValues']['run_number'] = 1
+data['index'] = 2 # set run index correspondingly (e.g. to run number) if you want to navigate to next/prev run from detailed view within a beamtime
+data['customValues']['run_number'] = 2
 data['customValues']['aim_of_run'] = 'aim of run'
 data['customValues']['retardation_voltage'] = 220
 data['customValues']['gas'] = 'gas'

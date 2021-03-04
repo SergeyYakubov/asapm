@@ -117,12 +117,13 @@ class NewBeamtimeMeta(sgqlc.types.Input):
 
 class NewCollectionEntry(sgqlc.types.Input):
     __schema__ = schema
-    __field_names__ = ('id', 'event_start', 'event_end', 'title', 'child_collection_name', 'custom_values')
+    __field_names__ = ('id', 'event_start', 'event_end', 'title', 'child_collection_name', 'index', 'custom_values')
     id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
     event_start = sgqlc.types.Field(DateTime, graphql_name='eventStart')
     event_end = sgqlc.types.Field(DateTime, graphql_name='eventEnd')
     title = sgqlc.types.Field(String, graphql_name='title')
     child_collection_name = sgqlc.types.Field(String, graphql_name='childCollectionName')
+    index = sgqlc.types.Field(Int, graphql_name='index')
     custom_values = sgqlc.types.Field(Map, graphql_name='customValues')
 
 
@@ -144,11 +145,12 @@ class NewLogEntryMessage(sgqlc.types.Input):
 ########################################################################
 class BaseCollectionEntry(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('id', 'event_start', 'event_end', 'title')
+    __field_names__ = ('id', 'event_start', 'event_end', 'title', 'index')
     id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
     event_start = sgqlc.types.Field(DateTime, graphql_name='eventStart')
     event_end = sgqlc.types.Field(DateTime, graphql_name='eventEnd')
     title = sgqlc.types.Field(String, graphql_name='title')
+    index = sgqlc.types.Field(Int, graphql_name='index')
 
 
 class BeamtimeUser(sgqlc.types.Type):
@@ -378,7 +380,11 @@ class BeamtimeMeta(sgqlc.types.Type, CollectionEntryInterface):
 
 class CollectionEntry(sgqlc.types.Type, CollectionEntryInterface):
     __schema__ = schema
-    __field_names__ = ()
+    __field_names__ = ('next_entry', 'prev_entry', 'parent_id', 'index')
+    next_entry = sgqlc.types.Field(String, graphql_name='nextEntry')
+    prev_entry = sgqlc.types.Field(String, graphql_name='prevEntry')
+    parent_id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='parentId')
+    index = sgqlc.types.Field(Int, graphql_name='index')
 
 
 class LogEntryMessage(sgqlc.types.Type, GenericLogEntry):

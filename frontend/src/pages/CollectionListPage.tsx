@@ -64,7 +64,7 @@ export type ColumnList = ColumnItem[];
 function possibleColumnListfromCustomValues(vals: KvObj | null, root: string, columns: ColumnList) {
     if (!vals) return;
     for (const [column, value] of Object.entries(vals)) {
-        const fullColumn = (root !== "" ? root + "." : "") + column;
+        const fullColumn: string = (root !== "" ? root + "." : "") + column;
         if (!value) continue;
         if (value.constructor.name === "Object") {
             possibleColumnListfromCustomValues(value, fullColumn, columns);
@@ -72,7 +72,7 @@ function possibleColumnListfromCustomValues(vals: KvObj | null, root: string, co
             if (!columns.find(column => column.fieldName === "customValues." + fullColumn)) {
                 columns.push({
                     fieldName: "customValues." + fullColumn,
-                    alias: fullColumn.replaceAll(".", "-"),
+                    alias: fullColumn.replace(/./g, '-'),
                     active: false,
                     type: value.constructor.name
                 });
