@@ -19,7 +19,7 @@ import Grid from "@material-ui/core/Grid";
 import {makeStyles} from "@material-ui/core/styles";
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import {useMutation, useQuery} from "@apollo/client";
-import {ADD_LOG_MESSAGE, LOG_GET_BEAMTIMES, LOG_GET_FACILITIES} from "../../graphQLSchemes";
+import {ADD_LOG_MESSAGE, LOG_GET_BEAMTIMES, LOG_GET_FACILITIES, LOG_GET_SUBCOLLECTIONS} from "../../graphQLSchemes";
 import {ApplicationApiBaseUrl, EasyFileUpload} from "../../common";
 import {Query} from "../../generated/graphql";
 import debounce from "lodash.debounce";
@@ -96,6 +96,7 @@ interface AttachedFileInfo {
 interface LogbookNewEntryCreatorProps {
     prefilledFacillity?: string;
     prefilledBeamtime?: string;
+    prefilledSubcollection?: string;
 }
 
 function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element {
@@ -112,15 +113,23 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
 
     const [facility, setFacility] = useState<string | null>('');
     const [beamtime, setBeamtime] = useState<string | null>('');
+    const [subCollection, setSubCollection] = useState<string | null>('');
 
     const [autoCompleteFacilities, setAutoCompleteFacilities] = useState<string[]>([]);
     const [autoCompleteBeamtimes, setAutoCompleteBeamtimes] = useState<string[]>([]);
+    const [autoCompleteSubCollections, setAutoCompleteSubCollections] = useState<string[]>([]);
 
     const getFacilitiesQueryResult = useQuery<Query, { filter: string }>(LOG_GET_FACILITIES, {
         variables: {filter: props.prefilledBeamtime ? `id='${props.prefilledBeamtime}'` : ''},
     });
     const getBeamtimesQueryResult = useQuery<Query, { filter: string }>(LOG_GET_BEAMTIMES, {
         variables: {filter: facility?.length ? `facility='${facility}'` : ''},
+        skip: (!facility?.length),
+    });
+
+    const getSubCollectionsQueryResult = useQuery<Query, { filter: string }>(LOG_GET_SUBCOLLECTIONS, {
+        variables: {filter: (beamtime?.length) ? `id != '${beamtime}' AND id regexp '^${beamtime}'` : ''},
+        skip: (!facility?.length || !beamtime?.length),
     });
 
     const [dragRefCounter, setDragRefCounter] = useState<number>(0);
@@ -145,12 +154,31 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
         },
         [getBeamtimesQueryResult.error, getBeamtimesQueryResult.loading, getBeamtimesQueryResult.data, setAutoCompleteBeamtimes]
     );
+    useEffect(() => {
+            if (getSubCollectionsQueryResult.error) {
+            } else if (!getSubCollectionsQueryResult.loading && getSubCollectionsQueryResult.data) {
+                const rawIds = getSubCollectionsQueryResult.data.uniqueFields[0].values;
+                setAutoCompleteSubCollections(rawIds.map(completeId => completeId.substring(completeId.indexOf('.') + 1)));
+            }
+        },
+        [getSubCollectionsQueryResult.error, getSubCollectionsQueryResult.loading, getSubCollectionsQueryResult.data, setAutoCompleteSubCollections]
+    );
 
-    const updateBeamtimes = useCallback(debounce((lastInput) => {
+    const updateBeamtimes = useCallback(debounce((facility) => {
         getBeamtimesQueryResult.refetch({
-            filter: lastInput?.length ? `facility='${lastInput}'` : '',
+            filter: facility?.length ? `facility='${facility}'` : '',
         });
-    }, 250), []);
+    }, 350), []);
+
+    const updateSubCollections = useCallback(debounce(([facility, beamtime]) => {
+        if (facility && beamtime) {
+            getSubCollectionsQueryResult.refetch({
+                filter: `id != '${beamtime}' AND id regexp '^${beamtime}'`,
+            });
+        } else {
+            setAutoCompleteSubCollections([]);
+        }
+    }, 350), []);
 
     function onFacilityInputChanged(e: ChangeEvent<any>, value: string | null) {
         setFacility(value);
@@ -159,6 +187,14 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
 
     function onBeamtimeInputChanged(e: ChangeEvent<any>, value: string | null) {
         setBeamtime(value);
+        updateSubCollections([facility, value]);
+        if (!value) {
+            setSubCollection('');
+        }
+    }
+
+    function onSubCollectionInputChanged(e: ChangeEvent<any>, value: string | null) {
+        setSubCollection(value);
     }
 
     async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -169,8 +205,6 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
 
         const message = markdownEditor!.current!.getRawContent();
 
-        console.log('Would post new message', facility, beamtime, message);
-
         try {
             setSubmitInProgress(true);
             const files = attachedFiles.length
@@ -179,6 +213,7 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
             await sendToApi({variables: {
                 facility,
                 beamtime,
+                subCollection,
                 message,
                 attachments: files,
             }});
@@ -282,8 +317,8 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
     function onDragOver(e: DragEvent) {
         e.preventDefault();
         e.stopPropagation();
-        // Even if this block is empty,
-        // it's required to actually catch the file
+        // Even if this codeblock does nothing
+        // it's required to catch the onDragOver event
     }
 
     function onDrop(e: DragEvent) {
@@ -315,7 +350,8 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
                 {
                     (dragRefCounter > 0) && <div className={classes.dragNdropIndicator}>Drop file here to upload</div>
                 }
-                <Grid container spacing={3}>
+                <Typography color="error">{sendMessageError}</Typography>
+                <Grid container spacing={1}>
                     <Grid item xs={3}>
                         <Autocomplete
                             id="facility-input"
@@ -342,10 +378,20 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
                             disabled={!!props.prefilledBeamtime}
                         />
                     </Grid>
-                    <Grid item xs={4}>
-                        <Typography color="error">{sendMessageError}</Typography>
+                    <Grid item xs={3}>
+                        <Autocomplete
+                            id="subcollection-input"
+                            freeSolo
+                            options={autoCompleteSubCollections}
+                            onInputChange={onSubCollectionInputChanged}
+                            renderInput={(params) => (
+                                <TextField {...params} label="Subcollection" margin="dense" variant="outlined"/>
+                            )}
+                            value={props.prefilledSubcollection ? props.prefilledSubcollection : (beamtime ? subCollection : '') }
+                            disabled={!!props.prefilledSubcollection || !beamtime}
+                        />
                     </Grid>
-                    <Grid item xs={2} style={{textAlign: 'right'}}>
+                    <Grid item xs={3} style={{textAlign: 'right'}}>
                         <Button variant="contained" color="primary" type="submit" disabled={!inputIsOkay || submitInProgress} style={{height: 45}}>
                             Send
                         </Button>

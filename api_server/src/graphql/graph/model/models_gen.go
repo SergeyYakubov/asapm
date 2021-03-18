@@ -128,16 +128,17 @@ type InputUsers struct {
 }
 
 type LogEntryMessage struct {
-	ID          string                 `json:"_id,omitempty" bson:"_id,omitempty"`
-	Time        time.Time              `json:"time,omitempty" bson:"time,omitempty"`
-	CreatedBy   string                 `json:"createdBy,omitempty" bson:"createdBy,omitempty"`
-	EntryType   LogEntryType           `json:"entryType,omitempty" bson:"entryType,omitempty"`
-	Facility    string                 `json:"facility,omitempty" bson:"facility,omitempty"`
-	Beamtime    *string                `json:"beamtime,omitempty" bson:"beamtime,omitempty"`
-	Tags        []string               `json:"tags,omitempty" bson:"tags,omitempty"`
-	Source      *string                `json:"source,omitempty" bson:"source,omitempty"`
-	Message     string                 `json:"message,omitempty" bson:"message,omitempty"`
-	Attachments map[string]interface{} `json:"attachments,omitempty" bson:"attachments,omitempty"`
+	ID            string                 `json:"_id,omitempty" bson:"_id,omitempty"`
+	Time          time.Time              `json:"time,omitempty" bson:"time,omitempty"`
+	CreatedBy     string                 `json:"createdBy,omitempty" bson:"createdBy,omitempty"`
+	EntryType     LogEntryType           `json:"entryType,omitempty" bson:"entryType,omitempty"`
+	Facility      string                 `json:"facility,omitempty" bson:"facility,omitempty"`
+	Beamtime      *string                `json:"beamtime,omitempty" bson:"beamtime,omitempty"`
+	SubCollection *string                `json:"subCollection,omitempty" bson:"subCollection,omitempty"`
+	Tags          []string               `json:"tags,omitempty" bson:"tags,omitempty"`
+	Source        *string                `json:"source,omitempty" bson:"source,omitempty"`
+	Message       string                 `json:"message,omitempty" bson:"message,omitempty"`
+	Attachments   map[string]interface{} `json:"attachments,omitempty" bson:"attachments,omitempty"`
 }
 
 func (LogEntryMessage) IsGenericLogEntry() {}
@@ -185,13 +186,14 @@ type NewCollectionEntry struct {
 }
 
 type NewLogEntryMessage struct {
-	Time        *time.Time             `json:"time,omitempty" bson:"time,omitempty"`
-	Facility    string                 `json:"facility,omitempty" bson:"facility,omitempty"`
-	Beamtime    *string                `json:"beamtime,omitempty" bson:"beamtime,omitempty"`
-	Tags        []string               `json:"tags,omitempty" bson:"tags,omitempty"`
-	Source      *string                `json:"source,omitempty" bson:"source,omitempty"`
-	Message     string                 `json:"message,omitempty" bson:"message,omitempty"`
-	Attachments map[string]interface{} `json:"attachments,omitempty" bson:"attachments,omitempty"`
+	Time          *time.Time             `json:"time,omitempty" bson:"time,omitempty"`
+	Facility      string                 `json:"facility,omitempty" bson:"facility,omitempty"`
+	Beamtime      *string                `json:"beamtime,omitempty" bson:"beamtime,omitempty"`
+	SubCollection *string                `json:"subCollection,omitempty" bson:"subCollection,omitempty"`
+	Tags          []string               `json:"tags,omitempty" bson:"tags,omitempty"`
+	Source        *string                `json:"source,omitempty" bson:"source,omitempty"`
+	Message       string                 `json:"message,omitempty" bson:"message,omitempty"`
+	Attachments   map[string]interface{} `json:"attachments,omitempty" bson:"attachments,omitempty"`
 }
 
 type OnlineAnylysisMeta struct {

@@ -105,7 +105,7 @@ def addMeta():
 
     json_object = json.dumps(vals)
 
-# Create the query string and variables required for the request.
+    # Create the query string and variables required for the request.
     query = " mutation { createMeta( input: " + json_object + ") {id, beamline, status, title, generated } } "
 
     statuses=['completed','running']
@@ -139,11 +139,46 @@ def addMeta():
     )
     s = Template(query)
     query = s.substitute(d)
-    print (query)
+    print("addMeta", query)
     res = client.execute(query=query)
     print (res)
 
     return (startDate, d["facility"], d["beamtimeId"])
+
+def addSubCollections(beamtime, amountOfSubCollections):
+    createdCollections = []
+    for i in range(0, amountOfSubCollections):
+        vals = {
+            "id": "$id",
+            "title": "$title",
+            "index": (i+1),
+        }
+
+        json_object = json.dumps(vals)
+
+        query = "mutation{addCollectionEntry(input:" + json_object + ") {id}}"
+        d = dict(
+            id = str(beamtime) + "." + str((i+1)),
+            title = "My Subcollection for beamtime: " + str(beamtime) + " sub: " + str((i+1)),
+        )
+        s = Template(query)
+        query = s.substitute(d)
+        print("addSubCollections", query)
+        try:
+            res = client.execute(query=query)
+        except:
+            print("except e: ", sys.exc_info()[0])
+            raise
+        
+        createdCollections.append(d["id"])
+
+        if randint(1,3) == 3:
+            (subCollections) = addSubCollections(d["id"], randint(1,3))
+            print("Created sub sub for ", subCollections)
+        else:
+            subCollections = []
+        createdCollections.extend(subCollections)
+    return (createdCollections)
 
 def addLogEntry(date, facility, beamline):
     vals = {
@@ -164,17 +199,23 @@ def addLogEntry(date, facility, beamline):
     )
     s = Template(query)
     query = s.substitute(d)
-    print(query)
+    print("addLogEntry", query)
     res = client.execute(query=query)
 
-def addLogEntries(startDate, facility, beamline):
+def addLogEntries(startDate, facility, beamline, amount):
     lastDateRef = startDate
 
-    for i in range(0, randint(3, 10)):
+    for i in range(0, amount):
         lastDateRef = random_date(lastDateRef, 0.25)
         #print('{0}, {1}, {2}'.format(facility, beamline, lastDateRef))
         addLogEntry(lastDateRef, facility, beamline)
 
 for i in range(0, 3):
     (startDate, facility, beamtime) = addMeta()
-    addLogEntries(startDate, facility, beamtime)
+
+    if randint(1,3) == 3:
+        (subCollections) = addSubCollections(beamtime, randint(1,4))
+    else:
+        subCollections = []
+
+    addLogEntries(startDate, facility, beamtime, randint(3, 10))

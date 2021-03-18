@@ -132,6 +132,7 @@ function DetailedTabs({originalQuery, meta,isBeamtime,section}: DetailedTabsProp
                 <TabPanel value={value} index={showDataset ? 2 : 1}>
                     <LogbooksPage
                         prefilledBeamtimeId={meta.parentBeamtimeMeta ? meta.parentBeamtimeMeta.id : meta.id}
+                        prefilledSubCollection={meta.parentBeamtimeMeta ? (meta.id.substring(meta.id.indexOf('.') + 1)) : undefined}
                     />
                 </TabPanel>
             </div>

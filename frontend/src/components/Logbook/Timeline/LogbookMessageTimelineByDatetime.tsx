@@ -1,9 +1,9 @@
-import LogbookItem from "./LogbookItem";
+import LogbookItem from "../LogbookItem";
 import {GroupedVirtuoso, GroupedVirtuosoMethods} from "react-virtuoso";
 import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
-import {LogEntryMessage} from "../../generated/graphql";
-import {getSplitedDate} from "./LogbookUtils";
-import LogbookGroupHeader from "./LogbookGroupHeader";
+import {LogEntryMessage} from "../../../generated/graphql";
+import {getSplitedDate} from "../LogbookUtils";
+import LogbookGroupHeader from "../LogbookGroupHeader";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 
 
@@ -18,12 +18,12 @@ const useStyles = makeStyles((theme: Theme) =>
         },
     }));
 
-interface LogbookMessageTimelineByFacilityProps {
+interface LogbookMessageTimelineByDatetimeProps {
     messages: LogEntryMessage[];
     onVisibleGroupChanged: (groupValue: string) => void;
 }
 
-const LogbookMessageTimelineByFacility = forwardRef(({ messages, onVisibleGroupChanged }: LogbookMessageTimelineByFacilityProps, ref) => {
+const LogbookMessageTimelineByDatetime = forwardRef(({ messages, onVisibleGroupChanged }: LogbookMessageTimelineByDatetimeProps, ref) => {
     const classes = useStyles();
 
     const [groups, setGroups] = React.useState<string[]>([]);
@@ -43,24 +43,19 @@ const LogbookMessageTimelineByFacility = forwardRef(({ messages, onVisibleGroupC
     }));
 
     useEffect(() => {
-        const groupByFullDateAndFacility: {[dateFacilityString: string]: LogEntryMessage[]} = {};
-        const sortedMessages = messages.sort((a, b) =>
-            a.facility.localeCompare(b.facility) || (Number(new Date(b.time)) - Number(new Date(a.time)))
-        );
-        for (const message of sortedMessages) {
+        const groupByFullDate: {[date: string]: LogEntryMessage[]} = {};
+        for (const message of messages) {
             const { full } = getSplitedDate(new Date(message.time));
 
-            const dateFacilityString = `${full},${message.facility}`;
-
-            let groupArrayRef = groupByFullDateAndFacility[dateFacilityString];
+            let groupArrayRef = groupByFullDate[full];
             if (groupArrayRef == undefined) {
-                groupArrayRef = groupByFullDateAndFacility[dateFacilityString] = [];
+                groupArrayRef = groupByFullDate[full] = [];
             }
             groupArrayRef.push(message);
         }
 
-        setGroups(Object.keys(groupByFullDateAndFacility));
-        setGroupSizes(Object.values(groupByFullDateAndFacility).map(group => group.length));
+        setGroups(Object.keys(groupByFullDate));
+        setGroupSizes(Object.values(groupByFullDate).map(group => group.length));
 
     }, [messages]);
 
@@ -88,6 +83,9 @@ const LogbookMessageTimelineByFacility = forwardRef(({ messages, onVisibleGroupC
         }}
 
         rangeChanged={({startIndex}) => {
+            // I want to get the currently visible group so that I can select it in the left tree
+            // But this seems to be hidden, so I have to use this workaround
+            // https://github.com/petyosi/react-virtuoso/issues/192
             let countLeft = startIndex;
             let group: string | undefined;
             for (let i = 0; i < groupSizes.length; i++){
@@ -106,4 +104,4 @@ const LogbookMessageTimelineByFacility = forwardRef(({ messages, onVisibleGroupC
     />);
 });
 
-export default LogbookMessageTimelineByFacility;
+export default LogbookMessageTimelineByDatetime;

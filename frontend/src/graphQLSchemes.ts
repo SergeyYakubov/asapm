@@ -206,10 +206,11 @@ export const COLLECTIONS = gql`
 
 
 export const ADD_LOG_MESSAGE = gql`
-mutation addMessageLogEntryLocal($facility: String!, $beamtime: String, $message: String!, $attachments: Map) {
+mutation addMessageLogEntryLocal($facility: String!, $beamtime: String, $subCollection: String, $message: String!, $attachments: Map) {
     addMessageLogEntry(input: {
         facility: $facility,
         beamtime: $beamtime,
+        subCollection: $subCollection,
         message: $message,
         attachments: $attachments
     })
@@ -226,6 +227,14 @@ mutation addMessageLogEntryLocal($facility: String!, $beamtime: String, $message
 export const LOG_GET_BEAMTIMES = gql`
 query ($filter: String!) {
   uniqueFields(filter: $filter, keys:["parentBeamtimeMeta._id"]) {
+    values
+  }
+}
+`;
+
+export const LOG_GET_SUBCOLLECTIONS = gql`
+query ($filter: String!) {
+  uniqueFields(filter: $filter, keys:["_id"]) {
     values
   }
 }
@@ -251,6 +260,7 @@ query ($filter: String!) {
         createdBy,
         facility,
         beamtime,
+        subCollection,
         tags,
         source,
         message,

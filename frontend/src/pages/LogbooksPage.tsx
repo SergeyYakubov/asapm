@@ -8,10 +8,12 @@ import {
 } from "../generated/graphql";
 import {LOG_MESSAGES} from "../graphQLSchemes";
 import LogbookNewEntryCreator from "../components/Logbook/LogbookNewEntryCreator";
-import LogbookSelectionTree from "../components/Logbook/LogbookSelectionTree";
-import LogbookMessageTimelineByDatetime from "../components/Logbook/LogbookMessageTimelineByDatetime";
+import LogbookSelectionTree from "../components/Logbook/Tree/LogbookSelectionTree";
+import LogbookMessageTimelineByDatetime from "../components/Logbook/Timeline/LogbookMessageTimelineByDatetime";
+import LogbookMessageTimelineByFacility from "../components/Logbook/Timeline/LogbookMessageTimelineByFacility";
+import LogbookMessageTimelineByBeamtime from "../components/Logbook/Timeline/LogbookMessageTimelineByBeamtime";
 import LogbookFilter from "../components/Logbook/LogbookFilter";
-import LogbookMessageTimelineByFacility from "../components/Logbook/LogbookMessageTimelineByFacility";
+import LogbookTimeline from "../components/Logbook/Timeline/LogbookTimeline";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -27,22 +29,32 @@ const useStyles = makeStyles((theme: Theme) =>
 
 interface LogbooksPageProps {
     prefilledBeamtimeId?: BeamtimeMeta['id'];
+    prefilledSubCollection?: BeamtimeMeta['id'];
 }
 
-export type OrderType = 'datetime' | 'facility' | 'facility_and_beamtime';
+export type OrderType = 'datetime' | /*'facility' |*/ 'beamtime';
 
 function LogbooksPage(props: LogbooksPageProps): JSX.Element {
     const classes = useStyles();
 
+    let filter = '';
+    if (props.prefilledBeamtimeId) {
+        filter += `beamtime="${props.prefilledBeamtimeId}"`;
+        if (props.prefilledSubCollection) {
+            console.log('prefilledSubCollection', props.prefilledSubCollection);
+            filter += `AND subCollection="${props.prefilledSubCollection}"`;
+        }
+    }
+
     const queryResult = useQuery<Query, { filter: string }>(LOG_MESSAGES, {
         pollInterval: 5000,
-        variables: {filter: props.prefilledBeamtimeId ? `beamtime="${props.prefilledBeamtimeId}"`: ''}//GetFilterString(filter), orderBy: "id"
+        variables: {filter}//GetFilterString(filter), orderBy: "id"
     });
 
     const $messageLog = createRef<any>();
 
     const [messages, setMessages] = useState<LogEntryMessage[]>([]);
-    const [currentVisibleDate, setCurrentVisibleDate] = useState('');
+    const [currentVisibleGroup, setCurrentVisibleGroup] = useState('');
 
     useEffect(() => {
         if (queryResult.error) {
@@ -70,26 +82,20 @@ function LogbooksPage(props: LogbooksPageProps): JSX.Element {
     return <div className={classes.logbookPageRoot}>
             <div style={{ flex: '1', display: 'flex' }}>
                 { hasPrefilledCondition ? null :
-                    <LogbookSelectionTree messages={messages} currentVisibleDate={currentVisibleDate} onDateSelected={(fullDate) => {
+                    <LogbookSelectionTree messages={messages} currentVisibleGroup={currentVisibleGroup} onGroupSelected={(fullDate) => {
                         $messageLog.current?.scrollToGroup(fullDate);
                     }}
-                    orderBy={orderBy}
-                    onOrderByChanged={(newOrderBy) => {
+                                          orderBy={orderBy}
+                                          onOrderByChanged={(newOrderBy) => {
                         setOrderBy(newOrderBy);
                     }} />
                 }
                 <div style={{ flex: '1', display: 'flex' }}>
                     <div style={{ flex: '1', display: 'flex' }}>
                         <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
-                            <LogbookNewEntryCreator prefilledBeamtime={props.prefilledBeamtimeId} />
+                            <LogbookNewEntryCreator prefilledBeamtime={props.prefilledBeamtimeId} prefilledSubcollection={props.prefilledSubCollection} />
                             <LogbookFilter />
-                            {
-                                {
-                                    ['datetime']: <LogbookMessageTimelineByDatetime ref={$messageLog} messages={messages} onVisibleGroupChanged={(fullDate) => setCurrentVisibleDate(fullDate)} />,
-                                    ['facility']: <LogbookMessageTimelineByFacility ref={$messageLog} messages={messages} onVisibleGroupChanged={(fullDate) => setCurrentVisibleDate(fullDate)} />,
-                                    ['facility_and_beamtime']: <div />,
-                                }[orderBy]
-                            }
+                            <LogbookTimeline orderBy={orderBy} forwardedRef={$messageLog} messages={messages} onVisibleGroupChanged={(fullDate) => setCurrentVisibleGroup(fullDate)} />
                         </div>
                     </div>
                 </div>

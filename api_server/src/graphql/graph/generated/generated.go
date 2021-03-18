@@ -110,16 +110,17 @@ type ComplexityRoot struct {
 	}
 
 	LogEntryMessage struct {
-		Attachments func(childComplexity int) int
-		Beamtime    func(childComplexity int) int
-		CreatedBy   func(childComplexity int) int
-		EntryType   func(childComplexity int) int
-		Facility    func(childComplexity int) int
-		ID          func(childComplexity int) int
-		Message     func(childComplexity int) int
-		Source      func(childComplexity int) int
-		Tags        func(childComplexity int) int
-		Time        func(childComplexity int) int
+		Attachments   func(childComplexity int) int
+		Beamtime      func(childComplexity int) int
+		CreatedBy     func(childComplexity int) int
+		EntryType     func(childComplexity int) int
+		Facility      func(childComplexity int) int
+		ID            func(childComplexity int) int
+		Message       func(childComplexity int) int
+		Source        func(childComplexity int) int
+		SubCollection func(childComplexity int) int
+		Tags          func(childComplexity int) int
+		Time          func(childComplexity int) int
 	}
 
 	LogEntryQueryResult struct {
@@ -665,6 +666,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LogEntryMessage.Source(childComplexity), true
+
+	case "LogEntryMessage.subCollection":
+		if e.complexity.LogEntryMessage.SubCollection == nil {
+			break
+		}
+
+		return e.complexity.LogEntryMessage.SubCollection(childComplexity), true
 
 	case "LogEntryMessage.tags":
 		if e.complexity.LogEntryMessage.Tags == nil {
@@ -1437,6 +1445,7 @@ type LogEntryMessage implements GenericLogEntry {
 
     facility: String!
     beamtime: String
+    subCollection: String # Can only be set if beamtime is also set
     tags: [String!]
     source: String
 
@@ -1450,6 +1459,7 @@ input NewLogEntryMessage {
 
     facility: String!
     beamtime: String
+    subCollection: String # Can only be set if beamtime is also set
     tags: [String!]
     source: String
 
@@ -3752,6 +3762,37 @@ func (ec *executionContext) _LogEntryMessage_beamtime(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Beamtime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LogEntryMessage_subCollection(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "LogEntryMessage",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SubCollection, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7477,6 +7518,12 @@ func (ec *executionContext) unmarshalInputNewLogEntryMessage(ctx context.Context
 			if err != nil {
 				return it, err
 			}
+		case "subCollection":
+			var err error
+			it.SubCollection, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "tags":
 			var err error
 			it.Tags, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
@@ -7825,6 +7872,8 @@ func (ec *executionContext) _LogEntryMessage(ctx context.Context, sel ast.Select
 			}
 		case "beamtime":
 			out.Values[i] = ec._LogEntryMessage_beamtime(ctx, field, obj)
+		case "subCollection":
+			out.Values[i] = ec._LogEntryMessage_subCollection(ctx, field, obj)
 		case "tags":
 			out.Values[i] = ec._LogEntryMessage_tags(ctx, field, obj)
 		case "source":

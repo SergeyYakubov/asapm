@@ -252,6 +252,7 @@ export type LogEntryMessage = GenericLogEntry & {
   entryType: LogEntryType;
   facility: Scalars['String'];
   beamtime: Maybe<Scalars['String']>;
+  subCollection: Maybe<Scalars['String']>;
   tags: Maybe<Array<Scalars['String']>>;
   source: Maybe<Scalars['String']>;
   message: Scalars['String'];
@@ -262,6 +263,7 @@ export type NewLogEntryMessage = {
   time: Maybe<Scalars['DateTime']>;
   facility: Scalars['String'];
   beamtime: Maybe<Scalars['String']>;
+  subCollection: Maybe<Scalars['String']>;
   tags: Maybe<Array<Scalars['String']>>;
   source: Maybe<Scalars['String']>;
   message: Scalars['String'];

@@ -44,6 +44,11 @@ const useStyles = makeStyles((theme: Theme) =>
             flexDirection: 'column',
             paddingLeft: theme.spacing(1),
         },
+        dateText: {
+            display: 'block',
+            fontSize: '0.5em',
+            color: '#444444',
+        },
         timeText: {
             fontSize: '1em',
             color: '#444444',
@@ -78,17 +83,25 @@ function toHumanTimestamp(dateString: string): string {
     // :${String(date.getSeconds()).padStart(2, '0')}`;
 }
 
-function LogbookItem({message}: {message: LogEntryMessage}): JSX.Element {
+function toHumanDate(dateString: string): string {
+    const date = new Date(dateString);
+    return `${String(date.getDay()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+}
+
+function LogbookItem({message, displayDate}: {message: LogEntryMessage, displayDate?: boolean}): JSX.Element {
     const classes = useStyles();
 
     return <div className={classes.logItemRoot}>
         <div className={classes.mainContent}>
             <div className={classes.leftSide}>
-                <div><span className={classes.timeText}>{toHumanTimestamp(message.time)}</span></div>
+                <div title={message.time}>
+                    { displayDate && <span className={classes.dateText}>{ toHumanDate(message.time) }</span> }
+                    <span className={classes.timeText}>{toHumanTimestamp(message.time)}</span>
+                </div>
                 <Avatar />
             </div>
             <div className={classes.mainSide}>
-                <div className={classes.infoText}><span>{message.createdBy}</span>{ message.source && <span> @ Source '{message.source}'</span> }<span> @ {message.facility}</span>{ message.beamtime && <span> @ Beamtime {message.beamtime}</span> }</div>
+                <div className={classes.infoText}><span>{message.createdBy}</span>{ message.source && <span> @ Source '{message.source}'</span> }<span> @ {message.facility}</span>{ message.beamtime && <span> @ Beamtime {message.beamtime}{ message.subCollection && `.${message.subCollection}` }</span> }</div>
                 <div className={classes.messageContent}>
                     <LogbookMarkdownViewer className={classes.messageContentInner} rawMarkdown={message.message} />
                 </div>
@@ -99,7 +112,6 @@ function LogbookItem({message}: {message: LogEntryMessage}): JSX.Element {
                             <Chip
                                 color="primary"
                                 size="small"
-                                onClick={() => {console.log('would download attachment');}}
                                 icon={<GetAppIcon/>}
                                 label={name}
                             />

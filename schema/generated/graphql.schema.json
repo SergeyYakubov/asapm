@@ -2400,6 +2400,18 @@
             "deprecationReason": null
           },
           {
+            "name": "subCollection",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "tags",
             "description": null,
             "args": [],
@@ -2503,6 +2515,16 @@
           },
           {
             "name": "beamtime",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "subCollection",
             "description": null,
             "type": {
               "kind": "SCALAR",
