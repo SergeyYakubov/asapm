@@ -44,6 +44,7 @@ function App(): JSX.Element {
     if (error) {
         console.log("cannot load user preferences, will use default");
     } else {
+        console.log("user preferences loaded")
         const saved_thema = data?.user?.preferences.schema;
         if (saved_thema !=="auto") {
             themeType = saved_thema as PaletteType || themeType;
