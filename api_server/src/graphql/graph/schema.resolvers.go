@@ -80,7 +80,16 @@ func (r *queryResolver) Collections(ctx context.Context, filter *string,orderBy 
 func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
 	log_str := "processing request create_meta"
 	logger.Debug(log_str)
-	return meta.CreateBeamtimeMeta(input)
+
+	resultId, err := meta.CreateBeamtimeMeta(input)
+	if err != nil {
+		return resultId, err
+	}
+
+	// TODO: What to do when there is no facility?!
+	err = logbook.WriteMetaCreationMessage(*input.Facility, input.ID)
+
+	return resultId, err
 }
 
 func (r *queryResolver) Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error) {
@@ -118,13 +127,25 @@ func (r *queryResolver) UniqueFields(ctx context.Context, filter *string, keys [
 func (r *mutationResolver) DeleteMeta(ctx context.Context, id string) (*string, error) {
 	log_str := "processing request delete_meta"
 	logger.Debug(log_str)
-	return meta.DeleteBeamtimeMetaAndCollections(id)
+	resultId, err := meta.DeleteBeamtimeMetaAndCollections(id)
+	if err != nil {
+		return resultId, err
+	}
+
+	err = logbook.RemoveAllLogEntriesForCollection(*resultId)
+	return resultId, err
 }
 
 func (r *mutationResolver) DeleteSubcollection(ctx context.Context, id string) (*string, error) {
 	log_str := "processing request delete_collection"
 	logger.Debug(log_str)
-	return meta.DeleteCollectionsAndSubcollectionMeta(id)
+	resultId, err := meta.DeleteCollectionsAndSubcollectionMeta(id)
+	if err != nil {
+		return resultId, err
+	}
+
+	err = logbook.RemoveAllLogEntriesForCollectionAndSubcollections(*resultId)
+	return resultId, err
 }
 
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {
@@ -133,6 +154,7 @@ func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, in
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.UserAccount, error) {
+	// TODO Check if ctx.User is actually user he is trying to get
 	return meta.GetUserPreferences(id)
 }
 

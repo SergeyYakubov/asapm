@@ -6,6 +6,7 @@ import (
 	"asapm/graphql/common"
 	"asapm/graphql/graph/model"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -49,6 +50,42 @@ func RemoveEntry(id string) error {
 	return err
 }
 
+func RemoveAllLogEntriesForCollection(rawBeamtimeId string) error {
+	splittedBeamtimeCollection := strings.SplitN(rawBeamtimeId, ".", 2)
+	beamtime := splittedBeamtimeCollection[0]
+	filter := "beamtime = '" + beamtime + "'"
+	if len(splittedBeamtimeCollection) == 2 {
+		subCollection := splittedBeamtimeCollection[1]
+		filter += " AND subCollection = '" + subCollection + "'"
+	}
+
+	fs := common.GetFilterAndSort(&filter, nil)
+
+	if _, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "delete_records", fs, true); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RemoveAllLogEntriesForCollectionAndSubcollections(rawBaseBeamtimeId string) error {
+	splittedBeamtimeCollection := strings.SplitN(rawBaseBeamtimeId, ".", 2)
+	beamtime := splittedBeamtimeCollection[0]
+	filter := "beamtime = '" + beamtime + "'"
+	if len(splittedBeamtimeCollection) == 2 {
+		subCollection := splittedBeamtimeCollection[1]
+		filter += " AND subCollection regexp '^" + subCollection + "(\\.)?'"
+	}
+
+	fs := common.GetFilterAndSort(&filter, nil)
+
+	if _, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "delete_records", fs, true); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 type logEntryMessageCreate struct {
 	CreatedBy     	string                 	`json:"createdBy" bson:"createdBy"`
 	Time          	time.Time              	`json:"time" bson:"time"`
@@ -60,6 +97,28 @@ type logEntryMessageCreate struct {
 	Source      	*string                	`json:"source" bson:"source"`
 	Message     	string                 	`json:"message" bson:"message"`
 	Attachments 	map[string]interface{}	`json:"attachments" bson:"attachments"`
+}
+
+func WriteMetaCreationMessage(facility string, rawBeamtimeCollection string) error {
+	splittedBeamtimeCollection := strings.SplitN(rawBeamtimeCollection, ".", 2)
+	beamtime := splittedBeamtimeCollection[0]
+	var subCollection *string = nil
+	if len(splittedBeamtimeCollection) == 2 {
+		subCollection = &(splittedBeamtimeCollection[1])
+	}
+
+	newMessage := logEntryMessageCreate{
+		Time:        	time.Now(),
+		CreatedBy:   	"System",
+		EntryType:   	model.LogEntryTypeMessage,
+		Facility:   	facility,
+		Beamtime:  		&beamtime,
+		SubCollection:	subCollection,
+		Message:     	"Collection '" + rawBeamtimeCollection + "' was created",
+	}
+	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "create_record", newMessage)
+
+	return err
 }
 
 func WriteNewMessage(newInput model.NewLogEntryMessage, username string) (*string, error) {

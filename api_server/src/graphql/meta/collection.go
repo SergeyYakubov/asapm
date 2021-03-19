@@ -276,13 +276,12 @@ func DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
 	}
 
 	ind := strings.LastIndex(id, ".")
-	if ind == -1 {
-		return nil, errors.New("wrong id format: " + id)
-	}
-
-	parentId := id[:ind]
-	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_array_element", parentId, id, KChildCollectionKey); err != nil {
-		return nil, err
+	if ind != -1 {
+		// We are just deleting a subcollection, so we need to change the parent
+		parentId := id[:ind]
+		if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_array_element", parentId, id, KChildCollectionKey); err != nil {
+			return nil, err
+		}
 	}
 
 	return &id, nil
