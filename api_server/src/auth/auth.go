@@ -31,6 +31,11 @@ func (acl MetaAcl) HasAccessToFacility(facility string) bool {
 	return !acl.ImmediateDeny && (acl.ImmediateAccess || utils.StringInSlice(facility, acl.AllowedFacilities))
 }
 
+func (acl MetaAcl) HasAccessToBeamtime(facility string, beamtime string) bool {
+	return !acl.ImmediateDeny && (acl.ImmediateAccess ||
+		(utils.StringInSlice(facility, acl.AllowedFacilities) && utils.StringInSlice(beamtime, acl.AllowedBeamtimes)))
+}
+
 type claimFields struct {
 	UserName        string   `json:"preferred_username"`
 	FullName        string   `json:"name"` // Full name like "John Smith"

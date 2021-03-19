@@ -493,6 +493,32 @@ func (db *Mongodb) deleteRecords(dbName string, dataCollectionName string, extra
 	return nil, nil
 }
 
+func (db *Mongodb) deleteRecordByObjectId(dbName string, dataCollectionName string, extraParams ...interface{})  ([]byte, error) {
+	if len(extraParams) != 1 {
+		return nil, errors.New("wrong number of parameters")
+	}
+	id, ok := extraParams[0].(string)
+	if !ok {
+		return nil, errors.New("an argument must be string")
+	}
+
+	oId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	q := bson.M{"_id": oId}
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+
+	res, err := c.DeleteOne(context.TODO(), q)
+	if err != nil {
+		return nil, err
+	}
+	if res.DeletedCount != 1 {
+		return nil, errors.New("did not found the object")
+	}
+	return nil, nil
+}
+
 func (db *Mongodb)getQueryAndSort(extra_params ...interface{})(q bson.M,sort bson.M,err error) {
 	if len(extra_params) != 2 {
 		return bson.M{},bson.M{}, errors.New("wrong number of parameters")
@@ -575,6 +601,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.readRecordWithFilter(db_name, data_collection_name, extra_params...)
 	case "delete_records":
 		return db.deleteRecords(db_name, data_collection_name, extra_params...)
+	case "delete_record_by_oid":
+		return db.deleteRecordByObjectId(db_name, data_collection_name, extra_params...)
 	case "add_array_element":
 		return db.addArrayElement(db_name, data_collection_name, extra_params...)
 	case "unique_fields":

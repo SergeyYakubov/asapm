@@ -217,6 +217,12 @@ mutation addMessageLogEntryLocal($facility: String!, $beamtime: String, $subColl
 }
 `;
 
+export const DELETE_LOG_MESSAGE = gql`
+mutation removeLogEntryLocal($messageId: ID!) {
+    removeLogEntry(id: $messageId)
+}
+`;
+
 /*
   logEntriesUniqueFields (filter: $filter, keys:["facility","beamtime"]){
     keyName

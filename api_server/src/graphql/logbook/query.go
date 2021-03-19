@@ -34,6 +34,21 @@ func ReadEntries(acl auth.MetaAcl, filter string, orderBy *string) (*model.LogEn
 	}, nil
 }
 
+func GetEntry(id string) (*model.LogEntryMessage, error) { // TODO: Currently assuming that the log entry is a 'message'
+	entry := model.LogEntryMessage{}
+	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "read_record_oid_and_parse", id, &entry)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entry, nil
+}
+
+func RemoveEntry(id string) error {
+	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "delete_record_by_oid", id)
+	return err
+}
+
 type logEntryMessageCreate struct {
 	CreatedBy     	string                 	`json:"createdBy" bson:"createdBy"`
 	Time          	time.Time              	`json:"time" bson:"time"`

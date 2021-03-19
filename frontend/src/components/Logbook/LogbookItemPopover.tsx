@@ -4,6 +4,8 @@ import MoreVertIcon from "@material-ui/icons/MoreVert";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
+import {useMutation} from "@apollo/client";
+import {ADD_LOG_MESSAGE, DELETE_LOG_MESSAGE} from "../../graphQLSchemes";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -93,6 +95,8 @@ function LogbookItemPopover({idRef}: {idRef: string}): JSX.Element {
         setAnchorEl(event.currentTarget);
     };
 
+    const [deleteLogMessageMutation] = useMutation<any, {messageId: string}>(DELETE_LOG_MESSAGE);
+
     const handleClose = () => {
         setAnchorEl(null);
     };
@@ -104,8 +108,16 @@ function LogbookItemPopover({idRef}: {idRef: string}): JSX.Element {
     const handleEdit = () => {
         console.log('Would edit', idRef);
     };
-    const handleDelete = () => {
-        console.log('Would delete', idRef);
+    const handleDelete = async () => {
+        try {
+            await deleteLogMessageMutation({
+                variables: {
+                    messageId: idRef
+                }
+            });
+        } catch (e) {
+            console.error(`Error while trying to delete a message(${idRef})`, e);
+        }
     };
 
     return <div>
@@ -131,12 +143,14 @@ function LogbookItemPopover({idRef}: {idRef: string}): JSX.Element {
                 dense={true}
                 component="nav"
             >
+                {/*
                 <ListItem button onClick={() => {handleItemClick(); handleEdit();}}>
                     <ListItemIcon className={classes.listItemWithIcon}>
                         <EditIcon fontSize={"small"}/>
                     </ListItemIcon>
                     <ListItemText primary="Edit"/>
                 </ListItem>
+                */}
                 <ListItem button onClick={() => {handleItemClick(); handleDelete();}}>
                     <ListItemIcon className={classes.listItemWithIcon}>
                         <DeleteIcon className={classes.colorError} fontSize={"small"}/>

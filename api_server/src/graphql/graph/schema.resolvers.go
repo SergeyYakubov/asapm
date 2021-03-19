@@ -160,7 +160,29 @@ func (r *mutationResolver) AddMessageLogEntry(ctx context.Context, newMessage mo
 }
 
 func (r *mutationResolver) RemoveLogEntry(ctx context.Context, id string) (*string, error) {
-	panic("TODO mutation RemoveLogEntry")
+	logEntryMsg, err := logbook.GetEntry(id)
+	if err != nil {
+		return nil, err
+	}
+
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("ReadAclFromContext; access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	// Note: logEntryMsg.Beamtime is only the parent id
+	if !acl.HasAccessToBeamtime(logEntryMsg.Facility, *logEntryMsg.Beamtime) {
+		logger.Error("HasAccessToBeamtime; access denied")
+		return nil, errors.New("access denied")
+	}
+
+	err = logbook.RemoveEntry(logEntryMsg.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil // okay
 }
 
 func (r *queryResolver) LogEntry(ctx context.Context, id string) (model.LogEntry, error) {
@@ -170,7 +192,7 @@ func (r *queryResolver) LogEntry(ctx context.Context, id string) (model.LogEntry
 func (r *queryResolver) LogEntries(ctx context.Context, filter string, start *int, limit *int) (*model.LogEntryQueryResult, error) {
 	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {
-		logger.Error("access denied: " + err.Error())
+		logger.Error("ReadAclFromContext; access denied: " + err.Error())
 		return &model.LogEntryQueryResult{}, errors.New("access denied: " + err.Error())
 	}
 
