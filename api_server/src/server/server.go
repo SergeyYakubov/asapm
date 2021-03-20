@@ -36,6 +36,9 @@ func cors(h http.HandlerFunc) http.HandlerFunc {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "*")
+		if (*r).Method == "OPTIONS" {
+			return
+		}
 		h(w, r)
 	}
 }
@@ -55,17 +58,17 @@ func StartServer() {
 	// To upload a file the user must be authenticated.
 	attachmentRouter := router.PathPrefix("/attachments/").Subrouter()
 	if Config.Authorization.Enabled {
-		attachmentRouter.Handle("/upload", utils.ProcessJWTAuth(utils.RemoveQuotes(attachment.HandleUpload), Config.publicKey)).Methods("POST")
+		attachmentRouter.Handle("/upload", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(attachment.HandleUpload), Config.publicKey))).Methods("POST")
 	} else {
 		attachmentRouter.Handle("/upload", cors(auth.BypassAuth(utils.RemoveQuotes(attachment.HandleUpload)))).Methods("POST")
 	}
-	attachmentRouter.Handle("/raw/{id}", utils.RemoveQuotes(attachment.HandleDownload)).Methods("GET")
+	attachmentRouter.Handle("/raw/{id}", cors(utils.RemoveQuotes(attachment.HandleDownload))).Methods("GET")
 
 	// GraphQL Service
 	gqlConfig := generateGqlConfig()
 	gqlSrv := handler.NewDefaultServer(generated.NewExecutableSchema(gqlConfig))
 	if Config.Authorization.Enabled {
-		router.Handle("/query", utils.ProcessJWTAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP), Config.publicKey))
+		router.Handle("/query", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP), Config.publicKey)))
 	} else {
 		router.Handle("/query", cors(auth.BypassAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP))))
 	}

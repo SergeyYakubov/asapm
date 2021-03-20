@@ -74,6 +74,7 @@ func ExtractAuthInfo(r *http.Request) (authType, token string, err error) {
 	}
 
 	cookie, err := r.Cookie("Authorization")
+
 	if err == nil {
 		return SplitAuthToken(cookie.Value)
 	}
@@ -147,6 +148,7 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 			http.Error(w, "Authorization error - wrong auth type", http.StatusUnauthorized)
 			return
 		}
+
 		fn(w, r.WithContext(ctx))
 	}
 }

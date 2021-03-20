@@ -10,10 +10,12 @@ import (
 	"strings"
 )
 
+const kDoorUserRole = "door_user"
+
 type userProps struct {
 	UserName        string
-    FullName        string
-    Email           string
+	FullName        string
+	Email           string
 	Roles           []string
 	Groups          []string
 	AuthorizedParty string
@@ -25,6 +27,7 @@ type MetaAcl struct {
 	AllowedBeamtimes  []string
 	AllowedBeamlines  []string
 	AllowedFacilities []string
+	DoorUser          string
 }
 
 func (acl MetaAcl) HasAccessToFacility(facility string) bool {
@@ -74,8 +77,8 @@ func userPropsFromClaim(claim map[string]interface{}) (userProps, error) {
 	}
 
 	props.UserName = fields.UserName
-    props.FullName = fields.FullName
-    props.Email = fields.Email
+	props.FullName = fields.FullName
+	props.Email = fields.Email
 	props.Roles = fields.Roles
 	props.Groups = make([]string, len(fields.Groups))
 	props.AuthorizedParty = fields.AuthorizedParty
@@ -202,11 +205,24 @@ func ReadAclFromContext(ctx context.Context) (MetaAcl, error) {
 	acl = addAllowedBeamlines(acl, props)
 	acl = addAllowedBeamtimes(acl, props)
 
-	if acl.AllowedBeamlines == nil && acl.AllowedBeamtimes == nil && acl.AllowedFacilities == nil {
+	if utils.StringInSlice(kDoorUserRole, props.Roles) {
+		acl.DoorUser = strings.TrimSuffix(props.UserName, "@door")
+	}
+
+	if acl.AllowedBeamlines == nil && acl.AllowedBeamtimes == nil &&
+		acl.AllowedFacilities == nil && acl.DoorUser == "" {
 		acl.ImmediateDeny = true
 	}
 
 	return acl, nil
+}
+
+func addFilterForDoorUser(currentFilter, user string) string {
+	name:="users.doorDb"
+	if user != "" {
+		currentFilter = "(" + name + " = '" + user + "')"
+	}
+	return currentFilter
 }
 
 func addFilterForNameInList(currentFilter, name string, list []string) string {
@@ -225,8 +241,9 @@ func AddAclToSqlFilter(acl MetaAcl, curFilter *string, filterFields FilterFields
 	aclFilter := addFilterForNameInList("", filterFields.BeamtimeId, acl.AllowedBeamtimes)
 	aclFilter = addFilterForNameInList(aclFilter, filterFields.Beamline, acl.AllowedBeamlines)
 	aclFilter = addFilterForNameInList(aclFilter, filterFields.Facility, acl.AllowedFacilities)
+	aclFilter = addFilterForDoorUser(aclFilter, acl.DoorUser)
 
-	if curFilter != nil {
+	if curFilter != nil  && *curFilter!=""{
 		s := "(" + aclFilter + ") AND (" + *curFilter + ")"
 		return &s
 	} else {
