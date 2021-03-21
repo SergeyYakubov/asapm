@@ -5,6 +5,7 @@
   "basePath" : "{{ tpl .Values.apiServer.basePath . }}",
   "publicKeyPath" : "/etc/asapm/keys/key.pub",
   "authorization" : {
-    "enabled": {{ .Values.apiServer.authorization.enabled }}
+    "enabled": {{ .Values.apiServer.authorization.enabled }},
+    "endpoint": {{ .Values.apiServer.authorization.endpoint }}
   }
 }

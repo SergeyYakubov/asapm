@@ -5,6 +5,7 @@
   "basePath" : "/api",
   "publicKeyPath" : "./pubkey",
   "authorization" : {
-    "enabled": true
+    "enabled": true,
+    "endpoint": "http://zitpcx27016:8080/auth/realms/asap/protocol/openid-connect/token"
   }
 }

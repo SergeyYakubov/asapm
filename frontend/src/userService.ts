@@ -1,47 +1,47 @@
 import Keycloak, {KeycloakPromise} from "keycloak-js";
 
-const _kc = Keycloak({
+export const keycloak = Keycloak({
     url: process.env.REACT_APP_KEYCLOAK_ENDPOINT as string,
     realm: process.env.REACT_APP_KEYCLOAK_REALM as string,
     clientId: process.env.REACT_APP_KEYCLOAK_CLIENT_ID as string,
-
 });
 
-const doLogin = _kc.login;
+const doLogin = keycloak.login;
 
-const doLogout = _kc.logout;
+const doLogout = keycloak.logout;
 
-function initKeycloak(onAuthenticatedCallback: () => void): void {
-    _kc.init({
+function initKeycloak(onAuthenticatedCallback: (initialized:boolean) => void): void {
+    keycloak.init({
         onLoad: 'check-sso',
         pkceMethod: 'S256',
         silentCheckSsoRedirectUri: window.location.origin + process.env.PUBLIC_URL+ '/silent-check-sso.html'
-    })
-        .then((authenticated:boolean) => {
+    }).then((authenticated:boolean) => {
             if (authenticated) {
-                onAuthenticatedCallback();
+                onAuthenticatedCallback(true);
             } else {
                 console.warn("not authenticated!");
                 doLogin();
             }
-        });
+        }).catch(function() {
+        alert('failed to initialize');
+    });
 }
 
 function getToken(): string | undefined {
-    return _kc.token;
+    return keycloak.token;
 }
 
 function updateToken(minValidity: number): KeycloakPromise<boolean, boolean> {
-    return _kc.updateToken(minValidity);
+    return keycloak.updateToken(minValidity);
 }
 
 function getUserId(): string | undefined {
-    return _kc.tokenParsed?.sub;
+    return keycloak.tokenParsed?.sub;
 }
 
 
 function getUserName(): string {
-    if (!_kc.tokenParsed) {
+    if (!keycloak.tokenParsed) {
         return "";
     }
 
@@ -49,7 +49,7 @@ function getUserName(): string {
     let givenName = "";
     let familyName = "";
 
-    for (const [key, value] of Object.entries(_kc!.tokenParsed)) {
+    for (const [key, value] of Object.entries(keycloak!.tokenParsed)) {
         if (key === "name") {
             return value.toString();
         }

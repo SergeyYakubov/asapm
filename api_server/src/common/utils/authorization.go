@@ -3,12 +3,16 @@ package utils
 import (
 	"context"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -17,7 +21,6 @@ type contextKey struct {
 }
 
 var TokenClaimsCtxKey = &contextKey{"TokenClaims"}
-
 
 type AuthorizationRequest struct {
 	Token   string
@@ -38,11 +41,9 @@ type Auth interface {
 	Name() string
 }
 
-
 func (a *JWTAuth) Name() string {
 	return "Bearer"
 }
-
 
 func stripURL(u *url.URL) string {
 	s := u.Path + u.RawQuery
@@ -86,6 +87,7 @@ func ExtractAuthInfo(r *http.Request) (authType, token string, err error) {
 
 type CustomClaims struct {
 	jwt.StandardClaims
+	Typ         string `json:"type"`
 	Duration    time.Duration
 	ExtraClaims interface{}
 }
@@ -122,14 +124,13 @@ func (t JWTAuth) GenerateToken(val ...interface{}) (string, error) {
 	return tokenString, nil
 }
 
-func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
+func ProcessJWTAuth(fn http.HandlerFunc, key string, authEndpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if (r.RequestURI == "/health-check") { // always allow /health-check request
-			fn(w,r)
+		if r.RequestURI == "/health-check" { // always allow /health-check request
+			fn(w, r)
 			return
 		}
 		authType, token, err := ExtractAuthInfo(r)
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
@@ -138,7 +139,7 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 		ctx := r.Context()
 
 		if authType == "Bearer" {
-			if claims, ok := CheckJWTToken(token, key); !ok {
+			if claims, ok := CheckJWTToken(token, key, authEndpoint); !ok {
 				http.Error(w, "Authorization error - token does not match", http.StatusUnauthorized)
 				return
 			} else {
@@ -153,17 +154,26 @@ func ProcessJWTAuth(fn http.HandlerFunc, key string) http.HandlerFunc {
 	}
 }
 
-func CheckJWTToken(token, key string) (jwt.Claims, bool) {
+type SavedToken struct {
+	token string
+	lastUpdate time.Time
+}
 
+var tokenCache = struct {
+	tokens map[string]SavedToken
+	lock sync.Mutex
+} {tokens:make(map[string]SavedToken,0)}
+
+func CheckJWTToken(token, key string, authEndpoint string) (jwt.Claims, bool) {
 	if token == "" {
 		return nil, false
 	}
-
-	t, err := jwt.ParseWithClaims(token, &jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+	var tokenClaims jwt.MapClaims
+	t, err := jwt.ParseWithClaims(token, &tokenClaims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); ok {
 			block, _ := pem.Decode([]byte(key))
-			if block== nil {
-				return nil,errors.New("cannot decode public key "+key)
+			if block == nil {
+				return nil, errors.New("cannot decode public key " + key)
 			}
 			return x509.ParsePKIXPublicKey(block.Bytes)
 		}
@@ -171,15 +181,56 @@ func CheckJWTToken(token, key string) (jwt.Claims, bool) {
 		return []byte(key), nil
 	})
 
-	if err == nil && t.Valid {
-		return t.Claims, true
+	if tokenClaims["typ"] == "Offline" {
+		tokenCache.lock.Lock()
+		savedToken,ok:=tokenCache.tokens[token]
+		tokenCache.lock.Unlock()
+		if ok {
+			if savedToken.lastUpdate.Add(30	*time.Second).After(time.Now()) {
+				return CheckJWTToken(savedToken.token, key, "")
+			}
+		}
+		formVals := url.Values{}
+		formVals.Add("grant_type", "refresh_token")
+		formVals.Add("client_id", "asapm")
+		formVals.Add("refresh_token", token)
+		response, err := http.PostForm(authEndpoint, formVals)
+		if err != nil {
+			return nil, false
+		}
+		defer response.Body.Close()
+
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, false
+		}
+		accessToken := struct {
+			AccessToken string `json:"access_token"`
+		}{}
+		err = json.Unmarshal(body, &accessToken)
+		if err != nil {
+			return nil, false
+		}
+		claims,ok := CheckJWTToken(accessToken.AccessToken, key, "")
+		if ok {
+			tokenCache.lock.Lock()
+			tokenCache.tokens[token]=SavedToken{token:accessToken.AccessToken,lastUpdate:time.Now()}
+			fmt.Println(accessToken.AccessToken)
+			tokenCache.lock.Unlock()
+		}
+		return claims,ok
 	}
 
-	return nil, false
+	if err != nil || !t.Valid {
+		return nil, false
+	}
+
+	return t.Claims, true
+
 }
 
 func JobClaimFromContext(ctx context.Context, val interface{}) error {
-	c,ok := ctx.Value(TokenClaimsCtxKey).(*jwt.MapClaims)
+	c, ok := ctx.Value(TokenClaimsCtxKey).(*jwt.MapClaims)
 	if c == nil || !ok {
 		return errors.New("Empty context")
 	}

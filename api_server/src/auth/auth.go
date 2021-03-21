@@ -21,6 +21,18 @@ type userProps struct {
 	AuthorizedParty string
 }
 
+const (
+	IngestMeta = iota
+	IngestSubcollection
+)
+
+type AuthorizedEntity struct{
+	Beamtime string
+	Beamline string
+	Facility string
+	Activity int
+}
+
 type MetaAcl struct {
 	ImmediateDeny     bool
 	ImmediateAccess   bool // Indicates an sort of 'Admin' account, access to all
@@ -188,6 +200,10 @@ func addAllowedBeamlines(acl MetaAcl, props userProps) MetaAcl {
 		}
 	}
 	return acl
+}
+
+func AuthorizeOperation(ctx context.Context, entry AuthorizedEntity) error {
+ return nil
 }
 
 func ReadAclFromContext(ctx context.Context) (MetaAcl, error) {

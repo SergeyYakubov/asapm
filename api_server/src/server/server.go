@@ -20,12 +20,7 @@ import (
 func generateGqlConfig() generated.Config {
 	c := generated.Config{Resolvers: &graph.Resolver{}}
 	c.Directives.NeedAcl = func(ctx context.Context, obj interface{}, next graphql.Resolver, acl model.Acls) (interface{}, error) {
-		if acl != model.AclsAdmin {
-			return next(ctx)
-		}
-		if err := auth.AuthorizeWrite(ctx); err != nil {
-			return nil, fmt.Errorf("Access denied: " + err.Error())
-		}
+		ctx = context.WithValue(ctx, "schemaAcl", acl)
 		return next(ctx)
 	}
 	return c
@@ -34,9 +29,10 @@ func generateGqlConfig() generated.Config {
 func cors(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "*")
 		if (*r).Method == "OPTIONS" {
+			w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "authorization,content-type")
+			w.Header().Set("Access-Control-Max-Age", "86400")
 			return
 		}
 		h(w, r)
@@ -58,7 +54,8 @@ func StartServer() {
 	// To upload a file the user must be authenticated.
 	attachmentRouter := router.PathPrefix("/attachments/").Subrouter()
 	if Config.Authorization.Enabled {
-		attachmentRouter.Handle("/upload", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(attachment.HandleUpload), Config.publicKey))).Methods("POST")
+		attachmentRouter.Handle("/upload", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(attachment.HandleUpload),
+			Config.publicKey,Config.Authorization.Endpoint))).Methods("POST")
 	} else {
 		attachmentRouter.Handle("/upload", cors(auth.BypassAuth(utils.RemoveQuotes(attachment.HandleUpload)))).Methods("POST")
 	}
@@ -68,7 +65,8 @@ func StartServer() {
 	gqlConfig := generateGqlConfig()
 	gqlSrv := handler.NewDefaultServer(generated.NewExecutableSchema(gqlConfig))
 	if Config.Authorization.Enabled {
-		router.Handle("/query", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP), Config.publicKey)))
+		router.Handle("/query", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP),
+			Config.publicKey,Config.Authorization.Endpoint)))
 	} else {
 		router.Handle("/query", cors(auth.BypassAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP))))
 	}

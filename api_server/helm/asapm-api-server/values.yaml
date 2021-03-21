@@ -8,6 +8,7 @@ apiServer:
   dbEndpoint: "{{ .Release.Name }}-mongodb:27017"
   authorization:
     enabled: true
+    endpoint: "https::/zitpcx27016:8080/auth/realms/asap/protocol/openid-connect/token"
   tls:
     enabled: false
   imageCredentials:
@@ -16,7 +17,8 @@ apiServer:
     username: someone
     password: sillyness
   logLevel: info
-  pubKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAobxQ4FZbx3tFXMGhazTK\n1e8nusH2p+ZOiP6NveXHQw2ZOjUqfvRfOYCko+wJyyzcpfbiSThwXdPhMfrt1N7P\nlJXd0OlTRu1bl0sTOmiNNc7eQLwSyZ+oP+LCX/RBl9o3ax71Wd3uw3bYeP1aRumH\n1H6jnmm7hLW8cPadg0GlCi4Q2rfhzmDGotlg00keXx58VJIc2ViKLqpb5aDgAlna\njOyKtkUcB2KIS3lBxSEINJqsyU8Fa2zrs8ga0pU/ebx8rPKybGkaU0XuWOSzUczr\n3nNcQOuzN82Jp7AndzJeNwAMEpN/vMGmd9W02iyD99GB5qPFRUb69pUrOOIWnixL\nEwIDAQAB\n-----END PUBLIC KEY-----\n"
+  #pubKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAobxQ4FZbx3tFXMGhazTK\n1e8nusH2p+ZOiP6NveXHQw2ZOjUqfvRfOYCko+wJyyzcpfbiSThwXdPhMfrt1N7P\nlJXd0OlTRu1bl0sTOmiNNc7eQLwSyZ+oP+LCX/RBl9o3ax71Wd3uw3bYeP1aRumH\n1H6jnmm7hLW8cPadg0GlCi4Q2rfhzmDGotlg00keXx58VJIc2ViKLqpb5aDgAlna\njOyKtkUcB2KIS3lBxSEINJqsyU8Fa2zrs8ga0pU/ebx8rPKybGkaU0XuWOSzUczr\n3nNcQOuzN82Jp7AndzJeNwAMEpN/vMGmd9W02iyD99GB5qPFRUb69pUrOOIWnixL\nEwIDAQAB\n-----END PUBLIC KEY-----\n"
+  pubKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgrw9qILVrbzlWWWdhASXfQ3Z2soI8J6FVRpGrpV3pPUg/TKyVCSegyaN4V/vKiDrt9EwQLNIgZIibdfggIAxFReFXvjzgSHTDSkM7mWiKUnGno5XOpiqi766YVOhLf04hgc2CRF+vE7uPGIMb+piASdeTtR9Vdf/DGtow6GvlazXp7lnCJp4R4GQz1EdEi++Op/cB+pLFsk7GjkYJBhFVGKU44w2u+kJKHP7sulIY7vcpaLBrVkHJiJTipSgfSdjD1iKFDhhQA0xub69otQDPd54ao6C953y1NrKqkLreKW9wVfZub/9PCKP+EwoJFhtytGroqmQEqSWhDspUh7rCwIDAQAB\n-----END PUBLIC KEY-----"
 mongodb:
   useStatefulSet: false
   architecture: "standalone"

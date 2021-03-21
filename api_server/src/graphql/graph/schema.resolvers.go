@@ -12,6 +12,7 @@ import (
 	"asapm/graphql/meta"
 	"context"
 	"errors"
+	"fmt"
 )
 
 func (r *mutationResolver)  ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToSet) (*model.BeamtimeMeta, error) {
@@ -78,6 +79,8 @@ func (r *queryResolver) Collections(ctx context.Context, filter *string,orderBy 
 }
 
 func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
+	fmt.Println("schema: ",ctx.Value("schemeAcl"))
+
 	log_str := "processing request create_meta"
 	logger.Debug(log_str)
 	return meta.CreateBeamtimeMeta(input)
@@ -99,6 +102,7 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string, orderBy *strin
 	if err != nil {
 		logger.Error(err.Error())
 	}
+
 	return res, err
 }
 
