@@ -176,7 +176,7 @@ func TestSqlDoorFilter(t *testing.T) {
 	}
 	filter:="meta.counter > 11"
 	res := AddAclToSqlFilter(acl,&filter,ff)
-	assert.Equal(t,"((users.doorDb = door_user)) AND (meta.counter > 11)",*res)
+	assert.Equal(t,"((users.doorDb = 'door_user')) AND (meta.counter > 11)",*res)
 }
 
 
