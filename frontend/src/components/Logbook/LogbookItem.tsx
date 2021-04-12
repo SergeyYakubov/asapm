@@ -6,6 +6,7 @@ import {LogEntryMessage} from "../../generated/graphql";
 import LogbookMarkdownViewer from "./LogbookMarkdownViewer";
 import GetAppIcon from '@material-ui/icons/GetApp';
 import {ApplicationApiBaseUrl} from "../../common";
+import {lightGreen} from "@material-ui/core/colors";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -74,6 +75,11 @@ const useStyles = makeStyles((theme: Theme) =>
         messageContentInner: {
             flex: '1',
         },
+
+        systemAvatarColor: {
+            color: theme.palette.getContrastText(lightGreen[700]),
+            backgroundColor: lightGreen[700],
+        }
     }),
 );
 
@@ -98,7 +104,11 @@ function LogbookItem({message, displayDate}: {message: LogEntryMessage, displayD
                     { displayDate && <span className={classes.dateText}>{ toHumanDate(message.time) }</span> }
                     <span className={classes.timeText}>{toHumanTimestamp(message.time)}</span>
                 </div>
-                <Avatar />
+                {
+                    message.createdBy === 'System'
+                        ? <Avatar className={classes.systemAvatarColor}>S</Avatar>
+                        : <Avatar/>
+                }
             </div>
             <div className={classes.mainSide}>
                 <div className={classes.infoText}><span>{message.createdBy}</span>{ message.source && <span> @ Source '{message.source}'</span> }<span> @ {message.facility}</span>{ message.beamtime && <span> @ Beamtime {message.beamtime}{ message.subCollection && `.${message.subCollection}` }</span> }</div>
