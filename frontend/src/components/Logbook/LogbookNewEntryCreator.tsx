@@ -181,20 +181,25 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
     }, 350), []);
 
     function onFacilityInputChanged(e: ChangeEvent<any>, value: string | null) {
-        setFacility(value);
-        updateBeamtimes(value);
-    }
-
-    function onBeamtimeInputChanged(e: ChangeEvent<any>, value: string | null) {
-        setBeamtime(value);
-        updateSubCollections([facility, value]);
-        if (!value) {
-            setSubCollection('');
+        if (!value || autoCompleteFacilities.includes(value)) {
+            setFacility(value);
+            onBeamtimeInputChanged(null, '');
+            updateBeamtimes(value);
         }
     }
 
-    function onSubCollectionInputChanged(e: ChangeEvent<any>, value: string | null) {
-        setSubCollection(value);
+    function onBeamtimeInputChanged(e: ChangeEvent<any> | null, value: string | null) {
+        if (!value || autoCompleteBeamtimes.includes(value)) {
+            setBeamtime(value);
+            onSubCollectionInputChanged(null, '');
+            updateSubCollections([facility, value]);
+        }
+    }
+
+    function onSubCollectionInputChanged(e: ChangeEvent<any> | null, value: string | null) {
+        if (!value || autoCompleteSubCollections.includes(value)) {
+            setSubCollection(value);
+        }
     }
 
     async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -355,9 +360,9 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
                     <Grid item xs={3}>
                         <Autocomplete
                             id="facility-input"
-                            freeSolo
                             options={autoCompleteFacilities}
                             onInputChange={onFacilityInputChanged}
+                            getOptionSelected={(option) => option === facility}
                             value={facility}
                             renderInput={(params) => (
                                 <TextField {...params} required label="Facility" margin="dense" variant="outlined" />
@@ -368,26 +373,26 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
                     <Grid item xs={3}>
                         <Autocomplete
                             id="beamtime-input"
-                            freeSolo
                             options={autoCompleteBeamtimes}
                             onInputChange={onBeamtimeInputChanged}
+                            getOptionSelected={(option) => option === beamtime}
                             renderInput={(params) => (
                                 <TextField {...params} label="Beamtime" margin="dense" variant="outlined"/>
                             )}
-                            value={props.prefilledBeamtime}
+                            value={props.prefilledBeamtime ? props.prefilledBeamtime : beamtime}
                             disabled={!!props.prefilledBeamtime}
                         />
                     </Grid>
                     <Grid item xs={3}>
                         <Autocomplete
                             id="subcollection-input"
-                            freeSolo
                             options={autoCompleteSubCollections}
                             onInputChange={onSubCollectionInputChanged}
+                            getOptionSelected={(option) => option === subCollection}
                             renderInput={(params) => (
                                 <TextField {...params} label="Subcollection" margin="dense" variant="outlined"/>
                             )}
-                            value={props.prefilledSubcollection ? props.prefilledSubcollection : (beamtime ? subCollection : '') }
+                            value={props.prefilledSubcollection ? props.prefilledSubcollection : subCollection }
                             disabled={!!props.prefilledSubcollection || !beamtime}
                         />
                     </Grid>
