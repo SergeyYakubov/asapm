@@ -4,6 +4,7 @@ import (
 	"asapm/auth"
 	"asapm/database"
 	"asapm/graphql/common"
+	"asapm/graphql/meta"
 	"asapm/graphql/graph/model"
 	"errors"
 	"strings"
@@ -132,14 +133,13 @@ func WriteNewMessage(newInput model.NewLogEntryMessage, username string) (*strin
 	if newInput.Beamtime != nil {
 		var fullBeamtimeId = *newInput.Beamtime
 		if newInput.SubCollection != nil {
-			fullBeamtimeId += *newInput.SubCollection
+			fullBeamtimeId += "." + (*newInput.SubCollection)
 		}
 
-		if !doesBeamtimeExists(newInput.Facility, fullBeamtimeId) {
+		if !meta.DoesBeamtimeExists(newInput.Facility, fullBeamtimeId) {
 			return nil, errors.New("beamtime does not exists")
 		}
 	}
-
 
 	newMessage := logEntryMessageCreate{
 		Time:        	messageTime,
@@ -156,8 +156,4 @@ func WriteNewMessage(newInput model.NewLogEntryMessage, username string) (*strin
 	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "create_record", newMessage)
 
 	return nil, err
-}
-
-func doesBeamtimeExists(facility string, fullBeamtimeId string) bool {
-	return true // TODO
 }

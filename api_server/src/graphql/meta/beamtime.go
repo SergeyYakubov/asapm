@@ -9,6 +9,12 @@ import (
 	"errors"
 )
 
+/// Checks if a beamtime exists. The fullBeamtimeId format must be '1234567.1.123'
+func DoesBeamtimeExists(facility string, fullBeamtimeId string) bool {
+	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", fullBeamtimeId)
+	return err == nil
+}
+
 func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFields []string, removeFields []string) ([]*model.BeamtimeMeta, error) {
 	if acl.ImmediateDeny {
 		return []*model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")
