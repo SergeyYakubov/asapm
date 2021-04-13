@@ -27,7 +27,7 @@ const useStyles = makeStyles((theme: Theme) =>
             display: 'flex',
             flexDirection: 'row',
             fontSize: '0.75em',
-            color: '#878787',
+            color: theme.palette.text.primary,
         },
         messageDownloads: {
             //marginLeft: theme.spacing(4),
@@ -36,8 +36,6 @@ const useStyles = makeStyles((theme: Theme) =>
             position: 'absolute',
             right: 0,
         },
-
-
 
         leftSide: {
             display: 'flex',
@@ -48,11 +46,11 @@ const useStyles = makeStyles((theme: Theme) =>
         dateText: {
             display: 'block',
             fontSize: '0.5em',
-            color: '#444444',
+            color: theme.palette.text.primary,
         },
         timeText: {
             fontSize: '1em',
-            color: '#444444',
+            color: theme.palette.text.primary,
         },
         mainSide: {
             display: 'flex',

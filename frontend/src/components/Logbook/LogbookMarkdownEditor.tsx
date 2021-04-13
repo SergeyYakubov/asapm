@@ -28,6 +28,7 @@ import {
 } from "prosemirror-tables";
 import {Schema, Fragment}  from "prosemirror-model";
 import {ChangeableImageRef} from "./LogbookUtils";
+import {useTheme} from "@material-ui/core";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {exampleSetup, buildMenuItems} = require('prosemirror-example-setup');
@@ -255,7 +256,14 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
         $view.current.dispatch(tr);
     });
 
-    return <div id="editor" ref={viewHost} className={classes.editor} />;
+    const theme = useTheme();
+
+    const styleVars = {
+        '--prose-mirror-bg-color': theme.palette.background.paper,
+        '--prose-mirror-text-color': theme.palette.text.primary,
+    } as React.CSSProperties;
+
+    return <div id="editor" ref={viewHost} style={styleVars} className={classes.editor} />;
 });
 
 export default LogbookMarkdownEditor;

@@ -158,11 +158,11 @@ li.ProseMirror-selectednode:after {
     border-top-right-radius: inherit;
     position: relative;
     min-height: 1em;
-    color: #666;
+    color: var(--prose-mirror-text-color);
     padding: 1px 6px;
     top: 0; left: 0; right: 0;
     border-bottom: 1px solid silver;
-    background: white;
+    background: var(--prose-mirror-bg-color);
     z-index: 10;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
@@ -245,7 +245,7 @@ li.ProseMirror-selectednode:after {
 }
 
 .ProseMirror-prompt {
-    background: white;
+    background: var(--prose-mirror-bg-color);
     padding: 5px 10px 5px 15px;
     border: 1px solid silver;
     position: fixed;
@@ -298,8 +298,8 @@ li.ProseMirror-selectednode:after {
     display: none;
 }
 #editor, .editor {
-    background: white;
-    color: black;
+    background: var(--prose-mirror-bg-color);
+    color: var(--prose-mirror-text-color);
     background-clip: padding-box;
     border-radius: 4px;
     border: 1px solid rgba(0, 0, 0, 0.2);
