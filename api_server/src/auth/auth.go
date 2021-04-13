@@ -232,6 +232,7 @@ func AddAclToSqlFilter(acl MetaAcl, curFilter *string, filterFields FilterFields
 	aclFilter = addFilterForNameInList(aclFilter, filterFields.Facility, acl.AllowedFacilities)
 
 	if curFilter != nil {
+		// TODO possible "SQL Injection" what if curFilter = ") OR (1 = 1) OR ("
 		s := "(" + aclFilter + ") AND (" + *curFilter + ")"
 		return &s
 	} else {
