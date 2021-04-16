@@ -1,5 +1,7 @@
 package logbook
 
-const kLogBookDbName = "logbook"
-const kLogBookNameInDb = "logbook"
+const KLogbookDbName = "beamtime"
+const KLogbookCollectionName = "logbook"
 
+const KLogbookAttachmentsDbName = "asapm-logbook-attachments"
+const KLogbookAttachmentsCollectionName = "attachments"

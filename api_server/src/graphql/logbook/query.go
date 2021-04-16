@@ -19,7 +19,7 @@ func ReadEntries(acl auth.MetaAcl, filter string, orderBy *string) (*model.LogEn
 	var response = []*model.LogEntryMessage{}
 
 	fs := common.GetFilterAndSort(&filter, orderBy)
-	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "read_records", fs, &response)
+	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "read_records", fs, &response)
 	if err != nil {
 		return &model.LogEntryQueryResult{}, err
 	}
@@ -38,7 +38,7 @@ func ReadEntries(acl auth.MetaAcl, filter string, orderBy *string) (*model.LogEn
 
 func GetEntry(id string) (*model.LogEntryMessage, error) { // TODO: Currently assuming that the log entry is a 'message'
 	entry := model.LogEntryMessage{}
-	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "read_record_oid_and_parse", id, &entry)
+	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "read_record_oid_and_parse", id, &entry)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func GetEntry(id string) (*model.LogEntryMessage, error) { // TODO: Currently as
 }
 
 func RemoveEntry(id string) error {
-	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "delete_record_by_oid", id)
+	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "delete_record_by_oid", id)
 	return err
 }
 
@@ -62,7 +62,7 @@ func RemoveAllLogEntriesForCollection(rawBeamtimeId string) error {
 
 	fs := common.GetFilterAndSort(&filter, nil)
 
-	if _, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "delete_records", fs, true); err != nil {
+	if _, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "delete_records", fs, true); err != nil {
 		return err
 	}
 
@@ -80,7 +80,7 @@ func RemoveAllLogEntriesForCollectionAndSubcollections(rawBaseBeamtimeId string)
 
 	fs := common.GetFilterAndSort(&filter, nil)
 
-	if _, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "delete_records", fs, true); err != nil {
+	if _, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "delete_records", fs, true); err != nil {
 		return err
 	}
 
@@ -117,7 +117,7 @@ func WriteMetaCreationMessage(facility string, rawBeamtimeCollection string) err
 		SubCollection:	subCollection,
 		Message:     	"Collection '" + rawBeamtimeCollection + "' was created",
 	}
-	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "create_record", newMessage)
+	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "create_record", newMessage)
 
 	return err
 }
@@ -153,7 +153,7 @@ func WriteNewMessage(newInput model.NewLogEntryMessage, username string) (*strin
 		Message:     	newInput.Message,
 		Attachments: 	newInput.Attachments, // TODO Check if attachments actually exists
 	}
-	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "create_record", newMessage)
+	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "create_record", newMessage)
 
 	return nil, err
 }

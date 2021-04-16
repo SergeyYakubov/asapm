@@ -3,6 +3,7 @@ package attachment
 import (
 	"asapm/auth"
 	"asapm/database"
+	"asapm/graphql/logbook"
 	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -11,9 +12,6 @@ import (
 	"strconv"
 	"time"
 )
-
-const kLogBookDbName = "logbook"
-const kLogBookAttachmentCollectionName = "attachments"
 
 type UploadDbEntryWithId struct {
 	ID string `json:"_id" bson:"_id"`
@@ -62,12 +60,12 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	res, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookAttachmentCollectionName, "create_record", entry)
+	res, err := database.GetDb().ProcessRequest(logbook.KLogbookAttachmentsDbName, logbook.KLogbookAttachmentsCollectionName, "create_record", entry)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Fprintf(w, "%s", res)
+	fmt.Fprintf(w, "%s", res) // Return ID
 }
 
 func HandleDownload(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +73,7 @@ func HandleDownload(w http.ResponseWriter, r *http.Request) {
 	id := params["id"]
 
 	entry := UploadDbEntry{}
-	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookAttachmentCollectionName, "read_record_oid_and_parse", id, &entry)
+	_, err := database.GetDb().ProcessRequest(logbook.KLogbookAttachmentsDbName, logbook.KLogbookAttachmentsCollectionName, "read_record_oid_and_parse", id, &entry)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
