@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {makeStyles, Theme, withStyles} from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
 import Menu, {MenuProps} from '@material-ui/core/Menu';
@@ -7,6 +7,7 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import VpnLockIcon from '@material-ui/icons/VpnLock';
 import UserService from "../../userService";
 
 import Typography from '@material-ui/core/Typography';
@@ -16,7 +17,17 @@ import BrightnessAutoOutlinedIcon from '@material-ui/icons/BrightnessAutoOutline
 import Divider from '@material-ui/core/Divider';
 import Container from '@material-ui/core/Container';
 import userPreferences from "../../userPreferences";
-import {Box} from "@material-ui/core";
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Link, TextField
+} from "@material-ui/core";
+import ApiTokenGeneratorDialog from "./ApiTokenGeneratorDialog";
 
 const useStyles = makeStyles((theme: Theme) => ({
     userAccountButton: {
@@ -162,7 +173,9 @@ function ThemeMenu({closeParent}:ThemeMenuProps) {
 
 
 export default function UserAccount(): JSX.Element {
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const [apiDialogOpen, setApiDialogOpen] = useState<boolean>(false);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -174,6 +187,13 @@ export default function UserAccount(): JSX.Element {
 
     const handleLogout = () => {
         UserService.doLogout();
+    };
+
+    const handleApiDialogClose = () => {
+        setApiDialogOpen(false);
+    };
+    const handleGenerateApiToken = () => {
+        setApiDialogOpen(true);
     };
 
     const classes = useStyles();
@@ -201,6 +221,12 @@ export default function UserAccount(): JSX.Element {
                 </MenuItem>
                 <Divider/>
                 <ThemeMenu closeParent={handleClose}/>
+                <MenuItem onClick={handleGenerateApiToken}>
+                    <ListItemIcon>
+                        <VpnLockIcon fontSize="small"/>
+                    </ListItemIcon>
+                    <ListItemText primary="Generate API Token"/>
+                </MenuItem>
                 <MenuItem onClick={handleLogout}>
                     <ListItemIcon>
                         <ExitToAppIcon fontSize="small"/>
@@ -208,6 +234,8 @@ export default function UserAccount(): JSX.Element {
                     <ListItemText primary="Logout"/>
                 </MenuItem>
             </StyledMenu>
+
+            <ApiTokenGeneratorDialog open={apiDialogOpen} onClose={handleApiDialogClose} />
         </div>
     );
 }

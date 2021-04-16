@@ -11,6 +11,24 @@ const doLogin = _kc.login;
 
 const doLogout = _kc.logout;
 
+async function generateOfflineApiToken(): Promise<string> {
+    const tmpKc = Keycloak({
+        url: process.env.REACT_APP_KEYCLOAK_ENDPOINT as string,
+        realm: process.env.REACT_APP_KEYCLOAK_REALM as string,
+        clientId: process.env.REACT_APP_KEYCLOAK_CLIENT_ID as string,
+    });
+    await tmpKc.init({
+        onLoad: 'check-sso',
+        pkceMethod: 'S256',
+        silentCheckSsoRedirectUri: window.location.origin + process.env.PUBLIC_URL+ '/silent-check-sso.html',
+    });
+    // With init() the refreshToken will be set
+    if (!tmpKc.refreshToken) {
+        throw new Error('No refresh token found, please re-login');
+    }
+    return tmpKc.refreshToken!;
+}
+
 function initKeycloak(onAuthenticatedCallback: () => void): void {
     _kc.init({
         onLoad: 'check-sso',
@@ -72,6 +90,7 @@ function getUserName(): string {
 }
 
 export default {
+    generateOfflineApiToken,
     initKeycloak,
     doLogin,
     doLogout,
