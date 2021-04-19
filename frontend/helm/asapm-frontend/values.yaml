@@ -5,6 +5,7 @@ frontend:
   host: "localhost"
   image: yakser/asapm-frontend
   basePathTemplate: "/{{ .Release.Namespace }}/asapm{{ .Values.resourceSuffix }}"
+  keycloakEndpoint: "https://keycloak.desy.de/auth"
   tls:
     enabled: false
   imageCredentials:

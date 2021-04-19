@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
@@ -215,7 +214,6 @@ func CheckJWTToken(token, key string, authEndpoint string) (jwt.Claims, bool) {
 		if ok {
 			tokenCache.lock.Lock()
 			tokenCache.tokens[token]=SavedToken{token:accessToken.AccessToken,lastUpdate:time.Now()}
-			fmt.Println(accessToken.AccessToken)
 			tokenCache.lock.Unlock()
 		}
 		return claims,ok

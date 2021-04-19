@@ -98,6 +98,7 @@ const useStyles = makeStyles((theme: Theme) =>
                 marginTop: theme.spacing(2),
                 marginBottom: theme.spacing(2),
                 marginRight: theme.spacing(2),
+                overflowWrap: 'break-word',
             },
             list: {
                 outline: 'none',

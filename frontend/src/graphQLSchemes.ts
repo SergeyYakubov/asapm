@@ -124,7 +124,7 @@ export const COLLECTION_ENTITY_DETAILED = gql`
 }
 `;
 
-
+/*
 export const METAS = gql`
  {
   meta {
@@ -135,7 +135,7 @@ export const METAS = gql`
   }
 }
 `;
-
+*/
 export const COLLECTIONS = gql`
    query ($filter:String,$orderBy:String) {
    uniqueFields (filter: $filter, keys:["parentBeamtimeMeta.beamline","parentBeamtimeMeta.facility","parentBeamtimeMeta.users.doorDb"]){
@@ -199,6 +199,68 @@ export const COLLECTIONS = gql`
         eventStart
         eventEnd
         type
+        customValues
+    }
+}
+`;
+
+
+export const METAS = gql`
+   query ($filter:String,$orderBy:String) {
+   uniqueFields (filter: $filter, keys:["parentBeamtimeMeta.beamline","parentBeamtimeMeta.facility","parentBeamtimeMeta.users.doorDb"]){
+        keyName
+        values
+    }
+    meta (filter: $filter,orderBy: $orderBy) {
+            applicant {
+                email
+                institute
+                lastname
+                userId
+                username
+            }
+            beamline
+            beamlineAlias
+            id
+            status
+            contact
+            corePath
+            eventEnd
+            eventStart
+            facility
+            generated
+            leader {
+                email
+                institute
+                lastname
+                userId
+                username
+            }    
+            onlineAnalysis {
+                asapoBeamtimeTokenPath
+                reservedNodes
+                slurmReservation
+                slurmPartition
+                sshPrivateKeyPath
+                sshPublicKeyPath
+                userAccount
+            }
+            pi {
+                email
+                institute
+                lastname
+                userId
+                username
+            }
+            proposalId
+            proposalType
+            title
+            unixId
+            users {
+                doorDb
+                special
+                special
+            }
         customValues
     }
 }

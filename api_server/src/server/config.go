@@ -11,10 +11,10 @@ type serverConfig struct {
 	LogLevel      string `json:"logLevel"`
 	Port          string `json:"port"`
 	BasePath      string `json:"basePath"`
-	PublicKeyPath string `json:"publicKeyPath"`
 	Authorization struct {
 		Endpoint string `json:"endpoint"`
 		Enabled  bool   `json:"enabled"`
+		PublicKeyPath string `json:"publicKeyPath"`
 	} `json:"authorization"`
 	publicKey string
 }
@@ -27,7 +27,7 @@ func ReadConfig(fname string) (log.Level, error) {
 	}
 
 	if Config.Authorization.Enabled {
-		publicKey, err := utils.ReadFileAsString(Config.PublicKeyPath)
+		publicKey, err := utils.ReadFileAsString(Config.Authorization.PublicKeyPath)
 		if err != nil {
 			return log.FatalLevel, err
 		} else {

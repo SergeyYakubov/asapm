@@ -37,14 +37,14 @@ function Rr(): JSX.Element {
     const [kTimedOut, setTimedOut] = React.useState(false);
 
     React.useEffect(() => {
-        const timer = setTimeout(() => {
+        setTimeout(() => {
             if (!keycloak.authenticated) setTimedOut(true);
-        }, 15000);
+        }, 60000);
     }, []);
 
     React.useEffect(() => {
         UserService.initKeycloak(setKInitialized);
-    }, [])
+    }, []);
 
     return keycloak.authenticated ? <ApolloProvider client={client}>
             <BrowserRouter basename={process.env.PUBLIC_URL}>
@@ -52,7 +52,7 @@ function Rr(): JSX.Element {
             </BrowserRouter>
         </ApolloProvider>
         :
-        <div>{kTimedOut ? "cannot connect to the authorization server, please try later" : "authorizing ..."}</div>
+        <div>{kTimedOut ? "cannot connect to the authorization server, please try later" : "authorizing ..."}</div>;
 }
 
 ReactDOM.render(

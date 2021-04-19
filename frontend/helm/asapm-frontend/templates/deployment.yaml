@@ -71,6 +71,8 @@ spec:
               value: ""
             - name: PUBLIC_URL
               value: "{{ tpl .Values.frontend.basePathTemplate . }}"
+            - name: KEYCLOAK_ENDPOINT
+              value: "{{ .Values.frontend.keycloakEndpoint }}"
             - name: SERVICE_PORT
               value: "{{ .Values.frontend.internalPort }}"
 {{- if .Values.frontend.imageCredentials.use }}

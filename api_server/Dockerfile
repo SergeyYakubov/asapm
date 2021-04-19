@@ -6,7 +6,8 @@ RUN go mod download
 COPY src /app/src
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/asapm-api-server asapm/asapm/
 
-FROM busybox:glibc
+FROM alpine
 COPY --from=base /app /app
+RUN apk add ca-certificates && update-ca-certificates
 ENTRYPOINT /app/asapm-api-server -config /etc/asapm/config.json
 
