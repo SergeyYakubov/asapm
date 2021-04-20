@@ -3,6 +3,7 @@ package server
 import (
 	log "asapm/common/logger"
 	"asapm/common/utils"
+	"errors"
 )
 
 type serverConfig struct {
@@ -10,11 +11,12 @@ type serverConfig struct {
 	LogLevel      string `json:"logLevel"`
 	Port          string `json:"port"`
 	BasePath      string `json:"basePath"`
-	PublicKeyPath string `json:"publicKeyPath"`
 	Authorization struct {
-		Enabled bool `json:"enabled"`
-	}`json:"authorization"`
-	publicKey     string
+		Endpoint string `json:"endpoint"`
+		Enabled  bool   `json:"enabled"`
+		PublicKeyPath string `json:"publicKeyPath"`
+	} `json:"authorization"`
+	publicKey string
 }
 
 var Config serverConfig
@@ -25,11 +27,14 @@ func ReadConfig(fname string) (log.Level, error) {
 	}
 
 	if Config.Authorization.Enabled {
-		publicKey, err := utils.ReadFileAsString(Config.PublicKeyPath)
+		publicKey, err := utils.ReadFileAsString(Config.Authorization.PublicKeyPath)
 		if err != nil {
 			return log.FatalLevel, err
 		} else {
 			Config.publicKey = publicKey
+		}
+		if Config.Authorization.Endpoint == "" {
+			return log.FatalLevel, errors.New("authorization endpoint not set")
 		}
 	}
 

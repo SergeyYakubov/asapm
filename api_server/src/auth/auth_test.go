@@ -65,7 +65,6 @@ func TestGetServiceAccountProps(t *testing.T) {
 	assert.Nil(t,err)
 	assert.Equal(t,"service-account-asapm-service",props.UserName)
 	assert.Equal(t,"asapm-service",props.AuthorizedParty)
-
 	assert.ElementsMatch(t,[]string{"ingestor"},props.Roles)
 	assert.Equal(t,0,len(props.Groups))
 }
@@ -93,7 +92,6 @@ var authTests = []struct {
 	{`{"preferred_username":"dd","azp": "asapm","roles": ["ingestor"]}`, true, "ingestor role"},
 	{`{"preferred_username":"dd","azp": "asapm-service", "roles": ["ingestor"]}`, true, "ingestor role"},
 	{`{"preferred_username":"dd","azp": "asapm-service", "roles": ["admin"]}`, true, "service admin role"},
-
 }
 
 
@@ -133,6 +131,8 @@ var aclTests = []struct {
 		MetaAcl{AllowedBeamlines: []string{"p02.1","p02.2","p21.1","p21.2"}}, true,"p01staff"},
 	{`{"preferred_username":"dd","azp": "asapm","groups": ["12345-clbt"]}`,
 		MetaAcl{AllowedBeamtimes: []string{"12345"}}, true,"beamtime 12345"},
+	{`{"preferred_username":"dd@door","azp": "asapm","roles": ["door_user"]}`,
+		MetaAcl{DoorUser: "dd"}, true,"door user"},
 
 }
 
@@ -164,6 +164,19 @@ func TestSqlFilter(t *testing.T) {
 	filter:="meta.counter > 11"
 	res := AddAclToSqlFilter(acl,&filter,ff)
 	assert.Equal(t,"((id IN ('bt')) OR (beamline IN ('bl')) OR (facility IN ('flty'))) AND (meta.counter > 11)",*res)
+}
+
+func TestSqlDoorFilter(t *testing.T) {
+	acl :=MetaAcl{DoorUser: "door_user"}
+
+	ff := FilterFields{
+		BeamtimeId: "id",
+		Beamline:   "beamline",
+		Facility:   "facility",
+	}
+	filter:="meta.counter > 11"
+	res := AddAclToSqlFilter(acl,&filter,ff)
+	assert.Equal(t,"((users.doorDb = 'door_user')) AND (meta.counter > 11)",*res)
 }
 
 

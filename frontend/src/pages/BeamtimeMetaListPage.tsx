@@ -17,7 +17,7 @@ import Divider from "@material-ui/core/Divider";
 import CircularProgress from '@material-ui/core/CircularProgress';
 import clsx from "clsx";
 import {useHistory} from "react-router-dom";
-import {COLLECTIONS} from "../graphQLSchemes";
+import {METAS} from "../graphQLSchemes";
 import {Query, QueryCollectionsArgs} from "../generated/graphql";
 import {GetFilterString, GetOrderBy} from "../common";
 
@@ -100,20 +100,20 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
         <Grid  item xs={12}>
         <Paper className={classes.paper}>
         <List component="nav">
-            {queryResult.data && queryResult.data!.collections.filter(meta => meta.parentBeamtimeMeta.status === status).map(meta =>
+            {queryResult.data && queryResult.data!.meta.filter(meta => meta.status === status).map(meta =>
                     <ListItem button className={classes.listItem} onClick={handleClick}
-                              id={meta.parentBeamtimeMeta.id as string} key={meta.parentBeamtimeMeta.id as string} >
+                              id={meta.id as string} key={meta.id as string} >
                         <ListItemText
                             primaryTypographyProps={{noWrap: true}}
-                            primary={meta.parentBeamtimeMeta.title}
+                            primary={meta.title}
                             secondary={
                                 <Grid container justify="space-between" component="span">
                                     <React.Fragment>
                                         <Typography component="span">
-                                            Beamtime ID: {meta.parentBeamtimeMeta.id}
+                                            Beamtime ID: {meta.id}
                                         </Typography>
                                         <Typography component="span" align="right">
-                                            Beamline: {meta.parentBeamtimeMeta.beamline || "undefined"}
+                                            Beamline: {meta.beamline || "undefined"}
                                         </Typography>
                                     </React.Fragment>
                                 </Grid>
@@ -133,7 +133,7 @@ function BeamtimeMetaListPage(): JSX.Element {
     const {data} = useQuery<BeamtimeFilterData>(GET_BEAMTIME_FILTER);
     const filter = data!.beamtimeFilter;
 
-    const queryResult = useQuery<Query, QueryCollectionsArgs>(COLLECTIONS, {
+    const queryResult = useQuery<Query, QueryCollectionsArgs>(METAS, {
         pollInterval: 5000,
         variables: {filter: GetFilterString(filter), orderBy: GetOrderBy(filter)}
     });

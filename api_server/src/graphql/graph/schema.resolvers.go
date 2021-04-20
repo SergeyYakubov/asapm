@@ -99,6 +99,7 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string, orderBy *strin
 	if err != nil {
 		logger.Error(err.Error())
 	}
+
 	return res, err
 }
 

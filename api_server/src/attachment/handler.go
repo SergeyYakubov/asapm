@@ -40,8 +40,7 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("file")
 	if err != nil {
-		fmt.Println("Error Retrieving the File")
-		fmt.Println(err)
+		fmt.Println("Error Retrieving the File:", err)
 		panic("TODO FormFile")
 	}
 

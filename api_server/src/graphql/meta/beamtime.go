@@ -103,6 +103,7 @@ func ModifyBeamtimeMeta(input model.FieldsToSet) (*model.BeamtimeMeta, error) {
 	parentMeta := model.ParentBeamtimeMeta{}
 	utils.DeepCopy(res_meta, &parentMeta)
 	smeta := string(res)
+
 	res_meta.JSONString = &smeta
 	res_meta.ParentBeamtimeMeta = &parentMeta
 

@@ -8,10 +8,10 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Paper from "@material-ui/core/Paper";
 import {
-    CollectionFilter,
+    CollectionFilter, EndOfDay,
     FieldFilter,
     InvertFilterOp,
-    RemoveDuplicates,
+    RemoveDuplicates, StartOfDay,
 } from "../common";
 import debounce from 'lodash.debounce';
 import {GetUniqueNamesForField} from "../meta";
@@ -390,7 +390,7 @@ function CollectionFilterBox({queryResult, filter, filterVar, mode}: CollectionF
     };
 
     const handleDataRangeChange = (range: DateRange) => {
-        filterVar({...filter, dateFrom: range.startDate, dateTo: range.endDate});
+        filterVar({...filter, dateFrom: StartOfDay(range.startDate), dateTo: EndOfDay(range.endDate)});
         toggle();
     };
 

@@ -8,6 +8,11 @@ apiServer:
   dbEndpoint: "{{ .Release.Name }}-mongodb:27017"
   authorization:
     enabled: true
+    endpoint: "https://dev-keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token"
+    #keycloak.desy.de
+    #  pubKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAobxQ4FZbx3tFXMGhazTK\n1e8nusH2p+ZOiP6NveXHQw2ZOjUqfvRfOYCko+wJyyzcpfbiSThwXdPhMfrt1N7P\nlJXd0OlTRu1bl0sTOmiNNc7eQLwSyZ+oP+LCX/RBl9o3ax71Wd3uw3bYeP1aRumH\n1H6jnmm7hLW8cPadg0GlCi4Q2rfhzmDGotlg00keXx58VJIc2ViKLqpb5aDgAlna\njOyKtkUcB2KIS3lBxSEINJqsyU8Fa2zrs8ga0pU/ebx8rPKybGkaU0XuWOSzUczr\n3nNcQOuzN82Jp7AndzJeNwAMEpN/vMGmd9W02iyD99GB5qPFRUb69pUrOOIWnixL\nEwIDAQAB\n-----END PUBLIC KEY-----\n"
+    #dev-keycloak
+    pubKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmnYYa5JtJSaQB+9V0Aef+mODqqUhqIpaAQLqecpef5qubq4i7gJguCFXjvUN04ap5o1krdXoOeKwvjDPJDZezUDnzzxmorET8VGML/b2ZhNIpr3fjvwb6CzlZCL6LcfZdfh4d8UxfGtK4hjSX+hlwWza7LC3dSpAu0vRKFGqpLgWDqEGixPcjLuA0ZhhD3N7Qe1cp4HquvicTHHWRq7UjNGWAloQA9KejzFmgEHWRNtJHXwM/zzQuvArslEy0XswKE5TFvOe5PqmVdwgg9UpsfRw68in2/YymvJyAMg7+jkgs8uQfiBZmnuXgCvTgCB0i+7FfJpW9Img4PdqtQA0vQIDAQAB\n-----END PUBLIC KEY-----"
   tls:
     enabled: false
   imageCredentials:
@@ -16,7 +21,6 @@ apiServer:
     username: someone
     password: sillyness
   logLevel: info
-  pubKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAobxQ4FZbx3tFXMGhazTK\n1e8nusH2p+ZOiP6NveXHQw2ZOjUqfvRfOYCko+wJyyzcpfbiSThwXdPhMfrt1N7P\nlJXd0OlTRu1bl0sTOmiNNc7eQLwSyZ+oP+LCX/RBl9o3ax71Wd3uw3bYeP1aRumH\n1H6jnmm7hLW8cPadg0GlCi4Q2rfhzmDGotlg00keXx58VJIc2ViKLqpb5aDgAlna\njOyKtkUcB2KIS3lBxSEINJqsyU8Fa2zrs8ga0pU/ebx8rPKybGkaU0XuWOSzUczr\n3nNcQOuzN82Jp7AndzJeNwAMEpN/vMGmd9W02iyD99GB5qPFRUb69pUrOOIWnixL\nEwIDAQAB\n-----END PUBLIC KEY-----\n"
 mongodb:
   useStatefulSet: false
   architecture: "standalone"

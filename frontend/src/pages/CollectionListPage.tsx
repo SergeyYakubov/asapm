@@ -72,7 +72,7 @@ function possibleColumnListfromCustomValues(vals: KvObj | null, root: string, co
             if (!columns.find(column => column.fieldName === "customValues." + fullColumn)) {
                 columns.push({
                     fieldName: "customValues." + fullColumn,
-                    alias: fullColumn.replace(/./g, '-'),
+                    alias: fullColumn.replace(/\./g, '-'),
                     active: false,
                     type: value.constructor.name
                 });
