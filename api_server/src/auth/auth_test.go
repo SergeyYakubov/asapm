@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"asapm/common/config"
 	"asapm/common/utils"
 	"context"
 	"encoding/json"
@@ -81,17 +82,45 @@ func TestGetUserAccountProps(t *testing.T) {
 }
 
 
-
 var authTests = []struct {
 	claims      string
+	entity AuthorizedEntity
+	adminLevels []string
 	ok        bool
 	Message    string
 }{
-	{`{"preferred_username":"dd","azp": "asapm"}`, false, "no ingestor role"},
-	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin"]}`, true, "admin role"},
-	{`{"preferred_username":"dd","azp": "asapm","roles": ["ingestor"]}`, true, "ingestor role"},
-	{`{"preferred_username":"dd","azp": "asapm-service", "roles": ["ingestor"]}`, true, "ingestor role"},
-	{`{"preferred_username":"dd","azp": "asapm-service", "roles": ["admin"]}`, true, "service admin role"},
+	{`{"preferred_username":"dd","azp": "asapm"}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{},false, "no role"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{},true, "admin role"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["ingestor"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{},false, "ingestor role"},
+	{`{"preferred_username":"dd","azp": "asapm-service", "roles": ["ingestor"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{},false, "ingestor role"},
+	{`{"preferred_username":"dd","azp": "asapm-service", "roles": ["admin"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{},true, "service admin role"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin_f_f1"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{"facility"},true, "facility admin role"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin_b_bl1"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{"beamline"},true, "beamline admin role"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin_f_f1"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{"beamline"},false, "facility admin role with beamline config"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin_f_f1"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{},false, "facility admin role without config"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["ingestor_f_f1"]}`, AuthorizedEntity{"", "bl1", "f1", DeleteMeta},
+		[]string{"facility"},false, "facility ingestor role"},
+
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["ingestor"]}`, AuthorizedEntity{"", "bl1", "f1", IngestMeta},
+		[]string{},true, "ingestor can ingest meta"},
+
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["ingestor"]}`, AuthorizedEntity{"", "bl1", "f1", ModifyMeta},
+		[]string{},true, "ingestor can modify meta"},
+
+
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["ingestor"]}`, AuthorizedEntity{"", "bl1", "f1", IngestSubcollection},
+		[]string{},true, "ingestor can ingest subcollection"},
+
+
 }
 
 
@@ -101,7 +130,12 @@ func TestAuthorizeIngestor(t *testing.T) {
 		json.Unmarshal([]byte(test.claims),&claim)
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
-		err := AuthorizeWrite(ctx)
+		acl,_:= ReadAclFromContext(ctx)
+		config.Config.Authorization.AdminLevels = test.adminLevels
+
+		err := AuthorizeOperation(acl,test.entity)
+
+
 		if test.ok {
 			assert.Nil(t, err,test.Message)
 		} else {
@@ -118,17 +152,21 @@ var aclTests = []struct {
 	Message string
 }{
 	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin"]}`,
-		MetaAcl{ImmediateAccess: true}, true,"admin access"},
+		MetaAcl{AdminAccess: true,ImmediateReadAccess: true}, true,"admin access"},
 	{`{"preferred_username":"dd","azp": "bla"}`,
 		MetaAcl{}, false,"wrong azp"},
 	{`{"preferred_username":"dd","azp": "asapm"}`,
 		MetaAcl{ImmediateDeny: true}, true,"no access"},
 	{`{"preferred_username":"dd","azp": "asapm","groups": ["fsdata"]}`,
-		MetaAcl{ImmediateAccess: true}, true,"fsdata access"},
+		MetaAcl{AdminAccess: false,ImmediateReadAccess: true}, true,"fsdata access"},
 	{`{"preferred_username":"dd","azp": "asapm","groups": ["p01staff"]}`,
 		MetaAcl{AllowedBeamlines: []string{"p01"}}, true,"p01staff"},
 	{`{"preferred_username":"dd","azp": "asapm","groups": ["p021staff","p022staff","p211staff","p212staff"]}`,
 		MetaAcl{AllowedBeamlines: []string{"p02.1","p02.2","p21.1","p21.2"}}, true,"p01staff"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin_b_p022"]}`,
+		MetaAcl{AllowedBeamlines: []string{"p02.2"}}, true,"p022 admin"},
+	{`{"preferred_username":"dd","azp": "asapm","roles": ["admin_f_petra3"]}`,
+		MetaAcl{AllowedFacilities: []string{"petra3"}}, true,"petra3 admin"},
 	{`{"preferred_username":"dd","azp": "asapm","groups": ["12345-clbt"]}`,
 		MetaAcl{AllowedBeamtimes: []string{"12345"}}, true,"beamtime 12345"},
 	{`{"preferred_username":"dd@door","azp": "asapm","roles": ["door_user"]}`,
@@ -142,7 +180,10 @@ func TestMetaReadAclFromContext(t *testing.T) {
 		json.Unmarshal([]byte(test.claims),&claim)
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
+		config.Config.Authorization.AdminLevels=[]string{"facility","beamline"}
 		acl,err := ReadAclFromContext(ctx)
+		acl.UserProps=UserProps{}
+
 		if test.ok {
 			assert.Nil(t, err,test.Message)
 			assert.Equal(t,test.acl,acl,test.Message)

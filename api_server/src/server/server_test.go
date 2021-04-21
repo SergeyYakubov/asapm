@@ -4,6 +4,7 @@ import (
 	"asapm/common/logger"
 	"asapm/common/utils"
 	"asapm/database"
+	"asapm/graphql/graph"
 	"asapm/graphql/graph/generated"
 	"asapm/graphql/graph/model"
 	"asapm/graphql/meta"
@@ -120,9 +121,8 @@ func createClient() *client.Client {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
 
-
-	config := generateGqlConfig()
-	return client.New(handler.NewDefaultServer(generated.NewExecutableSchema(config)),
+	gqlSrv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	return client.New(gqlSrv,
 		func(bd *client.Request) {
 			bd.HTTP = bd.HTTP.WithContext(ctx)
 		})

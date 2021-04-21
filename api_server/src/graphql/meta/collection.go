@@ -18,7 +18,11 @@ const (
 	ModeDeleteFields
 )
 
-func AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry, error) {
+func AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*model.CollectionEntry, error) {
+	if acl.ImmediateDeny {
+		return &model.CollectionEntry{}, errors.New("access denied")
+	}
+
 	entry := &model.CollectionEntry{}
 	utils.DeepCopy(input, entry)
 
@@ -35,6 +39,11 @@ func AddCollectionEntry(input model.NewCollectionEntry) (*model.CollectionEntry,
 
 	var btMeta model.BeamtimeMeta
 	if err := json.Unmarshal(btMetaBytes, &btMeta); err != nil {
+		return &model.CollectionEntry{}, err
+	}
+
+	err = auth.AuthorizeOperation(acl, auth.MetaToAuthorizedEntity(btMeta, auth.IngestSubcollection))
+	if err != nil {
 		return &model.CollectionEntry{}, err
 	}
 
@@ -109,7 +118,7 @@ func checkUserFields(mode int, input interface{}) bool {
 }
 
 func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry, mode int, input interface{}) bool {
-	if acl.ImmediateAccess {
+	if acl.AdminAccess {
 		return true
 	}
 
@@ -171,13 +180,7 @@ func auhthorizeModifyRequest(acl auth.MetaAcl, id string, mode int, input interf
 		return errors.New("access denied, not enough permissions")
 	}
 
-	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", id)
-	if err != nil {
-		return err
-	}
-
-	var meta model.CollectionEntry
-	err = json.Unmarshal(res, &meta)
+	meta, err := getCollectionMeta(id)
 	if err != nil {
 		return err
 	}
@@ -216,7 +219,7 @@ func setPrevNext(meta *model.CollectionEntry) {
 	}
 	filter := "parentId = '" + meta.ParentID + "' AND \"index\" < " + strconv.Itoa(*meta.Index)
 	order := "\"index\" DESC"
-	fsPrev := database.FilterAndSort{"",filter,order}
+	fsPrev := database.FilterAndSort{"", filter, order}
 
 	var prev = model.CollectionEntry{}
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record_wfilter", fsPrev, &prev)
@@ -226,7 +229,7 @@ func setPrevNext(meta *model.CollectionEntry) {
 
 	filter = "parentId = '" + meta.ParentID + "' AND \"index\" > " + strconv.Itoa(*meta.Index)
 	order = "\"index\""
-	fsNext := database.FilterAndSort{"",filter,order}
+	fsNext := database.FilterAndSort{"", filter, order}
 
 	var next = model.CollectionEntry{}
 	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record_wfilter", fsNext, &next)
@@ -251,7 +254,7 @@ func ReadCollectionsMeta(acl auth.MetaAcl, filter *string, orderBy *string, keep
 
 	var response = []*model.CollectionEntry{}
 
-	fs := common.GetFilterAndSort(systemFilter,filter, orderBy)
+	fs := common.GetFilterAndSort(systemFilter, filter, orderBy)
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records", fs, &response)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
@@ -266,9 +269,14 @@ func ReadCollectionsMeta(acl auth.MetaAcl, filter *string, orderBy *string, keep
 
 }
 
-func DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
+func DeleteCollectionsAndSubcollectionMeta(acl auth.MetaAcl, id string) (*string, error) {
+	err := authorizeCollectionActivity(id, acl, auth.DeleteSubcollection)
+	if err != nil {
+		return nil, err
+	}
+
 	filter := "id = '" + id + "' OR id regexp '^" + id + ".'"
-	fs := common.GetFilterAndSort(filter,nil, nil)
+	fs := common.GetFilterAndSort(filter, nil, nil)
 
 	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true); err != nil {
 		return nil, err
@@ -285,4 +293,35 @@ func DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
 	}
 
 	return &id, nil
+}
+
+func getCollectionMeta(id string) (model.CollectionEntry, error) {
+	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", id)
+	if err != nil {
+		return model.CollectionEntry{}, err
+	}
+	var res_meta model.CollectionEntry
+	err = json.Unmarshal(res, &res_meta)
+	return res_meta, err
+}
+
+func authorizeCollectionActivity(id string, acl auth.MetaAcl, activity int) error {
+	if acl.AdminAccess {
+		return nil
+	}
+
+	if acl.ImmediateDeny {
+		return errors.New("access denied")
+	}
+
+	meta, err := getCollectionMeta(id)
+	if err != nil {
+		return err
+	}
+
+	if activity == auth.DeleteSubcollection && meta.Type != KCollectionTypeName {
+		return errors.New(id + " is not a subcollection")
+	}
+
+	return auth.AuthorizeOperation(acl, auth.CollectionToAuthorizedEntity(meta, activity))
 }

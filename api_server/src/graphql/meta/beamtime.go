@@ -25,7 +25,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFie
 
 	var sResponse = []*model.BeamtimeMeta{}
 
-	fs := common.GetFilterAndSort(systemFilter,filter, orderBy)
+	fs := common.GetFilterAndSort(systemFilter, filter, orderBy)
 
 	if fs.SystemFilter != "" {
 		fs.SystemFilter = "(" + fs.SystemFilter + ")" + ` AND type='beamtime'`
@@ -46,9 +46,13 @@ func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFie
 
 }
 
-func CreateBeamtimeMeta(input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
+func CreateBeamtimeMeta(acl auth.MetaAcl, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
 	meta := &model.BeamtimeMeta{}
 	utils.DeepCopy(input, meta)
+
+	if err:= auth.AuthorizeOperation(acl, auth.MetaToAuthorizedEntity(*meta, auth.IngestMeta));err!=nil {
+		return nil,err
+	}
 
 	if meta.ChildCollection == nil {
 		meta.ChildCollection = []*model.BaseCollectionEntry{}
@@ -74,9 +78,30 @@ func CreateBeamtimeMeta(input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error
 	return meta, nil
 }
 
-func DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
+func authorizeMetaActivity(id string, acl auth.MetaAcl, activity int) error {
+	if acl.AdminAccess {
+		return nil
+	}
+
+	if acl.ImmediateDeny {
+		return errors.New("access denied")
+	}
+
+	meta, err := getBeamtimeMeta(id)
+	if err != nil {
+		return err
+	}
+
+	return auth.AuthorizeOperation(acl, auth.MetaToAuthorizedEntity(meta, activity))
+}
+
+func DeleteBeamtimeMetaAndCollections(acl auth.MetaAcl, id string) (*string, error) {
+	if err := authorizeMetaActivity(id, acl, auth.DeleteMeta); err != nil {
+		return nil, err
+	}
+
 	filter := "parentBeamtimeMeta.id = '" + id + "'"
-	fs := common.GetFilterAndSort(filter,nil, nil)
+	fs := common.GetFilterAndSort(filter, nil, nil)
 
 	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true); err != nil {
 		return nil, err
@@ -85,13 +110,22 @@ func DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
 	return &id, nil
 }
 
-func ModifyBeamtimeMeta(input model.FieldsToSet) (*model.BeamtimeMeta, error) {
-	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", input.ID)
+func getBeamtimeMeta(id string) (model.BeamtimeMeta, error) {
+	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", id)
 	if err != nil {
+		return model.BeamtimeMeta{}, err
+	}
+	var res_meta model.BeamtimeMeta
+	err = json.Unmarshal(res, &res_meta)
+	return res_meta, err
+}
+
+func ModifyBeamtimeMeta(acl auth.MetaAcl, input model.FieldsToSet) (*model.BeamtimeMeta, error) {
+	if err := authorizeMetaActivity(input.ID, acl, auth.ModifyMeta); err != nil {
 		return nil, err
 	}
 
-	res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_fields", &input)
+	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_fields", &input)
 	if err != nil {
 		return nil, err
 	}
@@ -106,5 +140,5 @@ func ModifyBeamtimeMeta(input model.FieldsToSet) (*model.BeamtimeMeta, error) {
 	res_meta.JSONString = &smeta
 	res_meta.ParentBeamtimeMeta = &parentMeta
 
-	return &res_meta,err
+	return &res_meta, err
 }
