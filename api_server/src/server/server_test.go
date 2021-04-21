@@ -176,8 +176,9 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	assertExpectations(suite.T(), suite.mock_db)
 
 	var fs  = database.FilterAndSort{
-		Filter: "(beamline = 'p05') AND type='beamtime'",
-		Order:  "id DESC",
+		UserFilter: "beamline = 'p05'",
+		SystemFilter: "type='beamtime'",
+		Order:      "id DESC",
 	}
 
 	params := []interface {}{fs,&[]*model.BeamtimeMeta{}}

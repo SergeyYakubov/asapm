@@ -16,7 +16,7 @@ func ReadEntries(acl auth.MetaAcl, filter string, orderBy *string) (*model.LogEn
 
 	var response = []*model.LogEntryMessage{}
 
-	fs := common.GetFilterAndSort(&filter, orderBy)
+	fs := common.GetFilterAndSort("",&filter, orderBy)
 	_, err := database.GetDb().ProcessRequest(kLogBookDbName, kLogBookNameInDb, "read_records", fs, &response)
 	if err != nil {
 		return &model.LogEntryQueryResult{}, err

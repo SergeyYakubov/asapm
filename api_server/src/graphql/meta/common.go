@@ -1,7 +1,6 @@
 package meta
 
 import (
-	"asapm/database"
 	"strings"
 )
 
@@ -12,17 +11,6 @@ const KCollectionTypeName = "collection"
 const KBeamtimeTypeName = "beamtime"
 
 const KUserFieldName = "customValues"
-
-func getFilterAndSort(filter *string, orderBy *string) database.FilterAndSort {
-	fs := database.FilterAndSort{}
-	if filter != nil {
-		fs.Filter = *filter
-	}
-	if orderBy != nil {
-		fs.Order = *orderBy
-	}
-	return fs
-}
 
 func keepFields(m map[string]interface{}, keep []string, prefix string) map[string]interface{} {
 	for key, v := range m {

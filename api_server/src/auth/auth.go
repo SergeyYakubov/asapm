@@ -253,16 +253,14 @@ func addFilterForNameInList(currentFilter, name string, list []string) string {
 	return currentFilter
 }
 
-func AddAclToSqlFilter(acl MetaAcl, curFilter *string, filterFields FilterFields) *string {
+func AclToSqlFilter(acl MetaAcl, filterFields FilterFields) string {
+	if acl.ImmediateAccess {
+		return ""
+	}
 	aclFilter := addFilterForNameInList("", filterFields.BeamtimeId, acl.AllowedBeamtimes)
 	aclFilter = addFilterForNameInList(aclFilter, filterFields.Beamline, acl.AllowedBeamlines)
 	aclFilter = addFilterForNameInList(aclFilter, filterFields.Facility, acl.AllowedFacilities)
 	aclFilter = addFilterForDoorUser(aclFilter, acl.DoorUser)
 
-	if curFilter != nil  && *curFilter!=""{
-		s := "(" + aclFilter + ") AND (" + *curFilter + ")"
-		return &s
-	} else {
-		return &aclFilter
-	}
+	return aclFilter
 }

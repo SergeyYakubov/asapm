@@ -175,7 +175,7 @@ func (suite *CollectionTestSuite) TestDeleteSubcollection() {
 	parentId := "12345"
 
 	var fs = database.FilterAndSort{
-		Filter: "id = '12345.123' OR id regexp '^12345.123.'",
+		SystemFilter: "id = '12345.123' OR id regexp '^12345.123.'",
 	}
 
 	params_delete := []interface{}{fs, true}

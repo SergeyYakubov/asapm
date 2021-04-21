@@ -4,6 +4,7 @@ import (
 	"asapm/auth"
 	"asapm/common/utils"
 	"asapm/database"
+	"asapm/graphql/common"
 	"asapm/graphql/graph/model"
 	"encoding/json"
 	"errors"
@@ -215,7 +216,7 @@ func setPrevNext(meta *model.CollectionEntry) {
 	}
 	filter := "parentId = '" + meta.ParentID + "' AND \"index\" < " + strconv.Itoa(*meta.Index)
 	order := "\"index\" DESC"
-	fsPrev := database.FilterAndSort{filter,order}
+	fsPrev := database.FilterAndSort{"",filter,order}
 
 	var prev = model.CollectionEntry{}
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record_wfilter", fsPrev, &prev)
@@ -225,7 +226,7 @@ func setPrevNext(meta *model.CollectionEntry) {
 
 	filter = "parentId = '" + meta.ParentID + "' AND \"index\" > " + strconv.Itoa(*meta.Index)
 	order = "\"index\""
-	fsNext := database.FilterAndSort{filter,order}
+	fsNext := database.FilterAndSort{"",filter,order}
 
 	var next = model.CollectionEntry{}
 	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record_wfilter", fsNext, &next)
@@ -246,13 +247,11 @@ func ReadCollectionsMeta(acl auth.MetaAcl, filter *string, orderBy *string, keep
 		Facility:   "parentBeamtimeMeta.facility",
 	}
 
-	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl, filter, ff)
-	}
+	systemFilter := auth.AclToSqlFilter(acl, ff)
 
 	var response = []*model.CollectionEntry{}
 
-	fs := getFilterAndSort(filter, orderBy)
+	fs := common.GetFilterAndSort(systemFilter,filter, orderBy)
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records", fs, &response)
 	if err != nil {
 		return []*model.CollectionEntry{}, err
@@ -269,7 +268,7 @@ func ReadCollectionsMeta(acl auth.MetaAcl, filter *string, orderBy *string, keep
 
 func DeleteCollectionsAndSubcollectionMeta(id string) (*string, error) {
 	filter := "id = '" + id + "' OR id regexp '^" + id + ".'"
-	fs := getFilterAndSort(&filter, nil)
+	fs := common.GetFilterAndSort(filter,nil, nil)
 
 	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true); err != nil {
 		return nil, err

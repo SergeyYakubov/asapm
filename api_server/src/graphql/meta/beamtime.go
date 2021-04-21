@@ -4,6 +4,7 @@ import (
 	"asapm/auth"
 	"asapm/common/utils"
 	"asapm/database"
+	"asapm/graphql/common"
 	"asapm/graphql/graph/model"
 	"encoding/json"
 	"errors"
@@ -20,18 +21,16 @@ func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFie
 		Facility:   "facility",
 	}
 
-	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl, filter, ff)
-	}
+	systemFilter := auth.AclToSqlFilter(acl, ff)
 
 	var sResponse = []*model.BeamtimeMeta{}
 
-	fs := getFilterAndSort(filter, orderBy)
+	fs := common.GetFilterAndSort(systemFilter,filter, orderBy)
 
-	if fs.Filter != "" {
-		fs.Filter = "(" + fs.Filter + ")" + ` AND type='beamtime'`
+	if fs.SystemFilter != "" {
+		fs.SystemFilter = "(" + fs.SystemFilter + ")" + ` AND type='beamtime'`
 	} else {
-		fs.Filter = `type='beamtime'`
+		fs.SystemFilter = `type='beamtime'`
 	}
 
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records", fs, &sResponse)
@@ -77,7 +76,7 @@ func CreateBeamtimeMeta(input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error
 
 func DeleteBeamtimeMetaAndCollections(id string) (*string, error) {
 	filter := "parentBeamtimeMeta.id = '" + id + "'"
-	fs := getFilterAndSort(&filter, nil)
+	fs := common.GetFilterAndSort(filter,nil, nil)
 
 	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true); err != nil {
 		return nil, err
