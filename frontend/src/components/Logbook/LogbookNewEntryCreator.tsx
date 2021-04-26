@@ -207,6 +207,7 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
         if (submitInProgress || !inputIsOkay) {
             return;
         }
+        setSendMessageError('');
 
         const message = markdownEditor!.current!.getRawContent();
 

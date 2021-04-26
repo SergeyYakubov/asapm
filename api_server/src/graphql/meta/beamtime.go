@@ -11,8 +11,29 @@ import (
 
 /// Checks if a beamtime exists. The fullBeamtimeId format must be '1234567.1.123'
 func DoesBeamtimeExists(facility string, fullBeamtimeId string) bool {
-	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", fullBeamtimeId)
-	return err == nil
+	btMetaBytes, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", fullBeamtimeId)
+	if err != nil {
+		return false
+	}
+
+	var btMeta model.BeamtimeMeta
+	if err := json.Unmarshal(btMetaBytes, &btMeta); err != nil {
+		return false
+	}
+
+	// Check parent
+	if btMeta.ParentBeamtimeMeta != nil &&
+		btMeta.ParentBeamtimeMeta.Facility != nil &&
+		*btMeta.ParentBeamtimeMeta.Facility == facility {
+		return true
+	}
+
+	// Check base
+	if btMeta.Facility != nil && *btMeta.Facility == facility {
+		return true
+	}
+
+	return false
 }
 
 func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFields []string, removeFields []string) ([]*model.BeamtimeMeta, error) {

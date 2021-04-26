@@ -132,7 +132,7 @@ func WriteNewMessage(newInput model.NewLogEntryMessage, username string) (*strin
 	}
 	if newInput.Beamtime != nil {
 		var fullBeamtimeId = *newInput.Beamtime
-		if newInput.SubCollection != nil {
+		if (newInput.SubCollection != nil) && (len(*newInput.SubCollection) > 0) {
 			fullBeamtimeId += "." + (*newInput.SubCollection)
 		}
 
