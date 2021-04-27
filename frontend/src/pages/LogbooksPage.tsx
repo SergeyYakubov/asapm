@@ -70,8 +70,6 @@ function LogbooksPage(props: LogbooksPageProps): JSX.Element {
                 setMessages(sortedMessages);
             }
         }
-
-
     }, [queryResult.error, queryResult.loading, queryResult.data]);
 
 

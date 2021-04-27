@@ -84,7 +84,7 @@ const LogbookMessageTimelineByFacility = forwardRef(({ messages, onVisibleGroupC
             return <LogbookGroupHeader key={`header,${groups[index]}`}><span>{groups[index]} <span className={classes.smallText}>({groupSizes[index]} entries)</span></span></LogbookGroupHeader>;
         }}
         item={(index) => {
-            return <LogbookItem key={`message,${messages[index].id}`} message={messages[index]}/>;
+            return messages[index] && <LogbookItem key={`message,${messages[index].id}`} message={messages[index]}/>;
         }}
 
         rangeChanged={({startIndex}) => {

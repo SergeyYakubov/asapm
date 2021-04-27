@@ -27,7 +27,7 @@ interface LogbookFilterProps {
     onQuickSearchChanged?: (input: string) => void;
 }
 
-function LogbookFilter({}: LogbookFilterProps): JSX.Element {
+function LogbookFilter({}: LogbookFilterProps): JSX.Element | null {
     const classes = useStyles();
 
     /*
@@ -43,12 +43,18 @@ function LogbookFilter({}: LogbookFilterProps): JSX.Element {
     });
      */
 
-    const {data} = useQuery<BeamtimeFilterData>(GET_BEAMTIME_FILTER);
-    const filter = data!.beamtimeFilter;
+    // const {data} = useQuery<BeamtimeFilterData>(GET_BEAMTIME_FILTER);
+    // const filter = data!.beamtimeFilter;
 
+    // Currently disabled since this filter would need to fetch all collection all the time
+    // and then only filter the collection
+    // TODO: Need to make a more generic filter that does not only apply to Collections
+    return null;
+    /*
     return <Paper variant="outlined" className={classes.filterPaper}>
         <CustomFilter collections={undefined} currentFilter={filter} filterVar={beamtimeFilterVar} />
     </Paper>;
+    */
 }
 
 export default LogbookFilter;

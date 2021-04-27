@@ -86,7 +86,7 @@ const MyAccordionSummary = withStyles({
     }
 })(AccordionSummary);
 
-interface AttachedFileInfo {
+export interface AttachedFileInfo {
     localId: string;
     id: string | null; // Might be null during upload
     uploadProgress: number; // from 0 to 1
@@ -249,7 +249,7 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
             case 'image/png':
             case 'image/gif':
             case 'image/jpeg':
-                imageElement = markdownEditor!.current!.addImage();
+                imageElement = markdownEditor!.current!.addNewChangeableImageHandle();
                 break;
         }
         const uploadedImage = await uploadAndAppendFile(file);
@@ -406,7 +406,7 @@ function LogbookNewEntryCreator(props: LogbookNewEntryCreatorProps): JSX.Element
                 <LogbookMarkdownEditor
                     key={editorVersionCounter}
                     ref={markdownEditor}
-                    onFileUpload={(file) => {uploadAndAppendFile(file);}}
+                    onFileUpload={(file) => uploadAndAppendFile(file)}
                     onHasContent={(hasContent) => {setHasContent(hasContent);}}
                 />
 

@@ -104,7 +104,7 @@ const LogBookMessageTimelineByBeamtime = forwardRef(({ messages, onVisibleGroupC
                 return <LogbookGroupHeader key={`header,${groups[index]}`}><span>{groups[index]} <span className={classes.smallText}>({groupSizes[index]} entries)</span></span></LogbookGroupHeader>;
             }}
             item={(index) => {
-                return <LogbookItem key={`message,${messages[index].id}`} message={messages[index]} displayDate={true}/>;
+                return messages[index] && <LogbookItem key={`message,${messages[index].id}`} message={messages[index]} displayDate={true}/>;
             }}
 
             rangeChanged={({startIndex}) => {

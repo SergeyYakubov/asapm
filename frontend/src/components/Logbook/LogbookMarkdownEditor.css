@@ -245,7 +245,7 @@ li.ProseMirror-selectednode:after {
 }
 
 .ProseMirror-prompt {
-    background: var(--prose-mirror-bg-color);
+    background-color: #636363;
     padding: 5px 10px 5px 15px;
     border: 1px solid silver;
     position: fixed;

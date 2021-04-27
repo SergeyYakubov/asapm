@@ -1,4 +1,4 @@
-import * as ProseMirrorMarkdown from "prosemirror-markdown";
+//import * as ProseMirrorMarkdown from "prosemirror-markdown";
 import * as ProseMirrorSchemaBasic from "prosemirror-schema-basic";
 const baseSchema = (ProseMirrorSchemaBasic as any).schema;
 
@@ -29,11 +29,13 @@ import {
 import {Schema, Fragment}  from "prosemirror-model";
 import {ChangeableImageRef} from "./LogbookUtils";
 import {useTheme} from "@material-ui/core";
+import {ApplicationApiBaseUrl} from "../../common";
+import {AttachedFileInfo} from "./LogbookNewEntryCreator";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {exampleSetup, buildMenuItems} = require('prosemirror-example-setup');
 
-const schema = new Schema({
+export const schemaWithTable = new Schema({
     nodes: baseSchema.spec.nodes.append(tableNodes({
         tableGroup: "block",
         cellContent: "block+",
@@ -48,8 +50,8 @@ const schema = new Schema({
     marks: baseSchema.spec.marks
 });
 
-function createMenu(onFileUpload: (file: File) => void): any {
-    const menu = buildMenuItems(schema).fullMenu;
+function createMenu(onFileUpload: (file: File) => Promise<AttachedFileInfo | undefined>, addNewChangeableImageHandle: () => ChangeableImageRef): any {
+    const menu = buildMenuItems(schemaWithTable).fullMenu;
     function item(label: string, cmd: any) {
         return new MenuItem({label, select: cmd, run: cmd});
     }
@@ -76,6 +78,14 @@ function createMenu(onFileUpload: (file: File) => void): any {
 
     // Push into the "insert" menu
     const insertSubMenu = menu[1][0];
+
+    const orgImageInsert = insertSubMenu.content.find((item: any) => item.spec.label === 'Image');
+    console.log('FINDME', insertSubMenu.content, orgImageInsert);
+    const indexOfOrgImageInsert = insertSubMenu.content.indexOf(orgImageInsert);
+    if (indexOfOrgImageInsert !== -1) {
+        insertSubMenu.content.splice(indexOfOrgImageInsert, 1);
+    }
+
     insertSubMenu.content.push(new MenuItem({
         label: 'Table',
         select: (s) => !isInTable(s),
@@ -97,10 +107,10 @@ function createMenu(onFileUpload: (file: File) => void): any {
             }
 
             return true;
-        }}));
-    insertSubMenu.content.pop(); // Temporarily disabled table because the serialization is not supported.
+        }
+    }));
     insertSubMenu.content.push(new MenuItem({
-        label: 'File',
+        label: 'File upload',
         run: () => {
             const tmpFileElement = document.createElement('input');
             tmpFileElement.type = 'file';
@@ -108,14 +118,55 @@ function createMenu(onFileUpload: (file: File) => void): any {
             tmpFileElement.onchange = (e) => {
                 const file = (e.target as HTMLInputElement).files?.[0];
                 if (file) {
-                    onFileUpload(file);
+                    /* noawait */onFileUpload(file);
                 }
             };
 
             tmpFileElement.click();
 
             return true;
-        }}));
+        }
+    }));
+    insertSubMenu.content.push(new MenuItem({
+        label: 'Image upload',
+        run: () => {
+            const tmpFileElement = document.createElement('input');
+            tmpFileElement.type = 'file';
+            tmpFileElement.accept = 'image/*';
+            (tmpFileElement as any).capture = 'camera';
+
+            tmpFileElement.onchange = async (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                    let imageElement: ChangeableImageRef | undefined = undefined;
+                    switch(file.type) {
+                        case 'image/png':
+                        case 'image/gif':
+                        case 'image/jpeg':
+                            imageElement = addNewChangeableImageHandle();
+                            break;
+                    }
+                    const uploadedImage = await onFileUpload(file);
+                    if (imageElement) {
+                        if (uploadedImage) {
+                            imageElement.changeSource(`${ApplicationApiBaseUrl}/attachments/raw/${uploadedImage.id}`);
+                        } else {
+                            imageElement.removeImage();
+                        }
+                    }
+                }
+            };
+
+            tmpFileElement.click();
+
+            return true;
+        }
+    }));
+    insertSubMenu.content.push(new MenuItem({
+        label: 'Image by URL',
+        enable: orgImageInsert.spec.enable,
+        run: orgImageInsert.spec.run,
+    }));
 
     // Customize existing menu entries
     const foundTyping = menu[1].find((x: any) => x.options.label === 'Type...');
@@ -171,12 +222,12 @@ const useStyles = makeStyles(() =>
 );
 
 interface LogbookMarkdownEditorProps {
-    onFileUpload: (file: File) => void;
+    onFileUpload: (file: File) => Promise<AttachedFileInfo | undefined>;
     onHasContent: (hasContent: boolean) => void;
 }
 export interface LogbookMarkdownEditorInterface {
     getRawContent(): string;
-    addImage(): ChangeableImageRef;
+    addNewChangeableImageHandle(): ChangeableImageRef;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -192,48 +243,46 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
     const viewHost = useRef() as any;
     const $view = useRef<EditorView>(null) as any;
 
+    function addNewChangeableImageHandle(): ChangeableImageRef {
+        const imageRef = {};
+
+        // Replace the selection with a placeholder
+        const tr = $view.current.state.tr;
+        if (!tr.selection.empty) {
+            tr.deleteSelection();
+        }
+
+        tr.setMeta(pendingImageManagerPlugin, {add: {objRef: imageRef, pos: tr.selection.from}});
+        $view.current.dispatch(tr);
+
+        return {
+            removeImage() {
+                $view.current.dispatch(tr.setMeta(pendingImageManagerPlugin, {remove: {objRef: imageRef}}));
+            },
+            changeSource(src: string) {
+                const pos = findPlaceholder($view.current.state, imageRef);
+                $view.current.dispatch($view.current.state.tr
+                    .replaceWith(pos, pos, schemaWithTable.nodes.image.create({src}))
+                    .setMeta(pendingImageManagerPlugin, {remove: {objRef: imageRef}}));
+            }
+        };
+    }
+
     useImperativeHandle(ref, () => ({
         getRawContent(): string {
-            console.log(ProseMirrorMarkdown.defaultMarkdownSerializer);
-            ProseMirrorMarkdown.defaultMarkdownSerializer.nodes['table'] = function(state, node) {
-                state.ensureNewLine();
-                state.write('TODO:TableSupport');
-                state.closeBlock(node);
-            };
-            console.log($view.current.state.schema);
-            return ProseMirrorMarkdown.defaultMarkdownSerializer.serialize($view.current.state.doc);
+            // we have to stringify it twice in order to preserve a string in graphql
+            return JSON.stringify(JSON.stringify($view.current.state.doc.toJSON()));
         },
-        addImage(): ChangeableImageRef {
-
-            const imageRef = {};
-
-            // Replace the selection with a placeholder
-            const tr = $view.current.state.tr;
-            if (!tr.selection.empty) {
-                tr.deleteSelection();
-            }
-
-            tr.setMeta(pendingImageManagerPlugin, {add: {objRef: imageRef, pos: tr.selection.from}});
-            $view.current.dispatch(tr);
-
-            return {
-                removeImage() {
-                    $view.current.dispatch(tr.setMeta(pendingImageManagerPlugin, {remove: {objRef: imageRef}}));
-                },
-                changeSource(src: string) {
-                    const pos = findPlaceholder($view.current.state, imageRef);
-                    $view.current.dispatch($view.current.state.tr
-                        .replaceWith(pos, pos, schema.nodes.image.create({src}))
-                        .setMeta(pendingImageManagerPlugin, {remove: {objRef: imageRef}}));
-                }
-            };
-        }
+        addNewChangeableImageHandle,
     }));
 
     useEffect(() => { // initial render
-        const state = EditorState.create({schema, plugins: [
+        const state = EditorState.create({schema: schemaWithTable, plugins: [
             tableEditing(), pendingImageManagerPlugin
-        ].concat(exampleSetup({schema, menuContent: createMenu(props.onFileUpload)}))});
+        ].concat(exampleSetup({schema: schemaWithTable, menuContent: createMenu(props.onFileUpload, addNewChangeableImageHandle)}))});
+
+
+        const emptyDocString = '{"type":"doc","content":[{"type":"paragraph"}]}';
 
         $view.current = new EditorView(viewHost.current, {
             state,
@@ -242,11 +291,11 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
                 $view.current.updateState(state);
 
                 if (transactions.some((tr: Transaction) => tr.docChanged)) {
-                    props.onHasContent(!!ProseMirrorMarkdown.defaultMarkdownSerializer.serialize(state.doc).length);
+                    props.onHasContent(JSON.stringify($view.current.state.doc.toJSON()) != emptyDocString);
                 }
             }
         });
-        props.onHasContent(!!ProseMirrorMarkdown.defaultMarkdownSerializer.serialize(state.doc).length);
+        props.onHasContent(JSON.stringify($view.current.state.doc.toJSON()) != emptyDocString);
 
         return () => $view.current.destroy();
     }, []);
