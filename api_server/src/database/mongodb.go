@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -222,10 +221,10 @@ func flatten(prefix string, src map[string]interface{}, dest map[string]interfac
 		switch child := v.(type) {
 		case map[string]interface{}:
 			flatten(prefix+k, child, dest)
-/*		case []interface{}:
-			for i := 0; i < len(child); i++ {
-				dest[prefix+k+"."+strconv.Itoa(i)] = child[i]
-			}*/
+			/*		case []interface{}:
+					for i := 0; i < len(child); i++ {
+						dest[prefix+k+"."+strconv.Itoa(i)] = child[i]
+					}*/
 		default:
 			dest[prefix+k] = v
 		}
@@ -234,7 +233,7 @@ func flatten(prefix string, src map[string]interface{}, dest map[string]interfac
 
 func mapToMapWithDots(origin map[string]interface{}) (res map[string]interface{}) {
 	res = make(map[string]interface{})
-	flatten("",origin,res)
+	flatten("", origin, res)
 	return res
 }
 
@@ -251,7 +250,6 @@ func (db *Mongodb) setFields(dbName string, dataCollectionName string, exist boo
 	filter := bson.D{{"_id", input.ID}}
 	filters := []bson.D{filter}
 	inputWithDots := mapToMapWithDots(input.Fields)
-	fmt.Println(inputWithDots,input.Fields)
 	for field := range inputWithDots {
 		filters = append(filters, bson.D{{field, bson.D{{"$exists", exist}}}})
 	}
@@ -493,7 +491,7 @@ func (db *Mongodb) deleteRecords(dbName string, dataCollectionName string, extra
 	return nil, nil
 }
 
-func (db *Mongodb) deleteRecordByObjectId(dbName string, dataCollectionName string, extraParams ...interface{})  ([]byte, error) {
+func (db *Mongodb) deleteRecordByObjectId(dbName string, dataCollectionName string, extraParams ...interface{}) ([]byte, error) {
 	if len(extraParams) != 1 {
 		return nil, errors.New("wrong number of parameters")
 	}
@@ -519,14 +517,14 @@ func (db *Mongodb) deleteRecordByObjectId(dbName string, dataCollectionName stri
 	return nil, nil
 }
 
-func (db *Mongodb)getQueryAndSort(extra_params ...interface{})(q bson.M,sort bson.M,err error) {
+func (db *Mongodb) getQueryAndSort(extra_params ...interface{}) (q bson.M, sort bson.M, err error) {
 	if len(extra_params) != 2 {
-		return bson.M{},bson.M{}, errors.New("wrong number of parameters")
+		return bson.M{}, bson.M{}, errors.New("wrong number of parameters")
 	}
 
 	fs, ok := extra_params[0].(FilterAndSort)
 	if !ok {
-		return bson.M{},bson.M{}, errors.New("mongo: filter and sort must be set")
+		return bson.M{}, bson.M{}, errors.New("mongo: filter and sort must be set")
 	}
 
 	queryStr := getQueryString(fs)
@@ -534,17 +532,16 @@ func (db *Mongodb)getQueryAndSort(extra_params ...interface{})(q bson.M,sort bso
 		queryStr = strings.ReplaceAll(queryStr, "\\", "\\\\")
 		q, sort, err = db.BSONFromSQL(queryStr)
 		if err != nil {
-			return bson.M{},bson.M{}, err
+			return bson.M{}, bson.M{}, err
 		}
 	}
-	return q,sort,nil
+	return q, sort, nil
 }
-
 
 func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 
-	q,sort,err := db.getQueryAndSort(extra_params...)
+	q, sort, err := db.getQueryAndSort(extra_params...)
 	if err != nil {
 		return nil, err
 	}
@@ -568,7 +565,7 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 func (db *Mongodb) readRecordWithFilter(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 
-	q,sort,err := db.getQueryAndSort(extra_params...)
+	q, sort, err := db.getQueryAndSort(extra_params...)
 	if err != nil {
 		return nil, err
 	}

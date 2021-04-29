@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import UserService from "./userService";
+import UserService, {keycloak} from "./userService";
 import userService from "./userService";
 import {BrowserRouter} from 'react-router-dom';
 import {cache} from './graphQLCache';
@@ -32,15 +32,32 @@ export const client = new ApolloClient({
     link: authLink.concat(httpLink)
 });
 
-const renderApp = () => ReactDOM.render(
-    <ApolloProvider client={client}>
-        <BrowserRouter basename={process.env.PUBLIC_URL}>
-            <App/>
-        </BrowserRouter>
-    </ApolloProvider>,
-    document.getElementById("root"));
+function Rr(): JSX.Element {
+    const [, setKInitialized] = React.useState(false);
+    const [kTimedOut, setTimedOut] = React.useState(false);
 
-UserService.initKeycloak(renderApp);
+    React.useEffect(() => {
+        setTimeout(() => {
+            if (!keycloak.authenticated) setTimedOut(true);
+        }, 60000);
+    }, []);
+
+    React.useEffect(() => {
+        UserService.initKeycloak(setKInitialized);
+    }, []);
+
+    return keycloak.authenticated ? <ApolloProvider client={client}>
+            <BrowserRouter basename={process.env.PUBLIC_URL}>
+                <App/>
+            </BrowserRouter>
+        </ApolloProvider>
+        :
+        <div>{kTimedOut ? "cannot connect to the authorization server, please try later" : "authorizing ..."}</div>;
+}
+
+ReactDOM.render(
+    <Rr/>,
+    document.getElementById("root"));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

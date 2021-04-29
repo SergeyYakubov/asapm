@@ -172,13 +172,11 @@ export function GetFilterString(filter: CollectionFilter): string {
     });
 
     if (filter.dateTo && filter.dateFrom) {
-        const endDate = new Date(filter.dateTo.valueOf());
-        endDate.setDate(endDate.getDate() + 1);
         let filter1 = AddToFilter("", "eventStart >= isodate('" + filter.dateFrom.toISOString() + "')", "and");
-        filter1 = AddToFilter(filter1, "eventStart <= isodate('" + endDate.toISOString() + "')", "and");
+        filter1 = AddToFilter(filter1, "eventStart <= isodate('" + filter.dateTo.toISOString() + "')", "and");
         let filter2 = AddToFilter("", "eventEnd >= isodate('" + filter.dateFrom.toISOString() + "')", "and");
-        filter2 = AddToFilter(filter2, "eventEnd <= isodate('" + endDate.toISOString() + "')", "and");
-        let filter3 = AddToFilter("", "eventEnd >= isodate('" + endDate.toISOString() + "')", "and");
+        filter2 = AddToFilter(filter2, "eventEnd <= isodate('" + filter.dateTo.toISOString() + "')", "and");
+        let filter3 = AddToFilter("", "eventEnd >= isodate('" + filter.dateTo.toISOString() + "')", "and");
         filter3 = AddToFilter(filter3, "eventStart <= isodate('" + filter.dateFrom.toISOString() + "')", "and");
         let filterRange = AddToFilter(filter1, filter2, "or");
         filterRange = AddToFilter(filterRange, filter3, "or");
@@ -233,3 +231,25 @@ export function EasyFileUpload(path: string, file: File, progressCallback?: (pro
         }
     });
 }
+
+export function EndOfDay(date: Date|undefined): Date|undefined {
+    if (!date) {
+        return date;
+    }
+    return  new Date(date!.getFullYear()
+        ,date!.getMonth()
+        ,date!.getDate()
+        ,23,59,59);
+}
+
+
+export function StartOfDay(date: Date|undefined): Date|undefined {
+    if (!date) {
+        return date;
+    }
+    return  new Date(date!.getFullYear()
+        ,date!.getMonth()
+        ,date!.getDate()
+        ,0,0,0);
+}
+

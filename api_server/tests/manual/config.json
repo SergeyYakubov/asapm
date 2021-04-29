@@ -3,8 +3,9 @@
   "logLevel" : "debug",
   "port" : "8080",
   "basePath" : "/api",
-  "publicKeyPath" : "./config.json",
+  "publicKeyPath" : "./pubkey",
   "authorization" : {
-    "enabled": false
+    "enabled": false,
+    "endpoint": "http://zitpcx27016:8080/auth/realms/asap/protocol/openid-connect/token"
   }
 }
