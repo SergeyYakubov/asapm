@@ -49,6 +49,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFie
 func CreateBeamtimeMeta(acl auth.MetaAcl, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
 	meta := &model.BeamtimeMeta{}
 	utils.DeepCopy(input, meta)
+	meta.CustomValues = UpdateDatetimeFields(meta.CustomValues)
 
 	if err:= auth.AuthorizeOperation(acl, auth.MetaToAuthorizedEntity(*meta, auth.IngestMeta));err!=nil {
 		return nil,err
@@ -124,6 +125,8 @@ func ModifyBeamtimeMeta(acl auth.MetaAcl, input model.FieldsToSet) (*model.Beamt
 	if err := authorizeMetaActivity(input.ID, acl, auth.ModifyMeta); err != nil {
 		return nil, err
 	}
+
+	input.Fields = 	UpdateDatetimeFields(input.Fields)
 
 	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_fields", &input)
 	if err != nil {

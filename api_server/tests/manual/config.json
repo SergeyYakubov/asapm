@@ -7,6 +7,6 @@
     "enabled": true,
     "publicKeyPath" : "./pubkey",
     "adminLevels": ["facility"],
-    "endpoint": "https://dev-keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token"
+    "endpoint": "https://keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token"
   }
 }

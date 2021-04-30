@@ -26,6 +26,9 @@ func AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mode
 	entry := &model.CollectionEntry{}
 	utils.DeepCopy(input, entry)
 
+	entry.CustomValues = 	UpdateDatetimeFields(entry.CustomValues)
+
+
 	ids := strings.Split(input.ID, ".")
 	if len(ids) < 2 {
 		return &model.CollectionEntry{}, errors.New("wrong id format")
@@ -162,12 +165,14 @@ func modifyMetaInDb(mode int, input interface{}) (res []byte, err error) {
 		if !ok {
 			return nil, errors.New("wrong mode/input in ModifyCollectionEntryMeta")
 		}
+		input_add.Fields = UpdateDatetimeFields(input_add.Fields)
 		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_fields", input_add)
 	case ModeUpdateFields:
 		input_update, ok := input.(*model.FieldsToSet)
 		if !ok {
 			return nil, errors.New("wrong mode/input in ModifyCollectionEntryMeta")
 		}
+		input_update.Fields = UpdateDatetimeFields(input_update.Fields)
 		res, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "update_fields", input_update)
 	default:
 		return nil, errors.New("wrong mode in ModifyCollectionEntryMeta")
