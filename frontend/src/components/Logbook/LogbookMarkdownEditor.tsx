@@ -9,9 +9,9 @@ import './LogbookMarkdownEditor.css';
 
 import {EditorState, Plugin, PluginKey, Transaction} from "prosemirror-state";
 import {Decoration, DecorationSet, EditorView} from "prosemirror-view";
-import React, {forwardRef, useEffect, useImperativeHandle, useRef} from "react";
+import React, {forwardRef, MutableRefObject, useEffect, useImperativeHandle, useRef} from "react";
 import {createStyles, makeStyles} from "@material-ui/core/styles";
-import {Dropdown, MenuItem} from "prosemirror-menu";
+import {Dropdown, MenuItem, MenuItemSpec} from "prosemirror-menu";
 import {
     addColumnAfter,
     addColumnBefore,
@@ -31,6 +31,12 @@ import {ChangeableImageRef} from "./LogbookUtils";
 import {useTheme} from "@material-ui/core";
 import {ApplicationApiBaseUrl} from "../../common";
 import {AttachedFileInfo} from "./LogbookNewEntryCreator";
+import FormatBoldIcon from '@material-ui/icons/FormatBold';
+import FormatItalicIcon from '@material-ui/icons/FormatItalic';
+import LinkIcon from '@material-ui/icons/Link';
+import UndoIcon from '@material-ui/icons/Undo';
+import RedoIcon from '@material-ui/icons/Redo';
+import FormatQuoteIcon from '@material-ui/icons/FormatQuote';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {exampleSetup, buildMenuItems} = require('prosemirror-example-setup');
@@ -50,7 +56,9 @@ export const schemaWithTable = new Schema({
     marks: baseSchema.spec.marks
 });
 
-function createMenu(onFileUpload: (file: File) => Promise<AttachedFileInfo | undefined>, addNewChangeableImageHandle: () => ChangeableImageRef): any {
+function createMenu(onFileUpload: (file: File) => Promise<AttachedFileInfo | undefined>, addNewChangeableImageHandle: () => ChangeableImageRef, iconPaths: {
+    bold: string, italic: string, link: string, undo: string, redo: string, quote: string
+}): any {
     const menu = buildMenuItems(schemaWithTable).fullMenu;
     function item(label: string, cmd: any) {
         return new MenuItem({label, select: cmd, run: cmd});
@@ -76,11 +84,25 @@ function createMenu(onFileUpload: (file: File) => Promise<AttachedFileInfo | und
     ];
     menu.splice(2, 0, [new Dropdown(tableMenu, {label: "Table"})]);
 
+    function replaceIcon(button: MenuItem, newIconPath: string) {
+        button.spec.icon = {
+            height: 24, // material ui default size
+            width: 24,
+            path: newIconPath,
+        };
+    }
+
+    replaceIcon(menu[0][0], iconPaths.bold);
+    replaceIcon(menu[0][1], iconPaths.italic);
+    replaceIcon(menu[0][3], iconPaths.link);
+    replaceIcon(menu[3][0], iconPaths.undo);
+    replaceIcon(menu[3][1], iconPaths.redo);
+    replaceIcon(menu[4][0], iconPaths.quote);
+
     // Push into the "insert" menu
     const insertSubMenu = menu[1][0];
 
     const orgImageInsert = insertSubMenu.content.find((item: any) => item.spec.label === 'Image');
-    console.log('FINDME', insertSubMenu.content, orgImageInsert);
     const indexOfOrgImageInsert = insertSubMenu.content.indexOf(orgImageInsert);
     if (indexOfOrgImageInsert !== -1) {
         insertSubMenu.content.splice(indexOfOrgImageInsert, 1);
@@ -241,6 +263,17 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
     const classes = useStyles();
 
     const viewHost = useRef() as any;
+
+    // Since prosemirror requires us to directly use a SVG "path" when replacing the icons
+    // we have to create a hidden image for each icon we want to replace, in order to get the path
+    const $boldIcon = useRef() as MutableRefObject<HTMLDivElement>;
+    const $italicIcon = useRef() as MutableRefObject<HTMLDivElement>;
+    const $linkIcon = useRef() as MutableRefObject<HTMLDivElement>;
+    const $undoIcon = useRef() as MutableRefObject<HTMLDivElement>;
+    const $redoIcon = useRef() as MutableRefObject<HTMLDivElement>;
+    const $quoteIcon = useRef() as MutableRefObject<HTMLDivElement>;
+
+
     const $view = useRef<EditorView>(null) as any;
 
     function addNewChangeableImageHandle(): ChangeableImageRef {
@@ -276,10 +309,40 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
         addNewChangeableImageHandle,
     }));
 
+    // Get all the paths we want to use
+    const boldIconPath = $boldIcon.current?.querySelector('svg > path')?.getAttribute('d');
+    const italicIconPath = $italicIcon.current?.querySelector('svg > path')?.getAttribute('d');
+    const linkIconPath = $linkIcon.current?.querySelector('svg > path')?.getAttribute('d');
+    const undoIconPath = $undoIcon.current?.querySelector('svg > path')?.getAttribute('d');
+    const redoIconPath = $redoIcon.current?.querySelector('svg > path')?.getAttribute('d');
+    const quoteIconPath = $quoteIcon.current?.querySelector('svg > path')?.getAttribute('d');
+
+    const hasAllIcons =
+        !!boldIconPath &&
+        !!italicIconPath &&
+        !!linkIconPath &&
+        !!undoIconPath &&
+        !!redoIconPath &&
+        !!quoteIconPath;
+
     useEffect(() => { // initial render
+        if (!hasAllIcons) {
+            return;
+        }
+
         const state = EditorState.create({schema: schemaWithTable, plugins: [
             tableEditing(), pendingImageManagerPlugin
-        ].concat(exampleSetup({schema: schemaWithTable, menuContent: createMenu(props.onFileUpload, addNewChangeableImageHandle)}))});
+        ].concat(exampleSetup({
+                schema: schemaWithTable,
+                menuContent: createMenu(props.onFileUpload, addNewChangeableImageHandle, {
+                    bold: boldIconPath as string,
+                    italic: italicIconPath as string,
+                    link: linkIconPath as string,
+                    undo: undoIconPath as string,
+                    redo: redoIconPath as string,
+                    quote: quoteIconPath as string,
+                })
+        }))});
 
 
         const emptyDocString = '{"type":"doc","content":[{"type":"paragraph"}]}';
@@ -298,9 +361,12 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
         props.onHasContent(JSON.stringify($view.current.state.doc.toJSON()) != emptyDocString);
 
         return () => $view.current.destroy();
-    }, []);
+    }, [hasAllIcons]);
 
     useEffect(() => { // every render
+        if (!$view.current) {
+            return;
+        }
         const tr = $view.current.state.tr.setMeta(reactPropsKey, {});
         $view.current.dispatch(tr);
     });
@@ -312,7 +378,29 @@ const LogbookMarkdownEditor = forwardRef<LogbookMarkdownEditorInterface, Logbook
         '--prose-mirror-text-color': theme.palette.text.primary,
     } as React.CSSProperties;
 
-    return <div id="editor" ref={viewHost} style={styleVars} className={classes.editor} />;
+    return <React.Fragment>
+            <div id="hiddenIcons" style={{display: 'none'}}>
+                <div ref={$boldIcon}>
+                    <FormatBoldIcon />
+                </div>
+                <div ref={$italicIcon}>
+                    <FormatItalicIcon />
+                </div>
+                <div ref={$linkIcon}>
+                    <LinkIcon />
+                </div>
+                <div ref={$undoIcon}>
+                    <UndoIcon />
+                </div>
+                <div ref={$redoIcon}>
+                    <RedoIcon />
+                </div>
+                <div ref={$quoteIcon}>
+                    <FormatQuoteIcon />
+                </div>
+            </div>
+            <div id="editor" ref={viewHost} style={styleVars} className={classes.editor} />
+        </React.Fragment>;
 });
 
 export default LogbookMarkdownEditor;

@@ -49,6 +49,7 @@ function App(): JSX.Element {
             themeType = saved_thema as PaletteType || themeType;
         }
     }
+    themeType = Number(1) > 0 ? "dark" : "light";
 
     const theme = createMuiTheme({
         overrides: {

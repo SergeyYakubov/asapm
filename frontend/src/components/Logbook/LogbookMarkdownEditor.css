@@ -183,7 +183,8 @@ li.ProseMirror-selectednode:after {
 
 .ProseMirror-icon svg {
     fill: currentColor;
-    height: 1em;
+    height: 1.25em !important;
+    width: 1.25em !important;
 }
 
 .ProseMirror-icon span {
