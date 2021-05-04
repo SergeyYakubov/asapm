@@ -57,7 +57,7 @@ build_frontend:
 deploy-frontend:
   stage: deploy
   image:
-    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+    name: gitlab.desy.de:5555/k8s/helm-ci-image:latest
     entrypoint: [""]
   script:
     - DYNAMIC_ENVIRONMENT_URL=$(echo ${FRONTEND_URL})
@@ -66,7 +66,7 @@ deploy-frontend:
       --set frontend.image=${FRONTEND_IMAGE}
       --set resourceSuffix="-${CI_COMMIT_SHORT_SHA}"
       --set frontend.imageCredentials.use=true
-      --set frontend.imageCredentials.registry=eosc-pan-git.desy.de:5555
+      --set frontend.imageCredentials.registry=gitlab.desy.de:5555
       --set frontend.imageCredentials.username=${REGISTRY_USERNAME}
       --set frontend.imageCredentials.password=${REGISTRY_PASS}
       --set frontend.host="*.desy.de"
@@ -104,7 +104,7 @@ int_tests_frontend:
 destroy-frontend:
   stage: destroy_deployments
   image:
-    name: eosc-pan-git.desy.de:5555/k8s/helm-ci-image:latest
+    name: gitlab.desy.de:5555/k8s/helm-ci-image:latest
     entrypoint: [""]
   script:
     - helm uninstall -n $KUBE_NAMESPACE asapm-frontend-${CI_COMMIT_SHORT_SHA}

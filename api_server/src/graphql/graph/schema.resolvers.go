@@ -15,7 +15,13 @@ import (
 )
 
 func (r *mutationResolver) ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToSet) (*model.BeamtimeMeta, error) {
-	res, err := meta.ModifyBeamtimeMeta(input)
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return &model.BeamtimeMeta{}, errors.New("access denied: " + err.Error())
+	}
+
+	res, err := meta.ModifyBeamtimeMeta(acl, input)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -54,7 +60,13 @@ func (r *mutationResolver) AddCollectionEntry(ctx context.Context, input model.N
 	log_str := "processing request add_collection_entry"
 	logger.Debug(log_str)
 
-	res, err := meta.AddCollectionEntry(input)
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return &model.CollectionEntry{}, errors.New("access denied: " + err.Error())
+	}
+
+	res, err := meta.AddCollectionEntry(acl, input)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -78,10 +90,14 @@ func (r *queryResolver) Collections(ctx context.Context, filter *string, orderBy
 }
 
 func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
-	log_str := "processing request create_meta"
-	logger.Debug(log_str)
+	logger.Debug("processing request create_meta")
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return &model.BeamtimeMeta{}, errors.New("access denied: " + err.Error())
+	}
 
-	resultId, err := meta.CreateBeamtimeMeta(input)
+	resultId, err := meta.CreateBeamtimeMeta(acl, input)
 	if err != nil {
 		return resultId, err
 	}
@@ -126,9 +142,13 @@ func (r *queryResolver) UniqueFields(ctx context.Context, filter *string, keys [
 }
 
 func (r *mutationResolver) DeleteMeta(ctx context.Context, id string) (*string, error) {
-	log_str := "processing request delete_meta"
-	logger.Debug(log_str)
-	resultId, err := meta.DeleteBeamtimeMetaAndCollections(id)
+	logger.Debug("processing request delete_meta")
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+	resultId, err := meta.DeleteBeamtimeMetaAndCollections(acl, id)
 	if err != nil {
 		return resultId, err
 	}
@@ -138,9 +158,14 @@ func (r *mutationResolver) DeleteMeta(ctx context.Context, id string) (*string, 
 }
 
 func (r *mutationResolver) DeleteSubcollection(ctx context.Context, id string) (*string, error) {
-	log_str := "processing request delete_collection"
-	logger.Debug(log_str)
-	resultId, err := meta.DeleteCollectionsAndSubcollectionMeta(id)
+	logger.Debug("processing request delete_collection")
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	resultId, err := meta.DeleteCollectionsAndSubcollectionMeta(acl, id)
 	if err != nil {
 		return resultId, err
 	}
@@ -195,7 +220,7 @@ func (r *mutationResolver) RemoveLogEntry(ctx context.Context, id string) (*stri
 	}
 
 	// Note: logEntryMsg.Beamtime is only the parent id
-	if !acl.HasAccessToBeamtime(logEntryMsg.Facility, *logEntryMsg.Beamtime) {
+	if !acl.HasWriteAccessToBeamtime(logEntryMsg.Facility, *logEntryMsg.Beamtime) {
 		logger.Error("HasAccessToBeamtime; access denied")
 		return nil, errors.New("access denied")
 	}

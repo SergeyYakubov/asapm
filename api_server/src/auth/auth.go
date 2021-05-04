@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"asapm/common/config"
 	"asapm/common/utils"
+	"asapm/graphql/graph/model"
 	"context"
 	"encoding/json"
 	"errors"
@@ -12,7 +14,7 @@ import (
 
 const kDoorUserRole = "door_user"
 
-type userProps struct {
+type UserProps struct {
 	UserName        string
 	FullName        string
 	Email           string
@@ -23,6 +25,9 @@ type userProps struct {
 
 const (
 	IngestMeta = iota
+	ModifyMeta
+	DeleteMeta
+	DeleteSubcollection
 	IngestSubcollection
 )
 
@@ -33,21 +38,47 @@ type AuthorizedEntity struct {
 	Activity int
 }
 
+func MetaToAuthorizedEntity(meta model.BeamtimeMeta, activity int) (res AuthorizedEntity) {
+	if meta.Facility != nil {
+		res.Facility = *meta.Facility
+	}
+	if meta.Beamline != nil {
+		res.Beamline = *meta.Beamline
+	}
+	res.Beamtime = meta.ID
+	res.Activity = activity
+	return
+}
+
+func CollectionToAuthorizedEntity(meta model.CollectionEntry, activity int) (res AuthorizedEntity) {
+	if meta.ParentBeamtimeMeta.Facility != nil {
+		res.Facility = *meta.ParentBeamtimeMeta.Facility
+	}
+	if meta.ParentBeamtimeMeta.Beamline != nil {
+		res.Beamline = *meta.ParentBeamtimeMeta.Beamline
+	}
+	res.Beamtime = meta.ParentBeamtimeMeta.ID
+	res.Activity = activity
+	return
+}
+
 type MetaAcl struct {
-	ImmediateDeny     bool
-	ImmediateAccess   bool // Indicates an sort of 'Admin' account, access to all
-	AllowedBeamtimes  []string
-	AllowedBeamlines  []string
-	AllowedFacilities []string
-	DoorUser          string
+	ImmediateDeny       bool
+	AdminAccess         bool
+	ImmediateReadAccess bool
+	AllowedBeamtimes    []string
+	AllowedBeamlines    []string
+	AllowedFacilities   []string
+	DoorUser            string
+	UserProps           UserProps
 }
 
 func (acl MetaAcl) HasAccessToFacility(facility string) bool {
-	return !acl.ImmediateDeny && (acl.ImmediateAccess || utils.StringInSlice(facility, acl.AllowedFacilities))
+	return !acl.ImmediateDeny && (acl.AdminAccess || utils.StringInSlice(facility, acl.AllowedFacilities))
 }
 
-func (acl MetaAcl) HasAccessToBeamtime(facility string, beamtime string) bool {
-	return !acl.ImmediateDeny && (acl.ImmediateAccess ||
+func (acl MetaAcl) HasWriteAccessToBeamtime(facility string, beamtime string) bool {
+	return !acl.ImmediateDeny && (acl.AdminAccess ||
 		(utils.StringInSlice(facility, acl.AllowedFacilities) && utils.StringInSlice(beamtime, acl.AllowedBeamtimes)))
 }
 
@@ -72,15 +103,14 @@ func BypassAuth(fn http.HandlerFunc) http.HandlerFunc {
 		jwtClaims := jwt.MapClaims{}
 
 		utils.InterfaceToInterface(&claims, &jwtClaims)
-
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &jwtClaims)
 		fn(w, r.WithContext(ctx))
 	}
 }
 
-func userPropsFromClaim(claim map[string]interface{}) (userProps, error) {
-	var props userProps
+func userPropsFromClaim(claim map[string]interface{}) (UserProps, error) {
+	var props UserProps
 	bClaim, _ := json.Marshal(&claim)
 	fields := claimFields{}
 
@@ -113,8 +143,8 @@ func checkAuthorizedParty(authorizedParty string) error {
 	return nil
 }
 
-func userPropsFromContext(ctx context.Context) (userProps, error) {
-	var props userProps
+func UserPropsFromContext(ctx context.Context) (UserProps, error) {
+	var props UserProps
 	var claims map[string]interface{}
 	if err := utils.JobClaimFromContext(ctx, &claims); err != nil {
 		return props, err
@@ -132,7 +162,7 @@ func userPropsFromContext(ctx context.Context) (userProps, error) {
 }
 
 func GetUsernameFromContext(ctx context.Context) (string, error) {
-	props, err := userPropsFromContext(ctx)
+	props, err := UserPropsFromContext(ctx)
 	if err != nil {
 		return "Unauthorized", err
 	}
@@ -141,7 +171,7 @@ func GetUsernameFromContext(ctx context.Context) (string, error) {
 
 // Will FullName, fallbacks to UserName
 func GetPreferredFullNameFromContext(ctx context.Context) (string, error) {
-	props, err := userPropsFromContext(ctx)
+	props, err := UserPropsFromContext(ctx)
 	if err != nil {
 		return "Unauthorized", err
 	}
@@ -151,34 +181,22 @@ func GetPreferredFullNameFromContext(ctx context.Context) (string, error) {
 	return props.FullName, nil
 }
 
-func AuthorizeWrite(ctx context.Context) error {
-	props, err := userPropsFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	if !utils.StringInSlice("admin", props.Roles) && !utils.StringInSlice("ingestor", props.Roles) {
-		return errors.New("need admin or ingestor role")
-	}
-	return nil
-}
-
-func checkImmediateReadAccess(props userProps) bool {
+func checkImmediateAccess(props UserProps) (bool, bool) {
 	if utils.StringInSlice("admin", props.Roles) {
-		return true
+		return true, true
 	}
 
 	groupsThatCanRead := []string{"fs-dmgt", "fsdata"}
 	for _, group := range groupsThatCanRead {
 		if utils.StringInSlice(group, props.Groups) {
-			return true
+			return false, true
 		}
 	}
 
-	return false
+	return false, false
 }
 
-func extractGroupWithSuffix(groups []string, suffixes []string, props userProps) []string {
+func extractGroupWithSuffix(groups []string, suffixes []string, props UserProps) []string {
 	for _, suffix := range suffixes {
 		for _, group := range props.Groups {
 			if strings.HasSuffix(group, suffix) {
@@ -189,15 +207,37 @@ func extractGroupWithSuffix(groups []string, suffixes []string, props userProps)
 	return groups
 }
 
-func addAllowedBeamtimes(acl MetaAcl, props userProps) MetaAcl {
+func extractRoleWithPrefix(entities []string, prefixes []string, props UserProps) []string {
+	for _, prefix := range prefixes {
+		for _, role := range props.Roles {
+			if strings.HasPrefix(role, prefix) {
+				entities = append(entities, strings.TrimPrefix(role, prefix))
+			}
+		}
+	}
+	return entities
+}
+
+func addAllowedBeamtimes(acl MetaAcl, props UserProps) MetaAcl {
 	beamtimeSuffixes := []string{"-clbt", "-part", "-dmgt"}
 	acl.AllowedBeamtimes = extractGroupWithSuffix(acl.AllowedBeamtimes, beamtimeSuffixes, props)
 	return acl
 }
 
-func addAllowedBeamlines(acl MetaAcl, props userProps) MetaAcl {
+func addAllowedFacilities(acl MetaAcl, props UserProps) MetaAcl {
+	if utils.StringInSlice("facility", config.Config.Authorization.AdminLevels) {
+		acl.AllowedFacilities = extractRoleWithPrefix(acl.AllowedFacilities, []string{"admin_f_"}, props)
+	}
+	return acl
+}
+
+func addAllowedBeamlines(acl MetaAcl, props UserProps) MetaAcl {
 	beamlineSuffixes := []string{"dmgt", "staff"}
 	acl.AllowedBeamlines = extractGroupWithSuffix(acl.AllowedBeamlines, beamlineSuffixes, props)
+	if utils.StringInSlice("beamline", config.Config.Authorization.AdminLevels) {
+		acl.AllowedBeamlines = extractRoleWithPrefix(acl.AllowedBeamlines, []string{"admin_b_"}, props)
+	}
+
 	for i, bl := range acl.AllowedBeamlines {
 		if bl == "p021" || bl == "p022" || bl == "p211" || bl == "p212" {
 			bl_new := bl[:3] + "." + bl[3:]
@@ -207,34 +247,64 @@ func addAllowedBeamlines(acl MetaAcl, props userProps) MetaAcl {
 	return acl
 }
 
-func AuthorizeOperation(ctx context.Context, entry AuthorizedEntity) error {
-	return nil
+func AuthorizeOperation(acl MetaAcl, entry AuthorizedEntity) error {
+	if acl.AdminAccess {
+		return nil
+	}
+
+	if acl.ImmediateDeny {
+		return errors.New("access denied")
+	}
+
+	if utils.StringInSlice("facility", config.Config.Authorization.AdminLevels) {
+		if utils.StringInSlice("admin_f_"+entry.Facility, acl.UserProps.Roles) {
+			return nil
+		}
+	}
+
+	if utils.StringInSlice("beamline", config.Config.Authorization.AdminLevels) {
+		if utils.StringInSlice("admin_b_"+entry.Beamline, acl.UserProps.Roles) {
+			return nil
+		}
+	}
+
+	if (entry.Activity == IngestMeta || entry.Activity == IngestSubcollection || entry.Activity == ModifyMeta) && utils.StringInSlice("ingestor", acl.UserProps.Roles) {
+		return nil
+	}
+
+	return errors.New("denied")
 }
 
 func ReadAclFromContext(ctx context.Context) (MetaAcl, error) {
 	var acl MetaAcl
-	props, err := userPropsFromContext(ctx)
+	props, err := UserPropsFromContext(ctx)
 	if err != nil {
 		return acl, err
 	}
 
-	if checkImmediateReadAccess(props) {
-		acl.ImmediateAccess = true
-		return acl, nil
-	}
+	acl.AdminAccess, acl.ImmediateReadAccess = checkImmediateAccess(props)
 
 	acl = addAllowedBeamlines(acl, props)
 	acl = addAllowedBeamtimes(acl, props)
+	acl = addAllowedFacilities(acl, props)
 
 	if utils.StringInSlice(kDoorUserRole, props.Roles) {
 		acl.DoorUser = strings.TrimSuffix(props.UserName, "@door")
 	}
 
-	if acl.AllowedBeamlines == nil && acl.AllowedBeamtimes == nil &&
-		acl.AllowedFacilities == nil && acl.DoorUser == "" {
+	if acl.AllowedBeamlines == nil &&
+		acl.AllowedBeamtimes == nil &&
+		acl.AllowedFacilities == nil &&
+		acl.DoorUser == "" &&
+		!acl.ImmediateReadAccess &&
+		!acl.AdminAccess &&
+		len(props.Roles) == 0 {
+
 		acl.ImmediateDeny = true
+
 	}
 
+	acl.UserProps = props
 	return acl, nil
 }
 
@@ -258,16 +328,14 @@ func addFilterForNameInList(currentFilter, name string, list []string) string {
 	return currentFilter
 }
 
-func AddAclToSqlFilter(acl MetaAcl, curFilter *string, filterFields FilterFields) *string {
+func AclToSqlFilter(acl MetaAcl, filterFields FilterFields) string {
+	if acl.AdminAccess || acl.ImmediateReadAccess {
+		return ""
+	}
 	aclFilter := addFilterForNameInList("", filterFields.BeamtimeId, acl.AllowedBeamtimes)
 	aclFilter = addFilterForNameInList(aclFilter, filterFields.Beamline, acl.AllowedBeamlines)
 	aclFilter = addFilterForNameInList(aclFilter, filterFields.Facility, acl.AllowedFacilities)
 	aclFilter = addFilterForDoorUser(aclFilter, acl.DoorUser)
 
-	if curFilter != nil && *curFilter != "" {
-		s := "(" + aclFilter + ") AND (" + *curFilter + ")"
-		return &s
-	} else {
-		return &aclFilter
-	}
+	return aclFilter
 }

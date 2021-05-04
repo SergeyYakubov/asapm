@@ -108,9 +108,12 @@ func TestMongoDBReadRecord(t *testing.T) {
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 
 	str := "((eventEnd < isodate('2020-09-25T08:45:24Z')) and (eventEnd > isodate('2019-09-25T08:45:24Z')))"
+	systemStr := "id = '123'"
+
 	var fs = FilterAndSort{
-		Filter: str,
-		Order:  "",
+		UserFilter:   str,
+		SystemFilter: systemStr,
+		Order:        "",
 	}
 	var res []*model.BeamtimeMeta
 	_, err = mongodb.ProcessRequest(dbname, collection, "read_records", fs, &res)
@@ -124,7 +127,7 @@ func TestMongoDBDeleteRecordNotFound(t *testing.T) {
 	defer cleanup()
 	id := "12345"
 	var fs = FilterAndSort{
-		Filter: "id = '" + id + "'",
+		UserFilter: "id = '" + id + "'",
 	}
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_record", fs, true)
 	assert.NotNil(t, err)
@@ -137,7 +140,7 @@ func TestMongoDBDeleteRecord(t *testing.T) {
 	rec := TestMetaRecord{id, []TestCollectionEntry{}, time.Now()}
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	var fs = FilterAndSort{
-		Filter: "id = '" + id + "'",
+		UserFilter: "id = '" + id + "'",
 	}
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_records", fs, true)
 	assert.Nil(t, err)
@@ -217,9 +220,9 @@ func TestMongoDBUpdateRecord(t *testing.T) {
 	_, err = mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	assert.Nil(t, err)
 
-	var update    model.FieldsToSet
+	var update model.FieldsToSet
 	update.ID = "123"
-	update.Fields =  map[string]interface{}{"status":"stopped","users.doorDb":[]string{"hello", "buy"}}
+	update.Fields = map[string]interface{}{"status": "stopped", "users.doorDb": []string{"hello", "buy"}}
 
 	res, err := mongodb.ProcessRequest(dbname, collection, "update_fields", &update)
 
@@ -255,7 +258,7 @@ func TestMongoDBDeleteFields(t *testing.T) {
 }
 
 func toMap(str string) (res map[string]interface{}) {
-	json.Unmarshal([]byte(str),&res)
+	json.Unmarshal([]byte(str), &res)
 	return res
 }
 
@@ -285,7 +288,6 @@ var UpdateFieldsTest = []struct {
 		TestUserMetaRecord{"1", toMap(`{"simple": "345", "nested":{"val1":3,"val2":2}}`)},
 		true, "update nested field"},
 
-
 	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
 		model.FieldsToSet{"1", toMap(`{"customValues": {"non_exist": "345", "nested":{"val1":3}}}`)},
 		false,
@@ -297,7 +299,6 @@ var UpdateFieldsTest = []struct {
 		false,
 		TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22,"non_exist": "345", "nested":{"val1":3}}`)},
 		false, "add existing field"},
-
 }
 
 func TestMongoDBUpdateFields(t *testing.T) {
@@ -312,7 +313,7 @@ func TestMongoDBUpdateFields(t *testing.T) {
 		} else {
 			op = "add_fields"
 		}
-		res, err := mongodb.ProcessRequest(dbname, collection, op,&test.update)
+		res, err := mongodb.ProcessRequest(dbname, collection, op, &test.update)
 		if test.ok {
 			assert.Nil(t, err, test.message)
 			expectedOutput, _ := json.Marshal(test.output)
@@ -321,7 +322,7 @@ func TestMongoDBUpdateFields(t *testing.T) {
 			assert.NotNil(t, err, test.message)
 		}
 		fs := FilterAndSort{
-			Filter: "id = '" + test.input.ID + "'",
+			UserFilter: "id = '" + test.input.ID + "'",
 		}
 		mongodb.ProcessRequest(dbname, collection, "delete_records", fs, true)
 	}

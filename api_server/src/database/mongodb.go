@@ -341,16 +341,10 @@ func (db *Mongodb) uniqueFields(dbName string, dataCollectionName string, extra_
 	}
 
 	c := db.client.Database(dbName).Collection(dataCollectionName)
-	q := bson.M{}
-	var err error
-	queryStr := getQueryString(fs)
 
-	if queryStr != "" {
-		queryStr = strings.ReplaceAll(queryStr, "\\", "\\\\")
-		q, _, err = db.BSONFromSQL(queryStr)
-		if err != nil {
-			return nil, err
-		}
+	q, _, err := db.getQueryAndSort(fs)
+	if err != nil {
+		return nil, err
 	}
 
 	res, err := c.Distinct(context.TODO(), key, q)
@@ -435,22 +429,25 @@ func (db *Mongodb) deleteArrayElement(dbName string, dataCollectionName string, 
 	return nil, err
 }
 
-func getQueryString(fs FilterAndSort) string {
-	queryStr := ""
+func getQueryStrings(fs FilterAndSort) (userQueryStr string, systemQueryStr string) {
 
-	if fs.Filter != "" {
-		queryStr = " where " + fs.Filter
+	if fs.UserFilter != "" {
+		userQueryStr = " where " + fs.UserFilter
+	}
+
+	if fs.SystemFilter != "" {
+		systemQueryStr = " where " + fs.SystemFilter
 	}
 
 	if fs.Order != "" {
-		queryStr = queryStr + " order by " + fs.Order
+		userQueryStr = userQueryStr + " order by " + fs.Order
+		systemQueryStr = systemQueryStr + " order by " + fs.Order
 	}
 
-	if queryStr == "" {
-		return ""
-	}
+	userQueryStr = strings.ReplaceAll(userQueryStr, "\\", "\\\\")
+	systemQueryStr = strings.ReplaceAll(systemQueryStr, "\\", "\\\\")
 
-	return queryStr
+	return
 }
 
 func (db *Mongodb) deleteRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
@@ -470,16 +467,11 @@ func (db *Mongodb) deleteRecords(dbName string, dataCollectionName string, extra
 		return nil, errors.New("mongo: errorOnNoDocuments must be bool")
 	}
 
-	q := bson.M{}
-	var err error
-	queryStr := getQueryString(fs)
-
-	if queryStr != "" {
-		q, _, err = db.BSONFromSQL(queryStr)
-		if err != nil {
-			return nil, err
-		}
+	q, _, err := db.getQueryAndSort(fs)
+	if err != nil {
+		return nil, err
 	}
+
 	deleted, err := c.DeleteMany(context.TODO(), q, options.Delete())
 	if err != nil {
 		return nil, err
@@ -517,31 +509,45 @@ func (db *Mongodb) deleteRecordByObjectId(dbName string, dataCollectionName stri
 	return nil, nil
 }
 
-func (db *Mongodb) getQueryAndSort(extra_params ...interface{}) (q bson.M, sort bson.M, err error) {
-	if len(extra_params) != 2 {
-		return bson.M{}, bson.M{}, errors.New("wrong number of parameters")
-	}
-
-	fs, ok := extra_params[0].(FilterAndSort)
-	if !ok {
-		return bson.M{}, bson.M{}, errors.New("mongo: filter and sort must be set")
-	}
-
-	queryStr := getQueryString(fs)
-	if queryStr != "" {
-		queryStr = strings.ReplaceAll(queryStr, "\\", "\\\\")
-		q, sort, err = db.BSONFromSQL(queryStr)
+func (db *Mongodb) getQueryAndSort(fs FilterAndSort) (q bson.M, sort bson.M, err error) {
+	userQueryStr, systemQueryStr := getQueryStrings(fs)
+	if userQueryStr != "" {
+		q, sort, err = db.BSONFromSQL(userQueryStr)
 		if err != nil {
 			return bson.M{}, bson.M{}, err
 		}
 	}
-	return q, sort, nil
+	qSystem := bson.M{}
+	if systemQueryStr != "" {
+		qSystem, sort, err = db.BSONFromSQL(systemQueryStr)
+		if err != nil {
+			return bson.M{}, bson.M{}, err
+		}
+	}
+	if userQueryStr == "" {
+		return qSystem, sort, nil
+	}
+
+	if systemQueryStr == "" {
+		return q, sort, nil
+	}
+
+	return bson.M{"$and": []bson.M{q, qSystem}}, sort, nil
 }
 
 func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 
-	q, sort, err := db.getQueryAndSort(extra_params...)
+	if len(extra_params) != 2 {
+		return nil, errors.New("readRecords: wrong number of parameters")
+	}
+
+	fs, ok := extra_params[0].(FilterAndSort)
+	if !ok {
+		return nil, errors.New("mongo: filter and sort must be set")
+	}
+
+	q, sort, err := db.getQueryAndSort(fs)
 	if err != nil {
 		return nil, err
 	}
@@ -565,7 +571,16 @@ func (db *Mongodb) readRecords(dbName string, dataCollectionName string, extra_p
 func (db *Mongodb) readRecordWithFilter(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
 	c := db.client.Database(dbName).Collection(dataCollectionName)
 
-	q, sort, err := db.getQueryAndSort(extra_params...)
+	if len(extra_params) != 2 {
+		return nil, errors.New("readRecords: wrong number of parameters")
+	}
+
+	fs, ok := extra_params[0].(FilterAndSort)
+	if !ok {
+		return nil, errors.New("mongo: filter and sort must be set")
+	}
+
+	q, sort, err := db.getQueryAndSort(fs)
 	if err != nil {
 		return nil, err
 	}

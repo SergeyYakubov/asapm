@@ -9,11 +9,6 @@ schema = sgqlc.types.Schema()
 ########################################################################
 # Scalars and Enumerations
 ########################################################################
-class Acls(sgqlc.types.Enum):
-    __schema__ = schema
-    __choices__ = ('ADMIN', 'READ')
-
-
 Boolean = sgqlc.types.Boolean
 
 DateTime = sgqlc.types.datetime.DateTime

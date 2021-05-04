@@ -2,6 +2,7 @@ package meta
 
 import (
 	"asapm/auth"
+	"asapm/common/config"
 	"asapm/common/logger"
 	"asapm/common/utils"
 	"asapm/database"
@@ -77,9 +78,28 @@ var beamtime_meta = `
 	}
 }	`
 
+var subcollection_meta = `
+{
+	"_id": "81999364.1",
+	"type": "collection",
+	"parentBeamtimeMeta" : {
+		"beamline": "p05",
+		"_id": "81999364",
+		"eventEnd": "2019-12-31T19:46:00Z",
+		"facility": "facility",
+		"generated": "2019-12-31T14:46:00Z",
+		"proposalId": "propid12345",
+		"title": "brilliant-tireless-anaconda-of-chemistry",
+		"users": {
+			"doorDb": ["aaa"],
+			"special": ["bbb"]
+		}
+	}
+}	`
+
 //prepared for testing acls, but for now only ingestor can add collections
 var aclImmediateAccess = auth.MetaAcl{
-	ImmediateAccess: true,
+	AdminAccess: true,
 }
 
 var aclImmediateDeny = auth.MetaAcl{
@@ -96,10 +116,14 @@ var AddCollectionEntryTests = []struct {
 }{
 	{aclImmediateAccess, true, "81999364.scan1", "81999364", KMetaNameInDb, "first layer"},
 	{aclImmediateAccess, true, "81999364.scan1.subscan1", "81999364.scan1", KMetaNameInDb, "second layer"},
-	//	{aclImmediateDeny, false,"12345.scan1","12345",KMetaNameInDb,"access denied"},
+	{aclImmediateDeny, false, "12345.scan1", "12345", KMetaNameInDb, "access denied"},
+	{auth.MetaAcl{UserProps: auth.UserProps{Roles: []string{"admin_f_facility"}, Groups: nil}}, true, "81999364.scan1", "81999364", KMetaNameInDb, "facility admin"},
+	{auth.MetaAcl{UserProps: auth.UserProps{Roles: []string{"admin_b_p05"}, Groups: nil}}, true, "81999364.scan1", "81999364", KMetaNameInDb, "facility admin"},
 }
 
 func (suite *CollectionTestSuite) TestAddCollectionEntry() {
+	config.Config.Authorization.AdminLevels = []string{"facility", "beamline"}
+
 	for _, test := range AddCollectionEntryTests {
 		input := model.NewCollectionEntry{
 			ID:                  test.collectionId,
@@ -109,11 +133,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			ChildCollectionName: nil,
 			CustomValues:        nil,
 		}
-		if  !test.allowed {
-			_, err := AddCollectionEntry(input)
-			suite.NotNil(err)
-			continue
-		}
+
 		baseInput := model.BaseCollectionEntry{
 			ID:         input.ID,
 			EventStart: input.EventStart,
@@ -121,41 +141,51 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			Title:      input.Title,
 		}
 
-		params_read := []interface{}{"81999364"}
-		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return([]byte(beamtime_meta), nil)
+		if !test.acl.ImmediateDeny {
+			params_read := []interface{}{"81999364"}
+			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return([]byte(beamtime_meta), nil)
+		}
 
-		params_update := []interface{}{test.parentId, "childCollection", baseInput, baseInput.ID}
-		suite.mock_db.On("ProcessRequest", "beamtime", test.dbCollectionName, "add_array_element", params_update).Return([]byte(""), nil)
+		if test.allowed {
 
+			params_update := []interface{}{test.parentId, "childCollection", baseInput, baseInput.ID}
+			suite.mock_db.On("ProcessRequest", "beamtime", test.dbCollectionName, "add_array_element", params_update).Return([]byte(""), nil)
 
-		var meta model.BeamtimeMeta
-		json.Unmarshal([]byte(beamtime_meta), &meta)
+			var meta model.BeamtimeMeta
+			json.Unmarshal([]byte(beamtime_meta), &meta)
 
-		var input_entry model.CollectionEntry
-		utils.DeepCopy(input, &input_entry)
-		input_entry.Type = KCollectionTypeName
-		input_entry.ChildCollection = []*model.BaseCollectionEntry{}
-		col := KDefaultCollectionName
-		input_entry.ChildCollectionName = &col
-		input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
-		input_entry.ParentID = test.parentId
-		bentry, _ := json.Marshal(&input_entry)
-		sentry := string(bentry)
-		input_entry.JSONString = &sentry
+			var input_entry model.CollectionEntry
+			utils.DeepCopy(input, &input_entry)
+			input_entry.Type = KCollectionTypeName
+			input_entry.ChildCollection = []*model.BaseCollectionEntry{}
+			col := KDefaultCollectionName
+			input_entry.ChildCollectionName = &col
+			input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
+			input_entry.ParentID = test.parentId
+			bentry, _ := json.Marshal(&input_entry)
+			sentry := string(bentry)
+			input_entry.JSONString = &sentry
 
-		params_create := []interface{}{&input_entry}
-		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "create_record", params_create).Return([]byte("{}"), nil)
+			params_create := []interface{}{&input_entry}
+			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "create_record", params_create).Return([]byte("{}"), nil)
 
-		entry, err := AddCollectionEntry(input)
+		}
 
-		suite.Nil(err)
-		suite.Equal("p05", *entry.ParentBeamtimeMeta.Beamline)
-		suite.Equal("facility", *entry.ParentBeamtimeMeta.Facility)
-		suite.Equal(test.collectionId, entry.ID)
-		suite.Equal(test.parentId, entry.ParentID)
-		suite.Equal(meta.ID, entry.ParentBeamtimeMeta.ID)
-		suite.Equal("collection", entry.Type)
-
+		entry, err := AddCollectionEntry(test.acl, input)
+		if test.allowed {
+			suite.Nil(err)
+			suite.Equal("p05", *entry.ParentBeamtimeMeta.Beamline)
+			suite.Equal("facility", *entry.ParentBeamtimeMeta.Facility)
+			suite.Equal(test.collectionId, entry.ID)
+			suite.Equal(test.parentId, entry.ParentID)
+			suite.Equal("81999364", entry.ParentBeamtimeMeta.ID)
+			suite.Equal("collection", entry.Type)
+		} else {
+			suite.NotNil(err)
+		}
+		suite.mock_db.AssertExpectations(suite.T())
+		suite.mock_db.ExpectedCalls = nil
+		suite.mock_db.Calls = nil
 	}
 }
 
@@ -175,8 +205,10 @@ func (suite *CollectionTestSuite) TestDeleteSubcollection() {
 	parentId := "12345"
 
 	var fs = database.FilterAndSort{
-		Filter: "id = '12345.123' OR id regexp '^12345.123.'",
+		SystemFilter: "id = '12345.123' OR id regexp '^12345.123.'",
 	}
+
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", mock.Anything).Return([]byte(subcollection_meta), nil)
 
 	params_delete := []interface{}{fs, true}
 	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_records", params_delete).Return([]byte(""), nil)
@@ -184,66 +216,63 @@ func (suite *CollectionTestSuite) TestDeleteSubcollection() {
 	params_delete_element := []interface{}{parentId, id, "childCollection"}
 	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_array_element", params_delete_element).Return([]byte(""), nil)
 	//	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,baseEntry.ID)
-
-	res, err := DeleteCollectionsAndSubcollectionMeta(id)
+	config.Config.Authorization.AdminLevels = []string{"facility"}
+	res, err := DeleteCollectionsAndSubcollectionMeta(auth.MetaAcl{UserProps: auth.UserProps{Roles: []string{"admin_f_facility"}, Groups: nil}}, id)
 
 	suite.Nil(err)
 	suite.Equal(id, *res)
 }
 
-
-
 var beamline = "bl"
 var facility = "facility"
 
 var AddUserMetaTests = []struct {
-	acl     auth.MetaAcl
-	id string
-	mode int
-	dbCmd string
-	input   interface{}
-	meta    *model.CollectionEntry
-	resultErrors   bool
-	message string
+	acl          auth.MetaAcl
+	id           string
+	mode         int
+	dbCmd        string
+	input        interface{}
+	meta         *model.CollectionEntry
+	resultErrors bool
+	message      string
 }{
-	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToSet{
-		ID:        "12345.1",
+	{aclImmediateDeny, "12345.1", ModeAddFields, "add_fields", &model.FieldsToSet{
+		ID:     "12345.1",
 		Fields: nil,
 	}, nil, true, "immediate access deny"},
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   false,
+		AdminAccess:       false,
 		AllowedBeamtimes:  []string{"12346"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12346.1", ModeAddFields,"add_fields",&model.FieldsToSet{
-		ID:        "12346.1",
+	}, "12346.1", ModeAddFields, "add_fields", &model.FieldsToSet{
+		ID:     "12346.1",
 		Fields: nil,
 	}, &model.CollectionEntry{
-		ID:       "12346.1",
+		ID: "12346.1",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12346",
 		},
 	}, false, "ok, access via beamtime"},
 
-
-	{aclImmediateDeny,"12345.1", ModeAddFields,"add_fields",&model.FieldsToSet{
-		ID:        "12345.1",
+	{aclImmediateDeny, "12345.1", ModeAddFields, "add_fields", &model.FieldsToSet{
+		ID:     "12345.1",
 		Fields: nil,
 	}, nil, true, "immediate access deny"},
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   false,
+		AdminAccess:       false,
 		AllowedBeamtimes:  []string{"12346"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12346.2", ModeAddFields,"add_fields",&model.FieldsToSet{
-		ID:        "12346.2",
-		Fields: map[string]interface{}{"hello":2},
+	}, "12346.2", ModeAddFields, "add_fields", &model.FieldsToSet{
+		ID:     "12346.2",
+		Fields: map[string]interface{}{"hello": 2},
 	}, &model.CollectionEntry{
-		ID:       "12346.2",
+		ID: "12346.2",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12346",
 		},
@@ -251,15 +280,15 @@ var AddUserMetaTests = []struct {
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   false,
+		AdminAccess:       false,
 		AllowedBeamtimes:  []string{"12346"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12346.3", ModeAddFields,"add_fields",&model.FieldsToSet{
-		ID:        "12346.3",
-		Fields: map[string]interface{}{KUserFieldName+".hello":2},
+	}, "12346.3", ModeAddFields, "add_fields", &model.FieldsToSet{
+		ID:     "12346.3",
+		Fields: map[string]interface{}{KUserFieldName + ".hello": 2},
 	}, &model.CollectionEntry{
-		ID:       "12346.3",
+		ID: "12346.3",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12346",
 		},
@@ -267,66 +296,65 @@ var AddUserMetaTests = []struct {
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   true,
+		AdminAccess:       true,
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12346.4", ModeAddFields,"add_fields",&model.FieldsToSet{
-		ID:        "12346.4",
-		Fields: map[string]interface{}{"hello":2},
+	}, "12346.4", ModeAddFields, "add_fields", &model.FieldsToSet{
+		ID:     "12346.4",
+		Fields: map[string]interface{}{"hello": 2},
 	}, &model.CollectionEntry{
-		ID:       "12346.4",
+		ID: "12346.4",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12346",
 		},
 	}, false, "ok, does not start with user fields but admin access"},
 
-
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   false,
+		AdminAccess:       false,
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  []string{beamline},
 		AllowedFacilities: nil,
-	},"12347.1", ModeAddFields,"add_fields",&model.FieldsToSet{
-		ID:        "12347.1",
+	}, "12347.1", ModeAddFields, "add_fields", &model.FieldsToSet{
+		ID:     "12347.1",
 		Fields: nil,
 	}, &model.CollectionEntry{
-		ID:       "12347.1",
+		ID: "12347.1",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
-			ID: "12348",
+			ID:       "12348",
 			Beamline: &beamline,
 		},
 	}, false, "ok, access via beamline"},
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   false,
+		AdminAccess:       false,
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
 		AllowedFacilities: []string{facility},
-	},"12348.1", ModeAddFields,"add_fields",&model.FieldsToSet{
-		ID:        "12348.1",
+	}, "12348.1", ModeAddFields, "add_fields", &model.FieldsToSet{
+		ID:     "12348.1",
 		Fields: nil,
 	}, &model.CollectionEntry{
-		ID:       "12348.1",
+		ID: "12348.1",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
-			ID: "12349",
+			ID:       "12349",
 			Facility: &facility,
 		},
 	}, false, "ok, access via facility"},
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   true,
+		AdminAccess:       true,
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12349", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
-		ID:        "12349",
+	}, "12349", ModeDeleteFields, "delete_fields", &model.FieldsToDelete{
+		ID:     "12349",
 		Fields: []string{},
 	}, &model.CollectionEntry{
-		ID:       "12349",
+		ID: "12349",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12349",
 		},
@@ -334,15 +362,15 @@ var AddUserMetaTests = []struct {
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   false,
+		AdminAccess:       false,
 		AllowedBeamtimes:  []string{"12349"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12349", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
-		ID:        "12349",
-		Fields: []string{KUserFieldName+".hello"},
+	}, "12349", ModeDeleteFields, "delete_fields", &model.FieldsToDelete{
+		ID:     "12349",
+		Fields: []string{KUserFieldName + ".hello"},
 	}, &model.CollectionEntry{
-		ID:       "12349",
+		ID: "12349",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12349",
 		},
@@ -350,15 +378,15 @@ var AddUserMetaTests = []struct {
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   false,
+		AdminAccess:       false,
 		AllowedBeamtimes:  []string{"12351"},
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12351", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
-		ID:        "12351",
+	}, "12351", ModeDeleteFields, "delete_fields", &model.FieldsToDelete{
+		ID:     "12351",
 		Fields: []string{"hello"},
 	}, &model.CollectionEntry{
-		ID:       "12351",
+		ID: "12351",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12351",
 		},
@@ -366,32 +394,31 @@ var AddUserMetaTests = []struct {
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   true,
+		AdminAccess:       true,
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12352", ModeDeleteFields,"delete_fields",&model.FieldsToDelete{
-		ID:        "12352",
+	}, "12352", ModeDeleteFields, "delete_fields", &model.FieldsToDelete{
+		ID:     "12352",
 		Fields: []string{"hello"},
 	}, &model.CollectionEntry{
-		ID:       "12352",
+		ID: "12352",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12352",
 		},
 	}, false, "ok delete non custom values field with immediate access"},
 
-
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
-		ImmediateAccess:   true,
+		AdminAccess:       true,
 		AllowedBeamtimes:  nil,
 		AllowedBeamlines:  nil,
 		AllowedFacilities: nil,
-	},"12350", ModeUpdateFields,"update_fields",&model.FieldsToSet{
-		ID:        "12350",
+	}, "12350", ModeUpdateFields, "update_fields", &model.FieldsToSet{
+		ID:     "12350",
 		Fields: nil,
 	}, &model.CollectionEntry{
-		ID:       "12350",
+		ID: "12350",
 		ParentBeamtimeMeta: &model.ParentBeamtimeMeta{
 			ID: "12350",
 		},
@@ -401,7 +428,7 @@ var AddUserMetaTests = []struct {
 func (suite *MetaSuite) TestAddUserMeta() {
 	for _, test := range AddUserMetaTests {
 		if test.acl.ImmediateDeny {
-			_, err := ModifyCollectionEntryMeta(test.acl,ModeAddFields,test.id,test.input,[]string{},[]string{})
+			_, err := ModifyCollectionEntryMeta(test.acl, ModeAddFields, test.id, test.input, []string{}, []string{})
 			suite.NotNil(err)
 			continue
 		}
@@ -418,15 +445,13 @@ func (suite *MetaSuite) TestAddUserMeta() {
 			params := []interface{}{test.input}
 			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, test.dbCmd, params).Return(metab, nil)
 		}
-		res, err := ModifyCollectionEntryMeta(test.acl, test.mode,test.id,test.input,[]string{},[]string{})
-		if test.meta == nil || test.resultErrors{
-			suite.NotNil(err,test.message)
-			suite.Nil(res,test.message)
-		} else
-		{
-			suite.Nil(err,test.message)
-			suite.NotNil(res,test.message)
+		res, err := ModifyCollectionEntryMeta(test.acl, test.mode, test.id, test.input, []string{}, []string{})
+		if test.meta == nil || test.resultErrors {
+			suite.NotNil(err, test.message)
+			suite.Nil(res, test.message)
+		} else {
+			suite.Nil(err, test.message)
+			suite.NotNil(res, test.message)
 		}
 	}
 }
-

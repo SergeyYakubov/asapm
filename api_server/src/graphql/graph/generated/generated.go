@@ -42,7 +42,6 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	NeedAcl func(ctx context.Context, obj interface{}, next graphql.Resolver, acl model.Acls) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -1476,29 +1475,20 @@ type LogEntryQueryResult {
     hasMore: Boolean!
 }
 `, BuiltIn: false},
-	&ast.Source{Name: "../../../schema/queries.graphqls", Input: `directive @needAcl(acl: Acls!) on FIELD_DEFINITION
-#directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
-
-enum Acls {
-    ADMIN
-    READ
-}
-
-
-type Mutation {
-    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: ADMIN)
-    deleteMeta(id: String!): String @needAcl(acl: ADMIN)
-    deleteSubcollection(id: String!): String @needAcl(acl: ADMIN)
-    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: ADMIN)
-    modifyBeamtimeMeta(input: FieldsToSet!): BeamtimeMeta @needAcl(acl: ADMIN)
+	&ast.Source{Name: "../../../schema/queries.graphqls", Input: `type Mutation {
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
+    deleteMeta(id: String!): String
+    deleteSubcollection(id: String!): String
+    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry
+    modifyBeamtimeMeta(input: FieldsToSet!): BeamtimeMeta
     updateCollectionEntryFields(input: FieldsToSet!): CollectionEntry
     addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 
     # Logbook API
-    addMessageLogEntry(input: NewLogEntryMessage!): ID @needAcl(acl: ADMIN)
-    removeLogEntry(id: ID!): ID @needAcl(acl: ADMIN)
+    addMessageLogEntry(input: NewLogEntryMessage!): ID
+    removeLogEntry(id: ID!): ID
 }
 
 type Query {
@@ -1535,20 +1525,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) dir_needAcl_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.Acls
-	if tmp, ok := rawArgs["acl"]; ok {
-		arg0, err = ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["acl"] = arg0
-	return args, nil
-}
 
 func (ec *executionContext) field_BeamtimeMeta_customValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -4058,32 +4034,8 @@ func (ec *executionContext) _Mutation_createMeta(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateMeta(rctx, args["input"].(model.NewBeamtimeMeta))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.NeedAcl == nil {
-				return nil, errors.New("directive needAcl is not implemented")
-			}
-			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.BeamtimeMeta); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *asapm/graphql/graph/model.BeamtimeMeta`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateMeta(rctx, args["input"].(model.NewBeamtimeMeta))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4120,32 +4072,8 @@ func (ec *executionContext) _Mutation_deleteMeta(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeleteMeta(rctx, args["id"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.NeedAcl == nil {
-				return nil, errors.New("directive needAcl is not implemented")
-			}
-			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteMeta(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4182,32 +4110,8 @@ func (ec *executionContext) _Mutation_deleteSubcollection(ctx context.Context, f
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeleteSubcollection(rctx, args["id"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.NeedAcl == nil {
-				return nil, errors.New("directive needAcl is not implemented")
-			}
-			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSubcollection(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4244,32 +4148,8 @@ func (ec *executionContext) _Mutation_addCollectionEntry(ctx context.Context, fi
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AddCollectionEntry(rctx, args["input"].(model.NewCollectionEntry))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.NeedAcl == nil {
-				return nil, errors.New("directive needAcl is not implemented")
-			}
-			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.CollectionEntry); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *asapm/graphql/graph/model.CollectionEntry`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddCollectionEntry(rctx, args["input"].(model.NewCollectionEntry))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4306,32 +4186,8 @@ func (ec *executionContext) _Mutation_modifyBeamtimeMeta(ctx context.Context, fi
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ModifyBeamtimeMeta(rctx, args["input"].(model.FieldsToSet))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.NeedAcl == nil {
-				return nil, errors.New("directive needAcl is not implemented")
-			}
-			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.BeamtimeMeta); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *asapm/graphql/graph/model.BeamtimeMeta`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ModifyBeamtimeMeta(rctx, args["input"].(model.FieldsToSet))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4520,32 +4376,8 @@ func (ec *executionContext) _Mutation_addMessageLogEntry(ctx context.Context, fi
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AddMessageLogEntry(rctx, args["input"].(model.NewLogEntryMessage))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.NeedAcl == nil {
-				return nil, errors.New("directive needAcl is not implemented")
-			}
-			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddMessageLogEntry(rctx, args["input"].(model.NewLogEntryMessage))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4582,32 +4414,8 @@ func (ec *executionContext) _Mutation_removeLogEntry(ctx context.Context, field 
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().RemoveLogEntry(rctx, args["id"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			acl, err := ec.unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx, "ADMIN")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.NeedAcl == nil {
-				return nil, errors.New("directive needAcl is not implemented")
-			}
-			return ec.directives.NeedAcl(ctx, nil, directive0, acl)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RemoveLogEntry(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8565,15 +8373,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
-
-func (ec *executionContext) unmarshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx context.Context, v interface{}) (model.Acls, error) {
-	var res model.Acls
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalNAcls2asapmᚋgraphqlᚋgraphᚋmodelᚐAcls(ctx context.Context, sel ast.SelectionSet, v model.Acls) graphql.Marshaler {
-	return v
-}
 
 func (ec *executionContext) marshalNBaseCollectionEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntry(ctx context.Context, sel ast.SelectionSet, v model.BaseCollectionEntry) graphql.Marshaler {
 	return ec._BaseCollectionEntry(ctx, sel, &v)

@@ -3,28 +3,17 @@ package server
 import (
 	"asapm/attachment"
 	"asapm/auth"
+	"asapm/common/config"
 	log "asapm/common/logger"
 	"asapm/common/utils"
 	"asapm/graphql/graph"
 	"asapm/graphql/graph/generated"
-	"asapm/graphql/graph/model"
-	"context"
 	"fmt"
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/mux"
 	"net/http"
 )
-
-func generateGqlConfig() generated.Config {
-	c := generated.Config{Resolvers: &graph.Resolver{}}
-	c.Directives.NeedAcl = func(ctx context.Context, obj interface{}, next graphql.Resolver, acl model.Acls) (interface{}, error) {
-		ctx = context.WithValue(ctx, "schemaAcl", acl)
-		return next(ctx)
-	}
-	return c
-}
 
 func cors(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -41,9 +30,9 @@ func cors(h http.HandlerFunc) http.HandlerFunc {
 
 func StartServer() {
 	routerRoot := mux.NewRouter()
-	router := routerRoot.PathPrefix(Config.BasePath).Subrouter()
+	router := routerRoot.PathPrefix(config.Config.BasePath).Subrouter()
 
-	if !Config.Authorization.Enabled {
+	if !config.Config.Authorization.Enabled {
 		log.Warning("authorization and cors access control disabled")
 	}
 
@@ -53,26 +42,26 @@ func StartServer() {
 	// Another client can then simply GET (download) this file by providing the UUID.
 	// To upload a file the user must be authenticated.
 	attachmentRouter := router.PathPrefix("/attachments/").Subrouter()
-	if Config.Authorization.Enabled {
+	if config.Config.Authorization.Enabled {
 		attachmentRouter.Handle("/upload", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(attachment.HandleUpload),
-			Config.publicKey, Config.Authorization.Endpoint))).Methods("POST")
+			config.Config.PublicKey, config.Config.Authorization.Endpoint))).Methods("POST")
 	} else {
 		attachmentRouter.Handle("/upload", cors(auth.BypassAuth(utils.RemoveQuotes(attachment.HandleUpload)))).Methods("POST")
 	}
 	attachmentRouter.Handle("/raw/{id}", cors(utils.RemoveQuotes(attachment.HandleDownload))).Methods("GET")
 
 	// GraphQL Service
-	gqlConfig := generateGqlConfig()
-	gqlSrv := handler.NewDefaultServer(generated.NewExecutableSchema(gqlConfig))
-	if Config.Authorization.Enabled {
+	gqlSrv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+
+	if config.Config.Authorization.Enabled {
 		router.Handle("/query", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP),
-			Config.publicKey, Config.Authorization.Endpoint)))
+			config.Config.PublicKey, config.Config.Authorization.Endpoint)))
 	} else {
 		router.Handle("/query", cors(auth.BypassAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP))))
 	}
-	router.Handle("", playground.Handler("GraphQL playground", Config.BasePath+"/query"))
+	router.Handle("", playground.Handler("GraphQL playground", config.Config.BasePath+"/query"))
 
 	// Start server
-	log.Info(fmt.Sprintf("connect to http://localhost:%s%s for GraphQL playground", Config.Port, Config.BasePath))
-	log.Fatal(http.ListenAndServe(":"+Config.Port, router))
+	log.Info(fmt.Sprintf("connect to http://localhost:%s%s for GraphQL playground", config.Config.Port, config.Config.BasePath))
+	log.Fatal(http.ListenAndServe(":"+config.Config.Port, router))
 }

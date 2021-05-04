@@ -13,14 +13,14 @@ func keepFields(m map[string]interface{}, keep []string, prefix string) map[stri
 		}
 		shouldKeep := false
 		for _, k := range keep {
-			if full_key==k || strings.HasPrefix(full_key,k+".") {
+			if full_key == k || strings.HasPrefix(full_key, k+".") {
 				shouldKeep = true
 			}
 		}
 		switch v.(type) {
 		case map[string]interface{}:
 			val := keepFields(v.(map[string]interface{}), keep, full_key)
-			if len(val)!=0 {
+			if len(val) != 0 {
 				m[key] = val
 			} else {
 				delete(m, key)
@@ -42,7 +42,7 @@ func removeFields(m map[string]interface{}, remove []string, prefix string) map[
 		}
 		shouldRemove := false
 		for _, k := range remove {
-			if strings.HasPrefix(full_key,k) {
+			if strings.HasPrefix(full_key, k) {
 				shouldRemove = true
 			}
 		}
@@ -65,19 +65,20 @@ func UpdateFields(keep []string, remove []string, customValues *map[string]inter
 		*customValues = removeFields(*customValues, remove, "")
 	}
 
-	if len(*customValues)==0 {
+	if len(*customValues) == 0 {
 		*customValues = nil
 	}
 	return
 }
 
-func GetFilterAndSort(filter *string,orderBy *string) database.FilterAndSort {
+func GetFilterAndSort(systemFilter string, userFilter *string, orderBy *string) database.FilterAndSort {
 	fs := database.FilterAndSort{}
-	if filter !=nil {
-		fs.Filter =*filter
+	if userFilter != nil {
+		fs.UserFilter = *userFilter
 	}
-	if orderBy !=nil {
-		fs.Order =*orderBy
+	fs.SystemFilter = systemFilter
+	if orderBy != nil {
+		fs.Order = *orderBy
 	}
 	return fs
 }

@@ -4,6 +4,7 @@ import (
 	"asapm/common/logger"
 	"asapm/common/utils"
 	"asapm/database"
+	"asapm/graphql/graph"
 	"asapm/graphql/graph/generated"
 	"asapm/graphql/graph/model"
 	"asapm/graphql/meta"
@@ -18,7 +19,7 @@ import (
 	"testing"
 )
 
-func AddMeta(c * client.Client, resp interface{} ) {
+func AddMeta(c *client.Client, resp interface{}) {
 	query := `mutation {
   createMeta(
     input: {
@@ -38,8 +39,7 @@ func AddMeta(c * client.Client, resp interface{} ) {
 	c.MustPost(query, resp)
 }
 
-
-func AddCollectionEntry(c * client.Client, resp interface{} ) {
+func AddCollectionEntry(c *client.Client, resp interface{}) {
 	query := `mutation {
   addCollectionEntry(
     input: {
@@ -55,7 +55,6 @@ func AddCollectionEntry(c * client.Client, resp interface{} ) {
 	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request add_collection_entry")))
 	c.MustPost(query, resp)
 }
-
 
 func assertExpectations(t *testing.T, mock_db *database.MockedDatabase) {
 	mock_db.AssertExpectations(t)
@@ -75,7 +74,6 @@ func containsMatcher(substrings ...string) func(str string) bool {
 	}
 }
 
-
 type ProcessQueryTestSuite struct {
 	suite.Suite
 	mock_db *database.MockedDatabase
@@ -88,12 +86,11 @@ func TestProcessQueryTestSuite(t *testing.T) {
 func setup_and_init(t *testing.T) *database.MockedDatabase {
 	mock_db := new(database.MockedDatabase)
 	mock_db.On("Connect", mock.AnythingOfType("string")).Return(nil)
-	database.InitDB(mock_db,"")
+	database.InitDB(mock_db, "")
 	assertExpectations(t, mock_db)
 	logger.SetMockLog()
 	return mock_db
 }
-
 
 func (suite *ProcessQueryTestSuite) SetupTest() {
 	suite.mock_db = setup_and_init(suite.T())
@@ -106,42 +103,40 @@ func (suite *ProcessQueryTestSuite) TearDownTest() {
 	logger.UnsetMockLog()
 }
 
-func structfromMap (resp_map map[string]interface{},resp_struct interface{})  {
+func structfromMap(resp_map map[string]interface{}, resp_struct interface{}) {
 	m, _ := json.Marshal(&resp_map)
-	replaced := strings.ReplaceAll(string(m),"id","_id")
+	replaced := strings.ReplaceAll(string(m), "id", "_id")
 	json.Unmarshal([]byte(replaced), resp_struct)
 }
 
-
 func createClient() *client.Client {
-	sclaims:=`{"preferred_username":"dd","azp": "asapm-service", "roles": ["admin"]}`
+	sclaims := `{"preferred_username":"dd","azp": "asapm-service", "roles": ["admin"]}`
 	var claim jwt.MapClaims
-	json.Unmarshal([]byte(sclaims),&claim)
+	json.Unmarshal([]byte(sclaims), &claim)
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
 
-
-	config := generateGqlConfig()
-	return client.New(handler.NewDefaultServer(generated.NewExecutableSchema(config)),
+	gqlSrv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	return client.New(gqlSrv,
 		func(bd *client.Request) {
 			bd.HTTP = bd.HTTP.WithContext(ctx)
 		})
 }
 
 func (suite *ProcessQueryTestSuite) TestCreateMeta() {
-	c:=createClient()
+	c := createClient()
 
-	suite.mock_db.On("ProcessRequest", "beamtime", meta.KMetaNameInDb,"create_record", mock.Anything).Return([]byte("{}"), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", meta.KMetaNameInDb, "create_record", mock.Anything).Return([]byte("{}"), nil)
 
 	var b map[string]interface{}
-	AddMeta(c,&b)
+	AddMeta(c, &b)
 
 	var resp struct {
 		CreateMeta model.BeamtimeMeta
 	}
-	structfromMap(b,&resp)
-	suite.Equal( "sss", resp.CreateMeta.ID)
-	suite.Equal( "completed", resp.CreateMeta.Status)
+	structfromMap(b, &resp)
+	suite.Equal("sss", resp.CreateMeta.ID)
+	suite.Equal("completed", resp.CreateMeta.Status)
 }
 
 /*func (suite *ProcessQueryTestSuite) TestAddCollectionEntry() {
@@ -160,12 +155,12 @@ func (suite *ProcessQueryTestSuite) TestCreateMeta() {
 
 func (suite *ProcessQueryTestSuite) TestReadMeta() {
 
-	suite.mock_db.On("ProcessRequest", "beamtime", meta.KMetaNameInDb,"create_record",mock.Anything).Return([]byte("{}"), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", meta.KMetaNameInDb, "create_record", mock.Anything).Return([]byte("{}"), nil)
 
-	c:=createClient()
+	c := createClient()
 
 	var map_resp map[string]interface{}
-	AddMeta(c,&map_resp)
+	AddMeta(c, &map_resp)
 	query := `query {
   	meta (filter:"beamline = 'p05'",orderBy:"id DESC") {
     	id
@@ -175,28 +170,29 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	}`
 	assertExpectations(suite.T(), suite.mock_db)
 
-	var fs  = database.FilterAndSort{
-		Filter: "(beamline = 'p05') AND type='beamtime'",
-		Order:  "id DESC",
+	var fs = database.FilterAndSort{
+		UserFilter:   "beamline = 'p05'",
+		SystemFilter: "type='beamtime'",
+		Order:        "id DESC",
 	}
 
-	params := []interface {}{fs,&[]*model.BeamtimeMeta{}}
-	suite.mock_db.On("ProcessRequest", "beamtime", meta.KMetaNameInDb,"read_records",params).Return([]byte("{}"), nil).
+	params := []interface{}{fs, &[]*model.BeamtimeMeta{}}
+	suite.mock_db.On("ProcessRequest", "beamtime", meta.KMetaNameInDb, "read_records", params).Return([]byte("{}"), nil).
 		Run(func(args mock.Arguments) {
-		arg := args.Get(3).([]interface {})[1].(*[]*model.BeamtimeMeta)
-		v := []byte("[{\"_id\":\"1234\"}]")
-		json.Unmarshal(v,arg)
-	})
+			arg := args.Get(3).([]interface{})[1].(*[]*model.BeamtimeMeta)
+			v := []byte("[{\"_id\":\"1234\"}]")
+			json.Unmarshal(v, arg)
+		})
 
-    logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request read_meta")))
+	logger.MockLog.On("Debug", mock.MatchedBy(containsMatcher("processing request read_meta")))
 
 	c.MustPost(query, &map_resp)
 
 	var resp struct {
-		Meta 	[]*model.BeamtimeMeta
+		Meta []*model.BeamtimeMeta
 	}
-	structfromMap(map_resp,&resp)
+	structfromMap(map_resp, &resp)
 
-	suite.Equal( "1234", resp.Meta[0].ID)
+	suite.Equal("1234", resp.Meta[0].ID)
 
 }

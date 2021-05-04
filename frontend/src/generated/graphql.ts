@@ -12,7 +12,6 @@ export type Scalars = {
   Map: Object;
 };
 
-
 export type BeamtimeUser = {
   __typename?: 'BeamtimeUser';
   applicant: Maybe<Scalars['String']>;
@@ -278,11 +277,6 @@ export type LogEntryQueryResult = {
   start: Scalars['Int'];
   hasMore: Scalars['Boolean'];
 };
-
-export enum Acls {
-  Admin = 'ADMIN',
-  Read = 'READ'
-}
 
 export type Mutation = {
   __typename?: 'Mutation';

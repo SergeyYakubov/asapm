@@ -4,8 +4,8 @@ import (
 	"asapm/auth"
 	"asapm/database"
 	"asapm/graphql/common"
-	"asapm/graphql/meta"
 	"asapm/graphql/graph/model"
+	"asapm/graphql/meta"
 	"errors"
 	"strings"
 	"time"
@@ -18,7 +18,7 @@ func ReadEntries(acl auth.MetaAcl, filter string, orderBy *string) (*model.LogEn
 
 	var response = []*model.LogEntryMessage{}
 
-	fs := common.GetFilterAndSort(&filter, orderBy)
+	fs := common.GetFilterAndSort("", &filter, orderBy)
 	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "read_records", fs, &response)
 	if err != nil {
 		return &model.LogEntryQueryResult{}, err
@@ -60,7 +60,7 @@ func RemoveAllLogEntriesForCollection(rawBeamtimeId string) error {
 		filter += " AND subCollection = '" + subCollection + "'"
 	}
 
-	fs := common.GetFilterAndSort(&filter, nil)
+	fs := common.GetFilterAndSort("", &filter, nil)
 
 	if _, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "delete_records", fs, true); err != nil {
 		return err
@@ -78,7 +78,7 @@ func RemoveAllLogEntriesForCollectionAndSubcollections(rawBaseBeamtimeId string)
 		filter += " AND subCollection regexp '^" + subCollection + "(\\.)?'"
 	}
 
-	fs := common.GetFilterAndSort(&filter, nil)
+	fs := common.GetFilterAndSort("", &filter, nil)
 
 	if _, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "delete_records", fs, true); err != nil {
 		return err
@@ -88,16 +88,16 @@ func RemoveAllLogEntriesForCollectionAndSubcollections(rawBaseBeamtimeId string)
 }
 
 type logEntryMessageCreate struct {
-	CreatedBy     	string                 	`json:"createdBy" bson:"createdBy"`
-	Time          	time.Time              	`json:"time" bson:"time"`
-	EntryType     	model.LogEntryType     	`json:"entryType" bson:"entryType"`
-	Facility      	string                 	`json:"facility" bson:"facility"`
-	Beamtime      	*string                	`json:"beamtime" bson:"beamtime"`
-	SubCollection 	*string                	`json:"subCollection" bson:"subCollection"`
-	Tags        	[]string               	`json:"tags" bson:"tags"`
-	Source      	*string                	`json:"source" bson:"source"`
-	Message     	string                 	`json:"message" bson:"message"`
-	Attachments 	map[string]interface{}	`json:"attachments" bson:"attachments"`
+	CreatedBy     string                 `json:"createdBy" bson:"createdBy"`
+	Time          time.Time              `json:"time" bson:"time"`
+	EntryType     model.LogEntryType     `json:"entryType" bson:"entryType"`
+	Facility      string                 `json:"facility" bson:"facility"`
+	Beamtime      *string                `json:"beamtime" bson:"beamtime"`
+	SubCollection *string                `json:"subCollection" bson:"subCollection"`
+	Tags          []string               `json:"tags" bson:"tags"`
+	Source        *string                `json:"source" bson:"source"`
+	Message       string                 `json:"message" bson:"message"`
+	Attachments   map[string]interface{} `json:"attachments" bson:"attachments"`
 }
 
 func WriteMetaCreationMessage(facility string, rawBeamtimeCollection string) error {
@@ -109,13 +109,13 @@ func WriteMetaCreationMessage(facility string, rawBeamtimeCollection string) err
 	}
 
 	newMessage := logEntryMessageCreate{
-		Time:        	time.Now(),
-		CreatedBy:   	"System",
-		EntryType:   	model.LogEntryTypeMessage,
-		Facility:   	facility,
-		Beamtime:  		&beamtime,
-		SubCollection:	subCollection,
-		Message:     	"Collection '" + rawBeamtimeCollection + "' was created",
+		Time:          time.Now(),
+		CreatedBy:     "System",
+		EntryType:     model.LogEntryTypeMessage,
+		Facility:      facility,
+		Beamtime:      &beamtime,
+		SubCollection: subCollection,
+		Message:       "Collection '" + rawBeamtimeCollection + "' was created",
 	}
 	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "create_record", newMessage)
 
@@ -142,16 +142,16 @@ func WriteNewMessage(newInput model.NewLogEntryMessage, username string) (*strin
 	}
 
 	newMessage := logEntryMessageCreate{
-		Time:        	messageTime,
-		CreatedBy:   	username,
-		EntryType:   	model.LogEntryTypeMessage,
-		Facility:   	newInput.Facility,
-		Beamtime:  		newInput.Beamtime,
-		SubCollection:	newInput.SubCollection,
-		Tags:        	newInput.Tags,
-		Source:      	newInput.Source,
-		Message:     	newInput.Message,
-		Attachments: 	newInput.Attachments, // TODO Check if attachments actually exists
+		Time:          messageTime,
+		CreatedBy:     username,
+		EntryType:     model.LogEntryTypeMessage,
+		Facility:      newInput.Facility,
+		Beamtime:      newInput.Beamtime,
+		SubCollection: newInput.SubCollection,
+		Tags:          newInput.Tags,
+		Source:        newInput.Source,
+		Message:       newInput.Message,
+		Attachments:   newInput.Attachments, // TODO Check if attachments actually exists
 	}
 	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "create_record", newMessage)
 
