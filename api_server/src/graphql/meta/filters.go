@@ -15,7 +15,7 @@ func UniqueFields(acl auth.MetaAcl, filter *string, keys []string) ([]*model.Uni
 		return []*model.UniqueField{}, errors.New("access denied, not enough permissions")
 	}
 
-	ff := auth.FilterFields{
+	ff := auth.AclRegularFieldNamesInDb{
 		BeamtimeId: "id",
 		Beamline:   "beamline",
 		Facility:   "facility",

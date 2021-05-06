@@ -594,6 +594,63 @@ func (db *Mongodb) readRecordWithFilter(dbName string, dataCollectionName string
 	return nil, err
 }
 
+func (db *Mongodb) readRecordsCrossTable(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
+	c := db.client.Database(dbName).Collection(dataCollectionName)
+
+	if len(extra_params) != 2 {
+		return nil, errors.New("readRecordsCrossTable: wrong number of parameters")
+	}
+
+	crossTable, ok := extra_params[0].(CrossTableLookupRequest)
+	if !ok {
+		return nil, errors.New("mongo: filter and sort must be set")
+	}
+	res := extra_params[1]
+
+	// TODO: sort support
+	q, _, err := db.getQueryAndSort(crossTable.Filter)
+	if err != nil {
+		return nil, err
+	}
+
+	aggregation := bson.A{
+		bson.M{ // Join with meta collection
+			"$lookup": bson.M{
+				"localField":   crossTable.OwnFieldName,
+				"from":         crossTable.FromCollection,
+				"foreignField": crossTable.ForeignFieldName,
+				"as":           crossTable.CollectionAlias,
+			},
+		},
+		bson.M{ // When joining data, the target field is an array, unwind just takes the first element
+			"$unwind": "$" + crossTable.CollectionAlias,
+		},
+		bson.M{
+			"$match": q,
+		},
+		bson.M{
+			"$project": bson.M{
+				crossTable.CollectionAlias: 0,
+			},
+		},
+	}
+
+	// To debug:
+	// rawjson, err := json.Marshal(aggregation)
+	// println("getQueryAndSort", string(rawjson))
+
+	cursor, err := c.Aggregate(context.TODO(), aggregation)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cursor.All(context.TODO(), res)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
 func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, op string, extra_params ...interface{}) ([]byte, error) {
 	if err := db.checkDatabaseOperationPrerequisites(db_name, data_collection_name); err != nil {
 		return nil, err
@@ -611,6 +668,8 @@ func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, o
 		return db.readRecords(db_name, data_collection_name, extra_params...)
 	case "read_record_wfilter":
 		return db.readRecordWithFilter(db_name, data_collection_name, extra_params...)
+	case "read_records_cross_table":
+		return db.readRecordsCrossTable(db_name, data_collection_name, extra_params...)
 	case "delete_records":
 		return db.deleteRecords(db_name, data_collection_name, extra_params...)
 	case "delete_record_by_oid":

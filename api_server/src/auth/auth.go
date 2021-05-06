@@ -73,7 +73,7 @@ type MetaAcl struct {
 	UserProps           UserProps
 }
 
-func (acl MetaAcl) HasAccessToFacility(facility string) bool {
+func (acl MetaAcl) HasWriteAccessToFacility(facility string) bool {
 	return !acl.ImmediateDeny && (acl.AdminAccess || utils.StringInSlice(facility, acl.AllowedFacilities))
 }
 
@@ -91,7 +91,11 @@ type claimFields struct {
 	Roles           []string `json:"roles"`
 }
 
-type FilterFields struct {
+type AclDirectFieldNamesInDb struct {
+	DoorUser string
+}
+
+type AclRegularFieldNamesInDb struct {
 	BeamtimeId string
 	Beamline   string
 	Facility   string
@@ -299,43 +303,72 @@ func ReadAclFromContext(ctx context.Context) (MetaAcl, error) {
 		!acl.ImmediateReadAccess &&
 		!acl.AdminAccess &&
 		len(props.Roles) == 0 {
-
 		acl.ImmediateDeny = true
-
 	}
 
 	acl.UserProps = props
 	return acl, nil
 }
 
-func addFilterForDoorUser(currentFilter, user string) string {
-	name := "users.doorDb"
+func addFilterForDoorUser(currentFilter string, fieldName string, user string) string {
 	if user != "" {
-		currentFilter = "(" + name + " = '" + user + "')"
+		currentFilter = "(" + fieldName + " = '" + user + "')"
 	}
 	return currentFilter
 }
 
-func addFilterForNameInList(currentFilter, name string, list []string) string {
-	if list != nil {
-		list := strings.Join(list, `','`)
-		if len(currentFilter) == 0 {
-			currentFilter = "(" + name + " IN ('" + list + "'))"
-		} else {
-			currentFilter = currentFilter + " OR (" + name + " IN ('" + list + "'))"
-		}
+func addFilterForNameInList(currentFilter string, fieldName string, list []string) string {
+	if fieldName == "" {
+		return currentFilter
+	}
+
+	if list == nil {
+		return currentFilter
+	}
+
+	listToString := strings.Join(list, `','`)
+	newFilterRule := "(" + fieldName + " IN ('" + listToString + "'))"
+
+	if len(currentFilter) == 0 {
+		currentFilter = newFilterRule
+	} else {
+		currentFilter = currentFilter + " OR " + newFilterRule
 	}
 	return currentFilter
 }
 
-func AclToSqlFilter(acl MetaAcl, filterFields FilterFields) string {
+func IsDirectUser(acl MetaAcl) bool {
+	return acl.DoorUser != ""
+}
+
+func AclToSqlFilterOnlyDirectUsers(acl MetaAcl, fieldNames AclDirectFieldNamesInDb) string {
 	if acl.AdminAccess || acl.ImmediateReadAccess {
 		return ""
 	}
-	aclFilter := addFilterForNameInList("", filterFields.BeamtimeId, acl.AllowedBeamtimes)
-	aclFilter = addFilterForNameInList(aclFilter, filterFields.Beamline, acl.AllowedBeamlines)
-	aclFilter = addFilterForNameInList(aclFilter, filterFields.Facility, acl.AllowedFacilities)
-	aclFilter = addFilterForDoorUser(aclFilter, acl.DoorUser)
+	return addFilterForDoorUser("", fieldNames.DoorUser, acl.DoorUser)
+}
+
+func AclToSqlFilterOnlyRegularAccess(acl MetaAcl, fieldNames AclRegularFieldNamesInDb) string {
+	if acl.AdminAccess || acl.ImmediateReadAccess {
+		return ""
+	}
+
+	aclFilter := addFilterForNameInList("", fieldNames.BeamtimeId, acl.AllowedBeamtimes)
+	aclFilter = addFilterForNameInList(aclFilter, fieldNames.Beamline, acl.AllowedBeamlines)
+	aclFilter = addFilterForNameInList(aclFilter, fieldNames.Facility, acl.AllowedFacilities)
+
+	return aclFilter
+}
+
+func AclToSqlFilter(acl MetaAcl, fieldNames AclRegularFieldNamesInDb) string {
+	if acl.AdminAccess || acl.ImmediateReadAccess {
+		return ""
+	}
+
+	aclFilter := addFilterForNameInList("", fieldNames.BeamtimeId, acl.AllowedBeamtimes)
+	aclFilter = addFilterForNameInList(aclFilter, fieldNames.Beamline, acl.AllowedBeamlines)
+	aclFilter = addFilterForNameInList(aclFilter, fieldNames.Facility, acl.AllowedFacilities)
+	aclFilter = addFilterForDoorUser(aclFilter, "users.doorDb", acl.DoorUser)
 
 	return aclFilter
 }

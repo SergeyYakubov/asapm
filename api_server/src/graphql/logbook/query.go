@@ -18,10 +18,42 @@ func ReadEntries(acl auth.MetaAcl, filter string, orderBy *string) (*model.LogEn
 
 	var response = []*model.LogEntryMessage{}
 
-	fs := common.GetFilterAndSort("", &filter, orderBy)
-	_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "read_records", fs, &response)
-	if err != nil {
-		return &model.LogEntryQueryResult{}, err
+	var systemFilter string
+
+	if auth.IsDirectUser(acl) {
+		ff := auth.AclDirectFieldNamesInDb{
+			DoorUser: "beamtime_meta.users.doorDb",
+		}
+
+		systemFilter = auth.AclToSqlFilterOnlyDirectUsers(acl, ff)
+
+		fs := common.GetFilterAndSort(systemFilter, &filter, orderBy)
+
+		crossRequest := database.CrossTableLookupRequest{
+			Filter:           fs,
+			OwnFieldName:     "beamtime",
+			FromCollection:   meta.KMetaNameInDb,
+			ForeignFieldName: "_id",
+			CollectionAlias:  "beamtime_meta",
+		}
+
+		_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "read_records_cross_table", crossRequest, &response)
+		if err != nil {
+			return &model.LogEntryQueryResult{}, err
+		}
+	} else {
+		ff := auth.AclRegularFieldNamesInDb{
+			BeamtimeId: "beamtime",
+			//Beamline:   "beamline",
+			Facility: "facility",
+		}
+		systemFilter = auth.AclToSqlFilterOnlyRegularAccess(acl, ff)
+
+		fs := common.GetFilterAndSort(systemFilter, &filter, orderBy)
+		_, err := database.GetDb().ProcessRequest(KLogbookDbName, KLogbookCollectionName, "read_records", fs, &response)
+		if err != nil {
+			return &model.LogEntryQueryResult{}, err
+		}
 	}
 
 	var mappedResponse []model.LogEntry

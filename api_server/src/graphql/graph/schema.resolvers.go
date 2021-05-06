@@ -192,10 +192,16 @@ func (r *mutationResolver) AddMessageLogEntry(ctx context.Context, newMessage mo
 		return nil, errors.New("access denied: " + err.Error())
 	}
 
-	// TODO: How to check if user has write access?
-	if !acl.HasAccessToFacility(newMessage.Facility) {
-		logger.Error("HasAccessForFacility, access denied")
-		return nil, errors.New("access denied: HasAccessToFacility")
+	if newMessage.Beamtime != nil {
+		if !acl.HasWriteAccessToBeamtime(newMessage.Facility, *newMessage.Beamtime) {
+			logger.Error("HasWriteAccessToBeamtime; access denied")
+			return nil, errors.New("access denied")
+		}
+	} else {
+		if !acl.HasWriteAccessToFacility(newMessage.Facility) {
+			logger.Error("HasWriteAccessToFacility; access denied")
+			return nil, errors.New("access denied")
+		}
 	}
 
 	username, err := auth.GetPreferredFullNameFromContext(ctx)
@@ -220,9 +226,16 @@ func (r *mutationResolver) RemoveLogEntry(ctx context.Context, id string) (*stri
 	}
 
 	// Note: logEntryMsg.Beamtime is only the parent id
-	if !acl.HasWriteAccessToBeamtime(logEntryMsg.Facility, *logEntryMsg.Beamtime) {
-		logger.Error("HasAccessToBeamtime; access denied")
-		return nil, errors.New("access denied")
+	if logEntryMsg.Beamtime != nil {
+		if !acl.HasWriteAccessToBeamtime(logEntryMsg.Facility, *logEntryMsg.Beamtime) {
+			logger.Error("HasWriteAccessToBeamtime; access denied")
+			return nil, errors.New("access denied")
+		}
+	} else {
+		if !acl.HasWriteAccessToFacility(logEntryMsg.Facility) {
+			logger.Error("HasWriteAccessToFacility; access denied")
+			return nil, errors.New("access denied")
+		}
 	}
 
 	err = logbook.RemoveEntry(logEntryMsg.ID)

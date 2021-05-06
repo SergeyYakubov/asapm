@@ -42,7 +42,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFie
 		return []*model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")
 	}
 
-	ff := auth.FilterFields{
+	ff := auth.AclRegularFieldNamesInDb{
 		BeamtimeId: "id",
 		Beamline:   "beamline",
 		Facility:   "facility",

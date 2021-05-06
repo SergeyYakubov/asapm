@@ -188,7 +188,7 @@ func TestMetaReadAclFromContext(t *testing.T) {
 func TestSqlFilter(t *testing.T) {
 	acl := MetaAcl{AllowedBeamtimes: []string{"bt"}, AllowedBeamlines: []string{"bl"}, AllowedFacilities: []string{"flty"}}
 
-	ff := FilterFields{
+	ff := AclRegularFieldNamesInDb{
 		BeamtimeId: "id",
 		Beamline:   "beamline",
 		Facility:   "facility",
@@ -200,7 +200,7 @@ func TestSqlFilter(t *testing.T) {
 func TestSqlDoorFilter(t *testing.T) {
 	acl := MetaAcl{DoorUser: "door_user"}
 
-	ff := FilterFields{
+	ff := AclRegularFieldNamesInDb{
 		BeamtimeId: "id",
 		Beamline:   "beamline",
 		Facility:   "facility",
