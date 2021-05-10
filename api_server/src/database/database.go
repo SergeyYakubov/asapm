@@ -7,8 +7,9 @@ import (
 
 
 type FilterAndSort struct {
-	Filter string
-	Order string
+	UserFilter string
+	SystemFilter string
+	Order      string
 }
 
 

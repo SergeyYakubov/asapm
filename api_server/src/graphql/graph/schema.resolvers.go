@@ -14,23 +14,29 @@ import (
 	"errors"
 )
 
-func (r *mutationResolver)  ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToSet) (*model.BeamtimeMeta, error) {
-	res,err := meta.ModifyBeamtimeMeta(input)
+func (r *mutationResolver) ModifyBeamtimeMeta(ctx context.Context, input model.FieldsToSet) (*model.BeamtimeMeta, error) {
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return &model.BeamtimeMeta{}, errors.New("access denied: " + err.Error())
+	}
+
+	res, err := meta.ModifyBeamtimeMeta(acl,input)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 	return res, err
 }
 
-func ModifyCollectionEntryFields(ctx context.Context, mode int,id string, input interface{}) (*model.CollectionEntry, error) {
-	acl,err := auth.ReadAclFromContext(ctx)
+func ModifyCollectionEntryFields(ctx context.Context, mode int, id string, input interface{}) (*model.CollectionEntry, error) {
+	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {
-		logger.Error("access denied: "+err.Error())
-		return &model.CollectionEntry{}, errors.New("access denied: "+err.Error())
+		logger.Error("access denied: " + err.Error())
+		return &model.CollectionEntry{}, errors.New("access denied: " + err.Error())
 	}
-	keep,remove := extractModificationFields(ctx)
+	keep, remove := extractModificationFields(ctx)
 
-	res,err := meta.ModifyCollectionEntryMeta(acl,mode, id, input, keep,remove)
+	res, err := meta.ModifyCollectionEntryMeta(acl, mode, id, input, keep, remove)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -39,30 +45,37 @@ func ModifyCollectionEntryFields(ctx context.Context, mode int,id string, input 
 }
 
 func (r *mutationResolver) UpdateCollectionEntryFields(ctx context.Context, input model.FieldsToSet) (*model.CollectionEntry, error) {
-	return ModifyCollectionEntryFields(ctx, meta.ModeUpdateFields,input.ID,&input)
+	return ModifyCollectionEntryFields(ctx, meta.ModeUpdateFields, input.ID, &input)
 }
 
 func (r *mutationResolver) AddCollectionEntryFields(ctx context.Context, input model.FieldsToSet) (*model.CollectionEntry, error) {
-	return ModifyCollectionEntryFields(ctx, meta.ModeAddFields,input.ID,&input)
+	return ModifyCollectionEntryFields(ctx, meta.ModeAddFields, input.ID, &input)
 }
 
 func (r *mutationResolver) DeleteCollectionEntryFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error) {
-	return ModifyCollectionEntryFields(ctx, meta.ModeDeleteFields,input.ID,&input)
+	return ModifyCollectionEntryFields(ctx, meta.ModeDeleteFields, input.ID, &input)
 }
 
 func (r *mutationResolver) AddCollectionEntry(ctx context.Context, input model.NewCollectionEntry) (*model.CollectionEntry, error) {
 	log_str := "processing request add_collection_entry"
 	logger.Debug(log_str)
 
-	res,err := meta.AddCollectionEntry(input)
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return &model.CollectionEntry{}, errors.New("access denied: " + err.Error())
+	}
+
+
+	res, err := meta.AddCollectionEntry(acl, input)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 	return res, err
 }
 
-func (r *queryResolver) Collections(ctx context.Context, filter *string,orderBy *string) ([]*model.CollectionEntry, error) {
-	acl,err := auth.ReadAclFromContext(ctx)
+func (r *queryResolver) Collections(ctx context.Context, filter *string, orderBy *string) ([]*model.CollectionEntry, error) {
+	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {
 		logger.Error("access denied: " + err.Error())
 		return []*model.CollectionEntry{}, errors.New("access denied: " + err.Error())
@@ -78,9 +91,14 @@ func (r *queryResolver) Collections(ctx context.Context, filter *string,orderBy 
 }
 
 func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamtimeMeta) (*model.BeamtimeMeta, error) {
-	log_str := "processing request create_meta"
-	logger.Debug(log_str)
-	return meta.CreateBeamtimeMeta(input)
+	logger.Debug("processing request create_meta")
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return &model.BeamtimeMeta{}, errors.New("access denied: " + err.Error())
+	}
+
+	return meta.CreateBeamtimeMeta(acl, input)
 }
 
 func (r *queryResolver) Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error) {
@@ -117,15 +135,24 @@ func (r *queryResolver) UniqueFields(ctx context.Context, filter *string, keys [
 }
 
 func (r *mutationResolver) DeleteMeta(ctx context.Context, id string) (*string, error) {
-	log_str := "processing request delete_meta"
-	logger.Debug(log_str)
-	return meta.DeleteBeamtimeMetaAndCollections(id)
+	logger.Debug("processing request delete_meta")
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+	return meta.DeleteBeamtimeMetaAndCollections(acl,id)
 }
 
 func (r *mutationResolver) DeleteSubcollection(ctx context.Context, id string) (*string, error) {
-	log_str := "processing request delete_collection"
-	logger.Debug(log_str)
-	return meta.DeleteCollectionsAndSubcollectionMeta(id)
+	logger.Debug("processing request delete_collection")
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	return meta.DeleteCollectionsAndSubcollectionMeta(acl,id)
 }
 
 func (r *mutationResolver) SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error) {

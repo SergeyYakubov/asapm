@@ -22,11 +22,8 @@ func UniqueFields(acl auth.MetaAcl,filter *string,keys []string)  ([]*model.Uniq
 		Facility:   "facility",
 	}
 
-	if !acl.ImmediateAccess {
-		filter = auth.AddAclToSqlFilter(acl,filter,ff)
-	}
-
-	fl := common.GetFilterAndSort(filter,nil)
+	systemFilter := auth.AclToSqlFilter(acl,ff)
+	fl := common.GetFilterAndSort(systemFilter,filter,nil)
 
 	res := make([]*model.UniqueField,0)
 

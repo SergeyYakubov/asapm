@@ -71,13 +71,15 @@ func UpdateFields(keep []string, remove []string, customValues *map[string]inter
 	return
 }
 
-func GetFilterAndSort(filter *string,orderBy *string) database.FilterAndSort {
+
+func GetFilterAndSort(systemFilter string, userFilter *string, orderBy *string) database.FilterAndSort {
 	fs := database.FilterAndSort{}
-	if filter !=nil {
-		fs.Filter =*filter
+	if userFilter != nil {
+		fs.UserFilter = *userFilter
 	}
-	if orderBy !=nil {
-		fs.Order =*orderBy
+	fs.SystemFilter = systemFilter
+	if orderBy != nil {
+		fs.Order = *orderBy
 	}
 	return fs
 }

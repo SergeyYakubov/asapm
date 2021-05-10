@@ -108,9 +108,12 @@ func TestMongoDBReadRecord(t *testing.T) {
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 
 	str := "((eventEnd < isodate('2020-09-25T08:45:24Z')) and (eventEnd > isodate('2019-09-25T08:45:24Z')))"
+	systemStr := "id = '123'"
+
 	var fs = FilterAndSort{
-		Filter: str,
-		Order:  "",
+		UserFilter: str,
+		SystemFilter: systemStr,
+		Order:      "",
 	}
 	var res []*model.BeamtimeMeta
 	_, err = mongodb.ProcessRequest(dbname, collection, "read_records", fs, &res)
@@ -124,7 +127,7 @@ func TestMongoDBDeleteRecordNotFound(t *testing.T) {
 	defer cleanup()
 	id := "12345"
 	var fs = FilterAndSort{
-		Filter: "id = '" + id + "'",
+		UserFilter: "id = '" + id + "'",
 	}
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_record", fs, true)
 	assert.NotNil(t, err)
@@ -137,7 +140,7 @@ func TestMongoDBDeleteRecord(t *testing.T) {
 	rec := TestMetaRecord{id, []TestCollectionEntry{}, time.Now()}
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	var fs = FilterAndSort{
-		Filter: "id = '" + id + "'",
+		UserFilter: "id = '" + id + "'",
 	}
 	_, err = mongodb.ProcessRequest(dbname, collection, "delete_records", fs, true)
 	assert.Nil(t, err)
@@ -321,7 +324,7 @@ func TestMongoDBUpdateFields(t *testing.T) {
 			assert.NotNil(t, err, test.message)
 		}
 		fs := FilterAndSort{
-			Filter: "id = '" + test.input.ID + "'",
+			UserFilter: "id = '" + test.input.ID + "'",
 		}
 		mongodb.ProcessRequest(dbname, collection, "delete_records", fs, true)
 	}

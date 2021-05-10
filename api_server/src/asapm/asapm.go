@@ -1,6 +1,7 @@
 package main
 
 import (
+	"asapm/common/config"
 	log "asapm/common/logger"
 	"asapm/common/version"
 	"asapm/database"
@@ -23,7 +24,7 @@ func main() {
 		PrintUsage()
 	}
 
-	logLevel, err := server.ReadConfig(*fname)
+	logLevel, err := config.ReadConfig(*fname)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -32,9 +33,9 @@ func main() {
 
 	log.Info("Starting ASAPM, version " + version.GetVersion())
 
-	err = database.InitDB(NewDefaultDatabase(),server.Config.DbEndpoint)
+	err = database.InitDB(NewDefaultDatabase(), config.Config.DbEndpoint)
 	if err != nil {
-		log.Fatal("cannot init database at "+server.Config.DbEndpoint+": "+err.Error())
+		log.Fatal("cannot init database at "+ config.Config.DbEndpoint+": "+err.Error())
 	}
 	defer database.CleanupDB()
 

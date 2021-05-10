@@ -4,6 +4,7 @@ import (
 	"asapm/common/logger"
 	"asapm/common/utils"
 	"asapm/database"
+	"asapm/graphql/graph"
 	"asapm/graphql/graph/generated"
 	"asapm/graphql/graph/model"
 	"asapm/graphql/meta"
@@ -120,9 +121,8 @@ func createClient() *client.Client {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, utils.TokenClaimsCtxKey, &claim)
 
-
-	config := generateGqlConfig()
-	return client.New(handler.NewDefaultServer(generated.NewExecutableSchema(config)),
+	gqlSrv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	return client.New(gqlSrv,
 		func(bd *client.Request) {
 			bd.HTTP = bd.HTTP.WithContext(ctx)
 		})
@@ -176,8 +176,9 @@ func (suite *ProcessQueryTestSuite) TestReadMeta() {
 	assertExpectations(suite.T(), suite.mock_db)
 
 	var fs  = database.FilterAndSort{
-		Filter: "(beamline = 'p05') AND type='beamtime'",
-		Order:  "id DESC",
+		UserFilter: "beamline = 'p05'",
+		SystemFilter: "type='beamtime'",
+		Order:      "id DESC",
 	}
 
 	params := []interface {}{fs,&[]*model.BeamtimeMeta{}}

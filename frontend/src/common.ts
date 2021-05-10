@@ -174,15 +174,18 @@ export function GetFilterString(filter: CollectionFilter): string {
     if (filter.dateTo && filter.dateFrom) {
         let filter1 = AddToFilter("", "eventStart >= isodate('" + filter.dateFrom.toISOString() + "')", "and");
         filter1 = AddToFilter(filter1, "eventStart <= isodate('" + filter.dateTo.toISOString() + "')", "and");
+
         let filter2 = AddToFilter("", "eventEnd >= isodate('" + filter.dateFrom.toISOString() + "')", "and");
         filter2 = AddToFilter(filter2, "eventEnd <= isodate('" + filter.dateTo.toISOString() + "')", "and");
+
         let filter3 = AddToFilter("", "eventEnd >= isodate('" + filter.dateTo.toISOString() + "')", "and");
         filter3 = AddToFilter(filter3, "eventStart <= isodate('" + filter.dateFrom.toISOString() + "')", "and");
+
         let filterRange = AddToFilter(filter1, filter2, "or");
         filterRange = AddToFilter(filterRange, filter3, "or");
         filterString = AddToFilter(filterString, filterRange, "and");
     }
-
+    console.log(filterString)
     if (filter.textSearch !== "") {
         filterString = AddToFilter(filterString, "jsonString regexp '" + filter.textSearch + "'", "and");
     }

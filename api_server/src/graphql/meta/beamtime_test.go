@@ -1,11 +1,13 @@
 package meta
 
 import (
+	"asapm/auth"
+	"asapm/common/config"
 	"asapm/common/logger"
 	"asapm/database"
 	"asapm/graphql/graph/model"
 	"encoding/json"
-	"errors"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -34,13 +36,14 @@ func (suite *MetaSuite) TestDeleteMeta() {
 	id := "12345"
 
 	var fs = database.FilterAndSort{
-		Filter: "parentBeamtimeMeta.id = '" + id + "'",
+		SystemFilter: "parentBeamtimeMeta.id = '" + id + "'",
 	}
 
 	params_delete := []interface{}{fs, true}
+
 	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_records", params_delete).Return([]byte(""), nil)
 
-	res, err := DeleteBeamtimeMetaAndCollections(id)
+	res, err := DeleteBeamtimeMetaAndCollections(auth.MetaAcl{AdminAccess: true},id)
 
 	suite.Nil(err)
 	suite.Equal(id, *res)
@@ -56,7 +59,6 @@ var ModifyMetaTests = []struct {
 	meta    *model.BeamtimeMeta
 	message string
 }{
-	{ "12345", &statusRunning, nil, nil, "not found"},
 	{ "12346", &statusRunning, &model.InputUsers{
 		DoorDb:  []string{"test"},
 		Special: []string{},
@@ -77,14 +79,6 @@ func (suite *MetaSuite) TestModifyMeta() {
 			Fields: map[string]interface{}{"status":test.status,"users":test.users},
 		}
 
-		params_modify := []interface{}{test.id}
-		metab, _ := json.Marshal(test.meta)
-		var db_err error
-		if test.meta == nil {
-			db_err = errors.New("not found")
-		}
-		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_modify).Return(metab, db_err)
-
 		if test.meta != nil {
 			params_update := []interface{}{&input}
 			test.meta.Status = *test.status
@@ -98,7 +92,7 @@ func (suite *MetaSuite) TestModifyMeta() {
 
 			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "update_fields", params_update).Return(metab, nil)
 		}
-		res, err := ModifyBeamtimeMeta(input)
+		res, err := ModifyBeamtimeMeta(auth.MetaAcl{AdminAccess: true},input)
 		if test.meta == nil {
 			suite.NotNil(err)
 			suite.Nil(res)
@@ -116,3 +110,52 @@ func (suite *MetaSuite) TestModifyMeta() {
 		}
 	}
 }
+
+
+var MetaOpTests = []struct {
+	op  string
+	acl auth.MetaAcl
+	allowed bool
+	message string
+}{
+	{ "delete",  auth.MetaAcl{UserProps: auth.UserProps{Roles:  nil, Groups: nil}}, false,"no acls"},
+	{ "delete",  auth.MetaAcl{AdminAccess: true}, true,"always allowed"},
+	{ "delete",  auth.MetaAcl{ImmediateDeny: true}, false,"always denied"},
+	{ "delete",  auth.MetaAcl{UserProps: auth.UserProps{Roles:  []string{"admin_f_facility1"}, Groups: nil}}, true,"facility admin"},
+	{ "delete",  auth.MetaAcl{UserProps: auth.UserProps{Roles:  []string{"admin_b_beamline1"}, Groups: nil}}, true,"beamline admin"},
+}
+
+func (suite *MetaSuite) TestDeleteAuthorization() {
+	id := "12345"
+	bl:= "beamline1"
+	facility:="facility1"
+	meta := model.BeamtimeMeta{
+		ID:       id,
+		Beamline: &bl,
+		Facility:  &facility,
+		Users:    nil,
+	}
+	metab, _ := json.Marshal(meta)
+	config.Config.Authorization.AdminLevels=[]string{"facility","beamline"}
+	for _, test := range MetaOpTests {
+		if !test.acl.AdminAccess && !test.acl.ImmediateDeny {
+			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record",  []interface{}{id}).Return(metab, nil)
+		}
+		if test.allowed {
+			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_records", mock.Anything).Return([]byte(""), nil)
+		}
+
+		_, err := DeleteBeamtimeMetaAndCollections(test.acl,id)
+
+		if test.allowed {
+			suite.Nil(err)
+		} else {
+			suite.NotNil(err)
+		}
+
+		suite.mock_db.AssertExpectations(suite.T())
+		suite.mock_db.ExpectedCalls = nil
+		suite.mock_db.Calls = nil
+	}
+}
+

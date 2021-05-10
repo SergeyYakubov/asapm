@@ -8,7 +8,7 @@ stages:
   - destroy_deployments
 
 variables:
-  REGISTRY: eosc-pan-git.desy.de:5555
+  REGISTRY: gitlab.desy.de:5555
 
 
 include:

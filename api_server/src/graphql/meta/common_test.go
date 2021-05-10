@@ -47,3 +47,23 @@ func TestProcessUpdateFieldTests(t *testing.T) {
 		assert.Equal(t, test.res, string(res), test.message)
 	}
 }
+
+
+var updatedateTimeTests = []struct {
+	customValues   string
+	res string
+	message    string
+}{
+	{`{"hello":{"date":"isodate('2006-01-02T15:04:05Z')","time":123}}`,
+		`{"hello":{"date":"2006-01-02T15:04:05Z","time":123}}`,"keep" },
+}
+
+func TestProcessUpdateDateTimeTests(t *testing.T) {
+	for _, test := range updatedateTimeTests {
+		var customValues map[string]interface{}
+		json.Unmarshal([]byte(test.customValues),&customValues)
+		customValues = UpdateDatetimeFields(customValues)
+		res,_:=json.Marshal(&customValues)
+		assert.Equal(t, test.res, string(res), test.message)
+	}
+}

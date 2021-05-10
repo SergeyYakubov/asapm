@@ -1,26 +1,17 @@
-directive @needAcl(acl: Acls!) on FIELD_DEFINITION
-#directive @inputNeedAcl(acl: Acls!) on INPUT_FIELD_DEFINITION
-
-enum Acls {
-    ADMIN
-    READ
-}
-
-
 type Mutation {
-    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta @needAcl(acl: ADMIN)
-    deleteMeta(id: String!): String @needAcl(acl: ADMIN)
-    deleteSubcollection(id: String!): String @needAcl(acl: ADMIN)
-    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry @needAcl(acl: ADMIN)
-    modifyBeamtimeMeta(input: FieldsToSet!): BeamtimeMeta @needAcl(acl: ADMIN)
+    createMeta(input: NewBeamtimeMeta!): BeamtimeMeta
+    deleteMeta(id: String!): String
+    deleteSubcollection(id: String!): String
+    addCollectionEntry(input: NewCollectionEntry!): CollectionEntry
+    modifyBeamtimeMeta(input: FieldsToSet!): BeamtimeMeta
     updateCollectionEntryFields(input: FieldsToSet!): CollectionEntry
     addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
 
     # Logbook API
-    addMessageLogEntry(input: NewLogEntryMessage!): ID @needAcl(acl: ADMIN)
-    removeLogEntry(id: ID!): ID @needAcl(acl: ADMIN)
+    addMessageLogEntry(input: NewLogEntryMessage!): ID
+    removeLogEntry(id: ID!): ID
 }
 
 type Query {

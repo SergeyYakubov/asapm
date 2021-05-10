@@ -84,8 +84,8 @@ func TestMongoDBQueryImagesOK(t *testing.T) {
 
 	for idx, test := range tests {
 		var fs  = FilterAndSort{
-			Filter: test.query,
-			Order:  "",
+			UserFilter: test.query,
+			Order:      "",
 		}
 		t.Logf("Running test query %d \"%s\"", idx, test.query)
 
