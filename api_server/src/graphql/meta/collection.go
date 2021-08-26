@@ -8,6 +8,7 @@ import (
 	"asapm/graphql/graph/model"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"strconv"
 	"strings"
 )
@@ -16,6 +17,7 @@ const (
 	ModeAddFields int = iota
 	ModeUpdateFields
 	ModeDeleteFields
+	ModeAddAttachment
 )
 
 func AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*model.CollectionEntry, error) {
@@ -129,7 +131,7 @@ func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry, mode int, input int
 		return false
 	}
 
-	if !checkUserFields(mode, input) {
+	if mode!= ModeAddAttachment && !checkUserFields(mode, input) {
 		return false
 	}
 
@@ -329,4 +331,46 @@ func authorizeCollectionActivity(id string, acl auth.MetaAcl, activity int) erro
 	}
 
 	return auth.AuthorizeOperation(acl, auth.CollectionToAuthorizedEntity(meta, activity))
+}
+
+func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment, error) {
+	err := auhthorizeModifyRequest(acl,req.EntryID, ModeAddAttachment,nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.File.Size > kMaxAttachmentSize {
+		return nil, errors.New("attachment should not exceed "+strconv.Itoa(int(kMaxAttachmentSize/1000/1000))+" MB")
+
+	}
+
+	content, err := ioutil.ReadAll(req.File.File)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := database.GetDb().ProcessRequest("beamtime", KAttachmentCollectionName, "create_record",
+		&AttachmentContent{req.File.ContentType,content})
+	if err != nil {
+		return nil, err
+	}
+	if res ==nil {
+		return nil, errors.New("UploadAttachment: could not generate id")
+	}
+	id := string(res)
+
+	attachment := model.Attachment{
+		ID:      id,
+		EntryID: req.EntryID,
+		Name:    req.File.Filename,
+		Size: 	 int(req.File.Size),
+		ContentType: req.File.ContentType,
+	}
+
+	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element", req.EntryID, KAttachmentKey, &attachment, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &attachment,nil
 }

@@ -28,6 +28,23 @@ func (r *mutationResolver) ModifyBeamtimeMeta(ctx context.Context, input model.F
 	return res, err
 }
 
+func (r *mutationResolver) UploadAttachment(ctx context.Context, req model.UploadFile) (*model.Attachment, error) {
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	res, err := meta.UploadAttachment(acl, req)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+
+	return res, err
+
+}
+
+
 func ModifyCollectionEntryFields(ctx context.Context, mode int, id string, input interface{}) (*model.CollectionEntry, error) {
 	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {

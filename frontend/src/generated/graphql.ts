@@ -8,10 +8,10 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  Upload: any;
   DateTime: string;
   Map: Object;
 };
-
 
 export type BeamtimeUser = {
   __typename?: 'BeamtimeUser';
@@ -21,6 +21,21 @@ export type BeamtimeUser = {
   lastname: Maybe<Scalars['String']>;
   userId: Maybe<Scalars['String']>;
   username: Maybe<Scalars['String']>;
+};
+
+
+export type Attachment = {
+  __typename?: 'Attachment';
+  id: Scalars['String'];
+  entryId: Scalars['String'];
+  name: Scalars['String'];
+  size: Scalars['Int'];
+  contentType: Scalars['String'];
+};
+
+export type UploadFile = {
+  entryId: Scalars['String'];
+  file: Scalars['Upload'];
 };
 
 export type InputBeamtimeUser = {
@@ -78,6 +93,7 @@ export type CollectionEntryInterface = {
   type: Scalars['String'];
   parentBeamtimeMeta: ParentBeamtimeMeta;
   jsonString: Maybe<Scalars['String']>;
+  attachments: Maybe<Array<Attachment>>;
 };
 
 
@@ -102,6 +118,7 @@ export type CollectionEntry = CollectionEntryInterface & {
   prevEntry: Maybe<Scalars['String']>;
   parentId: Scalars['String'];
   index: Maybe<Scalars['Int']>;
+  attachments: Maybe<Array<Attachment>>;
 };
 
 
@@ -161,6 +178,7 @@ export type BeamtimeMeta = CollectionEntryInterface & {
   type: Scalars['String'];
   parentBeamtimeMeta: ParentBeamtimeMeta;
   jsonString: Maybe<Scalars['String']>;
+  attachments: Maybe<Array<Attachment>>;
 };
 
 
@@ -277,11 +295,6 @@ export type LogEntryQueryResult = {
   hasMore: Scalars['Boolean'];
 };
 
-export enum Acls {
-  Admin = 'ADMIN',
-  Read = 'READ'
-}
-
 export type Mutation = {
   __typename?: 'Mutation';
   createMeta: Maybe<BeamtimeMeta>;
@@ -293,6 +306,7 @@ export type Mutation = {
   addCollectionEntryFields: Maybe<CollectionEntry>;
   deleteCollectionEntryFields: Maybe<CollectionEntry>;
   setUserPreferences: Maybe<UserAccount>;
+  uploadAttachment: Attachment;
   addMessageLogEntry: Maybe<Scalars['ID']>;
   removeLogEntry: Maybe<Scalars['ID']>;
 };
@@ -341,6 +355,11 @@ export type MutationDeleteCollectionEntryFieldsArgs = {
 export type MutationSetUserPreferencesArgs = {
   id: Scalars['ID'];
   input: InputUserPreferences;
+};
+
+
+export type MutationUploadAttachmentArgs = {
+  req: UploadFile;
 };
 
 

@@ -10,6 +10,8 @@ import (
 	"asapm/graphql/graph/generated"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -48,10 +50,18 @@ func StartServer() {
 	} else {
 		attachmentRouter.Handle("/upload", cors(auth.BypassAuth(utils.RemoveQuotes(attachment.HandleUpload)))).Methods("POST")
 	}
-	attachmentRouter.Handle("/raw/{id}", cors(utils.RemoveQuotes(attachment.HandleDownload))).Methods("GET")
+	attachmentRouter.Handle("/raw/logbook/{id}", cors(utils.RemoveQuotes(attachment.HandleDownload))).Methods("GET")
+	attachmentRouter.Handle("/raw/meta/{id}", cors(utils.RemoveQuotes(attachment.HandleDownloadMetaAttachment))).Methods("GET")
 
 	// GraphQL Service
+	var mb int64 = 1 << 20
 	gqlSrv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	gqlSrv.AddTransport(transport.POST{})
+	gqlSrv.AddTransport(transport.MultipartForm{
+		MaxMemory:     32 * mb,
+		MaxUploadSize: 50 * mb,
+	})
+	gqlSrv.Use(extension.Introspection{})
 
 	if config.Config.Authorization.Enabled {
 		router.Handle("/query", cors(utils.ProcessJWTAuth(utils.RemoveQuotes(gqlSrv.ServeHTTP),

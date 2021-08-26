@@ -3,6 +3,7 @@ package attachment
 import (
 	"asapm/auth"
 	"asapm/database"
+	"asapm/graphql/meta"
 	"bytes"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -67,6 +68,25 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "%s", res)
+}
+
+func HandleDownloadMetaAttachment(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	entry := meta.AttachmentContent{}
+	_, err := database.GetDb().ProcessRequest("beamtime", meta.KAttachmentCollectionName, "read_record_oid_and_parse", id, &entry)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", entry.ContentType)
+	w.Header().Set("Content-Length", strconv.FormatInt(int64(len(entry.Content)), 10))
+	// Prevents maliciously uploaded HTML code to access our website
+	// We still allow scripts (but they dont have access to our origin)
+	w.Header().Set("Content-Security-Policy", "sandbox allow-scripts")
+	_, err = io.Copy(w, bytes.NewReader(entry.Content))
 }
 
 func HandleDownload(w http.ResponseWriter, r *http.Request) {

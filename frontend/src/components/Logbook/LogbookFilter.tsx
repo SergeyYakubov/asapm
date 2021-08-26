@@ -4,6 +4,7 @@ import {createStyles, makeStyles} from "@material-ui/core/styles";
 import {CustomFilter} from "../CustomFilter";
 import {useQuery} from "@apollo/client";
 import {BeamtimeFilterData, beamtimeFilterVar, GET_BEAMTIME_FILTER} from "../FilterBoxes";
+import {Mode} from "../../common";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -47,7 +48,7 @@ function LogbookFilter({}: LogbookFilterProps): JSX.Element {
     const filter = data!.beamtimeFilter;
 
     return <Paper variant="outlined" className={classes.filterPaper}>
-        <CustomFilter collections={undefined} currentFilter={filter} filterVar={beamtimeFilterVar} />
+        <CustomFilter collections={undefined} mode={Mode.Collections} currentFilter={filter} filterVar={beamtimeFilterVar} />
     </Paper>;
 }
 

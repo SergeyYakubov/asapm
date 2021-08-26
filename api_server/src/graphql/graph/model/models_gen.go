@@ -7,6 +7,8 @@ import (
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/99designs/gqlgen/graphql"
 )
 
 type CollectionEntryInterface interface {
@@ -19,6 +21,14 @@ type GenericLogEntry interface {
 
 type LogEntry interface {
 	IsLogEntry()
+}
+
+type Attachment struct {
+	ID          string `json:"id,omitempty" bson:"id,omitempty"`
+	EntryID     string `json:"entryId,omitempty" bson:"entryId,omitempty"`
+	Name        string `json:"name,omitempty" bson:"name,omitempty"`
+	Size        int    `json:"size,omitempty" bson:"size,omitempty"`
+	ContentType string `json:"contentType,omitempty" bson:"contentType,omitempty"`
 }
 
 type BaseCollectionEntry struct {
@@ -56,6 +66,7 @@ type BeamtimeMeta struct {
 	Type                string                 `json:"type,omitempty" bson:"type,omitempty"`
 	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta,omitempty" bson:"parentBeamtimeMeta,omitempty"`
 	JSONString          *string                `json:"jsonString,omitempty" bson:"jsonString,omitempty"`
+	Attachments         []*Attachment          `json:"attachments,omitempty" bson:"attachments,omitempty"`
 }
 
 func (BeamtimeMeta) IsCollectionEntryInterface() {}
@@ -84,6 +95,7 @@ type CollectionEntry struct {
 	PrevEntry           *string                `json:"prevEntry,omitempty" bson:"prevEntry,omitempty"`
 	ParentID            string                 `json:"parentId,omitempty" bson:"parentId,omitempty"`
 	Index               *int                   `json:"index,omitempty" bson:"index,omitempty"`
+	Attachments         []*Attachment          `json:"attachments,omitempty" bson:"attachments,omitempty"`
 }
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
@@ -229,6 +241,11 @@ type ParentBeamtimeMeta struct {
 type UniqueField struct {
 	KeyName string   `json:"keyName,omitempty" bson:"keyName,omitempty"`
 	Values  []string `json:"values,omitempty" bson:"values,omitempty"`
+}
+
+type UploadFile struct {
+	EntryID string         `json:"entryId,omitempty" bson:"entryId,omitempty"`
+	File    graphql.Upload `json:"file,omitempty" bson:"file,omitempty"`
 }
 
 type UserAccount struct {

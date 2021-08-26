@@ -12,6 +12,7 @@ import {BeamtimeMeta, CollectionEntry, Query} from "../generated/graphql";
 import {QueryResult} from "@apollo/client";
 import LogbooksPage from "../pages/LogbooksPage";
 import {flexableContentStyle} from "../styleHelper";
+import AttachmentsTab from "./AttachmentsTab";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -89,6 +90,10 @@ function DetailedTabs({originalQuery, meta,isBeamtime,section}: DetailedTabsProp
             value = showDataset?2:1;
             break;
         }
+        case "attachments": {
+            value = showDataset?3:2;
+            break;
+        }
         default: {
             value = 0;
             break;
@@ -103,7 +108,11 @@ function DetailedTabs({originalQuery, meta,isBeamtime,section}: DetailedTabsProp
                 break;
             }
             case 2: {
-                subpath = "/logbook";
+                subpath = showDataset?"/logbook":"/attachments";
+                break;
+            }
+            case 3: {
+                subpath = "/attachments";
                 break;
             }
         }
@@ -118,6 +127,7 @@ function DetailedTabs({originalQuery, meta,isBeamtime,section}: DetailedTabsProp
                     <Tab label="Metadata" {...a11yProps(0)} />
                     {showDataset && <Tab label={meta.childCollectionName} {...a11yProps(1)} />}
                     <Tab label="Logbook" {...a11yProps(showDataset ? 2 : 1)} />
+                    <Tab label="Attachments" {...a11yProps(showDataset ? 3 : 2)} />
                 </Tabs>
             </AppBar>
             <div className={classes.marginLeftRight}>
@@ -133,6 +143,9 @@ function DetailedTabs({originalQuery, meta,isBeamtime,section}: DetailedTabsProp
                     <LogbooksPage
                         prefilledBeamtimeId={meta.parentBeamtimeMeta ? meta.parentBeamtimeMeta.id : meta.id}
                     />
+                </TabPanel>
+                <TabPanel value={value} index={showDataset ? 3 : 2}>
+                    <AttachmentsTab meta={meta}/>
                 </TabPanel>
             </div>
         </div>

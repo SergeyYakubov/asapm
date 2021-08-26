@@ -11,7 +11,7 @@ import {
     CollectionFilter, EndOfDay,
     FieldFilter,
     InvertFilterOp,
-    RemoveDuplicates, StartOfDay,
+    RemoveDuplicates, StartOfDay, Mode
 } from "../common";
 import debounce from 'lodash.debounce';
 import {GetUniqueNamesForField} from "../meta";
@@ -117,11 +117,6 @@ function BeamtimeFilterBox(): JSX.Element {
             </Grid>
         </div>
     );
-}
-
-export enum Mode {
-    Beamtimes,
-    Collections,
 }
 
 type CollectionFilterBoxProps = {
@@ -446,11 +441,14 @@ function CollectionFilterBox({queryResult, filter, filterVar, mode}: CollectionF
                                 Add Filter:
                             </Typography>
                             <SelectFields alias={"Facility"} filter={filter} filterVar={filterVar}
-                                          uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.facility")}/>
+                                          uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields,
+                                              mode==Mode.Beamtimes?"facility":"parentBeamtimeMeta.facility")}/>
                             <SelectFields alias={"Beamline"} filter={filter} filterVar={filterVar}
-                                          uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.beamline")}/>
+                                          uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields,
+                                              mode==Mode.Beamtimes?"beamline":"parentBeamtimeMeta.beamline")}/>
                             <SelectFields alias={"Door user"} filter={filter} filterVar={filterVar}
-                                          uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields, "parentBeamtimeMeta.users.doorDb")}/>
+                                          uniqueFields={GetUniqueNamesForField(queryResult.data?.uniqueFields,
+                                              mode==Mode.Beamtimes?"users.doorDb":"parentBeamtimeMeta.users.doorDb")}/>
                         </Box>
                     </Grid>
                     <Grid item md={3} sm={12} xs={12}>
@@ -518,9 +516,9 @@ function CollectionFilterBox({queryResult, filter, filterVar, mode}: CollectionF
                                 <BulkFilterEdit filter={filter}  filterVar={filterVar}/>
                                 {filter.fieldFilters.map(fieldFilter => {
                                     return <FilterChip key={n++} collections={queryResult.data?.collections}
-                                                       filter={filter} filterVar={filterVar} fieldFilter={fieldFilter}/>;
+                                                       filter={filter} mode={mode} filterVar={filterVar} fieldFilter={fieldFilter}/>;
                                 })}
-                                <CustomFilter currentFilter={filter}  filterVar={filterVar} collections={queryResult.data?.collections}/>
+                                <CustomFilter currentFilter={filter} mode={mode} filterVar={filterVar} collections={queryResult.data?.collections}/>
                             </Box>
                         </Paper>
                     </Grid>

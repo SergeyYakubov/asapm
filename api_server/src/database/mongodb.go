@@ -321,7 +321,6 @@ func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_
 	if ok {
 		return []byte(newId.Hex()), nil
 	}
-	// TODO res.InsertedID to string and return []byte
 	return nil, nil
 }
 

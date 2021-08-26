@@ -4,13 +4,12 @@ import {
     collectionFilterVar,
     CollectionFilterData,
     GET_COLLECTION_FILTER,
-    Mode
 } from "../components/FilterBoxes";
 import Grid from "@material-ui/core/Grid";
 import React from "react";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
 import Divider from "@material-ui/core/Divider";
-import {GetFilterString, GetOrderBy} from "../common";
+import {GetFilterString, GetOrderBy, Mode} from "../common";
 import Paper from "@material-ui/core/Paper";
 import {gql, makeVar} from "@apollo/client";
 import {CollectionEntry, Query, QueryCollectionsArgs} from "../generated/graphql";
@@ -98,6 +97,7 @@ export const defaultColumns: ColumnList = [
     {fieldName: "parentBeamtimeMeta.id", alias: "Beamtime ID", active: true, type: "string"},
     {fieldName: "parentBeamtimeMeta.beamline", alias: "Beamline", active: true, type: "string"},
     {fieldName: "parentBeamtimeMeta.facility", alias: "Facility", active: true, type: "string"},
+    {fieldName: "parentBeamtimeMeta.proposalId", alias: "Proposal Id", active: false, type: "string"},
     {fieldName: "parentBeamtimeMeta.users.doorDb", alias: "Door users", active: true, type: "Array"},
     {fieldName: "eventStart", alias: "Started At", active: true, type: "Date"},
 ];

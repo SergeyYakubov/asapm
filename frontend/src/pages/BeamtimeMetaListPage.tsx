@@ -11,7 +11,7 @@ import {
     BeamtimeFilterData,
     beamtimeFilterVar,
     CollectionFilterBox,
-    GET_BEAMTIME_FILTER, Mode
+    GET_BEAMTIME_FILTER
 } from "../components/FilterBoxes";
 import Divider from "@material-ui/core/Divider";
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -19,7 +19,7 @@ import clsx from "clsx";
 import {useHistory} from "react-router-dom";
 import {METAS} from "../graphQLSchemes";
 import {Query, QueryCollectionsArgs} from "../generated/graphql";
-import {GetFilterString, GetOrderBy} from "../common";
+import {GetFilterString, GetOrderBy, Mode} from "../common";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
