@@ -210,6 +210,7 @@ export const COLLECTIONS = gql`
         eventEnd
         type
         customValues
+        thumbnail
     }
 }
 `;
@@ -272,6 +273,7 @@ export const METAS = gql`
                 special
             }
            customValues
+           thumbnail
     }
 }
 `;

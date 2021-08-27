@@ -94,6 +94,7 @@ export type CollectionEntryInterface = {
   parentBeamtimeMeta: ParentBeamtimeMeta;
   jsonString: Maybe<Scalars['String']>;
   attachments: Maybe<Array<Attachment>>;
+  thumbnail: Maybe<Scalars['String']>;
 };
 
 
@@ -119,6 +120,7 @@ export type CollectionEntry = CollectionEntryInterface & {
   parentId: Scalars['String'];
   index: Maybe<Scalars['Int']>;
   attachments: Maybe<Array<Attachment>>;
+  thumbnail: Maybe<Scalars['String']>;
 };
 
 
@@ -179,6 +181,7 @@ export type BeamtimeMeta = CollectionEntryInterface & {
   parentBeamtimeMeta: ParentBeamtimeMeta;
   jsonString: Maybe<Scalars['String']>;
   attachments: Maybe<Array<Attachment>>;
+  thumbnail: Maybe<Scalars['String']>;
 };
 
 

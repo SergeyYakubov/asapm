@@ -107,6 +107,12 @@ const useStyles = makeStyles((theme: Theme) =>
                 width: '100%',
                 objectFit: 'contain',
             },
+            titleBar: {
+                background:
+                    'linear-gradient(to top, rgba(0,0,0,0.5) 0%, ' +
+                    'rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.0) 100%)',
+            },
+
         }),
 );
 
@@ -240,6 +246,8 @@ function Attachments({meta}: MetaViewProps) {
                         <img className={classes.image} src={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`} alt={tile.name} />
                         <ImageListItemBar
                             title={tile.name}
+                            position={'bottom'}
+                            className={classes.titleBar}
                             actionIcon={
                                 <a href={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`} download={tile.name}>
                                     <IconButton className={classes.icon}>
@@ -263,6 +271,7 @@ function Attachments({meta}: MetaViewProps) {
                             <img className={classes.image} src={process.env.PUBLIC_URL + '/file.svg'} alt={attachment.name} />
                             <ImageListItemBar
                                 title={attachment.name}
+                                className={classes.titleBar}
                                 actionIcon={
                                     <Link href={`${ApplicationApiBaseUrl}/attachments/raw/meta/${attachment.id}`} download={attachment.name}>
                                         <IconButton className={classes.icon} >

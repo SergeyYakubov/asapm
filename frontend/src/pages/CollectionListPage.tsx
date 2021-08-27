@@ -100,6 +100,7 @@ export const defaultColumns: ColumnList = [
     {fieldName: "parentBeamtimeMeta.proposalId", alias: "Proposal Id", active: false, type: "string"},
     {fieldName: "parentBeamtimeMeta.users.doorDb", alias: "Door users", active: true, type: "Array"},
     {fieldName: "eventStart", alias: "Started At", active: true, type: "Date"},
+    {fieldName: "thumbnail", alias: "Image", active: true, type: "Image"},
 ];
 
 export const columnsVar = makeVar<ColumnList>(

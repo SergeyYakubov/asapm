@@ -220,7 +220,10 @@ function Table({filter, columns, data}: TableProps) {
                         return (
                             <div {...cell.getCellProps()} className={classes.rowContent}>
                                 {cell.render((cell: any) => {
-                                    return ValueToString(cell.value, cell.column.type);
+                                    if (cell.column.type!="Image" || !cell.value) {
+                                        return ValueToString(cell.value, cell.column.type);
+                                    }
+                                    return <img src={`data:image/png;base64,${cell.value}`}/>
                                 })}
                             </div>
                         );
