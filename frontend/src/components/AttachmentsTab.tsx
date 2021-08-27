@@ -1,10 +1,13 @@
 import React from 'react';
-import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
+import {makeStyles, createStyles,useTheme, Theme} from '@material-ui/core/styles';
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import ImageList from '@material-ui/core/ImageList';
 import ImageListItem from '@material-ui/core/ImageListItem';
 import ImageListItemBar from '@material-ui/core/ImageListItemBar';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 
 import MaterialTable from "material-table";
 import {useHistory} from "react-router-dom";
@@ -26,11 +29,12 @@ import {UPLOAD_ATTACHMENT} from "../graphQLSchemes";
 import {useMutation} from "@apollo/client";
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import {Link} from "@material-ui/core";
+import Typography from "@material-ui/core/Typography";
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
             root: {
                 flexGrow: 1,
-                margin: theme.spacing(1),
+                margin: theme.spacing(0),
             },
             divider: {
                 marginLeft: theme.spacing(-1),
@@ -65,9 +69,9 @@ const useStyles = makeStyles((theme: Theme) =>
                 flexGrow: 1,
             },
             paper: {
-                paddingTop: theme.spacing(1),
+                paddingTop: theme.spacing(0),
                 padding: theme.spacing(2),
-                margin: theme.spacing(0),
+                marginBottom: theme.spacing(2),
                 textAlign: 'center',
                 color: theme.palette.text.primary,
                 background: theme.palette.lightBackground.main,
@@ -95,10 +99,13 @@ const useStyles = makeStyles((theme: Theme) =>
             tabPanel: {
                 marginLeft: theme.spacing(2),
             },
-            gridList: {
-            },
             icon: {
                 color: 'rgba(255, 255, 255, 0.54)',
+            },
+            image: {
+                height: '100%',
+                width: '100%',
+                objectFit: 'contain',
             },
         }),
 );
@@ -168,9 +175,39 @@ function DatasetTable({meta}: MetaViewProps) {
     />;
 }
 
-function ListOfImages({meta}: MetaViewProps) {
+type BreakpointOrNull = Breakpoint | null;
+
+function useWidth():Breakpoint {
+    const theme: Theme = useTheme();
+    const keys: Breakpoint[] = [...theme.breakpoints.keys].reverse();
+    return (
+        keys.reduce((output: BreakpointOrNull, key: Breakpoint) => {
+            const matches = useMediaQuery(theme.breakpoints.up(key));
+            return !output && matches ? key : output;
+        }, null) || 'xs'
+    );
+}
+const getGridListCols = (width : Breakpoint) => {
+    if (isWidthUp('xl', width)) {
+        return 6;
+    }
+
+    if (isWidthUp('lg', width)) {
+        return 4;
+    }
+
+    if (isWidthUp('md', width)) {
+        return 2;
+    }
+
+    return 1;
+}
+
+
+function Attachments({meta}: MetaViewProps) {
     const classes = useStyles();
     const [mutate, { data, loading, error }] = useMutation<Attachment, MutationUploadAttachmentArgs>(UPLOAD_ATTACHMENT);
+    const width = useWidth();
 
     if (loading) console.log('Submitting...');
     if (error) console.log(`Submission error! ${error.message}`);
@@ -190,14 +227,17 @@ function ListOfImages({meta}: MetaViewProps) {
                 // you can do something with the error here
             })
     }
-
     return (
-        <div className={classes.root}>
-            <ImageList cols={1} >
+        <div>
+            <Typography variant="overline" align="center" className={classes.tableTitle}>
+                Images
+            </Typography>
+        <Paper className={classes.paper}>
+            <ImageList rowHeight={200}  gap={5} cols={getGridListCols(width)} >
                 {meta.attachments && meta.attachments.map((tile) => (
                     tile.contentType.startsWith("image")&&
-                    <ImageListItem key={tile.id}>
-                        <img src={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`} alt={tile.name} />
+                    <ImageListItem cols={1} key={tile.id}>
+                        <img className={classes.image} src={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`} alt={tile.name} />
                         <ImageListItemBar
                             title={tile.name}
                             actionIcon={
@@ -211,13 +251,16 @@ function ListOfImages({meta}: MetaViewProps) {
                     </ImageListItem>
                 ))}
             </ImageList>
-
-            <ImageList key="Subheader2" cols={2} style={{ height: 'auto'}}>
-                    <ListSubheader component="div">Other files</ListSubheader>
+            </Paper>
+            <Typography variant="overline" align="center" className={classes.tableTitle}>
+                Other files
+            </Typography>
+            <Paper className={classes.paper}>
+            <ImageList cols={getGridListCols(width)} >
                     {meta.attachments && meta.attachments.map((attachment) => (
                         !attachment.contentType.startsWith("image")&&
-                        <ImageListItem key={attachment.id}>
-                            <img src={process.env.PUBLIC_URL + '/file.svg'} alt={attachment.name} />
+                        <ImageListItem cols={1} key={attachment.id}>
+                            <img className={classes.image} src={process.env.PUBLIC_URL + '/file.svg'} alt={attachment.name} />
                             <ImageListItemBar
                                 title={attachment.name}
                                 actionIcon={
@@ -232,6 +275,7 @@ function ListOfImages({meta}: MetaViewProps) {
                         </ImageListItem>
                     ))}
                 </ImageList>
+            </Paper>
             <DropzoneArea
                 showPreviewsInDropzone={false}
                 onChange={onChange}
@@ -245,9 +289,10 @@ function ListOfImages({meta}: MetaViewProps) {
 
 
 function AttachmentsTab({meta}: MetaViewProps): JSX.Element {
+    const classes = useStyles();
     return (
-        <div>
-            <ListOfImages meta={meta}/>
+        <div className={classes.root}>
+            <Attachments meta={meta}/>
         </div>
     );
 }

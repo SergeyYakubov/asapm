@@ -370,7 +370,7 @@ function CustomTable({suffix, id, data}: CustomTableProps) {
                         variables: {id: id, fields: obj},
                     }).then(() => {
                         setPlainData(plainData.map((item) => item.name === newData.name ? newData : item));
-                        resolve();
+                        resolve(null);
                     }).catch((err) => {
                             reject();
                             console.log(err);
@@ -404,7 +404,7 @@ function CustomTable({suffix, id, data}: CustomTableProps) {
                     }).then(() => {
                         setPlainData([...plainData,newData]);
 //                        originalQuery.refetch();
-                        resolve();
+                        resolve(null);
                     }).catch((err) => {
                             reject();
                             console.log(err);

@@ -17,7 +17,7 @@ const useStyles = makeStyles((theme: Theme) =>
     createStyles({
         logbookPageRoot: {
             flexGrow: 1,
-            margin: theme.spacing(1),
+            margin: theme.spacing(0),
             minWidth:0,
             display: 'flex',
         },
