@@ -6,8 +6,15 @@ import (
 	"asapm/database"
 	"asapm/graphql/common"
 	"asapm/graphql/graph/model"
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/disintegration/imaging"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -28,8 +35,7 @@ func AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mode
 	entry := &model.CollectionEntry{}
 	utils.DeepCopy(input, entry)
 
-	entry.CustomValues = 	UpdateDatetimeFields(entry.CustomValues)
-
+	entry.CustomValues = UpdateDatetimeFields(entry.CustomValues)
 
 	ids := strings.Split(input.ID, ".")
 	if len(ids) < 2 {
@@ -131,7 +137,7 @@ func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry, mode int, input int
 		return false
 	}
 
-	if mode!= ModeAddAttachment && !checkUserFields(mode, input) {
+	if mode != ModeAddAttachment && !checkUserFields(mode, input) {
 		return false
 	}
 
@@ -182,25 +188,25 @@ func modifyMetaInDb(mode int, input interface{}) (res []byte, err error) {
 	return res, err
 }
 
-func auhthorizeModifyRequest(acl auth.MetaAcl, id string, mode int, input interface{}) error {
+func auhthorizeModifyRequest(acl auth.MetaAcl, id string, mode int, input interface{}) (*model.CollectionEntry, error) {
 	if acl.ImmediateDeny {
-		return errors.New("access denied, not enough permissions")
+		return nil, errors.New("access denied, not enough permissions")
 	}
 
 	meta, err := getCollectionMeta(id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !checkAuth(acl, meta, mode, input) {
-		return errors.New("Access denied")
+		return nil, errors.New("Access denied")
 	}
 
-	return nil
+	return &meta, nil
 }
 
 func ModifyCollectionEntryMeta(acl auth.MetaAcl, mode int, id string, input interface{}, keepFields []string, removeFields []string) (*model.CollectionEntry, error) {
-	err := auhthorizeModifyRequest(acl, id, mode, input)
+	_, err := auhthorizeModifyRequest(acl, id, mode, input)
 	if err != nil {
 		return nil, err
 	}
@@ -333,14 +339,40 @@ func authorizeCollectionActivity(id string, acl auth.MetaAcl, activity int) erro
 	return auth.AuthorizeOperation(acl, auth.CollectionToAuthorizedEntity(meta, activity))
 }
 
+func toPng(contentType string, imageBytes []byte) ([]byte, error) {
+	var srcImage image.Image
+	var err error
+	switch contentType {
+	case "image/png":
+		srcImage, err = png.Decode(bytes.NewReader(imageBytes))
+		if err != nil {
+			return nil, errors.New("unable to decode png")
+		}
+	case "image/jpeg":
+		srcImage, err = jpeg.Decode(bytes.NewReader(imageBytes))
+		if err != nil {
+			return nil, errors.New("unable to decode jpeg")
+		}
+	default:
+		return nil, fmt.Errorf("unable to convert %#v to png", contentType)
+	}
+	dstImage128 := imaging.Resize(srcImage, 64, 64, imaging.Lanczos)
+	buf := new(bytes.Buffer)
+	if err := png.Encode(buf, dstImage128); err != nil {
+		return nil, errors.New("unable to encode png")
+	}
+	return buf.Bytes(), nil
+
+}
+
 func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment, error) {
-	err := auhthorizeModifyRequest(acl,req.EntryID, ModeAddAttachment,nil)
+	meta, err := auhthorizeModifyRequest(acl, req.EntryID, ModeAddAttachment, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	if req.File.Size > kMaxAttachmentSize {
-		return nil, errors.New("attachment should not exceed "+strconv.Itoa(int(kMaxAttachmentSize/1000/1000))+" MB")
+		return nil, errors.New("attachment should not exceed " + strconv.Itoa(int(kMaxAttachmentSize/1000/1000)) + " MB")
 
 	}
 
@@ -350,20 +382,20 @@ func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment
 	}
 
 	res, err := database.GetDb().ProcessRequest("beamtime", KAttachmentCollectionName, "create_record",
-		&AttachmentContent{req.File.ContentType,content})
+		&AttachmentContent{req.File.ContentType, content})
 	if err != nil {
 		return nil, err
 	}
-	if res ==nil {
+	if res == nil {
 		return nil, errors.New("UploadAttachment: could not generate id")
 	}
 	id := string(res)
 
 	attachment := model.Attachment{
-		ID:      id,
-		EntryID: req.EntryID,
-		Name:    req.File.Filename,
-		Size: 	 int(req.File.Size),
+		ID:          id,
+		EntryID:     req.EntryID,
+		Name:        req.File.Filename,
+		Size:        int(req.File.Size),
 		ContentType: req.File.ContentType,
 	}
 
@@ -372,5 +404,21 @@ func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment
 		return nil, err
 	}
 
-	return &attachment,nil
+	if meta.Thumbnail == nil && strings.HasPrefix(attachment.ContentType, "image") {
+		data, err := toPng(req.File.ContentType, content)
+		if err != nil {
+			return nil, err
+		}
+		sEnc := base64.StdEncoding.EncodeToString(data)
+		set := model.FieldsToSet{
+			ID:     req.EntryID,
+			Fields: map[string]interface{}{"thumbnail": sEnc}}
+
+		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_fields", &set)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &attachment, nil
 }

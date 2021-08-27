@@ -67,6 +67,7 @@ type BeamtimeMeta struct {
 	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta,omitempty" bson:"parentBeamtimeMeta,omitempty"`
 	JSONString          *string                `json:"jsonString,omitempty" bson:"jsonString,omitempty"`
 	Attachments         []*Attachment          `json:"attachments,omitempty" bson:"attachments,omitempty"`
+	Thumbnail           *string                `json:"thumbnail,omitempty" bson:"thumbnail,omitempty"`
 }
 
 func (BeamtimeMeta) IsCollectionEntryInterface() {}
@@ -96,6 +97,7 @@ type CollectionEntry struct {
 	ParentID            string                 `json:"parentId,omitempty" bson:"parentId,omitempty"`
 	Index               *int                   `json:"index,omitempty" bson:"index,omitempty"`
 	Attachments         []*Attachment          `json:"attachments,omitempty" bson:"attachments,omitempty"`
+	Thumbnail           *string                `json:"thumbnail,omitempty" bson:"thumbnail,omitempty"`
 }
 
 func (CollectionEntry) IsCollectionEntryInterface() {}

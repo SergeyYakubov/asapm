@@ -85,6 +85,7 @@ type ComplexityRoot struct {
 		ProposalID          func(childComplexity int) int
 		ProposalType        func(childComplexity int) int
 		Status              func(childComplexity int) int
+		Thumbnail           func(childComplexity int) int
 		Title               func(childComplexity int) int
 		Type                func(childComplexity int) int
 		UnixID              func(childComplexity int) int
@@ -114,6 +115,7 @@ type ComplexityRoot struct {
 		ParentBeamtimeMeta  func(childComplexity int) int
 		ParentID            func(childComplexity int) int
 		PrevEntry           func(childComplexity int) int
+		Thumbnail           func(childComplexity int) int
 		Title               func(childComplexity int) int
 		Type                func(childComplexity int) int
 	}
@@ -490,6 +492,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BeamtimeMeta.Status(childComplexity), true
 
+	case "BeamtimeMeta.thumbnail":
+		if e.complexity.BeamtimeMeta.Thumbnail == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.Thumbnail(childComplexity), true
+
 	case "BeamtimeMeta.title":
 		if e.complexity.BeamtimeMeta.Title == nil {
 			break
@@ -655,6 +664,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CollectionEntry.PrevEntry(childComplexity), true
+
+	case "CollectionEntry.thumbnail":
+		if e.complexity.CollectionEntry.Thumbnail == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.Thumbnail(childComplexity), true
 
 	case "CollectionEntry.title":
 		if e.complexity.CollectionEntry.Title == nil {
@@ -1371,6 +1387,7 @@ interface CollectionEntryInterface {
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
     attachments: [Attachment!]
+    thumbnail: String
 }
 
 type CollectionEntry implements CollectionEntryInterface {
@@ -1389,6 +1406,7 @@ type CollectionEntry implements CollectionEntryInterface {
     parentId: String!
     index: Int
     attachments: [Attachment!]
+    thumbnail: String
 }
 
 type ParentBeamtimeMeta {
@@ -1441,6 +1459,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
     attachments: [Attachment!]
+    thumbnail: String
 }
 
 type BaseCollectionEntry {
@@ -3208,6 +3227,37 @@ func (ec *executionContext) _BeamtimeMeta_attachments(ctx context.Context, field
 	return ec.marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _BeamtimeMeta_thumbnail(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Thumbnail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _BeamtimeUser_applicant(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeUser) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3876,6 +3926,37 @@ func (ec *executionContext) _CollectionEntry_attachments(ctx context.Context, fi
 	res := resTmp.([]*model.Attachment)
 	fc.Result = res
 	return ec.marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_thumbnail(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Thumbnail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LogEntryMessage_id(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
@@ -7940,6 +8021,8 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._BeamtimeMeta_jsonString(ctx, field, obj)
 		case "attachments":
 			out.Values[i] = ec._BeamtimeMeta_attachments(ctx, field, obj)
+		case "thumbnail":
+			out.Values[i] = ec._BeamtimeMeta_thumbnail(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8038,6 +8121,8 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 			out.Values[i] = ec._CollectionEntry_index(ctx, field, obj)
 		case "attachments":
 			out.Values[i] = ec._CollectionEntry_attachments(ctx, field, obj)
+		case "thumbnail":
+			out.Values[i] = ec._CollectionEntry_thumbnail(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

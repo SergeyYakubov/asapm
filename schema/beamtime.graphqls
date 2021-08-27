@@ -78,6 +78,7 @@ interface CollectionEntryInterface {
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
     attachments: [Attachment!]
+    thumbnail: String
 }
 
 type CollectionEntry implements CollectionEntryInterface {
@@ -96,6 +97,7 @@ type CollectionEntry implements CollectionEntryInterface {
     parentId: String!
     index: Int
     attachments: [Attachment!]
+    thumbnail: String
 }
 
 type ParentBeamtimeMeta {
@@ -148,6 +150,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
     attachments: [Attachment!]
+    thumbnail: String
 }
 
 type BaseCollectionEntry {

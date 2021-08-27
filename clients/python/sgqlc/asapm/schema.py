@@ -182,7 +182,7 @@ class BeamtimeUser(sgqlc.types.Type):
 
 class CollectionEntryInterface(sgqlc.types.Interface):
     __schema__ = schema
-    __field_names__ = ('id', 'event_start', 'event_end', 'title', 'child_collection_name', 'child_collection', 'custom_values', 'type', 'parent_beamtime_meta', 'json_string', 'attachments')
+    __field_names__ = ('id', 'event_start', 'event_end', 'title', 'child_collection_name', 'child_collection', 'custom_values', 'type', 'parent_beamtime_meta', 'json_string', 'attachments', 'thumbnail')
     id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
     event_start = sgqlc.types.Field(DateTime, graphql_name='eventStart')
     event_end = sgqlc.types.Field(DateTime, graphql_name='eventEnd')
@@ -198,6 +198,7 @@ class CollectionEntryInterface(sgqlc.types.Interface):
     parent_beamtime_meta = sgqlc.types.Field(sgqlc.types.non_null('ParentBeamtimeMeta'), graphql_name='parentBeamtimeMeta')
     json_string = sgqlc.types.Field(String, graphql_name='jsonString')
     attachments = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(Attachment)), graphql_name='attachments')
+    thumbnail = sgqlc.types.Field(String, graphql_name='thumbnail')
 
 
 class GenericLogEntry(sgqlc.types.Interface):
