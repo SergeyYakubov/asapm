@@ -365,7 +365,7 @@ func toPng(contentType string, imageBytes []byte) ([]byte, error) {
 
 }
 
-func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment, error) {
+func checkUploadAttachmentRequest(acl auth.MetaAcl, req model.UploadFile) (*model.CollectionEntry,error) {
 	meta, err := auhthorizeModifyRequest(acl, req.EntryID, ModeAddAttachment, nil)
 	if err != nil {
 		return nil, err
@@ -373,21 +373,18 @@ func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment
 
 	if req.File.Size > kMaxAttachmentSize {
 		return nil, errors.New("attachment should not exceed " + strconv.Itoa(int(kMaxAttachmentSize/1000/1000)) + " MB")
-
 	}
+	return meta, nil
+}
 
-	content, err := ioutil.ReadAll(req.File.File)
-	if err != nil {
-		return nil, err
-	}
-
+func addAttachmentToDb(content []byte, req model.UploadFile) (*model.Attachment,error) {
 	res, err := database.GetDb().ProcessRequest("beamtime", KAttachmentCollectionName, "create_record",
 		&AttachmentContent{req.File.ContentType, content})
 	if err != nil {
-		return nil, err
+		return nil,err
 	}
 	if res == nil {
-		return nil, errors.New("UploadAttachment: could not generate id")
+		return nil,errors.New("UploadAttachment: could not generate id")
 	}
 	id := string(res)
 
@@ -399,26 +396,51 @@ func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment
 		ContentType: req.File.ContentType,
 	}
 
-	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element", req.EntryID, KAttachmentKey, &attachment, id)
+	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element", req.EntryID, KAttachmentKey, attachment, id)
+	return &attachment, err
+
+}
+
+func addThumbnailToDb(content []byte, req model.UploadFile) (error) {
+	data, err := toPng(req.File.ContentType, content)
+	if err != nil {
+		return err
+	}
+	sEnc := base64.StdEncoding.EncodeToString(data)
+	set := model.FieldsToSet{
+		ID:     req.EntryID,
+		Fields: map[string]interface{}{"thumbnail": sEnc}}
+
+	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_fields", &set)
+	return err
+}
+
+func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment, error) {
+	meta, err := checkUploadAttachmentRequest(acl, req)
 	if err != nil {
 		return nil, err
 	}
 
-	if meta.Thumbnail == nil && strings.HasPrefix(attachment.ContentType, "image") {
-		data, err := toPng(req.File.ContentType, content)
-		if err != nil {
-			return nil, err
-		}
-		sEnc := base64.StdEncoding.EncodeToString(data)
-		set := model.FieldsToSet{
-			ID:     req.EntryID,
-			Fields: map[string]interface{}{"thumbnail": sEnc}}
+	content, err := ioutil.ReadAll(req.File.File)
+	if err != nil {
+		return nil, err
+	}
 
-		_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_fields", &set)
+	attachment, err := addAttachmentToDb(content,req)
+	if err != nil {
+		return nil, err
+	}
+
+	if needThumbnail(meta, attachment) {
+		err := addThumbnailToDb(content, req)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return &attachment, nil
+	return attachment, nil
+}
+
+func needThumbnail(meta *model.CollectionEntry, attachment *model.Attachment) bool {
+	return meta.Thumbnail == nil && strings.HasPrefix(attachment.ContentType, "image")
 }

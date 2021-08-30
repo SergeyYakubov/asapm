@@ -1,35 +1,27 @@
 import React from 'react';
-import {makeStyles, createStyles,useTheme, Theme} from '@material-ui/core/styles';
-import Grid from "@material-ui/core/Grid";
+import {makeStyles, createStyles, useTheme, Theme} from '@material-ui/core/styles';
 import Paper from "@material-ui/core/Paper";
 import ImageList from '@material-ui/core/ImageList';
 import ImageListItem from '@material-ui/core/ImageListItem';
 import ImageListItemBar from '@material-ui/core/ImageListItemBar';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import {isWidthUp} from '@material-ui/core/withWidth';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+import {Breakpoint} from '@material-ui/core/styles/createBreakpoints';
 
-import MaterialTable from "material-table";
-import {useHistory} from "react-router-dom";
-import {TableIcons} from "../TableIcons";
-import {ApplicationApiBaseUrl, IsoDateToStr} from "../common";
+import {ApplicationApiBaseUrl} from "../common";
 import {
-    BaseCollectionEntry,
     BeamtimeMeta,
     CollectionEntry,
-    Maybe,
-    MutationUploadAttachmentArgs, Scalars, Attachment, UploadFile
+    MutationUploadAttachmentArgs, Attachment, UploadFile
 } from "../generated/graphql";
-import ListSubheader from '@material-ui/core/ListSubheader';
 import IconButton from '@material-ui/core/IconButton';
-import InfoIcon from '@material-ui/icons/Info';
-import { DropzoneArea } from 'material-ui-dropzone';
-import Dropzone from 'react-dropzone'
+import {DropzoneArea} from 'material-ui-dropzone';
 import {UPLOAD_ATTACHMENT} from "../graphQLSchemes";
 import {useMutation} from "@apollo/client";
 import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import {Link} from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
+
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
             root: {
@@ -121,69 +113,9 @@ type MetaViewProps = {
     meta: BeamtimeMeta | CollectionEntry
 }
 
-interface TableEntry {
-    id: string
-    title: Maybe<string>
-    eventStart: Maybe<string>
-    eventEnd: Maybe<string>
-}
-
-type TableData = Array<TableEntry>
-
-function TableDataFromDataset(meta: BeamtimeMeta | CollectionEntry): TableData {
-    if (!meta.childCollection) {
-        return [];
-    }
-    return (meta.childCollection as BaseCollectionEntry[]).map(collection => {
-            return {
-                id: collection.id,
-                title: collection.title,
-                eventStart: IsoDateToStr(collection.eventStart),
-                eventEnd: IsoDateToStr(collection.eventEnd)
-            };
-        }
-    );
-}
-
-function DatasetTable({meta}: MetaViewProps) {
-    const history = useHistory();
-    const handleClick = (
-        event?: React.MouseEvent,
-        rowData?: TableEntry,
-    ) => {
-        const path = "/detailedcollection/" + rowData?.id + "/meta";
-        history.push(path);
-    };
-
-    return <MaterialTable
-        icons={TableIcons}
-        onRowClick={handleClick}
-        options={{
-            filtering: false,
-            header: true,
-            showTitle: false,
-            search: true,
-            paging: false,
-            toolbar: true,
-            draggable: false,
-            minBodyHeight: "50vh",
-            headerStyle: {
-                fontWeight: 'bold',
-            }
-        }}
-        columns={[
-            {title: 'ID', field: 'id'},
-            {title: 'Title', field: 'title'},
-            {title: 'Start time', field: 'eventStart'},
-            {title: 'End time', field: 'eventEnd'},
-        ]}
-        data={TableDataFromDataset(meta)}
-    />;
-}
-
 type BreakpointOrNull = Breakpoint | null;
 
-function useWidth():Breakpoint {
+function useWidth(): Breakpoint {
     const theme: Theme = useTheme();
     const keys: Breakpoint[] = [...theme.breakpoints.keys].reverse();
     return (
@@ -193,7 +125,8 @@ function useWidth():Breakpoint {
         }, null) || 'xs'
     );
 }
-const getGridListCols = (width : Breakpoint) => {
+
+const getGridListCols = (width: Breakpoint) => {
     if (isWidthUp('xl', width)) {
         return 6;
     }
@@ -207,75 +140,80 @@ const getGridListCols = (width : Breakpoint) => {
     }
 
     return 1;
-}
+};
 
 
 function Attachments({meta}: MetaViewProps) {
     const classes = useStyles();
-    const [mutate, { data, loading, error }] = useMutation<Attachment, MutationUploadAttachmentArgs>(UPLOAD_ATTACHMENT);
+    const [mutate, {loading, error}] = useMutation<Attachment, MutationUploadAttachmentArgs>(UPLOAD_ATTACHMENT);
     const width = useWidth();
 
     if (loading) console.log('Submitting...');
     if (error) console.log(`Submission error! ${error.message}`);
 
-    function onChange(files:File[]) {
-        if (files.length==0) {
+    function onChange(files: File[]) {
+        if (files.length == 0) {
             return;
         }
         const upload: UploadFile = {
             entryId: meta.id,
             file: files[0]
         };
-        mutate({ variables: { req: upload } }) .then(({ data }) => {
-            console.log("uploaded ",data);
+        mutate({variables: {req: upload}}).then(({data}) => {
+            console.log("uploaded ", data);
         })
             .catch(e => {
-                // you can do something with the error here
-            })
+                console.log(e);
+            });
     }
+
     return (
         <div>
             <Typography variant="overline" align="center" className={classes.tableTitle}>
                 Images
             </Typography>
-        <Paper className={classes.paper}>
-            <ImageList rowHeight={200}  gap={5} cols={getGridListCols(width)} >
-                {meta.attachments && meta.attachments.map((tile) => (
-                    tile.contentType.startsWith("image")&&
-                    <ImageListItem cols={1} key={tile.id}>
-                        <img className={classes.image} src={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`} alt={tile.name} />
-                        <ImageListItemBar
-                            title={tile.name}
-                            position={'bottom'}
-                            className={classes.titleBar}
-                            actionIcon={
-                                <a href={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`} download={tile.name}>
-                                    <IconButton className={classes.icon}>
-                                        <CloudDownloadIcon />
-                                    </IconButton>
-                                </a>
-                            }
-                        />
-                    </ImageListItem>
-                ))}
-            </ImageList>
+            <Paper className={classes.paper}>
+                <ImageList rowHeight={200} gap={5} cols={getGridListCols(width)}>
+                    {meta.attachments && meta.attachments.map((tile) => (
+                        tile.contentType.startsWith("image") &&
+                        <ImageListItem cols={1} key={tile.id}>
+                            <img className={classes.image}
+                                 src={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`} alt={tile.name}/>
+                            <ImageListItemBar
+                                title={tile.name}
+                                position={'bottom'}
+                                className={classes.titleBar}
+                                actionIcon={
+                                    <a href={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`}
+                                       download={tile.name}>
+                                        <IconButton className={classes.icon}>
+                                            <CloudDownloadIcon/>
+                                        </IconButton>
+                                    </a>
+                                }
+                            />
+                        </ImageListItem>
+                    ))}
+                </ImageList>
             </Paper>
             <Typography variant="overline" align="center" className={classes.tableTitle}>
                 Other files
             </Typography>
             <Paper className={classes.paper}>
-            <ImageList cols={getGridListCols(width)} >
+                <ImageList cols={getGridListCols(width)}>
                     {meta.attachments && meta.attachments.map((attachment) => (
-                        !attachment.contentType.startsWith("image")&&
+                        !attachment.contentType.startsWith("image") &&
                         <ImageListItem cols={1} key={attachment.id}>
-                            <img className={classes.image} src={process.env.PUBLIC_URL + '/file.svg'} alt={attachment.name} />
+                            <img className={classes.image} src={process.env.PUBLIC_URL + '/file.svg'}
+                                 alt={attachment.name}/>
                             <ImageListItemBar
                                 title={attachment.name}
                                 className={classes.titleBar}
                                 actionIcon={
-                                    <Link href={`${ApplicationApiBaseUrl}/attachments/raw/meta/${attachment.id}`} download={attachment.name}>
-                                        <IconButton className={classes.icon} >
-                                            <CloudDownloadIcon />
+                                    <Link href={`${ApplicationApiBaseUrl}/attachments/raw/meta/${attachment.id}`}
+                                          download={attachment.name}>
+                                        <IconButton className={classes.icon}>
+                                            <CloudDownloadIcon/>
                                         </IconButton>
                                     </Link>
                                 }

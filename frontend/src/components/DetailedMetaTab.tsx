@@ -22,9 +22,6 @@ import {QueryResult} from "@apollo/client";
 import {FormControl, InputLabel, MenuItem, Select, TextField} from "@material-ui/core";
 import ImageList from "@material-ui/core/ImageList";
 import ImageListItem from "@material-ui/core/ImageListItem";
-import ImageListItemBar from "@material-ui/core/ImageListItemBar";
-import IconButton from "@material-ui/core/IconButton";
-import CloudDownloadIcon from "@material-ui/icons/CloudDownload";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
