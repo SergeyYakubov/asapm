@@ -7,8 +7,11 @@ import (
 	"asapm/common/utils"
 	"asapm/database"
 	"asapm/graphql/graph/model"
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -117,12 +120,12 @@ var AddCollectionEntryTests = []struct {
 	{aclImmediateAccess, true, "81999364.scan1", "81999364", KMetaNameInDb, "first layer"},
 	{aclImmediateAccess, true, "81999364.scan1.subscan1", "81999364.scan1", KMetaNameInDb, "second layer"},
 	{aclImmediateDeny, false, "12345.scan1", "12345", KMetaNameInDb, "access denied"},
-	{auth.MetaAcl{UserProps: auth.UserProps{Roles:  []string{"admin_f_facility"}, Groups: nil}}, true, "81999364.scan1", "81999364", KMetaNameInDb, "facility admin"},
-	{auth.MetaAcl{UserProps: auth.UserProps{Roles:  []string{"admin_b_p05"}, Groups: nil}}, true, "81999364.scan1", "81999364", KMetaNameInDb, "facility admin"},
+	{auth.MetaAcl{UserProps: auth.UserProps{Roles: []string{"admin_f_facility"}, Groups: nil}}, true, "81999364.scan1", "81999364", KMetaNameInDb, "facility admin"},
+	{auth.MetaAcl{UserProps: auth.UserProps{Roles: []string{"admin_b_p05"}, Groups: nil}}, true, "81999364.scan1", "81999364", KMetaNameInDb, "facility admin"},
 }
 
 func (suite *CollectionTestSuite) TestAddCollectionEntry() {
-	config.Config.Authorization.AdminLevels=[]string{"facility","beamline"}
+	config.Config.Authorization.AdminLevels = []string{"facility", "beamline"}
 
 	for _, test := range AddCollectionEntryTests {
 		input := model.NewCollectionEntry{
@@ -208,7 +211,6 @@ func (suite *CollectionTestSuite) TestDeleteSubcollection() {
 		SystemFilter: "id = '12345.123' OR id regexp '^12345.123.'",
 	}
 
-
 	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", mock.Anything).Return([]byte(subcollection_meta), nil)
 
 	params_delete := []interface{}{fs, true}
@@ -217,8 +219,8 @@ func (suite *CollectionTestSuite) TestDeleteSubcollection() {
 	params_delete_element := []interface{}{parentId, id, "childCollection"}
 	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_array_element", params_delete_element).Return([]byte(""), nil)
 	//	_, err = database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "add_array_element",parentId, KChildCollectionKey,baseEntry,baseEntry.ID)
-	config.Config.Authorization.AdminLevels=[]string{"facility"}
-	res, err := DeleteCollectionsAndSubcollectionMeta(auth.MetaAcl{UserProps: auth.UserProps{Roles:  []string{"admin_f_facility"}, Groups: nil}}, id)
+	config.Config.Authorization.AdminLevels = []string{"facility"}
+	res, err := DeleteCollectionsAndSubcollectionMeta(auth.MetaAcl{UserProps: auth.UserProps{Roles: []string{"admin_f_facility"}, Groups: nil}}, id)
 
 	suite.Nil(err)
 	suite.Equal(id, *res)
@@ -257,7 +259,6 @@ var AddUserMetaTests = []struct {
 			ID: "12346",
 		},
 	}, false, "ok, access via beamtime"},
-
 
 	{aclImmediateDeny, "12345.1", ModeAddFields, "add_fields", &model.FieldsToSet{
 		ID:     "12345.1",
@@ -311,7 +312,6 @@ var AddUserMetaTests = []struct {
 			ID: "12346",
 		},
 	}, false, "ok, does not start with user fields but admin access"},
-
 
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
@@ -411,7 +411,6 @@ var AddUserMetaTests = []struct {
 		},
 	}, false, "ok delete non custom values field with immediate access"},
 
-
 	{auth.MetaAcl{
 		ImmediateDeny:     false,
 		AdminAccess:       true,
@@ -453,10 +452,72 @@ func (suite *MetaSuite) TestAddUserMeta() {
 		if test.meta == nil || test.resultErrors {
 			suite.NotNil(err, test.message)
 			suite.Nil(res, test.message)
-		} else
-		{
+		} else {
 			suite.Nil(err, test.message)
 			suite.NotNil(res, test.message)
 		}
 	}
+}
+
+var UploadAttachmentTests = []struct {
+	Id       string
+	parentId string
+	content  string
+	message  string
+}{
+	{"1", "81999364", "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "upload"},
+}
+
+func (suite *CollectionTestSuite) TestUploadAttachment() {
+	config.Config.Authorization.AdminLevels = []string{"facility", "beamline"}
+
+	for _, test := range UploadAttachmentTests {
+		c_decoded,_:=base64.StdEncoding.DecodeString(test.content)
+		input := model.UploadFile{
+			EntryID: test.parentId,
+			File: graphql.Upload{
+				File:        bytes.NewReader([]byte(c_decoded)),
+				Filename:    "file",
+				Size:        0,
+				ContentType: "image/png",
+			},
+		}
+		params_read := []interface{}{test.parentId}
+		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", params_read).Return([]byte(beamtime_meta), nil)
+
+		attachment := model.Attachment{
+			ID:          test.Id,
+			EntryID:     input.EntryID,
+			Name:        input.File.Filename,
+			Size:        int(input.File.Size),
+			ContentType: input.File.ContentType,
+		}
+		input_entry := AttachmentContent{input.File.ContentType, []byte(c_decoded)}
+		params_create := []interface{}{&input_entry}
+		suite.mock_db.On("ProcessRequest", "beamtime", "attachments", "create_record", params_create).Return([]byte(test.Id), nil)
+
+		params_add := []interface{}{test.parentId, "attachments", attachment, attachment.ID}
+		suite.mock_db.On("ProcessRequest", "beamtime", "meta", "add_array_element", params_add).Return([]byte(""), nil)
+
+
+		tn,_:=toPng("image/png", c_decoded)
+		add_fields:= &model.FieldsToSet{
+		ID:     test.parentId,
+			Fields: map[string]interface{}{"thumbnail": base64.StdEncoding.EncodeToString(tn)},
+		}
+		params := []interface{}{add_fields}
+		suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "add_fields", params).Return([]byte(""), nil)
+
+
+		result, err := UploadAttachment(aclImmediateAccess, input)
+
+		suite.Nil(err)
+		suite.Equal(test.parentId, result.EntryID)
+		suite.Equal(test.Id, result.ID)
+		suite.mock_db.AssertExpectations(suite.T())
+		suite.mock_db.ExpectedCalls = nil
+		suite.mock_db.Calls = nil
+
+	}
+
 }

@@ -45,6 +45,14 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Attachment struct {
+		ContentType func(childComplexity int) int
+		EntryID     func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Size        func(childComplexity int) int
+	}
+
 	BaseCollectionEntry struct {
 		EventEnd   func(childComplexity int) int
 		EventStart func(childComplexity int) int
@@ -55,6 +63,7 @@ type ComplexityRoot struct {
 
 	BeamtimeMeta struct {
 		Applicant           func(childComplexity int) int
+		Attachments         func(childComplexity int) int
 		Beamline            func(childComplexity int) int
 		BeamlineAlias       func(childComplexity int) int
 		BeamlineSetup       func(childComplexity int) int
@@ -76,6 +85,7 @@ type ComplexityRoot struct {
 		ProposalID          func(childComplexity int) int
 		ProposalType        func(childComplexity int) int
 		Status              func(childComplexity int) int
+		Thumbnail           func(childComplexity int) int
 		Title               func(childComplexity int) int
 		Type                func(childComplexity int) int
 		UnixID              func(childComplexity int) int
@@ -92,6 +102,7 @@ type ComplexityRoot struct {
 	}
 
 	CollectionEntry struct {
+		Attachments         func(childComplexity int) int
 		ChildCollection     func(childComplexity int) int
 		ChildCollectionName func(childComplexity int) int
 		CustomValues        func(childComplexity int, selectFields []string, removeFields []string) int
@@ -104,6 +115,7 @@ type ComplexityRoot struct {
 		ParentBeamtimeMeta  func(childComplexity int) int
 		ParentID            func(childComplexity int) int
 		PrevEntry           func(childComplexity int) int
+		Thumbnail           func(childComplexity int) int
 		Title               func(childComplexity int) int
 		Type                func(childComplexity int) int
 	}
@@ -139,6 +151,7 @@ type ComplexityRoot struct {
 		RemoveLogEntry              func(childComplexity int, id string) int
 		SetUserPreferences          func(childComplexity int, id string, input model.InputUserPreferences) int
 		UpdateCollectionEntryFields func(childComplexity int, input model.FieldsToSet) int
+		UploadAttachment            func(childComplexity int, req model.UploadFile) int
 	}
 
 	OnlineAnylysisMeta struct {
@@ -214,6 +227,7 @@ type MutationResolver interface {
 	AddCollectionEntryFields(ctx context.Context, input model.FieldsToSet) (*model.CollectionEntry, error)
 	DeleteCollectionEntryFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error)
 	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error)
+	UploadAttachment(ctx context.Context, req model.UploadFile) (*model.Attachment, error)
 	AddMessageLogEntry(ctx context.Context, input model.NewLogEntryMessage) (*string, error)
 	RemoveLogEntry(ctx context.Context, id string) (*string, error)
 }
@@ -241,6 +255,41 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Attachment.contentType":
+		if e.complexity.Attachment.ContentType == nil {
+			break
+		}
+
+		return e.complexity.Attachment.ContentType(childComplexity), true
+
+	case "Attachment.entryId":
+		if e.complexity.Attachment.EntryID == nil {
+			break
+		}
+
+		return e.complexity.Attachment.EntryID(childComplexity), true
+
+	case "Attachment.id":
+		if e.complexity.Attachment.ID == nil {
+			break
+		}
+
+		return e.complexity.Attachment.ID(childComplexity), true
+
+	case "Attachment.name":
+		if e.complexity.Attachment.Name == nil {
+			break
+		}
+
+		return e.complexity.Attachment.Name(childComplexity), true
+
+	case "Attachment.size":
+		if e.complexity.Attachment.Size == nil {
+			break
+		}
+
+		return e.complexity.Attachment.Size(childComplexity), true
 
 	case "BaseCollectionEntry.eventEnd":
 		if e.complexity.BaseCollectionEntry.EventEnd == nil {
@@ -283,6 +332,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeMeta.Applicant(childComplexity), true
+
+	case "BeamtimeMeta.attachments":
+		if e.complexity.BeamtimeMeta.Attachments == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.Attachments(childComplexity), true
 
 	case "BeamtimeMeta.beamline":
 		if e.complexity.BeamtimeMeta.Beamline == nil {
@@ -436,6 +492,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BeamtimeMeta.Status(childComplexity), true
 
+	case "BeamtimeMeta.thumbnail":
+		if e.complexity.BeamtimeMeta.Thumbnail == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.Thumbnail(childComplexity), true
+
 	case "BeamtimeMeta.title":
 		if e.complexity.BeamtimeMeta.Title == nil {
 			break
@@ -505,6 +568,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeUser.Username(childComplexity), true
+
+	case "CollectionEntry.attachments":
+		if e.complexity.CollectionEntry.Attachments == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.Attachments(childComplexity), true
 
 	case "CollectionEntry.childCollection":
 		if e.complexity.CollectionEntry.ChildCollection == nil {
@@ -594,6 +664,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CollectionEntry.PrevEntry(childComplexity), true
+
+	case "CollectionEntry.thumbnail":
+		if e.complexity.CollectionEntry.Thumbnail == nil {
+			break
+		}
+
+		return e.complexity.CollectionEntry.Thumbnail(childComplexity), true
 
 	case "CollectionEntry.title":
 		if e.complexity.CollectionEntry.Title == nil {
@@ -831,6 +908,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdateCollectionEntryFields(childComplexity, args["input"].(model.FieldsToSet)), true
+
+	case "Mutation.uploadAttachment":
+		if e.complexity.Mutation.UploadAttachment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_uploadAttachment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UploadAttachment(childComplexity, args["req"].(model.UploadFile)), true
 
 	case "OnlineAnylysisMeta.asapoBeamtimeTokenPath":
 		if e.complexity.OnlineAnylysisMeta.AsapoBeamtimeTokenPath == nil {
@@ -1227,6 +1316,21 @@ var sources = []*ast.Source{
     username: String
 }
 
+scalar Upload
+
+type Attachment {
+    id: String!
+    entryId: String!
+    name: String!
+    size: Int!
+    contentType: String!
+}
+
+input UploadFile {
+    entryId: String!
+    file: Upload!
+}
+
 input InputBeamtimeUser {
     applicant: String
     email: String
@@ -1282,6 +1386,8 @@ interface CollectionEntryInterface {
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
+    attachments: [Attachment!]
+    thumbnail: String
 }
 
 type CollectionEntry implements CollectionEntryInterface {
@@ -1299,6 +1405,8 @@ type CollectionEntry implements CollectionEntryInterface {
     prevEntry: String
     parentId: String!
     index: Int
+    attachments: [Attachment!]
+    thumbnail: String
 }
 
 type ParentBeamtimeMeta {
@@ -1350,6 +1458,8 @@ type BeamtimeMeta implements CollectionEntryInterface {
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
+    attachments: [Attachment!]
+    thumbnail: String
 }
 
 type BaseCollectionEntry {
@@ -1475,6 +1585,7 @@ type LogEntryQueryResult {
     addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
+    uploadAttachment(req: UploadFile!): Attachment!
 
     # Logbook API
     addMessageLogEntry(input: NewLogEntryMessage!): ID
@@ -1722,6 +1833,20 @@ func (ec *executionContext) field_Mutation_updateCollectionEntryFields_args(ctx 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_uploadAttachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UploadFile
+	if tmp, ok := rawArgs["req"]; ok {
+		arg0, err = ec.unmarshalNUploadFile2asapmᚋgraphqlᚋgraphᚋmodelᚐUploadFile(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["req"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1917,6 +2042,176 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Attachment_id(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Attachment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attachment_entryId(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Attachment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EntryID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attachment_name(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Attachment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attachment_size(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Attachment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Size, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attachment_contentType(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Attachment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContentType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _BaseCollectionEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.BaseCollectionEntry) (ret graphql.Marshaler) {
 	defer func() {
@@ -2901,6 +3196,68 @@ func (ec *executionContext) _BeamtimeMeta_jsonString(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _BeamtimeMeta_attachments(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Attachments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Attachment)
+	fc.Result = res
+	return ec.marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BeamtimeMeta_thumbnail(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Thumbnail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _BeamtimeUser_applicant(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeUser) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3538,6 +3895,68 @@ func (ec *executionContext) _CollectionEntry_index(ctx context.Context, field gr
 	res := resTmp.(*int)
 	fc.Result = res
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_attachments(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Attachments, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Attachment)
+	fc.Result = res
+	return ec.marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionEntry_thumbnail(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionEntry",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Thumbnail, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LogEntryMessage_id(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
@@ -4310,6 +4729,47 @@ func (ec *executionContext) _Mutation_setUserPreferences(ctx context.Context, fi
 	res := resTmp.(*model.UserAccount)
 	fc.Result = res
 	return ec.marshalOUserAccount2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_uploadAttachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_uploadAttachment_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UploadAttachment(rctx, args["req"].(model.UploadFile))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Attachment)
+	fc.Result = res
+	return ec.marshalNAttachment2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addMessageLogEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7315,6 +7775,30 @@ func (ec *executionContext) unmarshalInputNewLogEntryMessage(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUploadFile(ctx context.Context, obj interface{}) (model.UploadFile, error) {
+	var it model.UploadFile
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "entryId":
+			var err error
+			it.EntryID, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "file":
+			var err error
+			it.File, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -7377,6 +7861,53 @@ func (ec *executionContext) _LogEntry(ctx context.Context, sel ast.SelectionSet,
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var attachmentImplementors = []string{"Attachment"}
+
+func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSet, obj *model.Attachment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, attachmentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Attachment")
+		case "id":
+			out.Values[i] = ec._Attachment_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "entryId":
+			out.Values[i] = ec._Attachment_entryId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Attachment_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "size":
+			out.Values[i] = ec._Attachment_size(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "contentType":
+			out.Values[i] = ec._Attachment_contentType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var baseCollectionEntryImplementors = []string{"BaseCollectionEntry"}
 
@@ -7488,6 +8019,10 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			}
 		case "jsonString":
 			out.Values[i] = ec._BeamtimeMeta_jsonString(ctx, field, obj)
+		case "attachments":
+			out.Values[i] = ec._BeamtimeMeta_attachments(ctx, field, obj)
+		case "thumbnail":
+			out.Values[i] = ec._BeamtimeMeta_thumbnail(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7584,6 +8119,10 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 			}
 		case "index":
 			out.Values[i] = ec._CollectionEntry_index(ctx, field, obj)
+		case "attachments":
+			out.Values[i] = ec._CollectionEntry_attachments(ctx, field, obj)
+		case "thumbnail":
+			out.Values[i] = ec._CollectionEntry_thumbnail(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7725,6 +8264,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteCollectionEntryFields(ctx, field)
 		case "setUserPreferences":
 			out.Values[i] = ec._Mutation_setUserPreferences(ctx, field)
+		case "uploadAttachment":
+			out.Values[i] = ec._Mutation_uploadAttachment(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "addMessageLogEntry":
 			out.Values[i] = ec._Mutation_addMessageLogEntry(ctx, field)
 		case "removeLogEntry":
@@ -8325,6 +8869,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAttachment2asapmᚋgraphqlᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
+	return ec._Attachment(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAttachment2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Attachment(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNBaseCollectionEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntry(ctx context.Context, sel ast.SelectionSet, v model.BaseCollectionEntry) graphql.Marshaler {
 	return ec._BaseCollectionEntry(ctx, sel, &v)
 }
@@ -8708,6 +9266,24 @@ func (ec *executionContext) marshalNUniqueField2ᚖasapmᚋgraphqlᚋgraphᚋmod
 	return ec._UniqueField(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (graphql.Upload, error) {
+	return graphql.UnmarshalUpload(v)
+}
+
+func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v graphql.Upload) graphql.Marshaler {
+	res := graphql.MarshalUpload(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUploadFile2asapmᚋgraphqlᚋgraphᚋmodelᚐUploadFile(ctx context.Context, v interface{}) (model.UploadFile, error) {
+	return ec.unmarshalInputUploadFile(ctx, v)
+}
+
 func (ec *executionContext) marshalNUserPreferences2asapmᚋgraphqlᚋgraphᚋmodelᚐUserPreferences(ctx context.Context, sel ast.SelectionSet, v model.UserPreferences) graphql.Marshaler {
 	return ec._UserPreferences(ctx, sel, &v)
 }
@@ -8946,6 +9522,46 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAttachment2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalOBaseCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BaseCollectionEntry) graphql.Marshaler {

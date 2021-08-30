@@ -7,11 +7,12 @@ import UserService, {keycloak} from "./userService";
 import userService from "./userService";
 import {BrowserRouter} from 'react-router-dom';
 import {cache} from './graphQLCache';
-import {ApolloClient, ApolloProvider, createHttpLink} from "@apollo/client";
+import {ApolloClient, ApolloProvider} from "@apollo/client";
 import {setContext} from "@apollo/client/link/context";
 import {ApplicationApiBaseUrl} from "./common";
+import { createUploadLink } from 'apollo-upload-client';
 
-const httpLink = createHttpLink({
+const httpLink = createUploadLink({
     uri: `${ApplicationApiBaseUrl}/query`,
 });
 

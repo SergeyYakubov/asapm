@@ -1,3 +1,5 @@
+import {ColumnList} from "./pages/CollectionListPage";
+
 export interface TableEntry {
     name: string
     value: string
@@ -185,7 +187,6 @@ export function GetFilterString(filter: CollectionFilter): string {
         filterRange = AddToFilter(filterRange, filter3, "or");
         filterString = AddToFilter(filterString, filterRange, "and");
     }
-    console.log(filterString)
     if (filter.textSearch !== "") {
         filterString = AddToFilter(filterString, "jsonString regexp '" + filter.textSearch + "'", "and");
     }
@@ -256,3 +257,16 @@ export function StartOfDay(date: Date|undefined): Date|undefined {
         ,0,0,0);
 }
 
+export enum Mode {
+    Beamtimes,
+    Collections,
+}
+
+export const beamtimeFilterKeys: ColumnList = [
+    {fieldName: "id", alias: "ID", active: true, type: "string"},
+    {fieldName: "title", alias: "Title", active: true, type: "string"},
+    {fieldName: "beamline", alias: "Beamline", active: true, type: "string"},
+    {fieldName: "facility", alias: "Facility", active: true, type: "string"},
+    {fieldName: "proposalId", alias: "Proposal Id", active: false, type: "string"},
+    {fieldName: "users.doorDb", alias: "Door users", active: true, type: "Array"},
+];

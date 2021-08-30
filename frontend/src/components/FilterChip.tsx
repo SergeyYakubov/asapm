@@ -1,4 +1,4 @@
-import {CollectionFilter, FieldFilter, InvertFilterOp, RemoveElement, ReplaceElement, TextOpToSQLOp} from "../common";
+import {CollectionFilter, FieldFilter, InvertFilterOp, RemoveElement, ReplaceElement, TextOpToSQLOp, Mode} from "../common";
 import React from "react";
 import {Chip, List, ListItem, ListItemIcon, ListItemText, ListSubheader, Popover} from "@material-ui/core";
 import EditIcon from "@material-ui/icons/Edit";
@@ -32,9 +32,10 @@ interface FilterChipProps {
     fieldFilter: FieldFilter,
     filterVar: ReactiveVar<CollectionFilter>
     collections: CollectionEntry[] | undefined
+    mode : Mode
 }
 
-export function FilterChip({filter,filterVar, fieldFilter,collections}: FilterChipProps): JSX.Element {
+export function FilterChip({filter,filterVar,mode, fieldFilter,collections}: FilterChipProps): JSX.Element {
     const classes = useStyles();
     const handleDelete = () => {
         filterVar({...filter, fieldFilters: RemoveElement(fieldFilter, filter.fieldFilters)});
@@ -100,7 +101,7 @@ export function FilterChip({filter,filterVar, fieldFilter,collections}: FilterCh
                 horizontal: 'left',
             }}
         >
-            <FilterForm fieldFilterToEdit={fieldFilter} close={handleClose} currentFilter={filter} filterVar={filterVar}
+            <FilterForm fieldFilterToEdit={fieldFilter} mode={mode} close={handleClose} currentFilter={filter} filterVar={filterVar}
                         collections={collections}/>
         </Popover>
         }

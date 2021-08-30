@@ -7,6 +7,21 @@ type BeamtimeUser {
     username: String
 }
 
+scalar Upload
+
+type Attachment {
+    id: String!
+    entryId: String!
+    name: String!
+    size: Int!
+    contentType: String!
+}
+
+input UploadFile {
+    entryId: String!
+    file: Upload!
+}
+
 input InputBeamtimeUser {
     applicant: String
     email: String
@@ -62,6 +77,8 @@ interface CollectionEntryInterface {
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
+    attachments: [Attachment!]
+    thumbnail: String
 }
 
 type CollectionEntry implements CollectionEntryInterface {
@@ -79,6 +96,8 @@ type CollectionEntry implements CollectionEntryInterface {
     prevEntry: String
     parentId: String!
     index: Int
+    attachments: [Attachment!]
+    thumbnail: String
 }
 
 type ParentBeamtimeMeta {
@@ -130,6 +149,8 @@ type BeamtimeMeta implements CollectionEntryInterface {
     type: String!
     parentBeamtimeMeta: ParentBeamtimeMeta!
     jsonString: String
+    attachments: [Attachment!]
+    thumbnail: String
 }
 
 type BaseCollectionEntry {

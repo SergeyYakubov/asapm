@@ -8,6 +8,7 @@ type Mutation {
     addCollectionEntryFields(input: FieldsToSet!): CollectionEntry
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
+    uploadAttachment(req: UploadFile!): Attachment!
 
     # Logbook API
     addMessageLogEntry(input: NewLogEntryMessage!): ID

@@ -10,8 +10,17 @@ const KChildCollectionKey = "childCollection"
 const KMetaNameInDb = "meta"
 const KCollectionTypeName = "collection"
 const KBeamtimeTypeName = "beamtime"
+const KAttachmentCollectionName = "attachments"
+const kMaxAttachmentSize = 5*1000*1000 // 5MB
+const KAttachmentKey = "attachments"
+
 
 const KUserFieldName = "customValues"
+
+type AttachmentContent struct {
+	ContentType string
+	Content       []byte    `json:"content" bson:"content"`
+}
 
 func keepFields(m map[string]interface{}, keep []string, prefix string) map[string]interface{} {
 	for key, v := range m {

@@ -9,11 +9,6 @@ schema = sgqlc.types.Schema()
 ########################################################################
 # Scalars and Enumerations
 ########################################################################
-class Acls(sgqlc.types.Enum):
-    __schema__ = schema
-    __choices__ = ('ADMIN', 'READ')
-
-
 Boolean = sgqlc.types.Boolean
 
 DateTime = sgqlc.types.datetime.DateTime
@@ -32,6 +27,10 @@ class Map(sgqlc.types.Scalar):
 
 
 String = sgqlc.types.String
+
+class Upload(sgqlc.types.Scalar):
+    __schema__ = schema
+
 
 
 ########################################################################
@@ -139,10 +138,27 @@ class NewLogEntryMessage(sgqlc.types.Input):
     attachments = sgqlc.types.Field(Map, graphql_name='attachments')
 
 
+class UploadFile(sgqlc.types.Input):
+    __schema__ = schema
+    __field_names__ = ('entry_id', 'file')
+    entry_id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='entryId')
+    file = sgqlc.types.Field(sgqlc.types.non_null(Upload), graphql_name='file')
+
+
 
 ########################################################################
 # Output Objects and Interfaces
 ########################################################################
+class Attachment(sgqlc.types.Type):
+    __schema__ = schema
+    __field_names__ = ('id', 'entry_id', 'name', 'size', 'content_type')
+    id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
+    entry_id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='entryId')
+    name = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='name')
+    size = sgqlc.types.Field(sgqlc.types.non_null(Int), graphql_name='size')
+    content_type = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='contentType')
+
+
 class BaseCollectionEntry(sgqlc.types.Type):
     __schema__ = schema
     __field_names__ = ('id', 'event_start', 'event_end', 'title', 'index')
@@ -166,7 +182,7 @@ class BeamtimeUser(sgqlc.types.Type):
 
 class CollectionEntryInterface(sgqlc.types.Interface):
     __schema__ = schema
-    __field_names__ = ('id', 'event_start', 'event_end', 'title', 'child_collection_name', 'child_collection', 'custom_values', 'type', 'parent_beamtime_meta', 'json_string')
+    __field_names__ = ('id', 'event_start', 'event_end', 'title', 'child_collection_name', 'child_collection', 'custom_values', 'type', 'parent_beamtime_meta', 'json_string', 'attachments', 'thumbnail')
     id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
     event_start = sgqlc.types.Field(DateTime, graphql_name='eventStart')
     event_end = sgqlc.types.Field(DateTime, graphql_name='eventEnd')
@@ -181,6 +197,8 @@ class CollectionEntryInterface(sgqlc.types.Interface):
     type = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='type')
     parent_beamtime_meta = sgqlc.types.Field(sgqlc.types.non_null('ParentBeamtimeMeta'), graphql_name='parentBeamtimeMeta')
     json_string = sgqlc.types.Field(String, graphql_name='jsonString')
+    attachments = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(Attachment)), graphql_name='attachments')
+    thumbnail = sgqlc.types.Field(String, graphql_name='thumbnail')
 
 
 class GenericLogEntry(sgqlc.types.Interface):
@@ -206,7 +224,7 @@ class LogEntryQueryResult(sgqlc.types.Type):
 
 class Mutation(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('create_meta', 'delete_meta', 'delete_subcollection', 'add_collection_entry', 'modify_beamtime_meta', 'update_collection_entry_fields', 'add_collection_entry_fields', 'delete_collection_entry_fields', 'set_user_preferences', 'add_message_log_entry', 'remove_log_entry')
+    __field_names__ = ('create_meta', 'delete_meta', 'delete_subcollection', 'add_collection_entry', 'modify_beamtime_meta', 'update_collection_entry_fields', 'add_collection_entry_fields', 'delete_collection_entry_fields', 'set_user_preferences', 'upload_attachment', 'add_message_log_entry', 'remove_log_entry')
     create_meta = sgqlc.types.Field('BeamtimeMeta', graphql_name='createMeta', args=sgqlc.types.ArgDict((
         ('input', sgqlc.types.Arg(sgqlc.types.non_null(NewBeamtimeMeta), graphql_name='input', default=None)),
 ))
@@ -242,6 +260,10 @@ class Mutation(sgqlc.types.Type):
     set_user_preferences = sgqlc.types.Field('UserAccount', graphql_name='setUserPreferences', args=sgqlc.types.ArgDict((
         ('id', sgqlc.types.Arg(sgqlc.types.non_null(ID), graphql_name='id', default=None)),
         ('input', sgqlc.types.Arg(sgqlc.types.non_null(InputUserPreferences), graphql_name='input', default=None)),
+))
+    )
+    upload_attachment = sgqlc.types.Field(sgqlc.types.non_null(Attachment), graphql_name='uploadAttachment', args=sgqlc.types.ArgDict((
+        ('req', sgqlc.types.Arg(sgqlc.types.non_null(UploadFile), graphql_name='req', default=None)),
 ))
     )
     add_message_log_entry = sgqlc.types.Field(ID, graphql_name='addMessageLogEntry', args=sgqlc.types.ArgDict((

@@ -4,7 +4,7 @@
   "port" : "8080",
   "basePath" : "/api",
   "authorization" : {
-    "enabled": true,
+    "enabled": false,
     "publicKeyPath" : "./pubkey",
     "adminLevels": ["facility"],
     "endpoint": "https://keycloak.desy.de/auth/realms/asap/protocol/openid-connect/token"

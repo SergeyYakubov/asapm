@@ -12,7 +12,7 @@ import MaterialTable, {EditComponentProps} from "material-table";
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
-import {TableEntry, TableData, TableFromData} from "../common";
+import {TableEntry, TableData, TableFromData, ApplicationApiBaseUrl} from "../common";
 import {TableIcons} from "../TableIcons";
 import {BeamtimeMeta, CollectionEntry, Query} from "../generated/graphql";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
@@ -20,6 +20,8 @@ import {client} from "../index";
 import {DELETE_ENTRY_FIELDS, ADD_ENTRY_FIELDS, UPDATE_ENTRY_FIELDS} from "../graphQLSchemes";
 import {QueryResult} from "@apollo/client";
 import {FormControl, InputLabel, MenuItem, Select, TextField} from "@material-ui/core";
+import ImageList from "@material-ui/core/ImageList";
+import ImageListItem from "@material-ui/core/ImageListItem";
 
 const useStyles = makeStyles((theme: Theme) =>
         createStyles({
@@ -94,6 +96,22 @@ const useStyles = makeStyles((theme: Theme) =>
             tabPanel: {
                 marginLeft: theme.spacing(2),
             },
+            imageList: {
+                flexWrap: 'nowrap',
+                // Promote the list into his own layer on Chrome. This cost memory but helps keeping high FPS.
+                transform: 'translateZ(0)',
+            },
+            image: {
+                height: '100%',
+                width: '100%',
+                objectFit: 'contain',
+            },
+            imageBox: {
+                justifyContent: 'space-around',
+                overflow: 'hidden',
+                backgroundColor: theme.palette.background.paper,
+            },
+
         }),
 );
 
@@ -370,7 +388,7 @@ function CustomTable({suffix, id, data}: CustomTableProps) {
                         variables: {id: id, fields: obj},
                     }).then(() => {
                         setPlainData(plainData.map((item) => item.name === newData.name ? newData : item));
-                        resolve();
+                        resolve(null);
                     }).catch((err) => {
                             reject();
                             console.log(err);
@@ -404,7 +422,7 @@ function CustomTable({suffix, id, data}: CustomTableProps) {
                     }).then(() => {
                         setPlainData([...plainData,newData]);
 //                        originalQuery.refetch();
-                        resolve();
+                        resolve(null);
                     }).catch((err) => {
                             reject();
                             console.log(err);
@@ -471,7 +489,18 @@ function StaticSection({meta, section, tableFromMeta, isBeamtime}: StaticSection
 }
 
 function StaticMeta({meta, tableFromMeta, isBeamtime}: StaticMetaProps) {
+    const classes = useStyles();
     return <div>
+        <div className={classes.imageBox}>
+        <ImageList className={classes.imageList} rowHeight={120} cols={6} >
+            {meta.attachments && meta.attachments.map((tile) => (
+                tile.contentType.startsWith("image")&&
+                <ImageListItem key={tile.id}>
+                    <img className={classes.image} src={`${ApplicationApiBaseUrl}/attachments/raw/meta/${tile.id}`} alt={tile.name} />
+                </ImageListItem>
+            ))}
+        </ImageList>
+        </div>
         {isBeamtime ?
             <Grid container direction="row" alignItems="stretch" spacing={1}>
                 <Grid item xs={12} sm={12} md={4}>

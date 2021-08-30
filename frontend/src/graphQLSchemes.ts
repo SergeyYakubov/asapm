@@ -94,6 +94,11 @@ export const METAS_DETAILED = gql`
       eventEnd
     }
     customValues
+    attachments {
+            id
+            name
+            contentType
+    }
   }
 }
 `;
@@ -120,6 +125,11 @@ export const COLLECTION_ENTITY_DETAILED = gql`
     customValues
     prevEntry
     nextEntry
+    attachments {
+            id
+            name
+            contentType
+    }
   }
 }
 `;
@@ -200,6 +210,7 @@ export const COLLECTIONS = gql`
         eventEnd
         type
         customValues
+        thumbnail
     }
 }
 `;
@@ -207,7 +218,7 @@ export const COLLECTIONS = gql`
 
 export const METAS = gql`
    query ($filter:String,$orderBy:String) {
-   uniqueFields (filter: $filter, keys:["parentBeamtimeMeta.beamline","parentBeamtimeMeta.facility","parentBeamtimeMeta.users.doorDb"]){
+   uniqueFields (filter: $filter, keys:["beamline","facility","users.doorDb"]){
         keyName
         values
     }
@@ -261,7 +272,8 @@ export const METAS = gql`
                 special
                 special
             }
-        customValues
+           customValues
+           thumbnail
     }
 }
 `;
@@ -324,3 +336,14 @@ query ($filter: String!) {
   }
 }
 `;
+
+export const UPLOAD_ATTACHMENT = gql`
+  mutation ($req: UploadFile!) {
+    uploadAttachment(req: $req) {
+        entryId
+        id
+        contentType
+    }
+  }
+`;
+

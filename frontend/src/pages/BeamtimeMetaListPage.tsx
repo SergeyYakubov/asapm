@@ -11,7 +11,7 @@ import {
     BeamtimeFilterData,
     beamtimeFilterVar,
     CollectionFilterBox,
-    GET_BEAMTIME_FILTER, Mode
+    GET_BEAMTIME_FILTER
 } from "../components/FilterBoxes";
 import Divider from "@material-ui/core/Divider";
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -19,7 +19,8 @@ import clsx from "clsx";
 import {useHistory} from "react-router-dom";
 import {METAS} from "../graphQLSchemes";
 import {Query, QueryCollectionsArgs} from "../generated/graphql";
-import {GetFilterString, GetOrderBy} from "../common";
+import {GetFilterString, GetOrderBy, Mode} from "../common";
+import {Avatar, ListItemAvatar} from "@material-ui/core";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -103,19 +104,22 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
             {queryResult.data && queryResult.data!.meta.filter(meta => meta.status === status).map(meta =>
                     <ListItem button className={classes.listItem} onClick={handleClick}
                               id={meta.id as string} key={meta.id as string} >
+                        {meta.thumbnail &&
+                        <ListItemAvatar>
+                            <Avatar alt="" src={`data:image/png;base64,${meta.thumbnail}`}/>
+                        </ListItemAvatar>
+                        }
                         <ListItemText
                             primaryTypographyProps={{noWrap: true}}
                             primary={meta.title}
                             secondary={
-                                <Grid container justify="space-between" component="span">
-                                    <React.Fragment>
-                                        <Typography component="span">
-                                            Beamtime ID: {meta.id}
-                                        </Typography>
-                                        <Typography component="span" align="right">
-                                            Beamline: {meta.beamline || "undefined"}
-                                        </Typography>
-                                    </React.Fragment>
+                                <Grid container justify="space-between" alignItems={"baseline"} component="span">
+                                    <Typography component="span">
+                                        Beamtime ID: {meta.id || "undefined"}
+                                    </Typography>
+                                    <Typography component="span" align="right">
+                                        Beamline: {meta.beamline || "undefined"}
+                                    </Typography>
                                 </Grid>
                             }
                         />

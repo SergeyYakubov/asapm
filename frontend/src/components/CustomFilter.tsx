@@ -1,5 +1,5 @@
 import React from "react";
-import {CollectionFilter, FieldFilter, RemoveDuplicates, ReplaceElement, StringFromFieldFilter} from "../common";
+import {CollectionFilter, FieldFilter, RemoveDuplicates, ReplaceElement, StringFromFieldFilter, Mode,beamtimeFilterKeys} from "../common";
 import {ColumnList, columnsVar, PossibleColumnListfromCollections} from "../pages/CollectionListPage";
 import {
     Box,
@@ -24,6 +24,7 @@ interface CustomFilterProps {
     currentFilter: CollectionFilter
     filterVar: ReactiveVar<CollectionFilter>
     collections: CollectionEntry[] | undefined
+    mode: Mode
 }
 
 
@@ -63,6 +64,7 @@ interface FilterFormProps {
     currentFilter: CollectionFilter
     filterVar: ReactiveVar<CollectionFilter>
     close: () => void
+    mode: Mode
 }
 
 const emptyFieldFilter: FieldFilter = {
@@ -125,11 +127,12 @@ function OpsChoice({currentFieldFilter, setCurrentFieldFilter, availableKeys}: O
     </FormControl>;
 }
 
-export function FilterForm({fieldFilterToEdit, close, collections, currentFilter, filterVar}: FilterFormProps): JSX.Element {
+export function FilterForm({fieldFilterToEdit, mode, close, collections, currentFilter, filterVar}: FilterFormProps): JSX.Element {
     const classes = useStyles();
 
     const [availableKeys] = React.useState<ColumnList>(collections?
-        PossibleColumnListfromCollections(columnsVar(), collections!).filter(value => value.type !== "Date"):[]);
+        PossibleColumnListfromCollections(columnsVar(), collections!).filter(value => value.type !== "Date"):(
+            mode==Mode.Beamtimes?beamtimeFilterKeys:[]));
     const [currentFieldFilter, setCurrentFieldFilter] = React.useState<FieldFilter>(fieldFilterToEdit || emptyFieldFilter);
 
     const [sqlMode, SetSqlMode] = React.useState(!!(fieldFilterToEdit?.filterString));
@@ -249,7 +252,7 @@ export function FilterForm({fieldFilterToEdit, close, collections, currentFilter
     </Grid>;
 }
 
-export function CustomFilter({currentFilter, collections, filterVar}: CustomFilterProps): JSX.Element {
+export function CustomFilter({currentFilter,mode, collections, filterVar}: CustomFilterProps): JSX.Element {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -286,7 +289,7 @@ export function CustomFilter({currentFilter, collections, filterVar}: CustomFilt
             }}
             className={classes.popover}
         >
-            <FilterForm close={handleClose} currentFilter={currentFilter} filterVar={filterVar} collections={collections}/>
+            <FilterForm close={handleClose} mode={mode} currentFilter={currentFilter} filterVar={filterVar} collections={collections}/>
         </Popover>
         }
     </div>;
