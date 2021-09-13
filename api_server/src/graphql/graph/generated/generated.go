@@ -120,6 +120,22 @@ type ComplexityRoot struct {
 		Type                func(childComplexity int) int
 	}
 
+	CollectionFile struct {
+		Name func(childComplexity int) int
+		Size func(childComplexity int) int
+	}
+
+	CollectionFilePlain struct {
+		FullName func(childComplexity int) int
+		Size     func(childComplexity int) int
+	}
+
+	CollectionFolderContent struct {
+		Files      func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Subfolders func(childComplexity int) int
+	}
+
 	LogEntryMessage struct {
 		Attachments func(childComplexity int) int
 		Beamtime    func(childComplexity int) int
@@ -142,6 +158,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddCollectionEntry          func(childComplexity int, input model.NewCollectionEntry) int
 		AddCollectionEntryFields    func(childComplexity int, input model.FieldsToSet) int
+		AddCollectionFiles          func(childComplexity int, id string, files []*model.InputCollectionFile) int
 		AddMessageLogEntry          func(childComplexity int, input model.NewLogEntryMessage) int
 		CreateMeta                  func(childComplexity int, input model.NewBeamtimeMeta) int
 		DeleteCollectionEntryFields func(childComplexity int, input model.FieldsToDelete) int
@@ -187,13 +204,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Collections            func(childComplexity int, filter *string, orderBy *string) int
-		LogEntries             func(childComplexity int, filter string, start *int, limit *int) int
-		LogEntriesUniqueFields func(childComplexity int, filter *string, keys []string) int
-		LogEntry               func(childComplexity int, id string) int
-		Meta                   func(childComplexity int, filter *string, orderBy *string) int
-		UniqueFields           func(childComplexity int, filter *string, keys []string) int
-		User                   func(childComplexity int, id string) int
+		CollectionFiles         func(childComplexity int, id string) int
+		CollectionFolderContent func(childComplexity int, id string, rootFolder *string) int
+		Collections             func(childComplexity int, filter *string, orderBy *string) int
+		LogEntries              func(childComplexity int, filter string, start *int, limit *int) int
+		LogEntriesUniqueFields  func(childComplexity int, filter *string, keys []string) int
+		LogEntry                func(childComplexity int, id string) int
+		Meta                    func(childComplexity int, filter *string, orderBy *string) int
+		UniqueFields            func(childComplexity int, filter *string, keys []string) int
+		User                    func(childComplexity int, id string) int
 	}
 
 	UniqueField struct {
@@ -228,6 +247,7 @@ type MutationResolver interface {
 	DeleteCollectionEntryFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error)
 	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error)
 	UploadAttachment(ctx context.Context, req model.UploadFile) (*model.Attachment, error)
+	AddCollectionFiles(ctx context.Context, id string, files []*model.InputCollectionFile) ([]*model.CollectionFilePlain, error)
 	AddMessageLogEntry(ctx context.Context, input model.NewLogEntryMessage) (*string, error)
 	RemoveLogEntry(ctx context.Context, id string) (*string, error)
 }
@@ -236,6 +256,8 @@ type QueryResolver interface {
 	Collections(ctx context.Context, filter *string, orderBy *string) ([]*model.CollectionEntry, error)
 	UniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error)
 	User(ctx context.Context, id string) (*model.UserAccount, error)
+	CollectionFiles(ctx context.Context, id string) ([]*model.CollectionFilePlain, error)
+	CollectionFolderContent(ctx context.Context, id string, rootFolder *string) (*model.CollectionFolderContent, error)
 	LogEntry(ctx context.Context, id string) (model.LogEntry, error)
 	LogEntries(ctx context.Context, filter string, start *int, limit *int) (*model.LogEntryQueryResult, error)
 	LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error)
@@ -686,6 +708,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CollectionEntry.Type(childComplexity), true
 
+	case "CollectionFile.name":
+		if e.complexity.CollectionFile.Name == nil {
+			break
+		}
+
+		return e.complexity.CollectionFile.Name(childComplexity), true
+
+	case "CollectionFile.size":
+		if e.complexity.CollectionFile.Size == nil {
+			break
+		}
+
+		return e.complexity.CollectionFile.Size(childComplexity), true
+
+	case "CollectionFilePlain.fullName":
+		if e.complexity.CollectionFilePlain.FullName == nil {
+			break
+		}
+
+		return e.complexity.CollectionFilePlain.FullName(childComplexity), true
+
+	case "CollectionFilePlain.size":
+		if e.complexity.CollectionFilePlain.Size == nil {
+			break
+		}
+
+		return e.complexity.CollectionFilePlain.Size(childComplexity), true
+
+	case "CollectionFolderContent.files":
+		if e.complexity.CollectionFolderContent.Files == nil {
+			break
+		}
+
+		return e.complexity.CollectionFolderContent.Files(childComplexity), true
+
+	case "CollectionFolderContent.name":
+		if e.complexity.CollectionFolderContent.Name == nil {
+			break
+		}
+
+		return e.complexity.CollectionFolderContent.Name(childComplexity), true
+
+	case "CollectionFolderContent.subfolders":
+		if e.complexity.CollectionFolderContent.Subfolders == nil {
+			break
+		}
+
+		return e.complexity.CollectionFolderContent.Subfolders(childComplexity), true
+
 	case "LogEntryMessage.attachments":
 		if e.complexity.LogEntryMessage.Attachments == nil {
 			break
@@ -800,6 +871,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddCollectionEntryFields(childComplexity, args["input"].(model.FieldsToSet)), true
+
+	case "Mutation.addCollectionFiles":
+		if e.complexity.Mutation.AddCollectionFiles == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addCollectionFiles_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddCollectionFiles(childComplexity, args["id"].(string), args["files"].([]*model.InputCollectionFile)), true
 
 	case "Mutation.addMessageLogEntry":
 		if e.complexity.Mutation.AddMessageLogEntry == nil {
@@ -1103,6 +1186,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ParentBeamtimeMeta.Users(childComplexity), true
 
+	case "Query.collectionFiles":
+		if e.complexity.Query.CollectionFiles == nil {
+			break
+		}
+
+		args, err := ec.field_Query_collectionFiles_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CollectionFiles(childComplexity, args["id"].(string)), true
+
+	case "Query.collectionFolderContent":
+		if e.complexity.Query.CollectionFolderContent == nil {
+			break
+		}
+
+		args, err := ec.field_Query_collectionFolderContent_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CollectionFolderContent(childComplexity, args["id"].(string), args["rootFolder"].(*string)), true
+
 	case "Query.collections":
 		if e.complexity.Query.Collections == nil {
 			break
@@ -1329,6 +1436,27 @@ type Attachment {
 input UploadFile {
     entryId: String!
     file: Upload!
+}
+
+input InputCollectionFile {
+    name: String!
+    size: Int!
+}
+
+type CollectionFile {
+    name: String!
+    size: Int!
+}
+
+type CollectionFolderContent {
+    name: String!
+    files: [CollectionFile]
+    subfolders: [String!]
+}
+
+type CollectionFilePlain {
+    fullName: String!
+    size: Int!
 }
 
 input InputBeamtimeUser {
@@ -1586,6 +1714,7 @@ type LogEntryQueryResult {
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
     uploadAttachment(req: UploadFile!): Attachment!
+    addCollectionFiles(id: String!, files: [InputCollectionFile!]!): [CollectionFilePlain]!
 
     # Logbook API
     addMessageLogEntry(input: NewLogEntryMessage!): ID
@@ -1597,6 +1726,8 @@ type Query {
     collections (filter: String, orderBy: String): [CollectionEntry!]!
     uniqueFields  (filter: String, keys: [String!]!): [UniqueField!]!
     user (id: ID!): UserAccount
+    collectionFiles(id: String!): [CollectionFilePlain!]!
+    collectionFolderContent(id: String!, rootFolder: String): CollectionFolderContent!
 
     # Logbook API
     logEntry (id: ID!): LogEntry
@@ -1696,6 +1827,28 @@ func (ec *executionContext) field_Mutation_addCollectionEntry_args(ctx context.C
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_addCollectionFiles_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 []*model.InputCollectionFile
+	if tmp, ok := rawArgs["files"]; ok {
+		arg1, err = ec.unmarshalNInputCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFileᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["files"] = arg1
 	return args, nil
 }
 
@@ -1858,6 +2011,42 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_collectionFiles_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_collectionFolderContent_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["rootFolder"]; ok {
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["rootFolder"] = arg1
 	return args, nil
 }
 
@@ -3959,6 +4148,238 @@ func (ec *executionContext) _CollectionEntry_thumbnail(ctx context.Context, fiel
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CollectionFile_name(ctx context.Context, field graphql.CollectedField, obj *model.CollectionFile) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionFile",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionFile_size(ctx context.Context, field graphql.CollectedField, obj *model.CollectionFile) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionFile",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Size, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionFilePlain_fullName(ctx context.Context, field graphql.CollectedField, obj *model.CollectionFilePlain) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionFilePlain",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FullName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionFilePlain_size(ctx context.Context, field graphql.CollectedField, obj *model.CollectionFilePlain) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionFilePlain",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Size, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionFolderContent_name(ctx context.Context, field graphql.CollectedField, obj *model.CollectionFolderContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionFolderContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionFolderContent_files(ctx context.Context, field graphql.CollectedField, obj *model.CollectionFolderContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionFolderContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Files, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CollectionFile)
+	fc.Result = res
+	return ec.marshalOCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CollectionFolderContent_subfolders(ctx context.Context, field graphql.CollectedField, obj *model.CollectionFolderContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CollectionFolderContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Subfolders, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _LogEntryMessage_id(ctx context.Context, field graphql.CollectedField, obj *model.LogEntryMessage) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4770,6 +5191,47 @@ func (ec *executionContext) _Mutation_uploadAttachment(ctx context.Context, fiel
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
 	return ec.marshalNAttachment2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_addCollectionFiles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addCollectionFiles_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddCollectionFiles(rctx, args["id"].(string), args["files"].([]*model.InputCollectionFile))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CollectionFilePlain)
+	fc.Result = res
+	return ec.marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addMessageLogEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5819,6 +6281,88 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	res := resTmp.(*model.UserAccount)
 	fc.Result = res
 	return ec.marshalOUserAccount2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUserAccount(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_collectionFiles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_collectionFiles_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CollectionFiles(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CollectionFilePlain)
+	fc.Result = res
+	return ec.marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlainᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_collectionFolderContent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_collectionFolderContent_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().CollectionFolderContent(rctx, args["id"].(string), args["rootFolder"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.CollectionFolderContent)
+	fc.Result = res
+	return ec.marshalNCollectionFolderContent2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFolderContent(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_logEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7421,6 +7965,30 @@ func (ec *executionContext) unmarshalInputInputBeamtimeUser(ctx context.Context,
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputInputCollectionFile(ctx context.Context, obj interface{}) (model.InputCollectionFile, error) {
+	var it model.InputCollectionFile
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "size":
+			var err error
+			it.Size, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputInputOnlineAnylysisMeta(ctx context.Context, obj interface{}) (model.InputOnlineAnylysisMeta, error) {
 	var it model.InputOnlineAnylysisMeta
 	var asMap = obj.(map[string]interface{})
@@ -8134,6 +8702,101 @@ func (ec *executionContext) _CollectionEntry(ctx context.Context, sel ast.Select
 	return out
 }
 
+var collectionFileImplementors = []string{"CollectionFile"}
+
+func (ec *executionContext) _CollectionFile(ctx context.Context, sel ast.SelectionSet, obj *model.CollectionFile) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, collectionFileImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CollectionFile")
+		case "name":
+			out.Values[i] = ec._CollectionFile_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "size":
+			out.Values[i] = ec._CollectionFile_size(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var collectionFilePlainImplementors = []string{"CollectionFilePlain"}
+
+func (ec *executionContext) _CollectionFilePlain(ctx context.Context, sel ast.SelectionSet, obj *model.CollectionFilePlain) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, collectionFilePlainImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CollectionFilePlain")
+		case "fullName":
+			out.Values[i] = ec._CollectionFilePlain_fullName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "size":
+			out.Values[i] = ec._CollectionFilePlain_size(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var collectionFolderContentImplementors = []string{"CollectionFolderContent"}
+
+func (ec *executionContext) _CollectionFolderContent(ctx context.Context, sel ast.SelectionSet, obj *model.CollectionFolderContent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, collectionFolderContentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CollectionFolderContent")
+		case "name":
+			out.Values[i] = ec._CollectionFolderContent_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "files":
+			out.Values[i] = ec._CollectionFolderContent_files(ctx, field, obj)
+		case "subfolders":
+			out.Values[i] = ec._CollectionFolderContent_subfolders(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var logEntryMessageImplementors = []string{"LogEntryMessage", "GenericLogEntry", "LogEntry"}
 
 func (ec *executionContext) _LogEntryMessage(ctx context.Context, sel ast.SelectionSet, obj *model.LogEntryMessage) graphql.Marshaler {
@@ -8266,6 +8929,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_setUserPreferences(ctx, field)
 		case "uploadAttachment":
 			out.Values[i] = ec._Mutation_uploadAttachment(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addCollectionFiles":
+			out.Values[i] = ec._Mutation_addCollectionFiles(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -8452,6 +9120,34 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_user(ctx, field)
+				return res
+			})
+		case "collectionFiles":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_collectionFiles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "collectionFolderContent":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_collectionFolderContent(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "logEntry":
@@ -9013,6 +9709,108 @@ func (ec *executionContext) marshalNCollectionEntry2ᚖasapmᚋgraphqlᚋgraph�
 	return ec._CollectionEntry(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNCollectionFilePlain2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v model.CollectionFilePlain) graphql.Marshaler {
+	return ec._CollectionFilePlain(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v []*model.CollectionFilePlain) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOCollectionFilePlain2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlainᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CollectionFilePlain) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCollectionFilePlain2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNCollectionFilePlain2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v *model.CollectionFilePlain) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CollectionFilePlain(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCollectionFolderContent2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFolderContent(ctx context.Context, sel ast.SelectionSet, v model.CollectionFolderContent) graphql.Marshaler {
+	return ec._CollectionFolderContent(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCollectionFolderContent2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFolderContent(ctx context.Context, sel ast.SelectionSet, v *model.CollectionFolderContent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._CollectionFolderContent(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNDateTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
 	return graphql.UnmarshalTime(v)
 }
@@ -9047,6 +9845,38 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNInputCollectionFile2asapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFile(ctx context.Context, v interface{}) (model.InputCollectionFile, error) {
+	return ec.unmarshalInputInputCollectionFile(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNInputCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFileᚄ(ctx context.Context, v interface{}) ([]*model.InputCollectionFile, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*model.InputCollectionFile, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNInputCollectionFile2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFile(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNInputCollectionFile2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFile(ctx context.Context, v interface{}) (*model.InputCollectionFile, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNInputCollectionFile2asapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFile(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) unmarshalNInputUserPreferences2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUserPreferences(ctx context.Context, v interface{}) (model.InputUserPreferences, error) {
@@ -9658,6 +10488,68 @@ func (ec *executionContext) marshalOCollectionEntry2ᚖasapmᚋgraphqlᚋgraph�
 		return graphql.Null
 	}
 	return ec._CollectionEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOCollectionFile2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx context.Context, sel ast.SelectionSet, v model.CollectionFile) graphql.Marshaler {
+	return ec._CollectionFile(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx context.Context, sel ast.SelectionSet, v []*model.CollectionFile) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOCollectionFile2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalOCollectionFile2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx context.Context, sel ast.SelectionSet, v *model.CollectionFile) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CollectionFile(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOCollectionFilePlain2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v model.CollectionFilePlain) graphql.Marshaler {
+	return ec._CollectionFilePlain(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOCollectionFilePlain2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v *model.CollectionFilePlain) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CollectionFilePlain(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalODateTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {

@@ -233,8 +233,59 @@ func (r *queryResolver) LogEntries(ctx context.Context, filter string, start *in
 
 func (r *queryResolver) LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error) {
 	var result []*model.UniqueField
-
 	return result, nil
+}
+
+
+func (r *mutationResolver)  AddCollectionFiles(ctx context.Context, id string,files []*model.InputCollectionFile) ([]*model.CollectionFilePlain, error) {
+	log_str := "processing request add_collection_files"
+	logger.Debug(log_str)
+
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	res, err := meta.AddCollectionFiles(acl, id, files)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	return res, err
+}
+
+func (r *queryResolver) CollectionFiles(ctx context.Context, id string) ([]*model.CollectionFilePlain, error) {
+	log_str := "processing request get_collection_files"
+	logger.Debug(log_str)
+
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	res, err := meta.GetCollectionFiles(acl, id)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	return res, err
+}
+
+func (r *queryResolver) CollectionFolderContent(ctx context.Context, id string, rootFolder* string) (*model.CollectionFolderContent, error) {
+	log_str := "processing request get_collection_folder_content"
+	logger.Debug(log_str)
+
+	acl, err := auth.ReadAclFromContext(ctx)
+	if err != nil {
+		logger.Error("access denied: " + err.Error())
+		return nil, errors.New("access denied: " + err.Error())
+	}
+
+	res, err := meta.GetCollectionFolderContent(acl, id, rootFolder)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	return res, err
 }
 
 // Mutation returns generated.MutationResolver implementation.

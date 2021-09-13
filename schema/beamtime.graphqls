@@ -22,6 +22,27 @@ input UploadFile {
     file: Upload!
 }
 
+input InputCollectionFile {
+    name: String!
+    size: Int!
+}
+
+type CollectionFile {
+    name: String!
+    size: Int!
+}
+
+type CollectionFolderContent {
+    name: String!
+    files: [CollectionFile]
+    subfolders: [String!]
+}
+
+type CollectionFilePlain {
+    fullName: String!
+    size: Int!
+}
+
 input InputBeamtimeUser {
     applicant: String
     email: String

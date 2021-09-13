@@ -29,6 +29,7 @@ const (
 	DeleteMeta
 	DeleteSubcollection
 	IngestSubcollection
+	AddFiles
 )
 
 type AuthorizedEntity struct {
@@ -164,7 +165,7 @@ func GetUsernameFromContext(ctx context.Context) (string, error) {
 	return props.UserName, nil
 }
 
-// Will FullName, fallbacks to UserName
+// Will Name, fallbacks to UserName
 func GetPreferredFullNameFromContext(ctx context.Context) (string, error) {
 	props, err := UserPropsFromContext(ctx)
 	if err != nil {

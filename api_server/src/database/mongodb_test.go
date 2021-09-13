@@ -329,3 +329,55 @@ func TestMongoDBUpdateFields(t *testing.T) {
 		mongodb.ProcessRequest(dbname, collection, "delete_records", fs, true)
 	}
 }
+
+func TestMongoAddLastFolder(t *testing.T) {
+	mongodb.Connect(dbaddress)
+	err := mongodb.addFolderTree(dbname, "123","12345.5","raw/bla/dva/test2",false,10)
+	assert.Nil(t, err)
+//	defer cleanup()
+}
+
+var addFileTests = []struct {
+	files     []string
+	folders []model.CollectionFolderContent
+	message   string
+	}{
+		{[]string{"test/bla/bla/test1.txt","test/bla/test2.txt"},
+			[]model.CollectionFolderContent{
+				{".",[]*model.CollectionFile{},[]string{"test"}},
+				{"test",[]*model.CollectionFile{},[]string{"bla"}},
+				{"test/bla",[]*model.CollectionFile{&model.CollectionFile{"test2",123}},[]string{"bla"}},
+				{"test/bla/bla",[]*model.CollectionFile{&model.CollectionFile{"test1",123}},[]string{}},
+			},
+			""},
+	}
+
+func TestMongoAddFile(t *testing.T) {
+	for _,test:= range addFileTests {
+		mongodb.Connect(dbaddress)
+		for _,fileName:=range(test.files) {
+			file := model.InputCollectionFile{
+				Name: fileName,
+				Size: 123,
+			}
+			err := mongodb.addFile(dbname, "12345","12345.1", &file)
+			assert.Nil(t, err)
+		}
+		var response = []*model.CollectionFilePlain{}
+		_,err := mongodb.getFiles(dbname,"12345","12345.1", &response)
+		assert.Nil(t, err)
+		for i,f:=range(response) {
+			assert.Equal(t,test.files[i],f.FullName)
+		}
+		for _,folder:=range(test.folders) {
+			var folderInDb = model.CollectionFolderContent{}
+			_,err = mongodb.getFolder(dbname,"12345",&folder.Name, &folderInDb)
+			assert.Nil(t, err)
+			assert.Equal(t, folder,folderInDb)
+		}
+		cleanup()
+	}
+}
+
+
+

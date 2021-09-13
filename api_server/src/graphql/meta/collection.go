@@ -25,7 +25,17 @@ const (
 	ModeUpdateFields
 	ModeDeleteFields
 	ModeAddAttachment
+	ModeGetFiles
 )
+
+func btId(id string) string{
+	ids := strings.Split(id, ".")
+	if len(ids) < 1 {
+		return ""
+	}
+	return ids[0]
+}
+
 
 func AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*model.CollectionEntry, error) {
 	if acl.ImmediateDeny {
@@ -137,7 +147,7 @@ func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry, mode int, input int
 		return false
 	}
 
-	if mode != ModeAddAttachment && !checkUserFields(mode, input) {
+	if mode != ModeAddAttachment && mode != ModeGetFiles && !checkUserFields(mode, input) {
 		return false
 	}
 
@@ -154,6 +164,10 @@ func checkAuth(acl auth.MetaAcl, meta model.CollectionEntry, mode int, input int
 	}
 
 	if utils.StringInSlice(meta.ParentBeamtimeMeta.ID, acl.AllowedBeamtimes) {
+		return true
+	}
+
+	if utils.StringInSlice(acl.DoorUser, meta.ParentBeamtimeMeta.Users.DoorDb) {
 		return true
 	}
 
@@ -188,7 +202,7 @@ func modifyMetaInDb(mode int, input interface{}) (res []byte, err error) {
 	return res, err
 }
 
-func auhthorizeModifyRequest(acl auth.MetaAcl, id string, mode int, input interface{}) (*model.CollectionEntry, error) {
+func auhthorizeRequest(acl auth.MetaAcl, id string, mode int, input interface{}) (*model.CollectionEntry, error) {
 	if acl.ImmediateDeny {
 		return nil, errors.New("access denied, not enough permissions")
 	}
@@ -206,7 +220,7 @@ func auhthorizeModifyRequest(acl auth.MetaAcl, id string, mode int, input interf
 }
 
 func ModifyCollectionEntryMeta(acl auth.MetaAcl, mode int, id string, input interface{}, keepFields []string, removeFields []string) (*model.CollectionEntry, error) {
-	_, err := auhthorizeModifyRequest(acl, id, mode, input)
+	_, err := auhthorizeRequest(acl, id, mode, input)
 	if err != nil {
 		return nil, err
 	}
@@ -365,8 +379,8 @@ func toPng(contentType string, imageBytes []byte) ([]byte, error) {
 
 }
 
-func checkUploadAttachmentRequest(acl auth.MetaAcl, req model.UploadFile) (*model.CollectionEntry,error) {
-	meta, err := auhthorizeModifyRequest(acl, req.EntryID, ModeAddAttachment, nil)
+func checkUploadAttachmentRequest(acl auth.MetaAcl, req model.UploadFile) (*model.CollectionEntry, error) {
+	meta, err := auhthorizeRequest(acl, req.EntryID, ModeAddAttachment, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -377,14 +391,14 @@ func checkUploadAttachmentRequest(acl auth.MetaAcl, req model.UploadFile) (*mode
 	return meta, nil
 }
 
-func addAttachmentToDb(content []byte, req model.UploadFile) (*model.Attachment,error) {
+func addAttachmentToDb(content []byte, req model.UploadFile) (*model.Attachment, error) {
 	res, err := database.GetDb().ProcessRequest("beamtime", KAttachmentCollectionName, "create_record",
 		&AttachmentContent{req.File.ContentType, content})
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	if res == nil {
-		return nil,errors.New("UploadAttachment: could not generate id")
+		return nil, errors.New("UploadAttachment: could not generate id")
 	}
 	id := string(res)
 
@@ -401,7 +415,7 @@ func addAttachmentToDb(content []byte, req model.UploadFile) (*model.Attachment,
 
 }
 
-func addThumbnailToDb(content []byte, req model.UploadFile) (error) {
+func addThumbnailToDb(content []byte, req model.UploadFile) error {
 	data, err := toPng(req.File.ContentType, content)
 	if err != nil {
 		return err
@@ -426,7 +440,7 @@ func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment
 		return nil, err
 	}
 
-	attachment, err := addAttachmentToDb(content,req)
+	attachment, err := addAttachmentToDb(content, req)
 	if err != nil {
 		return nil, err
 	}
@@ -443,4 +457,48 @@ func UploadAttachment(acl auth.MetaAcl, req model.UploadFile) (*model.Attachment
 
 func needThumbnail(meta *model.CollectionEntry, attachment *model.Attachment) bool {
 	return meta.Thumbnail == nil && strings.HasPrefix(attachment.ContentType, "image")
+}
+
+func GetCollectionFolderContent(acl auth.MetaAcl, id string, rootFolder *string) (*model.CollectionFolderContent, error) {
+	_,err := auhthorizeRequest(acl,id, ModeGetFiles,nil)
+	if err != nil {
+		return nil, err
+	}
+	btId := btId(id)
+	if len(btId) == 0 {
+		return nil, errors.New("wrong id format")
+	}
+
+	var response = model.CollectionFolderContent{}
+	_, err = database.GetDb().ProcessRequest("beamtime", btId, "get_folder", id,rootFolder, &response)
+	return &response, err
+}
+
+func GetCollectionFiles(acl auth.MetaAcl, id string) ([]*model.CollectionFilePlain, error) {
+	_,err := auhthorizeRequest(acl,id, ModeGetFiles,nil)
+	if err != nil {
+		return nil, err
+	}
+	btId := btId(id)
+	if len(btId) == 0 {
+		return nil, errors.New("wrong id format")
+	}
+
+	var response = []*model.CollectionFilePlain{}
+	_, err = database.GetDb().ProcessRequest("beamtime", btId, "get_files", id, &response)
+	return response, err
+}
+
+func AddCollectionFiles(acl auth.MetaAcl, id string, files []*model.InputCollectionFile) ([]*model.CollectionFilePlain, error) {
+	err := authorizeCollectionActivity(id, acl, auth.AddFiles)
+	if err != nil {
+		return nil, err
+	}
+	btId := btId(id)
+	if len(btId) == 0 {
+		return nil, errors.New("wrong id format")
+	}
+	var response = []*model.CollectionFilePlain{}
+	_, err = database.GetDb().ProcessRequest("beamtime", btId, "add_files", id, files, &response)
+	return response, err
 }

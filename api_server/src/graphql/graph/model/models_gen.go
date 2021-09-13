@@ -102,6 +102,22 @@ type CollectionEntry struct {
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
 
+type CollectionFile struct {
+	Name string `json:"name,omitempty" bson:"name,omitempty"`
+	Size int    `json:"size,omitempty" bson:"size,omitempty"`
+}
+
+type CollectionFilePlain struct {
+	FullName string `json:"fullName,omitempty" bson:"fullName,omitempty"`
+	Size     int    `json:"size,omitempty" bson:"size,omitempty"`
+}
+
+type CollectionFolderContent struct {
+	Name       string            `json:"name,omitempty" bson:"name,omitempty"`
+	Files      []*CollectionFile `json:"files,omitempty" bson:"files,omitempty"`
+	Subfolders []string          `json:"subfolders,omitempty" bson:"subfolders,omitempty"`
+}
+
 type FieldsToDelete struct {
 	ID     string   `json:"id,omitempty" bson:"id,omitempty"`
 	Fields []string `json:"fields,omitempty" bson:"fields,omitempty"`
@@ -119,6 +135,11 @@ type InputBeamtimeUser struct {
 	Lastname  *string `json:"lastname,omitempty" bson:"lastname,omitempty"`
 	UserID    *string `json:"userId,omitempty" bson:"userId,omitempty"`
 	Username  *string `json:"username,omitempty" bson:"username,omitempty"`
+}
+
+type InputCollectionFile struct {
+	Name string `json:"name,omitempty" bson:"name,omitempty"`
+	Size int    `json:"size,omitempty" bson:"size,omitempty"`
 }
 
 type InputOnlineAnylysisMeta struct {

@@ -521,3 +521,37 @@ func (suite *CollectionTestSuite) TestUploadAttachment() {
 	}
 
 }
+
+
+func (suite *CollectionTestSuite) TestAddFiles() {
+	id := "12345.123"
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", mock.Anything).Return([]byte(subcollection_meta), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", "12345", "add_files", mock.Anything).Return([]byte{}, nil)
+
+	config.Config.Authorization.AdminLevels = []string{"facility"}
+	_, err := AddCollectionFiles(auth.MetaAcl{UserProps: auth.UserProps{Roles: []string{"admin_f_facility"}, Groups: nil}}, id, nil)
+
+	suite.Nil(err)
+}
+
+func (suite *CollectionTestSuite) TestGetFiles() {
+	id := "81999364.123"
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", mock.Anything).Return([]byte(subcollection_meta), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", "81999364", "get_files", mock.Anything).Return([]byte{}, nil)
+
+	_, err := GetCollectionFiles(auth.MetaAcl{AllowedBeamtimes: []string{"81999364"}}, id)
+
+	suite.Nil(err)
+}
+
+
+func (suite *CollectionTestSuite) TestGetFolder() {
+	id := "81999364.123"
+	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", mock.Anything).Return([]byte(subcollection_meta), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", "81999364", "get_folder", mock.Anything).Return([]byte{}, nil)
+
+	rf:="."
+	_, err := GetCollectionFolderContent(auth.MetaAcl{AllowedBeamtimes: []string{"81999364"}}, id, &rf)
+
+	suite.Nil(err)
+}

@@ -9,6 +9,7 @@ type Mutation {
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
     uploadAttachment(req: UploadFile!): Attachment!
+    addCollectionFiles(id: String!, files: [InputCollectionFile!]!): [CollectionFilePlain]!
 
     # Logbook API
     addMessageLogEntry(input: NewLogEntryMessage!): ID
@@ -20,6 +21,8 @@ type Query {
     collections (filter: String, orderBy: String): [CollectionEntry!]!
     uniqueFields  (filter: String, keys: [String!]!): [UniqueField!]!
     user (id: ID!): UserAccount
+    collectionFiles(id: String!): [CollectionFilePlain!]!
+    collectionFolderContent(id: String!, rootFolder: String): CollectionFolderContent!
 
     # Logbook API
     logEntry (id: ID!): LogEntry

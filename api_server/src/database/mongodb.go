@@ -12,6 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"path"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -44,18 +46,27 @@ type LocationPointer struct {
 	Value   int    `bson:"current_pointer"`
 }
 
-const data_collection_name_prefix = "data_"
-const acks_collection_name_prefix = "acks_"
-const meta_collection_name = "meta"
-const pointer_collection_name = "current_location"
-const pointer_field_name = "current_pointer"
-const no_session_msg = "database client not created"
-const wrong_id_type = "wrong id type"
-const already_connected_msg = "already connected"
-const id_name = "id"
+type FileEntry struct {
+	Name               string `json:"_id" bson:"_id"`
+	ParentCollectionId string `json:"parentCollectionId" bson:"parentCollectionId"`
+	Size               int
+}
 
-const finish_substream_keyword = "asapo_finish_substream"
-const no_next_substream_keyword = "asapo_no_next"
+type ChildFolder struct {
+	FullName            string   `json:"_id" bson:"_id"`
+	ParentCollectionIds []string `json:"parentCollectionIds" bson:"parentCollectionIds"`
+}
+
+type FolderEntry struct {
+	FullName string        `json:"_id" bson:"_id"`
+	Files    []FileEntry   `json:"files" bson:"files"`
+	Folders  []ChildFolder `json:"folders" bson:"folders"`
+}
+
+const no_session_msg = "database client not created"
+const already_connected_msg = "already connected"
+const KFileCollectionPrefix = "files_"
+const KFolderCollectionPrefix = "folders_"
 
 var dbListLock sync.RWMutex
 var dbPointersLock sync.RWMutex
@@ -136,7 +147,7 @@ func (db *Mongodb) insertRecord(dbname string, collection_name string, s interfa
 		return &DBError{utils.StatusServiceUnavailable, no_session_msg}
 	}
 
-	c := db.client.Database(dbname).Collection(data_collection_name_prefix + collection_name)
+	c := db.client.Database(dbname).Collection(collection_name)
 
 	_, err := c.InsertOne(context.TODO(), s)
 	return err
@@ -237,6 +248,201 @@ func mapToMapWithDots(origin map[string]interface{}) (res map[string]interface{}
 	return res
 }
 
+func (db *Mongodb) addFolderTree(dbName string, collection_suffix string, id string, fullpath string, isFile bool, size int) (err error) {
+	if fullpath == "" {
+		return nil
+	}
+	parent := path.Dir(fullpath)
+	if parent == "" {
+		parent = "."
+	}
+
+	fe := FolderEntry{
+		FullName: parent,
+		Files:    []FileEntry{},
+		Folders:  []ChildFolder{},
+	}
+	_, err = db.createRecord(dbName, KFolderCollectionPrefix+collection_suffix, &fe)
+	if err != nil && !duplicateError(err) {
+		return err
+	}
+
+	if isFile {
+		base := path.Base(fullpath)
+		filerec := FileEntry{
+			Name:               base,
+			Size:               size,
+			ParentCollectionId: id,
+		}
+		_, err = db.addArrayElement(dbName, KFolderCollectionPrefix+collection_suffix, parent, "files", filerec, base)
+		if err != nil {
+			return err
+		}
+	} else {
+		childFolderEntry := ChildFolder{
+			FullName:            fullpath,
+			ParentCollectionIds: []string{},
+		}
+		_, err = db.addArrayElement(dbName, KFolderCollectionPrefix+collection_suffix, parent, "folders", childFolderEntry, fullpath)
+		if err != nil && !duplicateElement(err) {
+			return err
+		}
+		opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+		filter := bson.D{{"_id", parent}, {"folders._id", fullpath}}
+		update := bson.M{
+			"$addToSet": bson.M{
+				"folders.$.parentCollectionIds": id,
+			},
+		}
+		var resMap map[string]interface{}
+		c := db.client.Database(dbName).Collection(KFolderCollectionPrefix + collection_suffix)
+		err = c.FindOneAndUpdate(context.TODO(), filter, update, opts).Decode(&resMap)
+		if err != nil {
+			return err
+		}
+	}
+
+	if parent == "." {
+		return nil
+	} else {
+		return db.addFolderTree(dbName, collection_suffix, id, parent, false, size)
+	}
+}
+
+func (db *Mongodb) addFile(dbName string, collection_suffix string, id string, file *model.InputCollectionFile) (err error) {
+	filerec := FileEntry{
+		Name:               file.Name,
+		Size:               file.Size,
+		ParentCollectionId: id,
+	}
+	err = db.insertRecord(dbName, KFileCollectionPrefix+collection_suffix, &filerec)
+	if err != nil {
+		return err
+	}
+
+	return db.addFolderTree(dbName, collection_suffix, id, file.Name, true, file.Size)
+}
+
+func (db *Mongodb) addFiles(dbName string, collectionSuffix string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 3 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	id, ok := extra_params[0].(string)
+	if !ok {
+		return nil, errors.New("id must be string")
+	}
+
+	files, ok := extra_params[1].([]*model.InputCollectionFile)
+	if !ok {
+		return nil, errors.New("cannot extract files")
+	}
+
+	res, ok := extra_params[2].(*[]*model.CollectionFilePlain)
+	if !ok {
+		return nil, errors.New("cannot extract output argument")
+	}
+
+	*res = make([]*model.CollectionFilePlain, len(files))
+	for i, file := range files {
+		err := db.addFile(dbName, collectionSuffix, id, file)
+		if err != nil {
+			return nil, err
+		}
+		f := model.CollectionFilePlain{}
+		f.Size = file.Size
+		f.FullName = file.Name
+		(*res)[i] = &f
+	}
+	sort.Slice(*res, func(i, j int) bool {
+		return (*res)[i].FullName < (*res)[j].FullName
+	})
+
+	return nil, nil
+}
+
+func (db *Mongodb) getFolder(dbName string, collectionSuffix string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 2 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	rootFolder, ok := extra_params[0].(*string)
+	if !ok {
+		return nil, errors.New("rootFolder must be string pointer")
+	}
+
+	folder, ok := extra_params[1].(*model.CollectionFolderContent)
+	if !ok {
+		return nil, errors.New("getFiles: wrong argument")
+	}
+
+	folderName := "."
+	if rootFolder != nil {
+		folderName = path.Clean(*rootFolder)
+	}
+
+	var folderEntry FolderEntry
+	res, err := db.readRecord(dbName, KFolderCollectionPrefix+collectionSuffix, folderName)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(res, &folderEntry)
+	if err != nil {
+		return nil, err
+	}
+
+	folder.Name = folderEntry.FullName
+	folder.Files = make([]*model.CollectionFile, len(folderEntry.Files))
+	for i, entry := range folderEntry.Files {
+		folder.Files[i] = &model.CollectionFile{
+			Name: entry.Name,
+			Size: entry.Size,
+		}
+	}
+	folder.Subfolders = make([]string, len(folderEntry.Folders))
+	for i, entry := range folderEntry.Folders {
+		folder.Subfolders[i] = path.Base(entry.FullName)
+	}
+
+	return nil, nil
+}
+
+func (db *Mongodb) getFiles(dbName string, collectionSuffix string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 2 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	id, ok := extra_params[0].(string)
+	if !ok {
+		return nil, errors.New("id must be string")
+	}
+
+	files, ok := extra_params[1].(*[]*model.CollectionFilePlain)
+	if !ok {
+		return nil, errors.New("getFiles: wrong argument")
+	}
+
+	var fs = FilterAndSort{
+		SystemFilter: "parentCollectionId = '" + id + "'",
+	}
+
+	var entries []FileEntry
+	_, err := db.readRecords(dbName, KFileCollectionPrefix+collectionSuffix, fs, &entries)
+	if err != nil {
+		return nil, err
+	}
+
+	*files = make([]*model.CollectionFilePlain, len(entries))
+	for i, entry := range entries {
+		(*files)[i] = &model.CollectionFilePlain{
+			FullName: entry.Name,
+			Size: entry.Size,
+		}
+	}
+
+	return nil, nil
+}
+
 func (db *Mongodb) setFields(dbName string, dataCollectionName string, exist bool, extra_params ...interface{}) ([]byte, error) {
 	if len(extra_params) != 1 {
 		return nil, errors.New("wrong number of parameters")
@@ -305,6 +511,26 @@ func (db *Mongodb) readRecordByObjectId(dbName string, dataCollectionName string
 		return nil, err
 	}
 	return nil, nil
+}
+
+func duplicateElement(err error) bool {
+	command_error, ok := err.(*DBError)
+	if ok {
+		return command_error.Code == utils.StatusNoData
+	}
+	return false
+}
+
+func duplicateError(err error) bool {
+	command_error, ok := err.(mongo.CommandError)
+	if !ok {
+		write_exception_error, ok1 := err.(mongo.WriteException)
+		if !ok1 {
+			return false
+		}
+		return strings.Contains(write_exception_error.Error(), "duplicate key")
+	}
+	return command_error.Name == "DuplicateKey"
 }
 
 func (db *Mongodb) createRecord(dbName string, dataCollectionName string, extra_params ...interface{}) ([]byte, error) {
@@ -388,7 +614,7 @@ func (db *Mongodb) addArrayElement(dbName string, dataCollectionName string, ext
 		return nil, err
 	}
 	if res.MatchedCount == 0 {
-		return nil, errors.New("record not found or duplicate entry")
+		return nil, &DBError{utils.StatusNoData, "record not found or duplicate entry"}
 	}
 
 	if res.ModifiedCount+res.UpsertedCount == 0 {
@@ -567,39 +793,45 @@ func (db *Mongodb) readRecordWithFilter(dbName string, dataCollectionName string
 	return nil, err
 }
 
-func (db *Mongodb) ProcessRequest(db_name string, data_collection_name string, op string, extra_params ...interface{}) ([]byte, error) {
-	if err := db.checkDatabaseOperationPrerequisites(db_name, data_collection_name); err != nil {
+func (db *Mongodb) ProcessRequest(db_name string, collection_name string, op string, extra_params ...interface{}) ([]byte, error) {
+	if err := db.checkDatabaseOperationPrerequisites(db_name, collection_name); err != nil {
 		return nil, err
 	}
 	switch op {
 	case "replace_record":
-		return db.replaceRecord(db_name, data_collection_name, extra_params...)
+		return db.replaceRecord(db_name, collection_name, extra_params...)
 	case "read_record":
-		return db.readRecord(db_name, data_collection_name, extra_params...)
+		return db.readRecord(db_name, collection_name, extra_params...)
 	case "read_record_oid_and_parse":
-		return db.readRecordByObjectId(db_name, data_collection_name, extra_params...)
+		return db.readRecordByObjectId(db_name, collection_name, extra_params...)
 	case "create_record":
-		return db.createRecord(db_name, data_collection_name, extra_params...)
+		return db.createRecord(db_name, collection_name, extra_params...)
 	case "read_records":
-		return db.readRecords(db_name, data_collection_name, extra_params...)
+		return db.readRecords(db_name, collection_name, extra_params...)
 	case "read_record_wfilter":
-		return db.readRecordWithFilter(db_name, data_collection_name, extra_params...)
+		return db.readRecordWithFilter(db_name, collection_name, extra_params...)
 	case "delete_records":
-		return db.deleteRecords(db_name, data_collection_name, extra_params...)
+		return db.deleteRecords(db_name, collection_name, extra_params...)
 	case "add_array_element":
-		return db.addArrayElement(db_name, data_collection_name, extra_params...)
+		return db.addArrayElement(db_name, collection_name, extra_params...)
 	case "unique_fields":
-		return db.uniqueFields(db_name, data_collection_name, extra_params...)
+		return db.uniqueFields(db_name, collection_name, extra_params...)
 	case "delete_array_element":
-		return db.deleteArrayElement(db_name, data_collection_name, extra_params...)
+		return db.deleteArrayElement(db_name, collection_name, extra_params...)
 	case "update_record":
-		return db.updateRecord(db_name, data_collection_name, false, extra_params...)
+		return db.updateRecord(db_name, collection_name, false, extra_params...)
 	case "delete_fields":
-		return db.deleteFields(db_name, data_collection_name, extra_params...)
+		return db.deleteFields(db_name, collection_name, extra_params...)
 	case "update_fields":
-		return db.setFields(db_name, data_collection_name, true, extra_params...)
+		return db.setFields(db_name, collection_name, true, extra_params...)
 	case "add_fields":
-		return db.setFields(db_name, data_collection_name, false, extra_params...)
+		return db.setFields(db_name, collection_name, false, extra_params...)
+	case "add_files":
+		return db.addFiles(db_name, collection_name, extra_params...)
+	case "get_files":
+		return db.getFiles(db_name, collection_name, extra_params...)
+	case "get_folder":
+		return db.getFolder(db_name, collection_name, extra_params...)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)
