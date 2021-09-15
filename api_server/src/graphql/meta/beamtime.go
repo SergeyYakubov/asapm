@@ -10,9 +10,9 @@ import (
 	"errors"
 )
 
-func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFields []string, removeFields []string) ([]*model.BeamtimeMeta, error) {
+func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFields []string, removeFields []string) ([]model.BeamtimeMeta, error) {
 	if acl.ImmediateDeny {
-		return []*model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")
+		return []model.BeamtimeMeta{}, errors.New("access denied, not enough permissions")
 	}
 
 	ff := auth.FilterFields{
@@ -23,7 +23,7 @@ func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFie
 
 	systemFilter := auth.AclToSqlFilter(acl, ff)
 
-	var sResponse = []*model.BeamtimeMeta{}
+	var sResponse = []model.BeamtimeMeta{}
 
 	fs := common.GetFilterAndSort(systemFilter, filter, orderBy)
 
@@ -35,11 +35,11 @@ func ReadBeamtimeMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFie
 
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records", fs, &sResponse)
 	if err != nil {
-		return []*model.BeamtimeMeta{}, err
+		return []model.BeamtimeMeta{}, err
 	}
 
-	for _, meta := range sResponse {
-		updateFields(keepFields, removeFields, &meta.CustomValues)
+	for i, _ := range sResponse {
+		updateFields(keepFields, removeFields, &sResponse[i].CustomValues)
 	}
 
 	return sResponse, nil
@@ -56,7 +56,7 @@ func CreateBeamtimeMeta(acl auth.MetaAcl, input model.NewBeamtimeMeta) (*model.B
 	}
 
 	if meta.ChildCollection == nil {
-		meta.ChildCollection = []*model.BaseCollectionEntry{}
+		meta.ChildCollection = []model.BaseCollectionEntry{}
 	}
 	if meta.ChildCollectionName == nil {
 		col := KDefaultCollectionName
@@ -107,6 +107,14 @@ func DeleteBeamtimeMetaAndCollections(acl auth.MetaAcl, id string) (*string, err
 	if _, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "delete_records", fs, true); err != nil {
 		return nil, err
 	}
+
+	if _, err := database.GetDb().ProcessRequest("beamtime", "files_"+btId(id), "delete_collection"); err != nil {
+		return nil, err
+	}
+	if _, err := database.GetDb().ProcessRequest("beamtime", "folders_"+btId(id), "delete_collection"); err != nil {
+		return nil, err
+	}
+
 
 	return &id, nil
 }

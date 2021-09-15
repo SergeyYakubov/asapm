@@ -89,12 +89,13 @@ type TestMetaRecord struct {
 	ID              string                `json:"_id" bson:"_id"`
 	ChildCollection []TestCollectionEntry `json:"childCollection" bson:"childCollection"`
 	EventEnd        time.Time             `json:"eventEnd" bson:"eventEnd"`
+	FilesetSize     int             `json:"filesetSize" bson:"filesetSize"`
 }
 
 func TestMongoDBAddRecord(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
-	rec := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now()}
+	rec := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now(),0}
 
 	_, err = mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	assert.Nil(t, err)
@@ -104,18 +105,18 @@ func TestMongoDBReadRecord(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
 	date := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
-	rec := TestMetaRecord{"123", []TestCollectionEntry{}, date}
+	rec := TestMetaRecord{"123", []TestCollectionEntry{}, date,0}
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 
 	str := "((eventEnd < isodate('2020-09-25T08:45:24Z')) and (eventEnd > isodate('2019-09-25T08:45:24Z')))"
 	systemStr := "id = '123'"
 
 	var fs = FilterAndSort{
-		UserFilter: str,
+		UserFilter:   str,
 		SystemFilter: systemStr,
-		Order:      "",
+		Order:        "",
 	}
-	var res []*model.BeamtimeMeta
+	var res []model.BeamtimeMeta
 	_, err = mongodb.ProcessRequest(dbname, collection, "read_records", fs, &res)
 
 	assert.Nil(t, err)
@@ -137,7 +138,7 @@ func TestMongoDBDeleteRecord(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
 	id := "12345"
-	rec := TestMetaRecord{id, []TestCollectionEntry{}, time.Now()}
+	rec := TestMetaRecord{id, []TestCollectionEntry{}, time.Now(),0}
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	var fs = FilterAndSort{
 		UserFilter: "id = '" + id + "'",
@@ -149,7 +150,7 @@ func TestMongoDBDeleteRecord(t *testing.T) {
 func TestMongoDBAddArrayElement(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
-	rec1 := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now()}
+	rec1 := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now(),0}
 
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
 
@@ -161,7 +162,7 @@ func TestMongoDBAddArrayElement(t *testing.T) {
 func TestMongoDBAddArrayElementFailesIfSame(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
-	rec1 := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now()}
+	rec1 := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now(),0}
 
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
 
@@ -177,8 +178,8 @@ func TestMongoDBAddArrayElementFailesIfSame(t *testing.T) {
 func TestMongoDBUniqueFields(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
-	rec1 := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now()}
-	rec2 := TestMetaRecord{"345", []TestCollectionEntry{}, time.Now()}
+	rec1 := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now(),0}
+	rec2 := TestMetaRecord{"345", []TestCollectionEntry{}, time.Now(),0}
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec2)
 	var fs = FilterAndSort{}
@@ -191,7 +192,7 @@ func TestMongoDBUniqueFields(t *testing.T) {
 func TestMongoDBDeleteArrayElement(t *testing.T) {
 	err := mongodb.Connect(dbaddress)
 	defer cleanup()
-	rec1 := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now()}
+	rec1 := TestMetaRecord{"123", []TestCollectionEntry{}, time.Now(),0}
 
 	mongodb.ProcessRequest(dbname, collection, "create_record", rec1)
 	rec := TestCollectionEntry{"123.123", "bla"}
@@ -220,9 +221,9 @@ func TestMongoDBUpdateRecord(t *testing.T) {
 	_, err = mongodb.ProcessRequest(dbname, collection, "create_record", rec)
 	assert.Nil(t, err)
 
-	var update    model.FieldsToSet
+	var update model.FieldsToSet
 	update.ID = "123"
-	update.Fields =  map[string]interface{}{"status":"stopped","users.doorDb":[]string{"hello", "buy"}}
+	update.Fields = map[string]interface{}{"status": "stopped", "users.doorDb": []string{"hello", "buy"}}
 
 	res, err := mongodb.ProcessRequest(dbname, collection, "update_fields", &update)
 
@@ -258,7 +259,7 @@ func TestMongoDBDeleteFields(t *testing.T) {
 }
 
 func toMap(str string) (res map[string]interface{}) {
-	json.Unmarshal([]byte(str),&res)
+	json.Unmarshal([]byte(str), &res)
 	return res
 }
 
@@ -288,7 +289,6 @@ var UpdateFieldsTest = []struct {
 		TestUserMetaRecord{"1", toMap(`{"simple": "345", "nested":{"val1":3,"val2":2}}`)},
 		true, "update nested field"},
 
-
 	{TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22}`)},
 		model.FieldsToSet{"1", toMap(`{"customValues": {"non_exist": "345", "nested":{"val1":3}}}`)},
 		false,
@@ -300,7 +300,6 @@ var UpdateFieldsTest = []struct {
 		false,
 		TestUserMetaRecord{"1", toMap(`{"simple": "123", "number": 22,"non_exist": "345", "nested":{"val1":3}}`)},
 		false, "add existing field"},
-
 }
 
 func TestMongoDBUpdateFields(t *testing.T) {
@@ -315,7 +314,7 @@ func TestMongoDBUpdateFields(t *testing.T) {
 		} else {
 			op = "add_fields"
 		}
-		res, err := mongodb.ProcessRequest(dbname, collection, op,&test.update)
+		res, err := mongodb.ProcessRequest(dbname, collection, op, &test.update)
 		if test.ok {
 			assert.Nil(t, err, test.message)
 			expectedOutput, _ := json.Marshal(test.output)
@@ -330,54 +329,83 @@ func TestMongoDBUpdateFields(t *testing.T) {
 	}
 }
 
-func TestMongoAddLastFolder(t *testing.T) {
-	mongodb.Connect(dbaddress)
-	err := mongodb.addFolderTree(dbname, "123","12345.5","raw/bla/dva/test2",false,10)
-	assert.Nil(t, err)
-//	defer cleanup()
+
+type fileInCol struct {
+		Name string
+		Col string
+	}
+var addFileTests = []struct {
+	files   []fileInCol
+	filesOut   []string
+	col string
+	subcol bool
+	folders []model.CollectionFolderContent
+	message string
+}{
+	{[]fileInCol{{"test/bla/bla/test1.txt","12345"}, {"test/bla/test2.txt","12345"}},
+		[]string{"test/bla/bla/test1.txt","test/bla/test2.txt"},"12345",false,
+		[]model.CollectionFolderContent{
+			{".", []model.CollectionFile{}, []string{"test"}},
+			{"test", []model.CollectionFile{}, []string{"bla"}},
+			{"test/bla", []model.CollectionFile{model.CollectionFile{"test2.txt", 123}}, []string{"bla"}},
+			{"test/bla/bla", []model.CollectionFile{model.CollectionFile{"test1.txt", 123}}, []string{}},
+		}, ""},
+	{[]fileInCol{{"test/bla/bla/test1.txt","12345"}, {"test/bla/test2.txt","12345.1"}},
+		[]string{"test/bla/bla/test1.txt"},"12345",false,
+		[]model.CollectionFolderContent{
+			{".", []model.CollectionFile{}, []string{"test"}},
+			{"test", []model.CollectionFile{}, []string{"bla"}},
+			{"test/bla", []model.CollectionFile{}, []string{"bla"}},
+			{"test/bla/bla", []model.CollectionFile{model.CollectionFile{"test1.txt", 123}}, []string{}},
+		}, "do not show file in subollection"},
+	{[]fileInCol{{"test/bla/bla/test1.txt","12345"}, {"test/bla/test2.txt","12345.1"}},
+		[]string{"test/bla/test2.txt"},"12345.1",false,
+		[]model.CollectionFolderContent{
+			{".", []model.CollectionFile{}, []string{"test"}},
+			{"test", []model.CollectionFile{}, []string{"bla"}},
+			{"test/bla", []model.CollectionFile{model.CollectionFile{"test2.txt", 123}}, []string{}},
+		}, "do not show file in subollection2"},
+	{[]fileInCol{{"test/bla/bla/test1.txt","12345.2"}, {"test/bla/test2.txt","12345.1"}},
+		[]string{},"12345",false,
+		[]model.CollectionFolderContent{},
+		"do not show files and folders in subcollections"},
+	{[]fileInCol{{"test/bla/bla/test1.txt","12345.2"}, {"test/bla/test2.txt","12345.1"}},
+		[]string{"test/bla/bla/test1.txt","test/bla/test2.txt"},"12345",true,
+		[]model.CollectionFolderContent{
+			{".", []model.CollectionFile{}, []string{"test"}},
+			{"test", []model.CollectionFile{}, []string{"bla"}},
+			{"test/bla", []model.CollectionFile{model.CollectionFile{"test2.txt", 123}}, []string{"bla"}},
+			{"test/bla/bla", []model.CollectionFile{model.CollectionFile{"test1.txt", 123}}, []string{}},
+		}, "show files and folders in subcollection"},
 }
 
-var addFileTests = []struct {
-	files     []string
-	folders []model.CollectionFolderContent
-	message   string
-	}{
-		{[]string{"test/bla/bla/test1.txt","test/bla/test2.txt"},
-			[]model.CollectionFolderContent{
-				{".",[]*model.CollectionFile{},[]string{"test"}},
-				{"test",[]*model.CollectionFile{},[]string{"bla"}},
-				{"test/bla",[]*model.CollectionFile{&model.CollectionFile{"test2",123}},[]string{"bla"}},
-				{"test/bla/bla",[]*model.CollectionFile{&model.CollectionFile{"test1",123}},[]string{}},
-			},
-			""},
-	}
-
 func TestMongoAddFile(t *testing.T) {
-	for _,test:= range addFileTests {
+	for _, test := range addFileTests {
 		mongodb.Connect(dbaddress)
-		for _,fileName:=range(test.files) {
+		rec := TestMetaRecord{"12345", []TestCollectionEntry{}, time.Now(),0}
+		mongodb.ProcessRequest(dbname, "meta", "create_record", rec)
+
+		for _, f := range test.files {
 			file := model.InputCollectionFile{
-				Name: fileName,
+				Name: f.Name,
 				Size: 123,
 			}
-			err := mongodb.addFile(dbname, "12345","12345.1", &file)
-			assert.Nil(t, err)
+			err := mongodb.addFile(dbname, "12345", f.Col, &file)
+			assert.Nil(t, err,test.message)
 		}
-		var response = []*model.CollectionFilePlain{}
-		_,err := mongodb.getFiles(dbname,"12345","12345.1", &response)
-		assert.Nil(t, err)
-		for i,f:=range(response) {
-			assert.Equal(t,test.files[i],f.FullName)
+		var response = []model.CollectionFilePlain{}
+		_, err := mongodb.getFiles(dbname, "12345", test.col,test.subcol, &response)
+		assert.Nil(t, err,test.message)
+		assert.Equal(t, len(response),len(test.filesOut))
+		for i, f := range response {
+			assert.Equal(t, test.filesOut[i], f.FullName,test.message)
 		}
-		for _,folder:=range(test.folders) {
+		for _, folder := range test.folders {
 			var folderInDb = model.CollectionFolderContent{}
-			_,err = mongodb.getFolder(dbname,"12345",&folder.Name, &folderInDb)
-			assert.Nil(t, err)
-			assert.Equal(t, folder,folderInDb)
+			_, err = mongodb.getFolder(dbname,"12345", test.col, &folder.Name, test.subcol, &folderInDb)
+			assert.Nil(t, err,test.message)
+			assert.Equal(t, folder,folderInDb,test.message)
 		}
 		cleanup()
 	}
 }
-
-
-

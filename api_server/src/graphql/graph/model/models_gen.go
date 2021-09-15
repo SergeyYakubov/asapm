@@ -61,13 +61,14 @@ type BeamtimeMeta struct {
 	UnixID              *string                `json:"unixId,omitempty" bson:"unixId,omitempty"`
 	Users               *Users                 `json:"users,omitempty" bson:"users,omitempty"`
 	ChildCollectionName *string                `json:"childCollectionName,omitempty" bson:"childCollectionName,omitempty"`
-	ChildCollection     []*BaseCollectionEntry `json:"childCollection,omitempty" bson:"childCollection,omitempty"`
+	ChildCollection     []BaseCollectionEntry  `json:"childCollection,omitempty" bson:"childCollection,omitempty"`
 	CustomValues        map[string]interface{} `json:"customValues,omitempty" bson:"customValues,omitempty"`
 	Type                string                 `json:"type,omitempty" bson:"type,omitempty"`
 	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta,omitempty" bson:"parentBeamtimeMeta,omitempty"`
 	JSONString          *string                `json:"jsonString,omitempty" bson:"jsonString,omitempty"`
-	Attachments         []*Attachment          `json:"attachments,omitempty" bson:"attachments,omitempty"`
+	Attachments         []Attachment           `json:"attachments,omitempty" bson:"attachments,omitempty"`
 	Thumbnail           *string                `json:"thumbnail,omitempty" bson:"thumbnail,omitempty"`
+	FilesetSize         *int                   `json:"filesetSize,omitempty" bson:"filesetSize,omitempty"`
 }
 
 func (BeamtimeMeta) IsCollectionEntryInterface() {}
@@ -87,7 +88,7 @@ type CollectionEntry struct {
 	EventEnd            *time.Time             `json:"eventEnd,omitempty" bson:"eventEnd,omitempty"`
 	Title               *string                `json:"title,omitempty" bson:"title,omitempty"`
 	ChildCollectionName *string                `json:"childCollectionName,omitempty" bson:"childCollectionName,omitempty"`
-	ChildCollection     []*BaseCollectionEntry `json:"childCollection,omitempty" bson:"childCollection,omitempty"`
+	ChildCollection     []BaseCollectionEntry  `json:"childCollection,omitempty" bson:"childCollection,omitempty"`
 	CustomValues        map[string]interface{} `json:"customValues,omitempty" bson:"customValues,omitempty"`
 	Type                string                 `json:"type,omitempty" bson:"type,omitempty"`
 	ParentBeamtimeMeta  *ParentBeamtimeMeta    `json:"parentBeamtimeMeta,omitempty" bson:"parentBeamtimeMeta,omitempty"`
@@ -96,26 +97,26 @@ type CollectionEntry struct {
 	PrevEntry           *string                `json:"prevEntry,omitempty" bson:"prevEntry,omitempty"`
 	ParentID            string                 `json:"parentId,omitempty" bson:"parentId,omitempty"`
 	Index               *int                   `json:"index,omitempty" bson:"index,omitempty"`
-	Attachments         []*Attachment          `json:"attachments,omitempty" bson:"attachments,omitempty"`
+	Attachments         []Attachment           `json:"attachments,omitempty" bson:"attachments,omitempty"`
 	Thumbnail           *string                `json:"thumbnail,omitempty" bson:"thumbnail,omitempty"`
 }
 
 func (CollectionEntry) IsCollectionEntryInterface() {}
 
 type CollectionFile struct {
-	Name string `json:"name,omitempty" bson:"name,omitempty"`
+	Name string `json:"_id,omitempty" bson:"_id,omitempty"`
 	Size int    `json:"size,omitempty" bson:"size,omitempty"`
 }
 
 type CollectionFilePlain struct {
-	FullName string `json:"fullName,omitempty" bson:"fullName,omitempty"`
+	FullName string `json:"_id,omitempty" bson:"_id,omitempty"`
 	Size     int    `json:"size,omitempty" bson:"size,omitempty"`
 }
 
 type CollectionFolderContent struct {
-	Name       string            `json:"name,omitempty" bson:"name,omitempty"`
-	Files      []*CollectionFile `json:"files,omitempty" bson:"files,omitempty"`
-	Subfolders []string          `json:"subfolders,omitempty" bson:"subfolders,omitempty"`
+	Name       string           `json:"_id,omitempty" bson:"_id,omitempty"`
+	Files      []CollectionFile `json:"files,omitempty" bson:"files,omitempty"`
+	Subfolders []string         `json:"subfolders,omitempty" bson:"subfolders,omitempty"`
 }
 
 type FieldsToDelete struct {

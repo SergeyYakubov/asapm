@@ -91,11 +91,11 @@ func (r *mutationResolver) AddCollectionEntry(ctx context.Context, input model.N
 	return res, err
 }
 
-func (r *queryResolver) Collections(ctx context.Context, filter *string, orderBy *string) ([]*model.CollectionEntry, error) {
+func (r *queryResolver) Collections(ctx context.Context, filter *string, orderBy *string) ([]model.CollectionEntry, error) {
 	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {
 		logger.Error("access denied: " + err.Error())
-		return []*model.CollectionEntry{}, errors.New("access denied: " + err.Error())
+		return []model.CollectionEntry{}, errors.New("access denied: " + err.Error())
 	}
 
 	keep, remove := extractModificationFields(ctx)
@@ -118,14 +118,14 @@ func (r *mutationResolver) CreateMeta(ctx context.Context, input model.NewBeamti
 	return meta.CreateBeamtimeMeta(acl, input)
 }
 
-func (r *queryResolver) Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error) {
+func (r *queryResolver) Meta(ctx context.Context, filter *string, orderBy *string) ([]model.BeamtimeMeta, error) {
 	log_str := "processing request read_meta"
 	logger.Debug(log_str)
 
 	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {
 		logger.Error("access denied: " + err.Error())
-		return []*model.BeamtimeMeta{}, errors.New("access denied: " + err.Error())
+		return []model.BeamtimeMeta{}, errors.New("access denied: " + err.Error())
 	}
 
 	keep, remove := extractModificationFields(ctx)
@@ -138,13 +138,13 @@ func (r *queryResolver) Meta(ctx context.Context, filter *string, orderBy *strin
 	return res, err
 }
 
-func (r *queryResolver) UniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error) {
+func (r *queryResolver) UniqueFields(ctx context.Context, filter *string, keys []string) ([]model.UniqueField, error) {
 	log_str := "processing request UniqueFields"
 
 	acl, err := auth.ReadAclFromContext(ctx)
 	if err != nil {
 		logger.Error("access denied: " + err.Error())
-		return []*model.UniqueField{}, errors.New("access denied: " + err.Error())
+		return []model.UniqueField{}, errors.New("access denied: " + err.Error())
 	}
 
 	logger.Debug(log_str)
@@ -231,13 +231,13 @@ func (r *queryResolver) LogEntries(ctx context.Context, filter string, start *in
 	return res, err
 }
 
-func (r *queryResolver) LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error) {
-	var result []*model.UniqueField
+func (r *queryResolver) LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]model.UniqueField, error) {
+	var result []model.UniqueField
 	return result, nil
 }
 
 
-func (r *mutationResolver)  AddCollectionFiles(ctx context.Context, id string,files []*model.InputCollectionFile) ([]*model.CollectionFilePlain, error) {
+func (r *mutationResolver)  AddCollectionFiles(ctx context.Context, id string,files []model.InputCollectionFile) ([]model.CollectionFilePlain, error) {
 	log_str := "processing request add_collection_files"
 	logger.Debug(log_str)
 
@@ -254,7 +254,7 @@ func (r *mutationResolver)  AddCollectionFiles(ctx context.Context, id string,fi
 	return res, err
 }
 
-func (r *queryResolver) CollectionFiles(ctx context.Context, id string) ([]*model.CollectionFilePlain, error) {
+func (r *queryResolver) CollectionFiles(ctx context.Context, id string, subcoll* bool) ([]model.CollectionFilePlain, error) {
 	log_str := "processing request get_collection_files"
 	logger.Debug(log_str)
 
@@ -264,14 +264,14 @@ func (r *queryResolver) CollectionFiles(ctx context.Context, id string) ([]*mode
 		return nil, errors.New("access denied: " + err.Error())
 	}
 
-	res, err := meta.GetCollectionFiles(acl, id)
+	res, err := meta.GetCollectionFiles(acl, id,subcoll)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 	return res, err
 }
 
-func (r *queryResolver) CollectionFolderContent(ctx context.Context, id string, rootFolder* string) (*model.CollectionFolderContent, error) {
+func (r *queryResolver) CollectionFolderContent(ctx context.Context, id string, rootFolder* string, subcoll* bool) (*model.CollectionFolderContent, error) {
 	log_str := "processing request get_collection_folder_content"
 	logger.Debug(log_str)
 
@@ -281,7 +281,7 @@ func (r *queryResolver) CollectionFolderContent(ctx context.Context, id string, 
 		return nil, errors.New("access denied: " + err.Error())
 	}
 
-	res, err := meta.GetCollectionFolderContent(acl, id, rootFolder)
+	res, err := meta.GetCollectionFolderContent(acl, id, rootFolder,subcoll)
 	if err != nil {
 		logger.Error(err.Error())
 	}

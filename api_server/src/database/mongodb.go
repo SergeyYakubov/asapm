@@ -309,6 +309,21 @@ func (db *Mongodb) addFolderTree(dbName string, collection_suffix string, id str
 	}
 }
 
+func (db *Mongodb) updateSizeInBeamtimeMeta(dbName string, metaId string,file *model.InputCollectionFile) error {
+	opts := options.Update().SetUpsert(false)
+	filter := bson.D{{"_id", metaId}}
+	update := bson.D{{"$inc", bson.M{"filesetSize": file.Size}}}
+	c := db.client.Database(dbName).Collection("meta")
+	res,err := c.UpdateOne(context.TODO(), filter, update, opts)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount!=1 {
+		return errors.New("addFile - cannot increase beamtime fileset size")
+	}
+	return nil
+}
+
 func (db *Mongodb) addFile(dbName string, collection_suffix string, id string, file *model.InputCollectionFile) (err error) {
 	filerec := FileEntry{
 		Name:               file.Name,
@@ -316,6 +331,11 @@ func (db *Mongodb) addFile(dbName string, collection_suffix string, id string, f
 		ParentCollectionId: id,
 	}
 	err = db.insertRecord(dbName, KFileCollectionPrefix+collection_suffix, &filerec)
+	if err != nil {
+		return err
+	}
+
+	err = db.updateSizeInBeamtimeMeta(dbName, collection_suffix, file)
 	if err != nil {
 		return err
 	}
@@ -333,26 +353,24 @@ func (db *Mongodb) addFiles(dbName string, collectionSuffix string, extra_params
 		return nil, errors.New("id must be string")
 	}
 
-	files, ok := extra_params[1].([]*model.InputCollectionFile)
+	files, ok := extra_params[1].([]model.InputCollectionFile)
 	if !ok {
 		return nil, errors.New("cannot extract files")
 	}
 
-	res, ok := extra_params[2].(*[]*model.CollectionFilePlain)
+	res, ok := extra_params[2].(*[]model.CollectionFilePlain)
 	if !ok {
 		return nil, errors.New("cannot extract output argument")
 	}
 
-	*res = make([]*model.CollectionFilePlain, len(files))
+	*res = make([]model.CollectionFilePlain, len(files))
 	for i, file := range files {
-		err := db.addFile(dbName, collectionSuffix, id, file)
+		err := db.addFile(dbName, collectionSuffix, id, &file)
 		if err != nil {
 			return nil, err
 		}
-		f := model.CollectionFilePlain{}
-		f.Size = file.Size
-		f.FullName = file.Name
-		(*res)[i] = &f
+		(*res)[i].FullName = file.Name
+		(*res)[i].Size = file.Size
 	}
 	sort.Slice(*res, func(i, j int) bool {
 		return (*res)[i].FullName < (*res)[j].FullName
@@ -361,54 +379,59 @@ func (db *Mongodb) addFiles(dbName string, collectionSuffix string, extra_params
 	return nil, nil
 }
 
-func (db *Mongodb) getFolder(dbName string, collectionSuffix string, extra_params ...interface{}) ([]byte, error) {
-	if len(extra_params) != 2 {
-		return nil, errors.New("wrong number of parameters")
+func getFilesFromFolderEntry(id string, subcol bool, folderEntry FolderEntry,folder *model.CollectionFolderContent) {
+	folder.Files = make([]model.CollectionFile, 0)
+	for _, entry := range folderEntry.Files {
+		add := entry.ParentCollectionId == id
+		if (subcol) {
+			add = add || strings.HasPrefix(entry.ParentCollectionId,id+".")
+		}
+		if add {
+			folder.Files = append(folder.Files,model.CollectionFile{
+				Name: entry.Name,
+				Size: entry.Size,
+			})
+		}
 	}
+}
 
-	rootFolder, ok := extra_params[0].(*string)
-	if !ok {
-		return nil, errors.New("rootFolder must be string pointer")
+func getFoldersFromFolderEntry(id string, subcol bool, folderEntry FolderEntry,folder *model.CollectionFolderContent) {
+	folder.Subfolders = make([]string, 0)
+	for _, entry := range folderEntry.Folders {
+		add := utils.StringInSlice(id,entry.ParentCollectionIds)
+		if (subcol) {
+			add = add || utils.StringInSliceStartsWith(id+".",entry.ParentCollectionIds)
+		}
+		if add {
+			folder.Subfolders = append(folder.Subfolders,path.Base(entry.FullName))
+		}
 	}
+}
 
-	folder, ok := extra_params[1].(*model.CollectionFolderContent)
-	if !ok {
-		return nil, errors.New("getFiles: wrong argument")
-	}
-
-	folderName := "."
-	if rootFolder != nil {
-		folderName = path.Clean(*rootFolder)
-	}
-
+func (db *Mongodb) getFolderContentFromDb(dbName string, collectionSuffix string,id string, folderName string,subcol bool,folder *model.CollectionFolderContent) error {
 	var folderEntry FolderEntry
-	res, err := db.readRecord(dbName, KFolderCollectionPrefix+collectionSuffix, folderName)
+	q := bson.M{"_id": folderName}
+	c := db.client.Database(dbName).Collection(KFolderCollectionPrefix+collectionSuffix)
+	err := c.FindOne(context.TODO(), q, options.FindOne()).Decode(&folderEntry)
 	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(res, &folderEntry)
-	if err != nil {
-		return nil, err
+		return err
 	}
 
 	folder.Name = folderEntry.FullName
-	folder.Files = make([]*model.CollectionFile, len(folderEntry.Files))
-	for i, entry := range folderEntry.Files {
-		folder.Files[i] = &model.CollectionFile{
-			Name: entry.Name,
-			Size: entry.Size,
-		}
-	}
-	folder.Subfolders = make([]string, len(folderEntry.Folders))
-	for i, entry := range folderEntry.Folders {
-		folder.Subfolders[i] = path.Base(entry.FullName)
-	}
+	getFilesFromFolderEntry(id,subcol,folderEntry,folder)
+	getFoldersFromFolderEntry(id,subcol,folderEntry,folder)
 
-	return nil, nil
+	return nil
 }
 
-func (db *Mongodb) getFiles(dbName string, collectionSuffix string, extra_params ...interface{}) ([]byte, error) {
-	if len(extra_params) != 2 {
+func (db *Mongodb)  deleteCollection(db_name string , collection_name string )([]byte, error) {
+	c := db.client.Database(db_name).Collection(collection_name)
+	err := c.Drop(context.Background())
+	return nil,err
+}
+
+func (db *Mongodb) getFolder(dbName string, collectionSuffix string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 4 {
 		return nil, errors.New("wrong number of parameters")
 	}
 
@@ -417,7 +440,47 @@ func (db *Mongodb) getFiles(dbName string, collectionSuffix string, extra_params
 		return nil, errors.New("id must be string")
 	}
 
-	files, ok := extra_params[1].(*[]*model.CollectionFilePlain)
+	rootFolder, ok := extra_params[1].(*string)
+	if !ok {
+		return nil, errors.New("rootFolder must be string pointer")
+	}
+
+	subcol, ok := extra_params[2].(bool)
+	if !ok {
+		return nil, errors.New("subcol must be bool")
+	}
+
+	folder, ok := extra_params[3].(*model.CollectionFolderContent)
+	if !ok {
+		return nil, errors.New("getFiles: wrong argument")
+	}
+
+	rootFolderName := "."
+	if rootFolder != nil {
+		rootFolderName = path.Clean(*rootFolder)
+	}
+
+	err := db.getFolderContentFromDb(dbName, collectionSuffix,id, rootFolderName,subcol,folder)
+	return nil, err
+
+}
+
+func (db *Mongodb) getFiles(dbName string, collectionSuffix string, extra_params ...interface{}) ([]byte, error) {
+	if len(extra_params) != 3 {
+		return nil, errors.New("wrong number of parameters")
+	}
+
+	id, ok := extra_params[0].(string)
+	if !ok {
+		return nil, errors.New("id must be string")
+	}
+
+	subcol, ok := extra_params[1].(bool)
+	if !ok {
+		return nil, errors.New("subcol must be bool")
+	}
+
+	files, ok := extra_params[2].(*[]model.CollectionFilePlain)
 	if !ok {
 		return nil, errors.New("getFiles: wrong argument")
 	}
@@ -425,22 +488,12 @@ func (db *Mongodb) getFiles(dbName string, collectionSuffix string, extra_params
 	var fs = FilterAndSort{
 		SystemFilter: "parentCollectionId = '" + id + "'",
 	}
-
-	var entries []FileEntry
-	_, err := db.readRecords(dbName, KFileCollectionPrefix+collectionSuffix, fs, &entries)
-	if err != nil {
-		return nil, err
+	if subcol {
+		fs.SystemFilter = fs.SystemFilter + " OR parentCollectionId REGEXP '^"+id+"\\.'"
 	}
 
-	*files = make([]*model.CollectionFilePlain, len(entries))
-	for i, entry := range entries {
-		(*files)[i] = &model.CollectionFilePlain{
-			FullName: entry.Name,
-			Size: entry.Size,
-		}
-	}
-
-	return nil, nil
+	_, err := db.readRecords(dbName, KFileCollectionPrefix+collectionSuffix, fs, files)
+	return nil, err
 }
 
 func (db *Mongodb) setFields(dbName string, dataCollectionName string, exist bool, extra_params ...interface{}) ([]byte, error) {
@@ -832,6 +885,8 @@ func (db *Mongodb) ProcessRequest(db_name string, collection_name string, op str
 		return db.getFiles(db_name, collection_name, extra_params...)
 	case "get_folder":
 		return db.getFolder(db_name, collection_name, extra_params...)
+	case "delete_collection":
+		return db.deleteCollection(db_name, collection_name)
 	}
 
 	return nil, errors.New("Wrong db operation: " + op)

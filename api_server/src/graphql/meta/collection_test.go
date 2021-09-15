@@ -160,7 +160,7 @@ func (suite *CollectionTestSuite) TestAddCollectionEntry() {
 			var input_entry model.CollectionEntry
 			utils.DeepCopy(input, &input_entry)
 			input_entry.Type = KCollectionTypeName
-			input_entry.ChildCollection = []*model.BaseCollectionEntry{}
+			input_entry.ChildCollection = []model.BaseCollectionEntry{}
 			col := KDefaultCollectionName
 			input_entry.ChildCollectionName = &col
 			input_entry.ParentBeamtimeMeta = meta.ParentBeamtimeMeta
@@ -539,7 +539,7 @@ func (suite *CollectionTestSuite) TestGetFiles() {
 	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "read_record", mock.Anything).Return([]byte(subcollection_meta), nil)
 	suite.mock_db.On("ProcessRequest", "beamtime", "81999364", "get_files", mock.Anything).Return([]byte{}, nil)
 
-	_, err := GetCollectionFiles(auth.MetaAcl{AllowedBeamtimes: []string{"81999364"}}, id)
+	_, err := GetCollectionFiles(auth.MetaAcl{AllowedBeamtimes: []string{"81999364"}}, id, nil)
 
 	suite.Nil(err)
 }
@@ -551,7 +551,7 @@ func (suite *CollectionTestSuite) TestGetFolder() {
 	suite.mock_db.On("ProcessRequest", "beamtime", "81999364", "get_folder", mock.Anything).Return([]byte{}, nil)
 
 	rf:="."
-	_, err := GetCollectionFolderContent(auth.MetaAcl{AllowedBeamtimes: []string{"81999364"}}, id, &rf)
+	_, err := GetCollectionFolderContent(auth.MetaAcl{AllowedBeamtimes: []string{"81999364"}}, id, &rf, nil)
 
 	suite.Nil(err)
 }

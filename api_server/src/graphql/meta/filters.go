@@ -10,10 +10,10 @@ import (
 )
 
 
-func UniqueFields(acl auth.MetaAcl,filter *string,keys []string)  ([]*model.UniqueField, error) {
+func UniqueFields(acl auth.MetaAcl,filter *string,keys []string)  ([]model.UniqueField, error) {
 
 	if acl.ImmediateDeny {
-		return []*model.UniqueField{}, errors.New("access denied, not enough permissions")
+		return []model.UniqueField{}, errors.New("access denied, not enough permissions")
 	}
 
 	ff := auth.FilterFields{
@@ -25,18 +25,18 @@ func UniqueFields(acl auth.MetaAcl,filter *string,keys []string)  ([]*model.Uniq
 	systemFilter := auth.AclToSqlFilter(acl,ff)
 	fl := common.GetFilterAndSort(systemFilter,filter,nil)
 
-	res := make([]*model.UniqueField,0)
+	res := make([]model.UniqueField,0)
 
 	for _,key:=range keys {
-		entry := &model.UniqueField{}
+		entry := model.UniqueField{}
 		entry.KeyName = key
 		bFields, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "unique_fields",fl,key)
 		if err != nil {
-			return []*model.UniqueField{}, err
+			return []model.UniqueField{}, err
 		}
 		err = json.Unmarshal(bFields, &entry.Values)
 		if err != nil {
-			return []*model.UniqueField{}, err
+			return []model.UniqueField{}, err
 		}
 		res = append(res, entry)
 	}

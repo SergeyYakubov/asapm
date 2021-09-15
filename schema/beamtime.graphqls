@@ -34,7 +34,7 @@ type CollectionFile {
 
 type CollectionFolderContent {
     name: String!
-    files: [CollectionFile]
+    files: [CollectionFile!]
     subfolders: [String!]
 }
 
@@ -172,6 +172,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     jsonString: String
     attachments: [Attachment!]
     thumbnail: String
+    filesetSize: Int
 }
 
 type BaseCollectionEntry {

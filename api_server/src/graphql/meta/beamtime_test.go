@@ -42,6 +42,8 @@ func (suite *MetaSuite) TestDeleteMeta() {
 	params_delete := []interface{}{fs, true}
 
 	suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_records", params_delete).Return([]byte(""), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", "files_"+id, "delete_collection", mock.Anything).Return([]byte(""), nil)
+	suite.mock_db.On("ProcessRequest", "beamtime", "folders_"+id, "delete_collection", mock.Anything).Return([]byte(""), nil)
 
 	res, err := DeleteBeamtimeMetaAndCollections(auth.MetaAcl{AdminAccess: true},id)
 
@@ -143,6 +145,8 @@ func (suite *MetaSuite) TestDeleteAuthorization() {
 		}
 		if test.allowed {
 			suite.mock_db.On("ProcessRequest", "beamtime", KMetaNameInDb, "delete_records", mock.Anything).Return([]byte(""), nil)
+			suite.mock_db.On("ProcessRequest", "beamtime", "files_"+id, "delete_collection", mock.Anything).Return([]byte(""), nil)
+			suite.mock_db.On("ProcessRequest", "beamtime", "folders_"+id, "delete_collection", mock.Anything).Return([]byte(""), nil)
 		}
 
 		_, err := DeleteBeamtimeMetaAndCollections(test.acl,id)

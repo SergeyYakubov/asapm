@@ -28,14 +28,13 @@ const (
 	ModeGetFiles
 )
 
-func btId(id string) string{
+func btId(id string) string {
 	ids := strings.Split(id, ".")
 	if len(ids) < 1 {
 		return ""
 	}
 	return ids[0]
 }
-
 
 func AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*model.CollectionEntry, error) {
 	if acl.ImmediateDeny {
@@ -82,7 +81,7 @@ func AddCollectionEntry(acl auth.MetaAcl, input model.NewCollectionEntry) (*mode
 	}
 
 	if entry.ChildCollection == nil {
-		entry.ChildCollection = []*model.BaseCollectionEntry{}
+		entry.ChildCollection = []model.BaseCollectionEntry{}
 	}
 	if entry.ChildCollectionName == nil {
 		col := KDefaultCollectionName
@@ -266,9 +265,9 @@ func setPrevNext(meta *model.CollectionEntry) {
 
 }
 
-func ReadCollectionsMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFields []string, removeFields []string) ([]*model.CollectionEntry, error) {
+func ReadCollectionsMeta(acl auth.MetaAcl, filter *string, orderBy *string, keepFields []string, removeFields []string) ([]model.CollectionEntry, error) {
 	if acl.ImmediateDeny {
-		return []*model.CollectionEntry{}, errors.New("access denied, not enough permissions")
+		return []model.CollectionEntry{}, errors.New("access denied, not enough permissions")
 	}
 
 	ff := auth.FilterFields{
@@ -279,17 +278,17 @@ func ReadCollectionsMeta(acl auth.MetaAcl, filter *string, orderBy *string, keep
 
 	systemFilter := auth.AclToSqlFilter(acl, ff)
 
-	var response = []*model.CollectionEntry{}
+	var response = []model.CollectionEntry{}
 
 	fs := common.GetFilterAndSort(systemFilter, filter, orderBy)
 	_, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_records", fs, &response)
 	if err != nil {
-		return []*model.CollectionEntry{}, err
+		return []model.CollectionEntry{}, err
 	}
 
-	for _, meta := range response {
-		updateFields(keepFields, removeFields, &meta.CustomValues)
-		setPrevNext(meta)
+	for i, _ := range response {
+		updateFields(keepFields, removeFields, &response[i].CustomValues)
+		setPrevNext(&response[i])
 	}
 
 	return response, nil
@@ -325,7 +324,7 @@ func DeleteCollectionsAndSubcollectionMeta(acl auth.MetaAcl, id string) (*string
 func getCollectionMeta(id string) (model.CollectionEntry, error) {
 	res, err := database.GetDb().ProcessRequest("beamtime", KMetaNameInDb, "read_record", id)
 	if err != nil {
-		return model.CollectionEntry{}, err
+		return model.CollectionEntry{}, errors.New("cannot find collection entry: "+err.Error())
 	}
 	var res_meta model.CollectionEntry
 	err = json.Unmarshal(res, &res_meta)
@@ -333,10 +332,6 @@ func getCollectionMeta(id string) (model.CollectionEntry, error) {
 }
 
 func authorizeCollectionActivity(id string, acl auth.MetaAcl, activity int) error {
-	if acl.AdminAccess {
-		return nil
-	}
-
 	if acl.ImmediateDeny {
 		return errors.New("access denied")
 	}
@@ -344,6 +339,10 @@ func authorizeCollectionActivity(id string, acl auth.MetaAcl, activity int) erro
 	meta, err := getCollectionMeta(id)
 	if err != nil {
 		return err
+	}
+
+	if acl.AdminAccess {
+		return nil
 	}
 
 	if activity == auth.DeleteSubcollection && meta.Type != KCollectionTypeName {
@@ -459,8 +458,8 @@ func needThumbnail(meta *model.CollectionEntry, attachment *model.Attachment) bo
 	return meta.Thumbnail == nil && strings.HasPrefix(attachment.ContentType, "image")
 }
 
-func GetCollectionFolderContent(acl auth.MetaAcl, id string, rootFolder *string) (*model.CollectionFolderContent, error) {
-	_,err := auhthorizeRequest(acl,id, ModeGetFiles,nil)
+func GetCollectionFolderContent(acl auth.MetaAcl, id string, rootFolder *string, subcoll *bool) (*model.CollectionFolderContent, error) {
+	_, err := auhthorizeRequest(acl, id, ModeGetFiles, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -470,12 +469,19 @@ func GetCollectionFolderContent(acl auth.MetaAcl, id string, rootFolder *string)
 	}
 
 	var response = model.CollectionFolderContent{}
-	_, err = database.GetDb().ProcessRequest("beamtime", btId, "get_folder", id,rootFolder, &response)
+	_, err = database.GetDb().ProcessRequest("beamtime", btId, "get_folder", id, rootFolder, boolFromPointer(subcoll, false), &response)
 	return &response, err
 }
 
-func GetCollectionFiles(acl auth.MetaAcl, id string) ([]*model.CollectionFilePlain, error) {
-	_,err := auhthorizeRequest(acl,id, ModeGetFiles,nil)
+func boolFromPointer(val *bool, defVal bool) bool {
+	if val == nil {
+		return defVal
+	}
+	return *val
+}
+
+func GetCollectionFiles(acl auth.MetaAcl, id string, subcoll *bool) ([]model.CollectionFilePlain, error) {
+	_, err := auhthorizeRequest(acl, id, ModeGetFiles, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -483,13 +489,12 @@ func GetCollectionFiles(acl auth.MetaAcl, id string) ([]*model.CollectionFilePla
 	if len(btId) == 0 {
 		return nil, errors.New("wrong id format")
 	}
-
-	var response = []*model.CollectionFilePlain{}
-	_, err = database.GetDb().ProcessRequest("beamtime", btId, "get_files", id, &response)
+	var response = []model.CollectionFilePlain{}
+	_, err = database.GetDb().ProcessRequest("beamtime", btId, "get_files", id, boolFromPointer(subcoll, false), &response)
 	return response, err
 }
 
-func AddCollectionFiles(acl auth.MetaAcl, id string, files []*model.InputCollectionFile) ([]*model.CollectionFilePlain, error) {
+func AddCollectionFiles(acl auth.MetaAcl, id string, files []model.InputCollectionFile) ([]model.CollectionFilePlain, error) {
 	err := authorizeCollectionActivity(id, acl, auth.AddFiles)
 	if err != nil {
 		return nil, err
@@ -498,7 +503,7 @@ func AddCollectionFiles(acl auth.MetaAcl, id string, files []*model.InputCollect
 	if len(btId) == 0 {
 		return nil, errors.New("wrong id format")
 	}
-	var response = []*model.CollectionFilePlain{}
+	var response = []model.CollectionFilePlain{}
 	_, err = database.GetDb().ProcessRequest("beamtime", btId, "add_files", id, files, &response)
 	return response, err
 }

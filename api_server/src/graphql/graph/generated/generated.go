@@ -75,6 +75,7 @@ type ComplexityRoot struct {
 		EventEnd            func(childComplexity int) int
 		EventStart          func(childComplexity int) int
 		Facility            func(childComplexity int) int
+		FilesetSize         func(childComplexity int) int
 		Generated           func(childComplexity int) int
 		ID                  func(childComplexity int) int
 		JSONString          func(childComplexity int) int
@@ -158,7 +159,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddCollectionEntry          func(childComplexity int, input model.NewCollectionEntry) int
 		AddCollectionEntryFields    func(childComplexity int, input model.FieldsToSet) int
-		AddCollectionFiles          func(childComplexity int, id string, files []*model.InputCollectionFile) int
+		AddCollectionFiles          func(childComplexity int, id string, files []model.InputCollectionFile) int
 		AddMessageLogEntry          func(childComplexity int, input model.NewLogEntryMessage) int
 		CreateMeta                  func(childComplexity int, input model.NewBeamtimeMeta) int
 		DeleteCollectionEntryFields func(childComplexity int, input model.FieldsToDelete) int
@@ -204,8 +205,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CollectionFiles         func(childComplexity int, id string) int
-		CollectionFolderContent func(childComplexity int, id string, rootFolder *string) int
+		CollectionFiles         func(childComplexity int, id string, subcollections *bool) int
+		CollectionFolderContent func(childComplexity int, id string, rootFolder *string, subcollections *bool) int
 		Collections             func(childComplexity int, filter *string, orderBy *string) int
 		LogEntries              func(childComplexity int, filter string, start *int, limit *int) int
 		LogEntriesUniqueFields  func(childComplexity int, filter *string, keys []string) int
@@ -247,20 +248,20 @@ type MutationResolver interface {
 	DeleteCollectionEntryFields(ctx context.Context, input model.FieldsToDelete) (*model.CollectionEntry, error)
 	SetUserPreferences(ctx context.Context, id string, input model.InputUserPreferences) (*model.UserAccount, error)
 	UploadAttachment(ctx context.Context, req model.UploadFile) (*model.Attachment, error)
-	AddCollectionFiles(ctx context.Context, id string, files []*model.InputCollectionFile) ([]*model.CollectionFilePlain, error)
+	AddCollectionFiles(ctx context.Context, id string, files []model.InputCollectionFile) ([]model.CollectionFilePlain, error)
 	AddMessageLogEntry(ctx context.Context, input model.NewLogEntryMessage) (*string, error)
 	RemoveLogEntry(ctx context.Context, id string) (*string, error)
 }
 type QueryResolver interface {
-	Meta(ctx context.Context, filter *string, orderBy *string) ([]*model.BeamtimeMeta, error)
-	Collections(ctx context.Context, filter *string, orderBy *string) ([]*model.CollectionEntry, error)
-	UniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error)
+	Meta(ctx context.Context, filter *string, orderBy *string) ([]model.BeamtimeMeta, error)
+	Collections(ctx context.Context, filter *string, orderBy *string) ([]model.CollectionEntry, error)
+	UniqueFields(ctx context.Context, filter *string, keys []string) ([]model.UniqueField, error)
 	User(ctx context.Context, id string) (*model.UserAccount, error)
-	CollectionFiles(ctx context.Context, id string) ([]*model.CollectionFilePlain, error)
-	CollectionFolderContent(ctx context.Context, id string, rootFolder *string) (*model.CollectionFolderContent, error)
+	CollectionFiles(ctx context.Context, id string, subcollections *bool) ([]model.CollectionFilePlain, error)
+	CollectionFolderContent(ctx context.Context, id string, rootFolder *string, subcollections *bool) (*model.CollectionFolderContent, error)
 	LogEntry(ctx context.Context, id string) (model.LogEntry, error)
 	LogEntries(ctx context.Context, filter string, start *int, limit *int) (*model.LogEntryQueryResult, error)
-	LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]*model.UniqueField, error)
+	LogEntriesUniqueFields(ctx context.Context, filter *string, keys []string) ([]model.UniqueField, error)
 }
 
 type executableSchema struct {
@@ -443,6 +444,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeMeta.Facility(childComplexity), true
+
+	case "BeamtimeMeta.filesetSize":
+		if e.complexity.BeamtimeMeta.FilesetSize == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.FilesetSize(childComplexity), true
 
 	case "BeamtimeMeta.generated":
 		if e.complexity.BeamtimeMeta.Generated == nil {
@@ -882,7 +890,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddCollectionFiles(childComplexity, args["id"].(string), args["files"].([]*model.InputCollectionFile)), true
+		return e.complexity.Mutation.AddCollectionFiles(childComplexity, args["id"].(string), args["files"].([]model.InputCollectionFile)), true
 
 	case "Mutation.addMessageLogEntry":
 		if e.complexity.Mutation.AddMessageLogEntry == nil {
@@ -1196,7 +1204,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CollectionFiles(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.CollectionFiles(childComplexity, args["id"].(string), args["subcollections"].(*bool)), true
 
 	case "Query.collectionFolderContent":
 		if e.complexity.Query.CollectionFolderContent == nil {
@@ -1208,7 +1216,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CollectionFolderContent(childComplexity, args["id"].(string), args["rootFolder"].(*string)), true
+		return e.complexity.Query.CollectionFolderContent(childComplexity, args["id"].(string), args["rootFolder"].(*string), args["subcollections"].(*bool)), true
 
 	case "Query.collections":
 		if e.complexity.Query.Collections == nil {
@@ -1450,7 +1458,7 @@ type CollectionFile {
 
 type CollectionFolderContent {
     name: String!
-    files: [CollectionFile]
+    files: [CollectionFile!]
     subfolders: [String!]
 }
 
@@ -1588,6 +1596,7 @@ type BeamtimeMeta implements CollectionEntryInterface {
     jsonString: String
     attachments: [Attachment!]
     thumbnail: String
+    filesetSize: Int
 }
 
 type BaseCollectionEntry {
@@ -1714,7 +1723,7 @@ type LogEntryQueryResult {
     deleteCollectionEntryFields(input: FieldsToDelete!): CollectionEntry
     setUserPreferences(id:ID!, input: InputUserPreferences!): UserAccount
     uploadAttachment(req: UploadFile!): Attachment!
-    addCollectionFiles(id: String!, files: [InputCollectionFile!]!): [CollectionFilePlain]!
+    addCollectionFiles(id: String!, files: [InputCollectionFile!]!): [CollectionFilePlain!]!
 
     # Logbook API
     addMessageLogEntry(input: NewLogEntryMessage!): ID
@@ -1726,8 +1735,8 @@ type Query {
     collections (filter: String, orderBy: String): [CollectionEntry!]!
     uniqueFields  (filter: String, keys: [String!]!): [UniqueField!]!
     user (id: ID!): UserAccount
-    collectionFiles(id: String!): [CollectionFilePlain!]!
-    collectionFolderContent(id: String!, rootFolder: String): CollectionFolderContent!
+    collectionFiles(id: String!, subcollections: Boolean): [CollectionFilePlain!]!
+    collectionFolderContent(id: String!, rootFolder: String, subcollections: Boolean): CollectionFolderContent!
 
     # Logbook API
     logEntry (id: ID!): LogEntry
@@ -1841,9 +1850,9 @@ func (ec *executionContext) field_Mutation_addCollectionFiles_args(ctx context.C
 		}
 	}
 	args["id"] = arg0
-	var arg1 []*model.InputCollectionFile
+	var arg1 []model.InputCollectionFile
 	if tmp, ok := rawArgs["files"]; ok {
-		arg1, err = ec.unmarshalNInputCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFileᚄ(ctx, tmp)
+		arg1, err = ec.unmarshalNInputCollectionFile2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFileᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2025,6 +2034,14 @@ func (ec *executionContext) field_Query_collectionFiles_args(ctx context.Context
 		}
 	}
 	args["id"] = arg0
+	var arg1 *bool
+	if tmp, ok := rawArgs["subcollections"]; ok {
+		arg1, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["subcollections"] = arg1
 	return args, nil
 }
 
@@ -2047,6 +2064,14 @@ func (ec *executionContext) field_Query_collectionFolderContent_args(ctx context
 		}
 	}
 	args["rootFolder"] = arg1
+	var arg2 *bool
+	if tmp, ok := rawArgs["subcollections"]; ok {
+		arg2, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["subcollections"] = arg2
 	return args, nil
 }
 
@@ -3243,9 +3268,9 @@ func (ec *executionContext) _BeamtimeMeta_childCollection(ctx context.Context, f
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.BaseCollectionEntry)
+	res := resTmp.([]model.BaseCollectionEntry)
 	fc.Result = res
-	return ec.marshalOBaseCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntryᚄ(ctx, field.Selections, res)
+	return ec.marshalOBaseCollectionEntry2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_customValues(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -3411,9 +3436,9 @@ func (ec *executionContext) _BeamtimeMeta_attachments(ctx context.Context, field
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Attachment)
+	res := resTmp.([]model.Attachment)
 	fc.Result = res
-	return ec.marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+	return ec.marshalOAttachment2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_thumbnail(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -3445,6 +3470,37 @@ func (ec *executionContext) _BeamtimeMeta_thumbnail(ctx context.Context, field g
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BeamtimeMeta_filesetSize(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FilesetSize, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeUser_applicant(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeUser) (ret graphql.Marshaler) {
@@ -3817,9 +3873,9 @@ func (ec *executionContext) _CollectionEntry_childCollection(ctx context.Context
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.BaseCollectionEntry)
+	res := resTmp.([]model.BaseCollectionEntry)
 	fc.Result = res
-	return ec.marshalOBaseCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntryᚄ(ctx, field.Selections, res)
+	return ec.marshalOBaseCollectionEntry2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CollectionEntry_customValues(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
@@ -4112,9 +4168,9 @@ func (ec *executionContext) _CollectionEntry_attachments(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Attachment)
+	res := resTmp.([]model.Attachment)
 	fc.Result = res
-	return ec.marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+	return ec.marshalOAttachment2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CollectionEntry_thumbnail(ctx context.Context, field graphql.CollectedField, obj *model.CollectionEntry) (ret graphql.Marshaler) {
@@ -4344,9 +4400,9 @@ func (ec *executionContext) _CollectionFolderContent_files(ctx context.Context, 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.CollectionFile)
+	res := resTmp.([]model.CollectionFile)
 	fc.Result = res
-	return ec.marshalOCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx, field.Selections, res)
+	return ec.marshalOCollectionFile2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFileᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CollectionFolderContent_subfolders(ctx context.Context, field graphql.CollectedField, obj *model.CollectionFolderContent) (ret graphql.Marshaler) {
@@ -5217,7 +5273,7 @@ func (ec *executionContext) _Mutation_addCollectionFiles(ctx context.Context, fi
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddCollectionFiles(rctx, args["id"].(string), args["files"].([]*model.InputCollectionFile))
+		return ec.resolvers.Mutation().AddCollectionFiles(rctx, args["id"].(string), args["files"].([]model.InputCollectionFile))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5229,9 +5285,9 @@ func (ec *executionContext) _Mutation_addCollectionFiles(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.CollectionFilePlain)
+	res := resTmp.([]model.CollectionFilePlain)
 	fc.Result = res
-	return ec.marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx, field.Selections, res)
+	return ec.marshalNCollectionFilePlain2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlainᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addMessageLogEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6158,9 +6214,9 @@ func (ec *executionContext) _Query_meta(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.BeamtimeMeta)
+	res := resTmp.([]model.BeamtimeMeta)
 	fc.Result = res
-	return ec.marshalNBeamtimeMeta2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMetaᚄ(ctx, field.Selections, res)
+	return ec.marshalNBeamtimeMeta2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMetaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_collections(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6199,9 +6255,9 @@ func (ec *executionContext) _Query_collections(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.CollectionEntry)
+	res := resTmp.([]model.CollectionEntry)
 	fc.Result = res
-	return ec.marshalNCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntryᚄ(ctx, field.Selections, res)
+	return ec.marshalNCollectionEntry2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_uniqueFields(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6240,9 +6296,9 @@ func (ec *executionContext) _Query_uniqueFields(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.UniqueField)
+	res := resTmp.([]model.UniqueField)
 	fc.Result = res
-	return ec.marshalNUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueFieldᚄ(ctx, field.Selections, res)
+	return ec.marshalNUniqueField2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6307,7 +6363,7 @@ func (ec *executionContext) _Query_collectionFiles(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CollectionFiles(rctx, args["id"].(string))
+		return ec.resolvers.Query().CollectionFiles(rctx, args["id"].(string), args["subcollections"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6319,9 +6375,9 @@ func (ec *executionContext) _Query_collectionFiles(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.CollectionFilePlain)
+	res := resTmp.([]model.CollectionFilePlain)
 	fc.Result = res
-	return ec.marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlainᚄ(ctx, field.Selections, res)
+	return ec.marshalNCollectionFilePlain2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlainᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_collectionFolderContent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6348,7 +6404,7 @@ func (ec *executionContext) _Query_collectionFolderContent(ctx context.Context, 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CollectionFolderContent(rctx, args["id"].(string), args["rootFolder"].(*string))
+		return ec.resolvers.Query().CollectionFolderContent(rctx, args["id"].(string), args["rootFolder"].(*string), args["subcollections"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6477,9 +6533,9 @@ func (ec *executionContext) _Query_logEntriesUniqueFields(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.UniqueField)
+	res := resTmp.([]model.UniqueField)
 	fc.Result = res
-	return ec.marshalNUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueFieldᚄ(ctx, field.Selections, res)
+	return ec.marshalNUniqueField2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -8591,6 +8647,8 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._BeamtimeMeta_attachments(ctx, field, obj)
 		case "thumbnail":
 			out.Values[i] = ec._BeamtimeMeta_thumbnail(ctx, field, obj)
+		case "filesetSize":
+			out.Values[i] = ec._BeamtimeMeta_filesetSize(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9583,21 +9641,11 @@ func (ec *executionContext) marshalNBaseCollectionEntry2asapmᚋgraphqlᚋgraph�
 	return ec._BaseCollectionEntry(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNBaseCollectionEntry2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntry(ctx context.Context, sel ast.SelectionSet, v *model.BaseCollectionEntry) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._BaseCollectionEntry(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v model.BeamtimeMeta) graphql.Marshaler {
 	return ec._BeamtimeMeta(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNBeamtimeMeta2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMetaᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BeamtimeMeta) graphql.Marshaler {
+func (ec *executionContext) marshalNBeamtimeMeta2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMetaᚄ(ctx context.Context, sel ast.SelectionSet, v []model.BeamtimeMeta) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9621,7 +9669,7 @@ func (ec *executionContext) marshalNBeamtimeMeta2ᚕᚖasapmᚋgraphqlᚋgraph�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx, sel, v[i])
+			ret[i] = ec.marshalNBeamtimeMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9632,16 +9680,6 @@ func (ec *executionContext) marshalNBeamtimeMeta2ᚕᚖasapmᚋgraphqlᚋgraph�
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalNBeamtimeMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeMeta(ctx context.Context, sel ast.SelectionSet, v *model.BeamtimeMeta) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._BeamtimeMeta(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
@@ -9662,7 +9700,7 @@ func (ec *executionContext) marshalNCollectionEntry2asapmᚋgraphqlᚋgraphᚋmo
 	return ec._CollectionEntry(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CollectionEntry) graphql.Marshaler {
+func (ec *executionContext) marshalNCollectionEntry2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.CollectionEntry) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9686,7 +9724,7 @@ func (ec *executionContext) marshalNCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgrap
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCollectionEntry2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntry(ctx, sel, v[i])
+			ret[i] = ec.marshalNCollectionEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntry(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9699,21 +9737,15 @@ func (ec *executionContext) marshalNCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgrap
 	return ret
 }
 
-func (ec *executionContext) marshalNCollectionEntry2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionEntry(ctx context.Context, sel ast.SelectionSet, v *model.CollectionEntry) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._CollectionEntry(ctx, sel, v)
+func (ec *executionContext) marshalNCollectionFile2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx context.Context, sel ast.SelectionSet, v model.CollectionFile) graphql.Marshaler {
+	return ec._CollectionFile(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNCollectionFilePlain2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v model.CollectionFilePlain) graphql.Marshaler {
 	return ec._CollectionFilePlain(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v []*model.CollectionFilePlain) graphql.Marshaler {
+func (ec *executionContext) marshalNCollectionFilePlain2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlainᚄ(ctx context.Context, sel ast.SelectionSet, v []model.CollectionFilePlain) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -9737,7 +9769,7 @@ func (ec *executionContext) marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOCollectionFilePlain2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx, sel, v[i])
+			ret[i] = ec.marshalNCollectionFilePlain2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -9748,53 +9780,6 @@ func (ec *executionContext) marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋ
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalNCollectionFilePlain2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlainᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CollectionFilePlain) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNCollectionFilePlain2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNCollectionFilePlain2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v *model.CollectionFilePlain) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._CollectionFilePlain(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNCollectionFolderContent2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFolderContent(ctx context.Context, sel ast.SelectionSet, v model.CollectionFolderContent) graphql.Marshaler {
@@ -9851,7 +9836,7 @@ func (ec *executionContext) unmarshalNInputCollectionFile2asapmᚋgraphqlᚋgrap
 	return ec.unmarshalInputInputCollectionFile(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNInputCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFileᚄ(ctx context.Context, v interface{}) ([]*model.InputCollectionFile, error) {
+func (ec *executionContext) unmarshalNInputCollectionFile2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFileᚄ(ctx context.Context, v interface{}) ([]model.InputCollectionFile, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -9861,22 +9846,14 @@ func (ec *executionContext) unmarshalNInputCollectionFile2ᚕᚖasapmᚋgraphql�
 		}
 	}
 	var err error
-	res := make([]*model.InputCollectionFile, len(vSlice))
+	res := make([]model.InputCollectionFile, len(vSlice))
 	for i := range vSlice {
-		res[i], err = ec.unmarshalNInputCollectionFile2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFile(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNInputCollectionFile2asapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFile(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) unmarshalNInputCollectionFile2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFile(ctx context.Context, v interface{}) (*model.InputCollectionFile, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalNInputCollectionFile2asapmᚋgraphqlᚋgraphᚋmodelᚐInputCollectionFile(ctx, v)
-	return &res, err
 }
 
 func (ec *executionContext) unmarshalNInputUserPreferences2asapmᚋgraphqlᚋgraphᚋmodelᚐInputUserPreferences(ctx context.Context, v interface{}) (model.InputUserPreferences, error) {
@@ -10049,7 +10026,7 @@ func (ec *executionContext) marshalNUniqueField2asapmᚋgraphqlᚋgraphᚋmodel�
 	return ec._UniqueField(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.UniqueField) graphql.Marshaler {
+func (ec *executionContext) marshalNUniqueField2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []model.UniqueField) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10073,7 +10050,7 @@ func (ec *executionContext) marshalNUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNUniqueField2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx, sel, v[i])
+			ret[i] = ec.marshalNUniqueField2asapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10084,16 +10061,6 @@ func (ec *executionContext) marshalNUniqueField2ᚕᚖasapmᚋgraphqlᚋgraphᚋ
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalNUniqueField2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐUniqueField(ctx context.Context, sel ast.SelectionSet, v *model.UniqueField) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._UniqueField(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v interface{}) (graphql.Upload, error) {
@@ -10354,7 +10321,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalOAttachment2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Attachment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10381,7 +10348,7 @@ func (ec *executionContext) marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋm
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAttachment2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
+			ret[i] = ec.marshalNAttachment2asapmᚋgraphqlᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10394,7 +10361,7 @@ func (ec *executionContext) marshalOAttachment2ᚕᚖasapmᚋgraphqlᚋgraphᚋm
 	return ret
 }
 
-func (ec *executionContext) marshalOBaseCollectionEntry2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BaseCollectionEntry) graphql.Marshaler {
+func (ec *executionContext) marshalOBaseCollectionEntry2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []model.BaseCollectionEntry) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10421,7 +10388,7 @@ func (ec *executionContext) marshalOBaseCollectionEntry2ᚕᚖasapmᚋgraphqlᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNBaseCollectionEntry2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntry(ctx, sel, v[i])
+			ret[i] = ec.marshalNBaseCollectionEntry2asapmᚋgraphqlᚋgraphᚋmodelᚐBaseCollectionEntry(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10490,11 +10457,7 @@ func (ec *executionContext) marshalOCollectionEntry2ᚖasapmᚋgraphqlᚋgraph�
 	return ec._CollectionEntry(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOCollectionFile2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx context.Context, sel ast.SelectionSet, v model.CollectionFile) graphql.Marshaler {
-	return ec._CollectionFile(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx context.Context, sel ast.SelectionSet, v []*model.CollectionFile) graphql.Marshaler {
+func (ec *executionContext) marshalOCollectionFile2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFileᚄ(ctx context.Context, sel ast.SelectionSet, v []model.CollectionFile) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -10521,7 +10484,7 @@ func (ec *executionContext) marshalOCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraph
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOCollectionFile2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx, sel, v[i])
+			ret[i] = ec.marshalNCollectionFile2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10532,24 +10495,6 @@ func (ec *executionContext) marshalOCollectionFile2ᚕᚖasapmᚋgraphqlᚋgraph
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalOCollectionFile2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFile(ctx context.Context, sel ast.SelectionSet, v *model.CollectionFile) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._CollectionFile(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOCollectionFilePlain2asapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v model.CollectionFilePlain) graphql.Marshaler {
-	return ec._CollectionFilePlain(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalOCollectionFilePlain2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐCollectionFilePlain(ctx context.Context, sel ast.SelectionSet, v *model.CollectionFilePlain) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._CollectionFilePlain(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalODateTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
