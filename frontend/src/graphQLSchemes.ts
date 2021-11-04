@@ -44,6 +44,11 @@ export const METAS_DETAILED = gql`
      userId
      username
     }
+    asapo {
+     beamtimeClbtTokenPath
+     beamtimeTokenPath
+     endpoint
+    }
     beamline
     beamlineAlias
     id
@@ -62,7 +67,6 @@ export const METAS_DETAILED = gql`
      username
     }    
     onlineAnalysis {
-     asapoBeamtimeTokenPath
      reservedNodes
      slurmReservation
      slurmPartition
@@ -163,6 +167,11 @@ export const COLLECTIONS = gql`
                 userId
                 username
             }
+            asapo {
+             beamtimeClbtTokenPath
+             beamtimeTokenPath
+             endpoint
+            }           
             beamline
             beamlineAlias
             id
@@ -181,7 +190,6 @@ export const COLLECTIONS = gql`
                 username
             }    
             onlineAnalysis {
-                asapoBeamtimeTokenPath
                 reservedNodes
                 slurmReservation
                 slurmPartition
@@ -230,6 +238,11 @@ export const METAS = gql`
                 userId
                 username
             }
+            asapo {
+             beamtimeClbtTokenPath
+             beamtimeTokenPath
+             endpoint
+            }           
             beamline
             beamlineAlias
             id
@@ -248,7 +261,6 @@ export const METAS = gql`
                 username
             }    
             onlineAnalysis {
-                asapoBeamtimeTokenPath
                 reservedNodes
                 slurmReservation
                 slurmPartition

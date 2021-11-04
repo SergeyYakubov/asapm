@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys,json, requests, re
 
-url = 'http://guest-k8s-node3.desy.de/yakser/asapm-dev/api/query'
+url = 'http://guest-k8s-node3.desy.de/yakser/asapm-p3/api/query'
 
 #read json file to dictionary
 with open (sys.argv[1], "r") as file:
@@ -16,7 +16,7 @@ data['eventStart'] = data['eventStart'].replace(" ","T")+"Z"
 data['generated']=data['generated'].replace(" ","T")+"Z"
 
 #set subcollection name to runs
-data['childCollectionName']='Runs'
+data['childCollectionName']='Scans'
 
 
 # prepare payload and graphql query

@@ -25,6 +25,7 @@ export function TableDataFromMeta(meta: BeamtimeMeta, section?: string): TableDa
             return [
                 {name: 'Core path', value: meta.corePath || "undefined"},
                 {name: 'Online', value: meta.onlineAnalysis ? "Requested" : "Not requested", data: meta.onlineAnalysis},
+                {name: 'Asapo', value: meta.asapo ? "Requested" : "Not requested", data: meta.asapo},
             ];
     }
     return [];

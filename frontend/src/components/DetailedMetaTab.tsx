@@ -472,7 +472,6 @@ function StaticSection({meta, section, tableFromMeta, isBeamtime}: StaticSection
     return <Grid
         container
         direction="column"
-        justify="center"
         alignItems="stretch"
     >
         <Grid item xs={12}>

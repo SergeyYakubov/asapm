@@ -333,7 +333,7 @@ function SelectColumns({collections, columns, close}: SelectColumnsProps) {
     };
 
     return <Box className={classes.root}>
-        <Grid container justify={'space-between'} className={classes.columnsHeader}>
+        <Grid container justifyContent={'space-between'} className={classes.columnsHeader}>
             <Button variant="contained" color="secondary" onClick={handleColumnButtonClick}
                     startIcon={<SettingsBackupRestoreIcon/>}>
                 Restore defaults

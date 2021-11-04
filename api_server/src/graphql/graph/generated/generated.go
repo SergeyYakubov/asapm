@@ -45,6 +45,12 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AsapoMeta struct {
+		BeamtimeClbtTokenPath func(childComplexity int) int
+		BeamtimeTokenPath     func(childComplexity int) int
+		Endpoint              func(childComplexity int) int
+	}
+
 	Attachment struct {
 		ContentType func(childComplexity int) int
 		EntryID     func(childComplexity int) int
@@ -63,6 +69,7 @@ type ComplexityRoot struct {
 
 	BeamtimeMeta struct {
 		Applicant           func(childComplexity int) int
+		Asapo               func(childComplexity int) int
 		Attachments         func(childComplexity int) int
 		Beamline            func(childComplexity int) int
 		BeamlineAlias       func(childComplexity int) int
@@ -173,17 +180,17 @@ type ComplexityRoot struct {
 	}
 
 	OnlineAnylysisMeta struct {
-		AsapoBeamtimeTokenPath func(childComplexity int) int
-		ReservedNodes          func(childComplexity int) int
-		SSHPrivateKeyPath      func(childComplexity int) int
-		SSHPublicKeyPath       func(childComplexity int) int
-		SlurmPartition         func(childComplexity int) int
-		SlurmReservation       func(childComplexity int) int
-		UserAccount            func(childComplexity int) int
+		ReservedNodes     func(childComplexity int) int
+		SSHPrivateKeyPath func(childComplexity int) int
+		SSHPublicKeyPath  func(childComplexity int) int
+		SlurmPartition    func(childComplexity int) int
+		SlurmReservation  func(childComplexity int) int
+		UserAccount       func(childComplexity int) int
 	}
 
 	ParentBeamtimeMeta struct {
 		Applicant      func(childComplexity int) int
+		Asapo          func(childComplexity int) int
 		Beamline       func(childComplexity int) int
 		BeamlineAlias  func(childComplexity int) int
 		Contact        func(childComplexity int) int
@@ -279,6 +286,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AsapoMeta.beamtimeClbtTokenPath":
+		if e.complexity.AsapoMeta.BeamtimeClbtTokenPath == nil {
+			break
+		}
+
+		return e.complexity.AsapoMeta.BeamtimeClbtTokenPath(childComplexity), true
+
+	case "AsapoMeta.beamtimeTokenPath":
+		if e.complexity.AsapoMeta.BeamtimeTokenPath == nil {
+			break
+		}
+
+		return e.complexity.AsapoMeta.BeamtimeTokenPath(childComplexity), true
+
+	case "AsapoMeta.endpoint":
+		if e.complexity.AsapoMeta.Endpoint == nil {
+			break
+		}
+
+		return e.complexity.AsapoMeta.Endpoint(childComplexity), true
+
 	case "Attachment.contentType":
 		if e.complexity.Attachment.ContentType == nil {
 			break
@@ -355,6 +383,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BeamtimeMeta.Applicant(childComplexity), true
+
+	case "BeamtimeMeta.asapo":
+		if e.complexity.BeamtimeMeta.Asapo == nil {
+			break
+		}
+
+		return e.complexity.BeamtimeMeta.Asapo(childComplexity), true
 
 	case "BeamtimeMeta.attachments":
 		if e.complexity.BeamtimeMeta.Attachments == nil {
@@ -1012,13 +1047,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UploadAttachment(childComplexity, args["req"].(model.UploadFile)), true
 
-	case "OnlineAnylysisMeta.asapoBeamtimeTokenPath":
-		if e.complexity.OnlineAnylysisMeta.AsapoBeamtimeTokenPath == nil {
-			break
-		}
-
-		return e.complexity.OnlineAnylysisMeta.AsapoBeamtimeTokenPath(childComplexity), true
-
 	case "OnlineAnylysisMeta.reservedNodes":
 		if e.complexity.OnlineAnylysisMeta.ReservedNodes == nil {
 			break
@@ -1067,6 +1095,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ParentBeamtimeMeta.Applicant(childComplexity), true
+
+	case "ParentBeamtimeMeta.asapo":
+		if e.complexity.ParentBeamtimeMeta.Asapo == nil {
+			break
+		}
+
+		return e.complexity.ParentBeamtimeMeta.Asapo(childComplexity), true
 
 	case "ParentBeamtimeMeta.beamline":
 		if e.complexity.ParentBeamtimeMeta.Beamline == nil {
@@ -1476,8 +1511,19 @@ input InputBeamtimeUser {
     username: String
 }
 
+type AsapoMeta {
+    beamtimeClbtTokenPath: String
+    beamtimeTokenPath: String
+    endpoint: String
+}
+
+input InputAsapoMeta {
+    beamtimeClbtTokenPath: String
+    beamtimeTokenPath: String
+    endpoint: String
+}
+
 type OnlineAnylysisMeta {
-    asapoBeamtimeTokenPath: String
     reservedNodes: [String!]
     slurmReservation: String
     slurmPartition: String
@@ -1548,6 +1594,7 @@ type CollectionEntry implements CollectionEntryInterface {
 type ParentBeamtimeMeta {
     id: String!
     applicant: BeamtimeUser
+    asapo : AsapoMeta
     beamline: String
     beamlineAlias: String
     status: String!
@@ -1570,6 +1617,7 @@ type ParentBeamtimeMeta {
 type BeamtimeMeta implements CollectionEntryInterface {
     id: String!
     applicant: BeamtimeUser
+    asapo : AsapoMeta
     beamline: String
     beamlineAlias: String
     beamlineSetup: String
@@ -1620,6 +1668,7 @@ input NewCollectionEntry {
 
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
+    asapo : InputAsapoMeta
     beamline: String
     beamlineAlias: String
     beamlineSetup: String
@@ -2257,6 +2306,99 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _AsapoMeta_beamtimeClbtTokenPath(ctx context.Context, field graphql.CollectedField, obj *model.AsapoMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AsapoMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BeamtimeClbtTokenPath, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AsapoMeta_beamtimeTokenPath(ctx context.Context, field graphql.CollectedField, obj *model.AsapoMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AsapoMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BeamtimeTokenPath, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AsapoMeta_endpoint(ctx context.Context, field graphql.CollectedField, obj *model.AsapoMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AsapoMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Endpoint, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Attachment_id(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2648,6 +2790,37 @@ func (ec *executionContext) _BeamtimeMeta_applicant(ctx context.Context, field g
 	res := resTmp.(*model.BeamtimeUser)
 	fc.Result = res
 	return ec.marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _BeamtimeMeta_asapo(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "BeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Asapo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AsapoMeta)
+	fc.Result = res
+	return ec.marshalOAsapoMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAsapoMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _BeamtimeMeta_beamline(ctx context.Context, field graphql.CollectedField, obj *model.BeamtimeMeta) (ret graphql.Marshaler) {
@@ -5366,37 +5539,6 @@ func (ec *executionContext) _Mutation_removeLogEntry(ctx context.Context, field 
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _OnlineAnylysisMeta_asapoBeamtimeTokenPath(ctx context.Context, field graphql.CollectedField, obj *model.OnlineAnylysisMeta) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "OnlineAnylysisMeta",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AsapoBeamtimeTokenPath, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _OnlineAnylysisMeta_reservedNodes(ctx context.Context, field graphql.CollectedField, obj *model.OnlineAnylysisMeta) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5646,6 +5788,37 @@ func (ec *executionContext) _ParentBeamtimeMeta_applicant(ctx context.Context, f
 	res := resTmp.(*model.BeamtimeUser)
 	fc.Result = res
 	return ec.marshalOBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐBeamtimeUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ParentBeamtimeMeta_asapo(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ParentBeamtimeMeta",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Asapo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.AsapoMeta)
+	fc.Result = res
+	return ec.marshalOAsapoMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAsapoMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ParentBeamtimeMeta_beamline(ctx context.Context, field graphql.CollectedField, obj *model.ParentBeamtimeMeta) (ret graphql.Marshaler) {
@@ -7973,6 +8146,36 @@ func (ec *executionContext) unmarshalInputFieldsToSet(ctx context.Context, obj i
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputInputAsapoMeta(ctx context.Context, obj interface{}) (model.InputAsapoMeta, error) {
+	var it model.InputAsapoMeta
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "beamtimeClbtTokenPath":
+			var err error
+			it.BeamtimeClbtTokenPath, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "beamtimeTokenPath":
+			var err error
+			it.BeamtimeTokenPath, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "endpoint":
+			var err error
+			it.Endpoint, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputInputBeamtimeUser(ctx context.Context, obj interface{}) (model.InputBeamtimeUser, error) {
 	var it model.InputBeamtimeUser
 	var asMap = obj.(map[string]interface{})
@@ -8156,6 +8359,12 @@ func (ec *executionContext) unmarshalInputNewBeamtimeMeta(ctx context.Context, o
 		case "applicant":
 			var err error
 			it.Applicant, err = ec.unmarshalOInputBeamtimeUser2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "asapo":
+			var err error
+			it.Asapo, err = ec.unmarshalOInputAsapoMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputAsapoMeta(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8486,6 +8695,34 @@ func (ec *executionContext) _LogEntry(ctx context.Context, sel ast.SelectionSet,
 
 // region    **************************** object.gotpl ****************************
 
+var asapoMetaImplementors = []string{"AsapoMeta"}
+
+func (ec *executionContext) _AsapoMeta(ctx context.Context, sel ast.SelectionSet, obj *model.AsapoMeta) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, asapoMetaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AsapoMeta")
+		case "beamtimeClbtTokenPath":
+			out.Values[i] = ec._AsapoMeta_beamtimeClbtTokenPath(ctx, field, obj)
+		case "beamtimeTokenPath":
+			out.Values[i] = ec._AsapoMeta_beamtimeTokenPath(ctx, field, obj)
+		case "endpoint":
+			out.Values[i] = ec._AsapoMeta_endpoint(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var attachmentImplementors = []string{"Attachment"}
 
 func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSet, obj *model.Attachment) graphql.Marshaler {
@@ -8586,6 +8823,8 @@ func (ec *executionContext) _BeamtimeMeta(ctx context.Context, sel ast.Selection
 			}
 		case "applicant":
 			out.Values[i] = ec._BeamtimeMeta_applicant(ctx, field, obj)
+		case "asapo":
+			out.Values[i] = ec._BeamtimeMeta_asapo(ctx, field, obj)
 		case "beamline":
 			out.Values[i] = ec._BeamtimeMeta_beamline(ctx, field, obj)
 		case "beamlineAlias":
@@ -9021,8 +9260,6 @@ func (ec *executionContext) _OnlineAnylysisMeta(ctx context.Context, sel ast.Sel
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("OnlineAnylysisMeta")
-		case "asapoBeamtimeTokenPath":
-			out.Values[i] = ec._OnlineAnylysisMeta_asapoBeamtimeTokenPath(ctx, field, obj)
 		case "reservedNodes":
 			out.Values[i] = ec._OnlineAnylysisMeta_reservedNodes(ctx, field, obj)
 		case "slurmReservation":
@@ -9064,6 +9301,8 @@ func (ec *executionContext) _ParentBeamtimeMeta(ctx context.Context, sel ast.Sel
 			}
 		case "applicant":
 			out.Values[i] = ec._ParentBeamtimeMeta_applicant(ctx, field, obj)
+		case "asapo":
+			out.Values[i] = ec._ParentBeamtimeMeta_asapo(ctx, field, obj)
 		case "beamline":
 			out.Values[i] = ec._ParentBeamtimeMeta_beamline(ctx, field, obj)
 		case "beamlineAlias":
@@ -10321,6 +10560,17 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOAsapoMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐAsapoMeta(ctx context.Context, sel ast.SelectionSet, v model.AsapoMeta) graphql.Marshaler {
+	return ec._AsapoMeta(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOAsapoMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐAsapoMeta(ctx context.Context, sel ast.SelectionSet, v *model.AsapoMeta) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AsapoMeta(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOAttachment2ᚕasapmᚋgraphqlᚋgraphᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Attachment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -10541,6 +10791,18 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 		return graphql.Null
 	}
 	return ec.marshalOID2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOInputAsapoMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐInputAsapoMeta(ctx context.Context, v interface{}) (model.InputAsapoMeta, error) {
+	return ec.unmarshalInputInputAsapoMeta(ctx, v)
+}
+
+func (ec *executionContext) unmarshalOInputAsapoMeta2ᚖasapmᚋgraphqlᚋgraphᚋmodelᚐInputAsapoMeta(ctx context.Context, v interface{}) (*model.InputAsapoMeta, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOInputAsapoMeta2asapmᚋgraphqlᚋgraphᚋmodelᚐInputAsapoMeta(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) unmarshalOInputBeamtimeUser2asapmᚋgraphqlᚋgraphᚋmodelᚐInputBeamtimeUser(ctx context.Context, v interface{}) (model.InputBeamtimeUser, error) {

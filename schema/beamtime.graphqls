@@ -52,8 +52,19 @@ input InputBeamtimeUser {
     username: String
 }
 
+type AsapoMeta {
+    beamtimeClbtTokenPath: String
+    beamtimeTokenPath: String
+    endpoint: String
+}
+
+input InputAsapoMeta {
+    beamtimeClbtTokenPath: String
+    beamtimeTokenPath: String
+    endpoint: String
+}
+
 type OnlineAnylysisMeta {
-    asapoBeamtimeTokenPath: String
     reservedNodes: [String!]
     slurmReservation: String
     slurmPartition: String
@@ -124,6 +135,7 @@ type CollectionEntry implements CollectionEntryInterface {
 type ParentBeamtimeMeta {
     id: String!
     applicant: BeamtimeUser
+    asapo : AsapoMeta
     beamline: String
     beamlineAlias: String
     status: String!
@@ -146,6 +158,7 @@ type ParentBeamtimeMeta {
 type BeamtimeMeta implements CollectionEntryInterface {
     id: String!
     applicant: BeamtimeUser
+    asapo : AsapoMeta
     beamline: String
     beamlineAlias: String
     beamlineSetup: String
@@ -196,6 +209,7 @@ input NewCollectionEntry {
 
 input NewBeamtimeMeta {
     applicant: InputBeamtimeUser
+    asapo : InputAsapoMeta
     beamline: String
     beamlineAlias: String
     beamlineSetup: String

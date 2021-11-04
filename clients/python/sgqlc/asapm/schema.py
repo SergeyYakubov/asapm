@@ -50,6 +50,14 @@ class FieldsToSet(sgqlc.types.Input):
     fields = sgqlc.types.Field(sgqlc.types.non_null(Map), graphql_name='fields')
 
 
+class InputAsapoMeta(sgqlc.types.Input):
+    __schema__ = schema
+    __field_names__ = ('beamtime_clbt_token_path', 'beamtime_token_path', 'endpoint')
+    beamtime_clbt_token_path = sgqlc.types.Field(String, graphql_name='beamtimeClbtTokenPath')
+    beamtime_token_path = sgqlc.types.Field(String, graphql_name='beamtimeTokenPath')
+    endpoint = sgqlc.types.Field(String, graphql_name='endpoint')
+
+
 class InputBeamtimeUser(sgqlc.types.Input):
     __schema__ = schema
     __field_names__ = ('applicant', 'email', 'institute', 'lastname', 'user_id', 'username')
@@ -59,6 +67,13 @@ class InputBeamtimeUser(sgqlc.types.Input):
     lastname = sgqlc.types.Field(String, graphql_name='lastname')
     user_id = sgqlc.types.Field(String, graphql_name='userId')
     username = sgqlc.types.Field(String, graphql_name='username')
+
+
+class InputCollectionFile(sgqlc.types.Input):
+    __schema__ = schema
+    __field_names__ = ('name', 'size')
+    name = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='name')
+    size = sgqlc.types.Field(sgqlc.types.non_null(Int), graphql_name='size')
 
 
 class InputOnlineAnylysisMeta(sgqlc.types.Input):
@@ -89,8 +104,9 @@ class InputUsers(sgqlc.types.Input):
 
 class NewBeamtimeMeta(sgqlc.types.Input):
     __schema__ = schema
-    __field_names__ = ('applicant', 'beamline', 'beamline_alias', 'beamline_setup', 'id', 'status', 'contact', 'core_path', 'event_end', 'event_start', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'title', 'unix_id', 'users', 'child_collection_name', 'custom_values')
+    __field_names__ = ('applicant', 'asapo', 'beamline', 'beamline_alias', 'beamline_setup', 'id', 'status', 'contact', 'core_path', 'event_end', 'event_start', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'title', 'unix_id', 'users', 'child_collection_name', 'custom_values')
     applicant = sgqlc.types.Field(InputBeamtimeUser, graphql_name='applicant')
+    asapo = sgqlc.types.Field(InputAsapoMeta, graphql_name='asapo')
     beamline = sgqlc.types.Field(String, graphql_name='beamline')
     beamline_alias = sgqlc.types.Field(String, graphql_name='beamlineAlias')
     beamline_setup = sgqlc.types.Field(String, graphql_name='beamlineSetup')
@@ -149,6 +165,14 @@ class UploadFile(sgqlc.types.Input):
 ########################################################################
 # Output Objects and Interfaces
 ########################################################################
+class AsapoMeta(sgqlc.types.Type):
+    __schema__ = schema
+    __field_names__ = ('beamtime_clbt_token_path', 'beamtime_token_path', 'endpoint')
+    beamtime_clbt_token_path = sgqlc.types.Field(String, graphql_name='beamtimeClbtTokenPath')
+    beamtime_token_path = sgqlc.types.Field(String, graphql_name='beamtimeTokenPath')
+    endpoint = sgqlc.types.Field(String, graphql_name='endpoint')
+
+
 class Attachment(sgqlc.types.Type):
     __schema__ = schema
     __field_names__ = ('id', 'entry_id', 'name', 'size', 'content_type')
@@ -201,6 +225,28 @@ class CollectionEntryInterface(sgqlc.types.Interface):
     thumbnail = sgqlc.types.Field(String, graphql_name='thumbnail')
 
 
+class CollectionFile(sgqlc.types.Type):
+    __schema__ = schema
+    __field_names__ = ('name', 'size')
+    name = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='name')
+    size = sgqlc.types.Field(sgqlc.types.non_null(Int), graphql_name='size')
+
+
+class CollectionFilePlain(sgqlc.types.Type):
+    __schema__ = schema
+    __field_names__ = ('full_name', 'size')
+    full_name = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='fullName')
+    size = sgqlc.types.Field(sgqlc.types.non_null(Int), graphql_name='size')
+
+
+class CollectionFolderContent(sgqlc.types.Type):
+    __schema__ = schema
+    __field_names__ = ('name', 'files', 'subfolders')
+    name = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='name')
+    files = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(CollectionFile)), graphql_name='files')
+    subfolders = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(String)), graphql_name='subfolders')
+
+
 class GenericLogEntry(sgqlc.types.Interface):
     __schema__ = schema
     __field_names__ = ('id', 'time', 'created_by', 'entry_type', 'facility', 'beamtime', 'tags', 'source')
@@ -224,7 +270,7 @@ class LogEntryQueryResult(sgqlc.types.Type):
 
 class Mutation(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('create_meta', 'delete_meta', 'delete_subcollection', 'add_collection_entry', 'modify_beamtime_meta', 'update_collection_entry_fields', 'add_collection_entry_fields', 'delete_collection_entry_fields', 'set_user_preferences', 'upload_attachment', 'add_message_log_entry', 'remove_log_entry')
+    __field_names__ = ('create_meta', 'delete_meta', 'delete_subcollection', 'add_collection_entry', 'modify_beamtime_meta', 'update_collection_entry_fields', 'add_collection_entry_fields', 'delete_collection_entry_fields', 'set_user_preferences', 'upload_attachment', 'add_collection_files', 'add_message_log_entry', 'remove_log_entry')
     create_meta = sgqlc.types.Field('BeamtimeMeta', graphql_name='createMeta', args=sgqlc.types.ArgDict((
         ('input', sgqlc.types.Arg(sgqlc.types.non_null(NewBeamtimeMeta), graphql_name='input', default=None)),
 ))
@@ -266,6 +312,11 @@ class Mutation(sgqlc.types.Type):
         ('req', sgqlc.types.Arg(sgqlc.types.non_null(UploadFile), graphql_name='req', default=None)),
 ))
     )
+    add_collection_files = sgqlc.types.Field(sgqlc.types.non_null(sgqlc.types.list_of(sgqlc.types.non_null(CollectionFilePlain))), graphql_name='addCollectionFiles', args=sgqlc.types.ArgDict((
+        ('id', sgqlc.types.Arg(sgqlc.types.non_null(String), graphql_name='id', default=None)),
+        ('files', sgqlc.types.Arg(sgqlc.types.non_null(sgqlc.types.list_of(sgqlc.types.non_null(InputCollectionFile))), graphql_name='files', default=None)),
+))
+    )
     add_message_log_entry = sgqlc.types.Field(ID, graphql_name='addMessageLogEntry', args=sgqlc.types.ArgDict((
         ('input', sgqlc.types.Arg(sgqlc.types.non_null(NewLogEntryMessage), graphql_name='input', default=None)),
 ))
@@ -278,8 +329,7 @@ class Mutation(sgqlc.types.Type):
 
 class OnlineAnylysisMeta(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('asapo_beamtime_token_path', 'reserved_nodes', 'slurm_reservation', 'slurm_partition', 'ssh_private_key_path', 'ssh_public_key_path', 'user_account')
-    asapo_beamtime_token_path = sgqlc.types.Field(String, graphql_name='asapoBeamtimeTokenPath')
+    __field_names__ = ('reserved_nodes', 'slurm_reservation', 'slurm_partition', 'ssh_private_key_path', 'ssh_public_key_path', 'user_account')
     reserved_nodes = sgqlc.types.Field(sgqlc.types.list_of(sgqlc.types.non_null(String)), graphql_name='reservedNodes')
     slurm_reservation = sgqlc.types.Field(String, graphql_name='slurmReservation')
     slurm_partition = sgqlc.types.Field(String, graphql_name='slurmPartition')
@@ -290,9 +340,10 @@ class OnlineAnylysisMeta(sgqlc.types.Type):
 
 class ParentBeamtimeMeta(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('id', 'applicant', 'beamline', 'beamline_alias', 'status', 'contact', 'core_path', 'event_end', 'event_start', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'title', 'unix_id', 'users')
+    __field_names__ = ('id', 'applicant', 'asapo', 'beamline', 'beamline_alias', 'status', 'contact', 'core_path', 'event_end', 'event_start', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'title', 'unix_id', 'users')
     id = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='id')
     applicant = sgqlc.types.Field(BeamtimeUser, graphql_name='applicant')
+    asapo = sgqlc.types.Field(AsapoMeta, graphql_name='asapo')
     beamline = sgqlc.types.Field(String, graphql_name='beamline')
     beamline_alias = sgqlc.types.Field(String, graphql_name='beamlineAlias')
     status = sgqlc.types.Field(sgqlc.types.non_null(String), graphql_name='status')
@@ -314,7 +365,7 @@ class ParentBeamtimeMeta(sgqlc.types.Type):
 
 class Query(sgqlc.types.Type):
     __schema__ = schema
-    __field_names__ = ('meta', 'collections', 'unique_fields', 'user', 'log_entry', 'log_entries', 'log_entries_unique_fields')
+    __field_names__ = ('meta', 'collections', 'unique_fields', 'user', 'collection_files', 'collection_folder_content', 'log_entry', 'log_entries', 'log_entries_unique_fields')
     meta = sgqlc.types.Field(sgqlc.types.non_null(sgqlc.types.list_of(sgqlc.types.non_null('BeamtimeMeta'))), graphql_name='meta', args=sgqlc.types.ArgDict((
         ('filter', sgqlc.types.Arg(String, graphql_name='filter', default=None)),
         ('order_by', sgqlc.types.Arg(String, graphql_name='orderBy', default=None)),
@@ -332,6 +383,17 @@ class Query(sgqlc.types.Type):
     )
     user = sgqlc.types.Field('UserAccount', graphql_name='user', args=sgqlc.types.ArgDict((
         ('id', sgqlc.types.Arg(sgqlc.types.non_null(ID), graphql_name='id', default=None)),
+))
+    )
+    collection_files = sgqlc.types.Field(sgqlc.types.non_null(sgqlc.types.list_of(sgqlc.types.non_null(CollectionFilePlain))), graphql_name='collectionFiles', args=sgqlc.types.ArgDict((
+        ('id', sgqlc.types.Arg(sgqlc.types.non_null(String), graphql_name='id', default=None)),
+        ('subcollections', sgqlc.types.Arg(Boolean, graphql_name='subcollections', default=None)),
+))
+    )
+    collection_folder_content = sgqlc.types.Field(sgqlc.types.non_null(CollectionFolderContent), graphql_name='collectionFolderContent', args=sgqlc.types.ArgDict((
+        ('id', sgqlc.types.Arg(sgqlc.types.non_null(String), graphql_name='id', default=None)),
+        ('root_folder', sgqlc.types.Arg(String, graphql_name='rootFolder', default=None)),
+        ('subcollections', sgqlc.types.Arg(Boolean, graphql_name='subcollections', default=None)),
 ))
     )
     log_entry = sgqlc.types.Field('LogEntry', graphql_name='logEntry', args=sgqlc.types.ArgDict((
@@ -381,8 +443,9 @@ class Users(sgqlc.types.Type):
 
 class BeamtimeMeta(sgqlc.types.Type, CollectionEntryInterface):
     __schema__ = schema
-    __field_names__ = ('applicant', 'beamline', 'beamline_alias', 'beamline_setup', 'status', 'contact', 'core_path', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'unix_id', 'users')
+    __field_names__ = ('applicant', 'asapo', 'beamline', 'beamline_alias', 'beamline_setup', 'status', 'contact', 'core_path', 'facility', 'generated', 'leader', 'online_analysis', 'pi', 'proposal_id', 'proposal_type', 'unix_id', 'users', 'fileset_size')
     applicant = sgqlc.types.Field(BeamtimeUser, graphql_name='applicant')
+    asapo = sgqlc.types.Field(AsapoMeta, graphql_name='asapo')
     beamline = sgqlc.types.Field(String, graphql_name='beamline')
     beamline_alias = sgqlc.types.Field(String, graphql_name='beamlineAlias')
     beamline_setup = sgqlc.types.Field(String, graphql_name='beamlineSetup')
@@ -398,6 +461,7 @@ class BeamtimeMeta(sgqlc.types.Type, CollectionEntryInterface):
     proposal_type = sgqlc.types.Field(String, graphql_name='proposalType')
     unix_id = sgqlc.types.Field(String, graphql_name='unixId')
     users = sgqlc.types.Field(Users, graphql_name='users')
+    fileset_size = sgqlc.types.Field(Int, graphql_name='filesetSize')
 
 
 class CollectionEntry(sgqlc.types.Type, CollectionEntryInterface):

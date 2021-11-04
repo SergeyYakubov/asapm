@@ -90,7 +90,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
     return <Grid
         container
         direction="column"
-        justify="center"
+        justifyContent="center"
         alignItems="stretch"
     >
         <Grid  item xs={12}>
@@ -113,7 +113,7 @@ function MetaColumn({queryResult, status,title}: MetaColumnProps) {
                             primaryTypographyProps={{noWrap: true}}
                             primary={meta.title}
                             secondary={
-                                <Grid container justify="space-between" alignItems={"baseline"} component="span">
+                                <Grid container justifyContent="space-between" alignItems={"baseline"} component="span">
                                     <Typography component="span">
                                         Beamtime ID: {meta.id || "undefined"}
                                     </Typography>

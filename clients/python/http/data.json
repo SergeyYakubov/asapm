@@ -1,0 +1,46 @@
+{
+  "applicant": {
+    "email": "elmers@uni-mainz.de",
+    "institute": "Johannes-Gutenberg-Universitaet Mainz",
+    "lastname": "Elmers",
+    "userId": "7173",
+    "username": "elmers"
+  },
+  "beamline": "p22",
+  "beamlineAlias": "P22",
+  "beamlineSetup": "Hard X-ray photoelectron spectrometer (HAXPES)",
+  "beamtimeId": "11009110",
+  "contact": "Hloskovsky",
+  "corePath": "/asap3/petra3/gpfs/p22/2021/data/11009110",
+  "eventEnd": "2021-10-24 09:00:00",
+  "eventStart": "2021-10-18 09:00:00",
+  "facility": "PETRA III",
+  "generated": "2021-10-17 18:20:05",
+  "leader": {
+    "email": "schoenhe@uni-mainz.de",
+    "institute": "Johannes-Gutenberg-Universitaet Mainz",
+    "lastname": "Schoenhense",
+    "userId": "4872",
+    "username": "schoenhense"
+  },
+  "pi": {
+    "email": "elmers@uni-mainz.de",
+    "institute": "Johannes-Gutenberg-Universitaet Mainz",
+    "lastname": "Elmers",
+    "userId": "7173",
+    "username": "elmers"
+  },
+  "proposalId": "20200011",
+  "proposalType": "II",
+  "title": "Full-Field Momentum Microscopy at P22",
+  "unixId": "None",
+  "users": {
+    "doorDb": [
+      "schluetc",
+      "hloskovs",
+      "peixotot"
+    ],
+    "special": [],
+    "unknown": []
+  }
+}

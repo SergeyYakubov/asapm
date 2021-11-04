@@ -23,6 +23,12 @@ type LogEntry interface {
 	IsLogEntry()
 }
 
+type AsapoMeta struct {
+	BeamtimeClbtTokenPath *string `json:"beamtimeClbtTokenPath,omitempty" bson:"beamtimeClbtTokenPath,omitempty"`
+	BeamtimeTokenPath     *string `json:"beamtimeTokenPath,omitempty" bson:"beamtimeTokenPath,omitempty"`
+	Endpoint              *string `json:"endpoint,omitempty" bson:"endpoint,omitempty"`
+}
+
 type Attachment struct {
 	ID          string `json:"id,omitempty" bson:"id,omitempty"`
 	EntryID     string `json:"entryId,omitempty" bson:"entryId,omitempty"`
@@ -42,6 +48,7 @@ type BaseCollectionEntry struct {
 type BeamtimeMeta struct {
 	ID                  string                 `json:"_id,omitempty" bson:"_id,omitempty"`
 	Applicant           *BeamtimeUser          `json:"applicant,omitempty" bson:"applicant,omitempty"`
+	Asapo               *AsapoMeta             `json:"asapo,omitempty" bson:"asapo,omitempty"`
 	Beamline            *string                `json:"beamline,omitempty" bson:"beamline,omitempty"`
 	BeamlineAlias       *string                `json:"beamlineAlias,omitempty" bson:"beamlineAlias,omitempty"`
 	BeamlineSetup       *string                `json:"beamlineSetup,omitempty" bson:"beamlineSetup,omitempty"`
@@ -129,6 +136,12 @@ type FieldsToSet struct {
 	Fields map[string]interface{} `json:"fields,omitempty" bson:"fields,omitempty"`
 }
 
+type InputAsapoMeta struct {
+	BeamtimeClbtTokenPath *string `json:"beamtimeClbtTokenPath,omitempty" bson:"beamtimeClbtTokenPath,omitempty"`
+	BeamtimeTokenPath     *string `json:"beamtimeTokenPath,omitempty" bson:"beamtimeTokenPath,omitempty"`
+	Endpoint              *string `json:"endpoint,omitempty" bson:"endpoint,omitempty"`
+}
+
 type InputBeamtimeUser struct {
 	Applicant *string `json:"applicant,omitempty" bson:"applicant,omitempty"`
 	Email     *string `json:"email,omitempty" bson:"email,omitempty"`
@@ -187,6 +200,7 @@ type LogEntryQueryResult struct {
 
 type NewBeamtimeMeta struct {
 	Applicant           *InputBeamtimeUser       `json:"applicant,omitempty" bson:"applicant,omitempty"`
+	Asapo               *InputAsapoMeta          `json:"asapo,omitempty" bson:"asapo,omitempty"`
 	Beamline            *string                  `json:"beamline,omitempty" bson:"beamline,omitempty"`
 	BeamlineAlias       *string                  `json:"beamlineAlias,omitempty" bson:"beamlineAlias,omitempty"`
 	BeamlineSetup       *string                  `json:"beamlineSetup,omitempty" bson:"beamlineSetup,omitempty"`
@@ -231,18 +245,18 @@ type NewLogEntryMessage struct {
 }
 
 type OnlineAnylysisMeta struct {
-	AsapoBeamtimeTokenPath *string  `json:"asapoBeamtimeTokenPath,omitempty" bson:"asapoBeamtimeTokenPath,omitempty"`
-	ReservedNodes          []string `json:"reservedNodes,omitempty" bson:"reservedNodes,omitempty"`
-	SlurmReservation       *string  `json:"slurmReservation,omitempty" bson:"slurmReservation,omitempty"`
-	SlurmPartition         *string  `json:"slurmPartition,omitempty" bson:"slurmPartition,omitempty"`
-	SSHPrivateKeyPath      *string  `json:"sshPrivateKeyPath,omitempty" bson:"sshPrivateKeyPath,omitempty"`
-	SSHPublicKeyPath       *string  `json:"sshPublicKeyPath,omitempty" bson:"sshPublicKeyPath,omitempty"`
-	UserAccount            *string  `json:"userAccount,omitempty" bson:"userAccount,omitempty"`
+	ReservedNodes     []string `json:"reservedNodes,omitempty" bson:"reservedNodes,omitempty"`
+	SlurmReservation  *string  `json:"slurmReservation,omitempty" bson:"slurmReservation,omitempty"`
+	SlurmPartition    *string  `json:"slurmPartition,omitempty" bson:"slurmPartition,omitempty"`
+	SSHPrivateKeyPath *string  `json:"sshPrivateKeyPath,omitempty" bson:"sshPrivateKeyPath,omitempty"`
+	SSHPublicKeyPath  *string  `json:"sshPublicKeyPath,omitempty" bson:"sshPublicKeyPath,omitempty"`
+	UserAccount       *string  `json:"userAccount,omitempty" bson:"userAccount,omitempty"`
 }
 
 type ParentBeamtimeMeta struct {
 	ID             string              `json:"_id,omitempty" bson:"_id,omitempty"`
 	Applicant      *BeamtimeUser       `json:"applicant,omitempty" bson:"applicant,omitempty"`
+	Asapo          *AsapoMeta          `json:"asapo,omitempty" bson:"asapo,omitempty"`
 	Beamline       *string             `json:"beamline,omitempty" bson:"beamline,omitempty"`
 	BeamlineAlias  *string             `json:"beamlineAlias,omitempty" bson:"beamlineAlias,omitempty"`
 	Status         string              `json:"status,omitempty" bson:"status,omitempty"`

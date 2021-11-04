@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import TopBar from "./components/Header/TopBar";
-import {ThemeProvider, createMuiTheme} from '@material-ui/core/styles';
+import {ThemeProvider, createTheme} from '@material-ui/core/styles';
 import {PaletteType} from "@material-ui/core";
 import userPreferences from "./userPreferences";
 import BeamtimeMetaListPage from "./pages/BeamtimeMetaListPage";
@@ -50,7 +50,7 @@ function App(): JSX.Element {
         }
     }
 
-    const theme = createMuiTheme({
+    const theme = createTheme({
         overrides: {
             MuiAppBar: {colorPrimary: {backgroundColor: themeType === "dark" ? "#002984" : "#5a4bff"}},
             MuiCssBaseline: {

@@ -38,6 +38,30 @@ export type UploadFile = {
   file: Scalars['Upload'];
 };
 
+export type InputCollectionFile = {
+  name: Scalars['String'];
+  size: Scalars['Int'];
+};
+
+export type CollectionFile = {
+  __typename?: 'CollectionFile';
+  name: Scalars['String'];
+  size: Scalars['Int'];
+};
+
+export type CollectionFolderContent = {
+  __typename?: 'CollectionFolderContent';
+  name: Scalars['String'];
+  files: Maybe<Array<CollectionFile>>;
+  subfolders: Maybe<Array<Scalars['String']>>;
+};
+
+export type CollectionFilePlain = {
+  __typename?: 'CollectionFilePlain';
+  fullName: Scalars['String'];
+  size: Scalars['Int'];
+};
+
 export type InputBeamtimeUser = {
   applicant: Maybe<Scalars['String']>;
   email: Maybe<Scalars['String']>;
@@ -47,9 +71,21 @@ export type InputBeamtimeUser = {
   username: Maybe<Scalars['String']>;
 };
 
+export type AsapoMeta = {
+  __typename?: 'AsapoMeta';
+  beamtimeClbtTokenPath: Maybe<Scalars['String']>;
+  beamtimeTokenPath: Maybe<Scalars['String']>;
+  endpoint: Maybe<Scalars['String']>;
+};
+
+export type InputAsapoMeta = {
+  beamtimeClbtTokenPath: Maybe<Scalars['String']>;
+  beamtimeTokenPath: Maybe<Scalars['String']>;
+  endpoint: Maybe<Scalars['String']>;
+};
+
 export type OnlineAnylysisMeta = {
   __typename?: 'OnlineAnylysisMeta';
-  asapoBeamtimeTokenPath: Maybe<Scalars['String']>;
   reservedNodes: Maybe<Array<Scalars['String']>>;
   slurmReservation: Maybe<Scalars['String']>;
   slurmPartition: Maybe<Scalars['String']>;
@@ -133,6 +169,7 @@ export type ParentBeamtimeMeta = {
   __typename?: 'ParentBeamtimeMeta';
   id: Scalars['String'];
   applicant: Maybe<BeamtimeUser>;
+  asapo: Maybe<AsapoMeta>;
   beamline: Maybe<Scalars['String']>;
   beamlineAlias: Maybe<Scalars['String']>;
   status: Scalars['String'];
@@ -156,6 +193,7 @@ export type BeamtimeMeta = CollectionEntryInterface & {
   __typename?: 'BeamtimeMeta';
   id: Scalars['String'];
   applicant: Maybe<BeamtimeUser>;
+  asapo: Maybe<AsapoMeta>;
   beamline: Maybe<Scalars['String']>;
   beamlineAlias: Maybe<Scalars['String']>;
   beamlineSetup: Maybe<Scalars['String']>;
@@ -182,6 +220,7 @@ export type BeamtimeMeta = CollectionEntryInterface & {
   jsonString: Maybe<Scalars['String']>;
   attachments: Maybe<Array<Attachment>>;
   thumbnail: Maybe<Scalars['String']>;
+  filesetSize: Maybe<Scalars['Int']>;
 };
 
 
@@ -211,6 +250,7 @@ export type NewCollectionEntry = {
 
 export type NewBeamtimeMeta = {
   applicant: Maybe<InputBeamtimeUser>;
+  asapo: Maybe<InputAsapoMeta>;
   beamline: Maybe<Scalars['String']>;
   beamlineAlias: Maybe<Scalars['String']>;
   beamlineSetup: Maybe<Scalars['String']>;
@@ -310,6 +350,7 @@ export type Mutation = {
   deleteCollectionEntryFields: Maybe<CollectionEntry>;
   setUserPreferences: Maybe<UserAccount>;
   uploadAttachment: Attachment;
+  addCollectionFiles: Array<CollectionFilePlain>;
   addMessageLogEntry: Maybe<Scalars['ID']>;
   removeLogEntry: Maybe<Scalars['ID']>;
 };
@@ -366,6 +407,12 @@ export type MutationUploadAttachmentArgs = {
 };
 
 
+export type MutationAddCollectionFilesArgs = {
+  id: Scalars['String'];
+  files: Array<InputCollectionFile>;
+};
+
+
 export type MutationAddMessageLogEntryArgs = {
   input: NewLogEntryMessage;
 };
@@ -381,6 +428,8 @@ export type Query = {
   collections: Array<CollectionEntry>;
   uniqueFields: Array<UniqueField>;
   user: Maybe<UserAccount>;
+  collectionFiles: Array<CollectionFilePlain>;
+  collectionFolderContent: CollectionFolderContent;
   logEntry: Maybe<LogEntry>;
   logEntries: Maybe<LogEntryQueryResult>;
   logEntriesUniqueFields: Array<UniqueField>;
@@ -407,6 +456,19 @@ export type QueryUniqueFieldsArgs = {
 
 export type QueryUserArgs = {
   id: Scalars['ID'];
+};
+
+
+export type QueryCollectionFilesArgs = {
+  id: Scalars['String'];
+  subcollections: Maybe<Scalars['Boolean']>;
+};
+
+
+export type QueryCollectionFolderContentArgs = {
+  id: Scalars['String'];
+  rootFolder: Maybe<Scalars['String']>;
+  subcollections: Maybe<Scalars['Boolean']>;
 };
 
 
