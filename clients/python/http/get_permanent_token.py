@@ -17,4 +17,5 @@ payload = {
 
 
 response = requests.post(url, data=payload)
+print(response.json())
 print(response.json()["refresh_token"])
