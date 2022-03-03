@@ -53,7 +53,7 @@ def output_csv(filename,json_resp):
     f.close()
 
 
-url = 'http://guest-k8s-node3.desy.de/yakser/asapm-flash/api/query'
+url = 'http://guest-k8s-node2.desy.de/yakser/asapm-flash/api/query'
 
 beamtimeId="11008881"
 
